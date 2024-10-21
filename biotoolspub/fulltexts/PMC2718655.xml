@@ -1,0 +1,1044 @@
+<?properties open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title-group>
+      <journal-title>Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1460-2059</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2718655</article-id>
+    <article-id pub-id-type="pmid">18586747</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btn177</article-id>
+    <article-id pub-id-type="publisher-id">btn177</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Ismb 2008 Conference Proceedings 19–23 July 2008, Toronto</subject>
+        <subj-group>
+          <subject>Original Papers</subject>
+          <subj-group>
+            <subject>Sequence Analysis and Alignment</subject>
+          </subj-group>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>A max-margin model for efficient simultaneous alignment and folding of RNA sequences</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Do</surname>
+          <given-names>Chuong B.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="COR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Foo</surname>
+          <given-names>Chuan-Sheng</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Batzoglou</surname>
+          <given-names>Serafim</given-names>
+        </name>
+      </contrib>
+    </contrib-group>
+    <aff>Computer Science Department, Stanford University, Stanford, CA 94305, USA</aff>
+    <author-notes>
+      <corresp id="COR1">*To whom correspondence should be addressed.</corresp>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>1</day>
+      <month>7</month>
+      <year>2008</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>1</day>
+      <month>7</month>
+      <year>2008</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="ppub"/>. -->
+    <volume>24</volume>
+    <issue>13</issue>
+    <fpage>i68</fpage>
+    <lpage>i76</lpage>
+    <permissions>
+      <copyright-statement>© 2008 The Author(s)</copyright-statement>
+      <copyright-year>2008</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">http://creativecommons.org/licenses/by-nc/2.0/uk/</ext-link>) which permits unrestricted non-commercial use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Motivation:</bold> The need for accurate and efficient tools for computational RNA structure analysis has become increasingly apparent over the last several years: RNA folding algorithms underlie numerous applications in bioinformatics, ranging from microarray probe selection to <italic>de novo</italic> non-coding RNA gene prediction.</p>
+      <p>In this work, we present RAF (RNA Alignment and Folding), an efficient algorithm for simultaneous alignment and consensus folding of unaligned RNA sequences. Algorithmically, RAF exploits sparsity in the set of likely pairing and alignment candidates for each nucleotide (as identified by the CONTRAfold or CONTRAlign programs) to achieve an effectively quadratic running time for simultaneous pairwise alignment and folding. RAF's fast sparse dynamic programming, in turn, serves as the inference engine within a discriminative machine learning algorithm for parameter estimation.</p>
+      <p><bold>Results:</bold> In cross-validated benchmark tests, RAF achieves accuracies equaling or surpassing the current best approaches for RNA multiple sequence secondary structure prediction. However, RAF requires nearly an order of magnitude less time than other simultaneous folding and alignment methods, thus making it especially appropriate for high-throughput studies.</p>
+      <p><bold>Availability:</bold> Source code for RAF is available at:<ext-link ext-link-type="uri" xlink:href="http://contra.stanford.edu/contrafold/">http://contra.stanford.edu/contrafold/</ext-link></p>
+      <p>
+        <bold>Contact:</bold>
+        <email>chuongdo@cs.stanford.edu</email>
+      </p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec sec-type="intro" id="SEC1">
+    <title>1 INTRODUCTION</title>
+    <p>The secondary structure adopted by an RNA molecule <italic>in vivo</italic> is a vital consideration in many bioinformatics analyses. In PCR primer design, stable secondary structures can obstruct proper binding of the primer to DNA (Dieffenbach <italic>et al.</italic>, <xref ref-type="bibr" rid="B5">1993</xref>); in RNA folding pathway studies, secondary structure forms the basic scaffold on which more complicated 3D structures organize (Brion and Westhof, <xref ref-type="bibr" rid="B3">1997</xref>); and in computational non-coding RNA gene prediction, RNA secondary structural stability provides the characteristic signal for distinguishing real RNA sequence from non-functional transcripts (Eddy, <xref ref-type="bibr" rid="B10">2002</xref>).</p>
+    <p>To date, the most powerful non-experimental methods for determining RNA secondary structure rely primarily on position-specific patterns of nucleotide covariation in multiple homologous RNA sequences. Specifically, enrichment for complementarity in pairs of columns from an RNA multiple alignment, especially when primary sequence is not conserved, provides strong evidence for potential base-pairings in the RNA's <italic>in vivo</italic> structure. A primary limitation of covariation analysis, however, is the difficulty of obtaining reliable sequence alignments for divergent RNA families. This shortcoming is especially relevant in the detection of ncRNA genes, as secondary structural constraints often exist even when primary sequence conservation is lacking (Torarinsson <italic>et al.</italic>, <xref ref-type="bibr" rid="B35">2006</xref>).</p>
+    <p>In this article, we describe RNA alignment and folding (RAF), a new algorithm for predicting RNA secondary structure from a collection of unaligned homologous RNA sequences. Algorithmically, RAF belongs to a category of RNA secondary structure prediction methods which <italic>simultaneously</italic> align and fold RNA sequences. By optimizing a pair of unaligned RNA sequences for both sequence homology and structural conservation concurrently, simultaneous alignment and folding approaches sidestep the usual problem of needing accurate sequence alignments before the folding is done. By exploiting sparsity in the set of likely base pairings and aligned nucleotides, RAF achieves <italic>O</italic>(<italic>L</italic><sup>2</sup>) running time for sequences of length <italic>L</italic>, improving significantly upon the <italic>O</italic>(<italic>L</italic><sup>4</sup>) running times of typical simultaneous folding and alignment approaches.</p>
+    <p>The main contribution of RAF, however, is its application of discriminative machine learning techniques for parameter estimation to the problem of simultaneous alignment and folding. Unlike previous methods, RAF's scoring model does not rely on <italic>ad hoc</italic> combinations of thermodynamic free energies for structural features (Mathews <italic>et al.</italic>, <xref ref-type="bibr" rid="B25">1999</xref>) with arbitrary alignment match and gap penalties (Hofacker <italic>et al.</italic>, <xref ref-type="bibr" rid="B18">2002</xref>), nor does RAF attempt the ambitious task of simultaneously modeling the evolutionary history of both sequences and structure (Knudsen and Hein, <xref ref-type="bibr" rid="B22">2003</xref>). Instead, RAF defines a fixed set of basis features describing aspects of the alignment, RNA secondary structure, or both. RAF then poses the task of learning weights for these features as a convex optimization problem, giving rise to efficient algorithms with guaranteed convergence to optimality.</p>
+    <p>The concept of using discriminative methods for parameter estimation rather than relying solely on parameters compiled from experimental measurements originated with the CONTRAfold (Do <italic>et al.</italic>, <xref ref-type="bibr" rid="B8">2006b</xref>) program, and later also became the basis of the CG (Andronescu <italic>et al.</italic>, <xref ref-type="bibr" rid="B1">2007</xref>) method. In a manner analogous to these two previous methods for single sequence secondary structure prediction, RAF demonstrates that automatic learning of parameters can also confer benefits to multiple sequence structure prediction accuracy.</p>
+  </sec>
+  <sec sec-type="methods" id="SEC2">
+    <title>2 METHODS</title>
+    <p>The RAF algorithm consists of four components: (1) a simple yet flexible objective function for pairwise alignment and folding of unaligned RNA sequences; (2) a fast Sankoff-style inference engine for maximizing this objective function via sparse dynamic programming; (3) a simple progressive strategy for extending the pairwise algorithm to handle multiple unaligned sequence inputs; and (4) a max-margin framework for automatically learning model parameters from training data. We describe each of these in turn.</p>
+    <sec id="SEC2.1">
+      <title>2.1 The RAF scoring model</title>
+      <p>We begin our description of the algorithm by describing a scoring scheme for alignments and consensus foldings of two sequences. Let <italic>a</italic> and <italic>b</italic> be a pair of unaligned input RNA sequences. We refer to a candidate alignment and consensus secondary structure of <italic>a</italic> and <italic>b</italic> collectively as a <italic>parse</italic>. Formally, a parse <italic>y</italic> for a pair of sequences <italic>a</italic> and <italic>b</italic> is a set whose elements consist of base pairings (<italic>a</italic><sub><italic>i</italic></sub>, <italic>a</italic><sub><italic>j</italic></sub>) belonging to sequence <italic>a</italic>, base pairings (<italic>b</italic><sub><italic>k</italic></sub>, <italic>b</italic><sub><italic>l</italic></sub>) belonging to sequence <italic>b</italic>, and aligned positions (<italic>a</italic><sub><italic>i</italic></sub>, <italic>b</italic><sub><italic>k</italic></sub>) between <italic>a</italic> and <italic>b</italic>.</p>
+      <p>For a given parse <italic>y</italic> from the space of all valid<xref ref-type="fn" rid="FN1"><sup>1</sup></xref> parses 𝒴, RAF uses a simple scoring scheme which takes into account aligned positions and conserved base pairings. Specifically, RAF defines the score, <monospace>Score</monospace>(<italic>y</italic>;<bold>w</bold>), of such a parse <italic>y</italic> to be
+<disp-formula><graphic xlink:href="btn177um1"/></disp-formula>
+where <inline-formula><inline-graphic xlink:href="btn177i1.jpg"/></inline-formula> and <inline-formula><inline-graphic xlink:href="btn177i2.jpg"/></inline-formula> are scoring terms for aligned positions and conserved base pairs, respectively, and where ℬ(<italic>y</italic>) is the set of all conserved base pairings. In turn, RAF models each scoring term as a linear combination of arbitrary basis features (<xref ref-type="app" rid="APP1">Appendix A.1</xref>):
+<disp-formula><graphic xlink:href="btn177um2"/></disp-formula>
+where <bold>w</bold>∈ℝ<sup><italic>n</italic><sub>aligned</sub>+<italic>n</italic><sub>Paired</sub></sup>=ℝ<sup><italic>n</italic></sup> is a vector of scoring parameters.</p>
+    </sec>
+    <sec id="SEC2.2">
+      <title>2.2 Fast pairwise alignment and folding</title>
+      <p>Given the scoring scheme described in the previous section, the problem of simultaneous alignment and folding reduces to the optimization problem,
+<disp-formula id="M1"><label>(1)</label><graphic xlink:href="btn177m1"/></disp-formula>
+In principle, the solution to (<xref ref-type="disp-formula" rid="M1">1</xref>) follows immediately from the original dynamic programming algorithm for simultaneous alignment and folding presented by Sankoff (<xref ref-type="bibr" rid="B28">1985</xref>). Sankoff's algorithm, however, has an <italic>O</italic>(<italic>L</italic><sup>3<italic>K</italic></sup>) time complexity and <italic>O</italic>(<italic>L</italic><sup>2<italic>K</italic></sup>) space complexity for <italic>K</italic> sequences of length <italic>L</italic>, rendering it impractical for all but the smallest multiple folding problems. Therefore, most programs for RNA simultaneous alignment and folding use heuristics to reduce time and memory requirements while minimally compromising alignment and structure-prediction quality. Some heuristics used in previous programs have included incorporating structural information into a single alignment scoring matrix (Dalli <italic>et al.</italic>, <xref ref-type="bibr" rid="B4">2006</xref>), disallowing multi-branch loops (Gorodkin <italic>et al.</italic>, <xref ref-type="bibr" rid="B13">1997</xref>), and precomputing potential conserved helices prior to alignment (Tabei <italic>et al.</italic>, <xref ref-type="bibr" rid="B32">2006</xref>; Touzet and Perriquet, <xref ref-type="bibr" rid="B37">2004</xref>).</p>
+      <p>The most popular heuristics, however, involve reduction of the portion of the dynamic programming matrices (which we call the <italic>DP region</italic>) that must be computed. For example, some methods restrict the DP region to a strip of fixed width about the diagonal (Hofacker <italic>et al.</italic>, <xref ref-type="bibr" rid="B19">2004</xref>; Mathews and Turner, <xref ref-type="bibr" rid="B24">2002</xref>) or about an initial alignment path (Kiryu <italic>et al.</italic>, <xref ref-type="bibr" rid="B21">2007</xref>). Other methods rely on external single-sequence folding and probabilistic alignment programs to generate base pairing probability matrices (Torarinsson <italic>et al.</italic>, <xref ref-type="bibr" rid="B36">2007</xref>; Will <italic>et al.</italic>, <xref ref-type="bibr" rid="B40">2007</xref>) or alignment match posterior probability matrices (Kiryu <italic>et al.</italic>, <xref ref-type="bibr" rid="B21">2007</xref>), and then exploit the sparsity of these matrices in order to reduce the amount of computation required.</p>
+      <p>The RAF algorithm adopts the last of these strategies. Namely, RAF uses a single-sequence RNA secondary structure prediction program CONTRAfold; Do <italic>et al.</italic>, <xref ref-type="bibr" rid="B8">2006b</xref>) and a pairwise RNA sequence alignment program (CONTRAlign; Do <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2006a</xref>),<xref ref-type="fn" rid="FN2"><sup>2</sup></xref> respectively, to construct a <italic>constraint set</italic> 𝒞 of allowed base pairs and aligned positions in <italic>a</italic> and <italic>b</italic>. Given a constraint set 𝒞, RAF then replaces (<xref ref-type="disp-formula" rid="M1">1</xref>) with the reduced inference problem,
+<disp-formula id="M2"><label>(2)</label><graphic xlink:href="btn177m2"/></disp-formula>
+where 𝒴<sub>𝒞</sub>={<italic>y</italic>∈𝒴:<italic>y</italic>⊆𝒞} is the space of valid parses, restricted to those which contain only base pairings and alignment matches from the constraint set 𝒞 (<xref ref-type="fig" rid="F1">Fig. 1</xref>).
+<fig id="F1" position="float"><label>Fig. 1.</label><caption><p>Sparsity patterns in posterior probability matrices. Panels (<bold>a</bold>) and (<bold>b</bold>) illustrate the pairwise pairing posterior probabilities for two different sequences (such as generated by a single-sequence probabilistic or partition function–based RNA folding program). Panel (<bold>c</bold>) shows the alignment match probabilities for these sequences (such as generated by a probabilistic HMM). In each panel, the darkness of each square represents the posterior confidence in the corresponding base pairing or alignment match. While the single sequence folder or the pairwise sequence aligner may not be able to identify the single correct folding or alignment, respectively, the set of likely candidate base pairings and matched positions, nonetheless, is extremely sparse.</p></caption><graphic xlink:href="btn177f1"/></fig>
+</p>
+      <p>To obtain the set of allowed base pairings, RAF uses the implementation of McCaskill's algorithm (McCaskill, <xref ref-type="bibr" rid="B27">1990</xref>) from CONTRAfold in order to compute the posterior probability of each possible base pairing in sequence <italic>a</italic>, and similarly for sequence <italic>b</italic>. All base pairs with posterior probability at least ɛ<sub>paired</sub> are then retained. Similarly, to determine the set of allowed aligned positions, RAF retains those matches whose posterior probability, according to a version of the CONTRAlign program adapted for RNAs, is at least ɛ<sub>aligned</sub>. If these cutoffs ɛ<sub>aligned</sub> and ɛ<sub>paired</sub> are chosen to be too low, then the reduction of the dynamic programming space achieved for 𝒴<sub>𝒞</sub> will not be significant. Conversely, a higher cutoff could also degrade performance by excluding portions of the DP matrix which actually correspond to the true parse of the input sequences. A similar approach for pruning the space of candidate alignments and folds via <italic>fold and alignment envelopes</italic> was implemented in the Stemloc (Holmes, <xref ref-type="bibr" rid="B20">2005</xref>) program. A number of other programs exploit either base-pairing sparsity (Torarinsson <italic>et al.</italic>, <xref ref-type="bibr" rid="B36">2007</xref>; Will <italic>et al.</italic>, <xref ref-type="bibr" rid="B40">2007</xref>) or alignment sparsity (Dowell and Eddy, <xref ref-type="bibr" rid="B9">2006</xref>; Harmanci <italic>et al.</italic>, <xref ref-type="bibr" rid="B16">2007</xref>; Kiryu <italic>et al.</italic>, <xref ref-type="bibr" rid="B21">2007</xref>) separately.</p>
+      <p>Assuming <italic>O</italic>(<italic>c</italic>) and <italic>O</italic>(<italic>d</italic>) bounds on the number of candidate base pairing and alignment partners, respectively, per position of both sequences, we show that the time complexity of the RAF algorithm scales <italic>quadratically</italic> in the length of the sequences, while the space complexity scales <italic>linearly</italic> (<xref ref-type="app" rid="APP1">Appendix B.1</xref>). A comparison table of asymptotic time and space complexity of a number of modern RNA simultaneous folding and alignment approaches is shown in <xref ref-type="table" rid="T1">Table 1</xref>. In practice, we find that RAF's scaling reflects the theoretical bounds, achieving running times often an order of magnitude faster than current simultaneous alignment and folding methods.<xref ref-type="fn" rid="FN3"><sup>3</sup></xref>
+<table-wrap id="T1" position="float"><label>Table 1.</label><caption><p>Comparison of computational complexity of RNA simultaneous folding and alignment algorithms</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th align="left" rowspan="1" colspan="1">Algorithm</th><th align="left" rowspan="1" colspan="1">Time complexity</th><th align="left" rowspan="1" colspan="1">Space complexity</th></tr></thead><tbody><tr><td rowspan="1" colspan="1">Sankoff</td><td rowspan="1" colspan="1"><italic>O</italic>(<italic>L</italic><sup>6</sup>)</td><td rowspan="1" colspan="1"><italic>O</italic>(<italic>L</italic><sup>4</sup>)</td></tr><tr><td rowspan="1" colspan="1">FOLDALIGN</td><td rowspan="1" colspan="1"><italic>O</italic>(<italic>L</italic><sup>4</sup>)</td><td rowspan="1" colspan="1"><italic>O</italic>(<italic>L</italic><sup>4</sup>)</td></tr><tr><td rowspan="1" colspan="1">LocARNA</td><td rowspan="1" colspan="1"><italic>O</italic>(<italic>c</italic><sup>2</sup><italic>L</italic><sup>4</sup>)</td><td rowspan="1" colspan="1"><italic>O</italic>(<italic>c</italic><sup>2</sup><italic>L</italic><sup>2</sup>)</td></tr><tr><td rowspan="1" colspan="1">Murlet</td><td rowspan="1" colspan="1"><italic>O</italic>(<italic>d</italic><sup>2</sup><italic>L</italic><sup>2</sup>+<italic>d</italic><sup>3</sup><italic>L</italic><sup>3</sup>/κ<sup>6</sup>)</td><td rowspan="1" colspan="1"><italic>O</italic>(<italic>d</italic><sup>2</sup><italic>L</italic><sup>2</sup>)</td></tr><tr><td rowspan="1" colspan="1">RAF</td><td rowspan="1" colspan="1"><italic>O</italic>(min(<italic>c</italic>,<italic>d</italic>)·<italic>cd</italic><sup>2</sup><italic>L</italic><sup>2</sup>)</td><td rowspan="1" colspan="1"><italic>O</italic>(min(<italic>c</italic>,<italic>d</italic>)·<italic>cdL</italic>)</td></tr></tbody></table><table-wrap-foot><fn id="TF"><p>Here, <italic>L</italic> denotes the sequence length, <italic>c</italic> is the number of candidate base pairs per position, <italic>d</italic> is the number of candidate alignment matches per position and κ is the minimum allowed distance between adjacent helices.</p></fn></table-wrap-foot></table-wrap></p>
+    </sec>
+    <sec id="SEC2.3">
+      <title>2.3 Extension to multiple alignment</title>
+      <p>Using the RAF pairwise alignment subroutine, we can also address the problem of aligning two alignments. Let <italic>S</italic> and <italic>T</italic> be two sets of sequences that we wish to align; furthermore, we denote their corresponding alignments as <italic>A</italic> and <italic>B</italic>.</p>
+      <p>To align a pair of alignments, we first define new basis features <inline-formula><inline-graphic xlink:href="btn177i3.jpg"/></inline-formula> and <inline-formula><inline-graphic xlink:href="btn177i4.jpg"/></inline-formula> to simply be the average over all pairs of sequences <italic>s</italic>∈<italic>S</italic> and <italic>t</italic>∈<italic>T</italic> of the basis features for aligning <italic>s</italic> and <italic>t</italic>, remapped to the coordinates of the alignments <italic>A</italic> and <italic>B</italic>. Second, we define the new constraint set 𝒞 for aligning the two alignments to be the union over all pairs of sequences <italic>s</italic>∈<italic>S</italic> and <italic>t</italic>∈<italic>T</italic> of the constraint sets for each pair, again remapped to the alignment coordinates. Finally, using these new features and our new constraint set, we simply call the existing RAF subroutine for fast-pairwise alignment and folding.</p>
+      <p>Using this new subroutine for aligning alignments, we can then perform multiple alignment in RAF using a standard progressive strategy (Feng and Doolittle, <xref ref-type="bibr" rid="B11">1987</xref>). Specifically, we cluster the sequences with a UPGMA (Sneath and Sokal, <xref ref-type="bibr" rid="B31">1962</xref>) tree-building procedure, using the expected accuracy similarity measure (Do <italic>et al.</italic>, <xref ref-type="bibr" rid="B6">2005</xref>). Finally, we perform progressive alignment by aligning subgroups of sequences according to the tree.</p>
+    </sec>
+    <sec id="SEC2.4">
+      <title>2.4 A max-margin framework</title>
+      <p>Given a set of training examples, <inline-formula><inline-graphic xlink:href="btn177i5.jpg"/></inline-formula>, the parameter estimation problem is the task of identifying a vector of weights <bold>w</bold>=(<italic>w</italic><sub>1</sub>,<italic>w</italic><sub>2</sub>,…,<italic>w</italic><sub><italic>n</italic></sub>)∈ℝ<sup><italic>n</italic></sup> for which the RAF inference algorithm, as described in the previous section, will yield accurate alignments and consensus structures. In this section, we present a max-margin framework for parameter estimation in RAF.</p>
+      <sec id="SEC2.4.1">
+        <title>2.4.1 Formulation</title>
+        <p>In the max-margin framework, our goal is to obtain a parameter vector <bold>w</bold> for which running the RAF inference algorithm will generate accurate alignments and consensus structures. Clearly, this goal is met if for each training example (<italic>a</italic><sup>(<italic>i</italic>)</sup>,<italic>b</italic><sup>(<italic>i</italic>)</sup>,<italic>y</italic><sup>(<italic>i</italic>)</sup>) from our training set <italic>S</italic>,<xref ref-type="fn" rid="FN4"><sup>4</sup></xref>
+<disp-formula id="M3"><label>(3)</label><graphic xlink:href="btn177m3"/></disp-formula>
+In such a case, we would be guaranteed that the maximum of (<xref ref-type="disp-formula" rid="M2">2</xref>) is attained for <italic>y</italic>*=<italic>y</italic><sup>(<italic>i</italic>)</sup> (provided the true parse <italic>y</italic><sup>(<italic>i</italic>)</sup> belongs to <inline-formula><inline-graphic xlink:href="btn177i6.jpg"/></inline-formula>), and hence our inference procedure would necessarily return the correct alignment and consensus folding. This intuition is captured in the following convex optimization problem:
+<disp-formula id="M4"><label>(4)</label><graphic xlink:href="btn177m4"/></disp-formula>
+Here, <italic>C</italic> is a regularization constant, and Δ(<italic>y</italic><sup>(<italic>i</italic>)</sup>,<italic>y</italic>′) is a non-negative distance measure between pair of parses, conventionally referred to as the <italic>loss function</italic>, which takes value 0 if and only if its two arguments are equal (<xref ref-type="sec" rid="SEC2.4.2">Section 2.4.2</xref>).</p>
+        <p>The inequality constraints play the role of (<xref ref-type="disp-formula" rid="M3">3</xref>)—they try to ensure that the training output <italic>y</italic><sup>(<italic>i</italic>)</sup> scores higher than any alternative incorrect parse <italic>y</italic>′ by some positive amount Δ(<italic>y</italic><sup>(<italic>i</italic>)</sup>,<italic>y</italic>′). In cases where this condition is not achieved, the objective function incurs a penalty of ξ<sub><italic>i</italic></sub>. Finally, the regularization term (½)<italic>C</italic>‖<bold>w</bold>‖<sup>2</sup> is a penalty used to prevent overfitting.<xref ref-type="fn" rid="FN5"><sup>5</sup></xref></p>
+      </sec>
+      <sec id="SEC2.4.2">
+        <title>2.4.2 The loss function</title>
+        <p>The loss function Δ(<italic>y</italic><sup>(<italic>i</italic>)</sup>,<italic>y</italic>′) in (<xref ref-type="disp-formula" rid="M4">4</xref>) plays two significant roles. Technically, the loss function establishes an appropriate scale for the parameters of the problem and prevents the trivial solution, <bold>w</bold>=<bold>0</bold>. Intuitively, however, the loss function also helps to make the max-margin optimization robust. By choosing a loss function that takes large positive values for incorrect candidate outputs <italic>y</italic>′ that differ from the true output <italic>y</italic><sup>(<italic>i</italic>)</sup> in a very critical way, but that takes small positive values for incorrect candidate outputs <italic>y</italic>′ whose errors are more forgivable, the loss function allows the user to implement a notion of ‘cost’ for different types of mistakes in the max-margin model.</p>
+        <p>For RAF, we defined the loss function by restricting our attention to four types of parsing errors: (1) <italic>false positive base-pairings</italic> ((<italic>a</italic><sub><italic>i</italic></sub>, <italic>a</italic><sub><italic>j</italic></sub>)∈<italic>y</italic>′ ∖ <italic>y</italic><sup>(<italic>i</italic>)</sup>, or similarly in sequence <italic>b</italic>), (2) <italic>false negative base-pairings</italic> ((<italic>a</italic><sub><italic>i</italic></sub>, <italic>a</italic><sub><italic>j</italic></sub>)∈<italic>y</italic><sup><italic>i</italic></sup> ∖ <italic>y</italic>′, or similarly in sequence <italic>b</italic>), (3) <italic>false positive aligned matches</italic> ((<italic>a</italic><sub><italic>i</italic></sub>, <italic>b</italic><sub><italic>k</italic></sub>)∈<italic>y</italic>’ ∖ <italic>y</italic><sup>(<italic>i</italic>)</sup>) and (4) <italic>false negative aligned matches</italic> ((<italic>a</italic><sub><italic>i</italic></sub>, <italic>b</italic><sub><italic>k</italic></sub>)∈<italic>y</italic><sup>(<italic>i</italic>)</sup> ∖ <italic>y</italic>′). Then, we set
+<disp-formula><graphic xlink:href="btn177um3"/></disp-formula>
+The numbers γ<sup>FN paired</sup>, γ<sup>FP paired</sup>, γ<sup>FN aligned</sup> and γ<sup>FP aligned</sup> are hyperparameters, chosen by the user prior to training the RAF algorithm, which allow the user to express her preference for models with either high sensitivity or high specificity for base-pairing positions and aligned nucleotides.<xref ref-type="fn" rid="FN6"><sup>6</sup></xref></p>
+      </sec>
+      <sec id="SEC2.4.3">
+        <title>2.4.3 Optimization algorithm</title>
+        <p>At first glance, the constrained optimization problem stated in (<xref ref-type="disp-formula" rid="M4">4</xref>) appears to be a standard convex quadratic program and hence solvable using off-the-shelf packages for convex programming. In reality, for each training example, the optimization problem has an exponential number of inequalities, one corresponding to each possible candidate parse <italic>y</italic>′ of the input sequences! Despite our use of constraints sets to reduce the set of allowed candidate outputs, in most cases, this space is still too large to enumerate.</p>
+        <p>One approach to deal with this problem is an iterative algorithm known as <italic>constraint generation</italic> (or <italic>column generation</italic>), as used in the program CG (Andronescu <italic>et al.</italic>, <xref ref-type="bibr" rid="B1">2007</xref>). In this approach, the parameter vector <bold>w</bold><sub><italic>t</italic></sub> at each time <italic>t</italic> is the solution to a reduced version of (<xref ref-type="disp-formula" rid="M4">4</xref>) in which only a small subset of the constraints are retained. Next, one checks if <bold>w</bold><sub><italic>t</italic></sub> violates any of the constraints of the original full optimization problem by more than an prescribed tolerance of ɛ. If so, the worst violated constraint is added to the current set of constraints to form a new reduced optimization problem, whose solution, in turn, gives the next iterate <bold>w</bold><sub><italic>t</italic>+1</sub>. If not, the optimization algorithm terminates. Each of the optimization problems in the sequence requires a quadratic programming solver.</p>
+        <p>Here, we take a simpler approach based on the recent SVM training algorithm of (Shalev-Shwartz and Singer, <xref ref-type="bibr" rid="B29">2007</xref>) and Shalev-Shwartz <italic>et al.</italic>, (<xref ref-type="bibr" rid="B30">2007</xref>). Omitting details, we begin by converting (<xref ref-type="disp-formula" rid="M4">4</xref>) into an equivalent unconstrained problem: namely, minimize (with respect to <bold>w</bold>∈ℝ<sup><italic>n</italic></sup>),
+<disp-formula id="M5"><label>(5)</label><graphic xlink:href="btn177m5"/></disp-formula>
+Next, we use strong duality from optimization theory in order to derive an upper bound <italic>B</italic> on the norm of the optimal solution of our unconstrained problem (<xref ref-type="app" rid="APP1">Appendix C.1</xref>). Finally, we actually run the optimization procedure by applying the simple update rule,
+<disp-formula id="M6"><label>(6)</label><graphic xlink:href="btn177m6"/></disp-formula>
+starting from <bold>w</bold><sub>1</sub>=<bold>0</bold>. Here, <bold>g</bold><sub><italic>t</italic></sub>∈∂<italic>f</italic>(<bold>w</bold><sub><italic>t</italic></sub>) is any subgradient of the objective function <italic>f</italic>(<bold>w</bold>) evaluated at <bold>w</bold>=<bold>w</bold><sub><italic>t</italic></sub>, and the operator <bold>Π</bold><sub><italic>B</italic></sub>[·] projects a vector onto an origin-centered ball of radius <italic>B</italic> (i.e. <bold>Π</bold><sub><italic>B</italic></sub>[<bold>v</bold>]=(<bold><italic>B</italic></bold>/‖<bold>v</bold>‖)<bold>v</bold> if ‖<bold>v</bold>‖&gt;<italic>B</italic> and <bold>Π</bold><sub><italic>B</italic></sub>[<bold>v</bold>]=<bold>v</bold> otherwise). Intuitively, the algorithm works much like a standard gradient descent procedure adapted for non-differentiable objective functions, but with the added twist that the projection operation ensures that the weight vector iterates stay with a region of the parameter space where the optimum is known to exist.</p>
+        <p>Given an existing routine for computing subgradients of the unconstrained objective, this algorithm can be implemented in a few lines of code with no complicated numerical optimization software. As shown by Singer and Shalev-Shwartz, the algorithm is also quite efficient, requiring only Õ(<italic>m</italic>/<italic>C</italic>ɛ) iterations to achieve ɛ accuracy on a training set of <italic>m</italic> examples. An online variant of the algorithm, in which the subgradients <bold>g</bold><sub><italic>t</italic></sub> in each step are computed based only on a randomly sampled subset of the training data (e.g. a single example), achieves an Õ(1/<italic>C</italic>ɛ) expected running time, independent of <italic>m</italic>, the size of the training set.</p>
+      </sec>
+      <sec id="SEC2.4.4">
+        <title>2.4.4 Subgradient computation</title>
+        <p>Finally, we show how to compute a subgradient <bold>g</bold><sub><italic>t</italic></sub>∈∂<italic>f</italic>(<bold>w</bold><sub><italic>t</italic></sub>). In order to simplify notation, define an <italic>n</italic>-dimensional vector <bold>Φ</bold>(<italic>y</italic>) whose <italic>p</italic>th component is
+<disp-formula><graphic xlink:href="btn177um4"/></disp-formula>
+from which it follows that <monospace>Score</monospace>(<italic>y</italic>;<bold>w</bold>)=<bold>w</bold><sup><italic>T</italic></sup><bold>Φ</bold>(<italic>y</italic>). We can apply the usual rules for computing subgradients see, e.g. Bertsekas <italic>et al.</italic>, <xref ref-type="bibr" rid="B2">2003</xref>) to obtain
+<disp-formula id="M7"><label>(7)</label><graphic xlink:href="btn177m7"/></disp-formula>
+where <inline-formula><inline-graphic xlink:href="btn177i7.jpg"/></inline-formula> is simply any <italic>y</italic>′ which attains the maximum in the <italic>i</italic>th term of the summation in (<xref ref-type="disp-formula" rid="M5">5</xref>), for <bold>w</bold>=<bold>w</bold><sub><italic>t</italic></sub>. Each ‘loss-augmented’ maximization, in turn, is easily performed by modifying the original RAF inference procedure to incorporate an appropriately defined additional scoring matrix, φ<sub>0</sub>(<italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic>), with fixed weight <italic>w</italic><sub>0</sub>=1.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec sec-type="results" id="SEC3">
+    <title>3 RESULTS</title>
+    <p>To evaluate the performance of RAF on real data, we collected training and testing data from a variety of sources. In particular, for training, we obtained Rfam 8.1 (Griffiths-Jones <italic>et al.</italic>, <xref ref-type="bibr" rid="B15">2005</xref>), a database of alignments and covariance models for RNA families along with annotated secondary structures where available. For testing, we obtained BRAliBASE II (Gardner <italic>et al.</italic>, <xref ref-type="bibr" rid="B12">2005</xref>), a benchmark set for RNA alignment programs. We also obtained a testing set of RNA families used by the authors of the recent program, MASTR (Lindgreen <italic>et al.</italic>, <xref ref-type="bibr" rid="B23">2007</xref>).</p>
+    <p>An important concern in the validation of RNA alignment programs is the confounding factor that unless cross-validation is properly performed, the performance that one sees on any given validation set is not likely to be a reliable judge of the program's performance on future data. Even in cases where the training and evaluation tests are disjoint but still contain sequences from the same RNA family, evaluation can still give misleading results, because the weights learned for loop lengths and composition will be biased toward specific properties of that RNA family.</p>
+    <p>To be absolutely sure of no contamination between training and testing data, we preprocessed our Rfam training set of alignments and consensus structures (October 2007 version, 607 families) by excluding all families for which either of the two testing databases contained an example from that family. We then also removed all families for which only automatically predicted consensus structures were known, leaving a total of 154 families. Finally, we generated a training set 𝒯<sub>1</sub> of up to 10 randomly sampled pairwise alignments with consensus structures from each remaining family (1361 pairwise alignments in total), a training set 𝒯<sub>2</sub>, of up to 10 randomly sampled sequences with structures from each family (1179 sequences in total), and a training set 𝒯<sub>3</sub>, containing one randomly sampled five-way multiple alignment from each family (118 multiple alignments in total).</p>
+    <p>RAF uses two external programs, CONTRAlign (Do <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2006a</xref>) and CONTRAfold (Do <italic>et al.</italic>, <xref ref-type="bibr" rid="B8">2006b</xref>), to compute alignment match and base-pairing posterior probabilities, respectively. To ensure proper cross-validation, CONTRAlign was retrained from scratch using 𝒯<sub>1</sub>, and CONTRAfold was retrained using 𝒯<sub>2</sub>. Finally, the RAF algorithm itself was trained using all pairwise projections of each multiple alignment of 𝒯<sub>3</sub>. Our strict cross-validation procedure significantly reduces both the size and coverage of the training sets used for CONTRAlign and CONTRAfold, and thus places RAF at a significant disadvantage in the comparisons shown here. Nonetheless, as shown in the following sections, RAF performs well, indicating its ability to generalize for sequences not present in the training set.</p>
+    <sec id="SEC3.1">
+      <title>3.1 Alignment and base-pairing constraints</title>
+      <p>To observe the effects of different cutoffs ɛ<sub>aligned</sub> and ɛ<sub>paired</sub>, we computed the proportions of reference base pairings and reference aligned matches recovered for varying cutoff constraints. In addition, we also computed the sparsity ratio (i.e. the maximum number of pairing partners or matching partners for any nucleotide, averaged over the entire training set) for each cutoff. A plot of these two values for training set 𝒯<sub>3</sub> is shown in <xref ref-type="fig" rid="F2">Figure 2</xref>. As seen in the figure, nearly complete coverage of base pairings and alignment matches can be retained when each sparsity factor is roughly 10.<xref ref-type="fn" rid="FN7"><sup>7</sup></xref>
+<fig id="F2" position="float"><label>Fig. 2.</label><caption><p>Trade-off between sparsity factor and proportion of reference base-pairings or aligned matches covered when varying the cutoffs ɛ<sub>paired</sub> and ɛ<sub>aligned</sub>. This graph was made using training set 𝒯<sub>3</sub>.</p></caption><graphic xlink:href="btn177f2"/></fig>
+</p>
+    </sec>
+    <sec id="SEC3.2">
+      <title>3.2 Evaluation metrics</title>
+      <p>To evaluate the quality of the resulting alignments, we used five different scoring measures:
+<list list-type="order"><list-item><p>(1) the standard sum-of-pairs (SP) score (Thompson <italic>et al.</italic>, <xref ref-type="bibr" rid="B34">1999</xref>), which computes the proportion of matches in a reference alignment which are present in the predicted alignment,</p></list-item><list-item><p>(2) sensitivity (Sens), the proportion of base pairings in a reference parse which are recovered in the predicted parse,</p></list-item><list-item><p>(3) specificity or positive-predictive value (PPV), the proportion of base pairings in a predicted parse which are also present in the reference parse, and</p></list-item><list-item><p>(4) the Matthews correlation coefficient (MCC) (Matthews, <xref ref-type="bibr" rid="B26">1975</xref>), which we approximate as <inline-formula><inline-graphic xlink:href="btn177i8.jpg"/></inline-formula>, following Gorodkin <italic>et al.</italic>, (<xref ref-type="bibr" rid="B14">2001</xref>).</p></list-item></list>
+</p>
+    </sec>
+    <sec id="SEC3.3">
+      <title>3.3 Comparison of accuracy</title>
+      <p>In our first accuracy assessment, we evaluated RAF as well as a number of other current RNA secondary structure prediction programs using the BRAliBASE II dataset. In particular, the first dataset from BRAliBASE II contains collections of 100 five-sequence subalignments, sampled from five specific Rfam families (5S rRNA, group II intron, SRP, tRNA and U5). For each of these alignments, we ran a number of current multiple-sequence RNA secondary structure prediction programs, including Murlet v0.1.1 (Kiryu <italic>et al.</italic>, <xref ref-type="bibr" rid="B21">2007</xref>), LocARNA v1.2.2a (Will <italic>et al.</italic>, <xref ref-type="bibr" rid="B40">2007</xref>), and RNA Sampler v1.3 (Xu <italic>et al.</italic>, <xref ref-type="bibr" rid="B41">2007</xref>). Wherever any of these programs required access to external pairing-posterior probabilities, we used ViennaRNA v1.7 (Hofacker <italic>et al.</italic>, <xref ref-type="bibr" rid="B17">1994</xref>). The results of the comparison are shown in <xref ref-type="table" rid="T2">Table 2</xref>.
+<table-wrap id="T2" position="float"><label>Table 2.</label><caption><p>Performance comparison on BRAliBASE II datasets. The best number in each column is marked in bold</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th align="left" rowspan="1" colspan="1">Dataset</th><th align="left" rowspan="1" colspan="1">Program</th><th align="left" rowspan="1" colspan="1">Time (s)</th><th align="left" rowspan="1" colspan="1">SP</th><th align="left" rowspan="1" colspan="1">Sens</th><th align="left" rowspan="1" colspan="1">PPV</th><th align="left" rowspan="1" colspan="1">MCC</th></tr></thead><tbody><tr><td rowspan="1" colspan="1">5S rRNA</td><td rowspan="1" colspan="1">Murlet</td><td rowspan="1" colspan="1">687</td><td rowspan="1" colspan="1">0.94</td><td rowspan="1" colspan="1"><bold>0.70</bold></td><td rowspan="1" colspan="1"><bold>0.70</bold></td><td rowspan="1" colspan="1"><bold>0.70</bold></td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">LocARNA</td><td rowspan="1" colspan="1">812</td><td rowspan="1" colspan="1">0.93</td><td rowspan="1" colspan="1">0.55</td><td rowspan="1" colspan="1">0.60</td><td rowspan="1" colspan="1">0.57</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RNA Sampler</td><td rowspan="1" colspan="1">2361</td><td rowspan="1" colspan="1">0.90</td><td rowspan="1" colspan="1">0.55</td><td rowspan="1" colspan="1">0.64</td><td rowspan="1" colspan="1">0.59</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RAF</td><td rowspan="1" colspan="1"><bold>87</bold></td><td rowspan="1" colspan="1"><bold>0.95</bold></td><td rowspan="1" colspan="1">0.66</td><td rowspan="1" colspan="1">0.66</td><td rowspan="1" colspan="1">0.66</td></tr><tr><td rowspan="1" colspan="1">group II intron</td><td rowspan="1" colspan="1">Murlet</td><td rowspan="1" colspan="1">962</td><td rowspan="1" colspan="1"><bold>0.78</bold></td><td rowspan="1" colspan="1">0.75</td><td rowspan="1" colspan="1"><bold>0.76</bold></td><td rowspan="1" colspan="1"><bold>0.75</bold></td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">LocARNA</td><td rowspan="1" colspan="1">250</td><td rowspan="1" colspan="1">0.74</td><td rowspan="1" colspan="1">0.79</td><td rowspan="1" colspan="1">0.65</td><td rowspan="1" colspan="1">0.72</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RNA Sampler</td><td rowspan="1" colspan="1">1626</td><td rowspan="1" colspan="1">0.72</td><td rowspan="1" colspan="1">0.77</td><td rowspan="1" colspan="1">0.65</td><td rowspan="1" colspan="1">0.71</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RAF</td><td rowspan="1" colspan="1"><bold>48</bold></td><td rowspan="1" colspan="1">0.78</td><td rowspan="1" colspan="1"><bold>0.83</bold></td><td rowspan="1" colspan="1">0.65</td><td rowspan="1" colspan="1">0.73</td></tr><tr><td rowspan="1" colspan="1">SRP</td><td rowspan="1" colspan="1">Murlet</td><td rowspan="1" colspan="1">20548</td><td rowspan="1" colspan="1"><bold>0.88</bold></td><td rowspan="1" colspan="1"><bold>0.75</bold></td><td rowspan="1" colspan="1"><bold>0.78</bold></td><td rowspan="1" colspan="1"><bold>0.76</bold></td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">LocARNA</td><td rowspan="1" colspan="1">22467</td><td rowspan="1" colspan="1">0.85</td><td rowspan="1" colspan="1">0.66</td><td rowspan="1" colspan="1">0.70</td><td rowspan="1" colspan="1">0.68</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RAF</td><td rowspan="1" colspan="1"><bold>1290</bold></td><td rowspan="1" colspan="1">0.87</td><td rowspan="1" colspan="1">0.72</td><td rowspan="1" colspan="1">0.71</td><td rowspan="1" colspan="1">0.70</td></tr><tr><td rowspan="1" colspan="1">tRNA</td><td rowspan="1" colspan="1">Murlet</td><td rowspan="1" colspan="1">525</td><td rowspan="1" colspan="1">0.93</td><td rowspan="1" colspan="1">0.86</td><td rowspan="1" colspan="1">0.90</td><td rowspan="1" colspan="1">0.88</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">LocARNA</td><td rowspan="1" colspan="1">246</td><td rowspan="1" colspan="1"><bold>0.95</bold></td><td rowspan="1" colspan="1">0.86</td><td rowspan="1" colspan="1">0.90</td><td rowspan="1" colspan="1">0.88</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RNA Sampler</td><td rowspan="1" colspan="1">763</td><td rowspan="1" colspan="1">0.92</td><td rowspan="1" colspan="1"><bold>0.93</bold></td><td rowspan="1" colspan="1"><bold>0.91</bold></td><td rowspan="1" colspan="1"><bold>0.92</bold></td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RAF</td><td rowspan="1" colspan="1"><bold>52</bold></td><td rowspan="1" colspan="1">0.94</td><td rowspan="1" colspan="1">0.81</td><td rowspan="1" colspan="1">0.85</td><td rowspan="1" colspan="1">0.83</td></tr><tr><td rowspan="1" colspan="1">U5</td><td rowspan="1" colspan="1">Murlet</td><td rowspan="1" colspan="1">1772</td><td rowspan="1" colspan="1"><bold>0.84</bold></td><td rowspan="1" colspan="1">0.69</td><td rowspan="1" colspan="1">0.75</td><td rowspan="1" colspan="1">0.72</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">LocARNA</td><td rowspan="1" colspan="1">549</td><td rowspan="1" colspan="1">0.80</td><td rowspan="1" colspan="1">0.56</td><td rowspan="1" colspan="1">0.61</td><td rowspan="1" colspan="1">0.58</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RNA Sampler</td><td rowspan="1" colspan="1">4084</td><td rowspan="1" colspan="1">0.77</td><td rowspan="1" colspan="1">0.75</td><td rowspan="1" colspan="1">0.70</td><td rowspan="1" colspan="1">0.72</td></tr><tr><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1">RAF</td><td rowspan="1" colspan="1"><bold>99</bold></td><td rowspan="1" colspan="1">0.82</td><td rowspan="1" colspan="1"><bold>0.83</bold></td><td rowspan="1" colspan="1"><bold>0.79</bold></td><td rowspan="1" colspan="1"><bold>0.81</bold></td></tr></tbody></table></table-wrap></p>
+      <p>As seen from the table, on the BRAliBASE II benchmark, RAF attains comparable accuracy to the other methods, achieving either the best or second-best overall accuracy according to MCC on four out of the five datasets. The running time of the method, however, is dramatically faster than the other algorithms, often taking an order of magnitude less time than many of the other programs.</p>
+      <p>We also obtained the dataset used in the benchmarking of the MASTR RNA secondary structure prediction program. For a number of different programs, pre-generated predictions for each input file are available for download on the MASTR website. In addition to scoring these pre-generated predictions, we also generated and scored predictions using Murlet and RAF. The results are shown in <xref ref-type="table" rid="T3">Table 3</xref>. In this benchmark set, RAF obtains the highest overall MCC.
+<table-wrap id="T3" position="float"><label>Table 3.</label><caption><p>Performance comparison on MASTR benchmarking sets. The best number in each column is marked in bold.</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th align="left" rowspan="1" colspan="1">Program</th><th align="left" rowspan="1" colspan="1">SP</th><th align="left" rowspan="1" colspan="1">Sens</th><th align="left" rowspan="1" colspan="1">PPV</th><th align="left" rowspan="1" colspan="1">MCC</th></tr></thead><tbody><tr><td rowspan="1" colspan="1">CLUSTAL W+Alifold</td><td rowspan="1" colspan="1">0.81</td><td rowspan="1" colspan="1">0.57</td><td rowspan="1" colspan="1">0.73</td><td rowspan="1" colspan="1">0.65</td></tr><tr><td rowspan="1" colspan="1">FoldalignM</td><td rowspan="1" colspan="1">0.78</td><td rowspan="1" colspan="1">0.38</td><td rowspan="1" colspan="1"><bold>0.81</bold></td><td rowspan="1" colspan="1">0.55</td></tr><tr><td rowspan="1" colspan="1">LocARNA</td><td rowspan="1" colspan="1">0.75</td><td rowspan="1" colspan="1">0.41</td><td rowspan="1" colspan="1">0.77</td><td rowspan="1" colspan="1">0.56</td></tr><tr><td rowspan="1" colspan="1">MASTR</td><td rowspan="1" colspan="1">0.84</td><td rowspan="1" colspan="1">0.64</td><td rowspan="1" colspan="1">0.73</td><td rowspan="1" colspan="1">0.68</td></tr><tr><td rowspan="1" colspan="1">Murlet</td><td rowspan="1" colspan="1"><bold>0.89</bold></td><td rowspan="1" colspan="1">0.62</td><td rowspan="1" colspan="1">0.78</td><td rowspan="1" colspan="1">0.70</td></tr><tr><td rowspan="1" colspan="1">RNAforester</td><td rowspan="1" colspan="1">0.53</td><td rowspan="1" colspan="1">0.55</td><td rowspan="1" colspan="1">0.55</td><td rowspan="1" colspan="1">0.55</td></tr><tr><td rowspan="1" colspan="1">RNA Sampler</td><td rowspan="1" colspan="1">0.82</td><td rowspan="1" colspan="1">0.65</td><td rowspan="1" colspan="1">0.70</td><td rowspan="1" colspan="1">0.67</td></tr><tr><td rowspan="1" colspan="1">RAF</td><td rowspan="1" colspan="1">0.88</td><td rowspan="1" colspan="1"><bold>0.68</bold></td><td rowspan="1" colspan="1">0.77</td><td rowspan="1" colspan="1"><bold>0.72</bold></td></tr></tbody></table></table-wrap>
+</p>
+      <p>We emphasize, however, that benchmarking results such as these should be taken with a grain of salt; both the BRAliBASE II and MASTR benchmarking sets are extremely restricted in their coverage of the space of RNA families, choosing to focus on a few individual RNA families only. As a result, methods carefully tuned to the benchmarks may perform less well on diverse RNA families not found in either of these benchmarks. By using cross-validation, we improve the chances that RAF's validation results really do indicate reliable out-of-sample performance.</p>
+      <p>We also note that the performance of RAF on particular RNA families is often closely related to the accuracy of the underlying alignment and single-sequence models used to derive folding and alignment constraints. Because the tools involved in the RAF pipeline all rely on automatic parameter learning, RAF allows the possibility of learning custom parameter sets well-suited for predictions on particular RNA families.</p>
+    </sec>
+  </sec>
+  <sec sec-type="discussion" id="SEC4">
+    <title>4 DISCUSSION</title>
+    <p>We presented RAF, a new tool for simultaneous folding and alignment of RNA sequences which exploits sparsity in base pairing and alignment probability matrices and max-margin training in order to achieve faster running times and higher accuracy than previous tools.</p>
+    <p>Besides its speed, one principal advantage of the RAF meth-odology is its use of a flexible scoring function for combining an arbitrary set of functions into a coherent objective function for alignment scoring. The ability to introduce new basis scoring functions into the RAF scoring model means that there remains a rich space of possible features to explore.</p>
+    <p>In addition, the use of the max-margin framework to identify relevant linear combinations of scoring functions has other promising potential applications. For example, Wallace <italic>et al.</italic> (<xref ref-type="bibr" rid="B38">2006</xref>) recently introduced M-Coffee, a meta-algorithm for protein sequence alignment, which combines the results of several different protein sequence alignment programs using the T-Coffee framework. The difficulty of identifying appropriate weights for the various programs used in the M-Coffee scoring scheme (i.e. some heuristically derived tree-based weights the authors tried did not give a significant improvement in accuracy over flat weights), led the authors to rely on a uniform weight model, treating programs known to be more accurate on equal footing with less accurate aligners. The max-margin framework developed in this paper obviates the need for heuristically-derived weights altogether.</p>
+  </sec>
+</body>
+<back>
+  <fn-group>
+    <fn id="FN1">
+      <p><sup>1</sup>We say that a parse <italic>y</italic> of inputs <italic>a</italic> and <italic>b</italic> is <italic>valid</italic> provided that (1) each nucleotide of <italic>a</italic> and <italic>b</italic> base pairs with at most one other nucleotide in the same sequence; (2) each nucleotide aligns with at most one nucleotide in the opposite sequence; (3) neither sequence contains pseudo-knotted base pairings; (4) the alignment of the two sequences does not contain rearrangements or repeats; and (5) all base pairings are conserved.</p>
+    </fn>
+    <fn id="FN2">
+      <p><sup>2</sup>The original CONTRAlign program was designed for protein sequences. We adapted this for RNAs by removing all protein-specific features (e.g. hydrophobicity), modifying the underlying alphabet (A, C, G and U) and simply retraining on the appropriate training set.</p>
+    </fn>
+    <fn id="FN3">
+      <p><sup>3</sup>We note that the method described here bears some relation to the ‘candidate list’ algorithm of Wexler <italic>et al.</italic> (<xref ref-type="bibr" rid="B39">2007</xref>), which maintains sparse lists of potential bifurcation points for single sequence folding. By showing that the number of relevant bifurcation points has a negligible dependence on sequence length, the authors provide an effectively quadratic time algorithm for single-sequence folding. Here, our algorithm also relies on sparsity of bifurcation point candidates when dealing with pairwise alignment and folding, but unlike in the previous algorithm, the candidates are provided explicitly via the constraint set 𝒞.</p>
+    </fn>
+    <fn id="FN4">
+      <p><sup>4</sup>Note that our notation hides the dependencies of the S<monospace>core</monospace> function on each of the input sequences <italic>a</italic><sup>(<italic>i</italic>)</sup> and <italic>b</italic><sup>(<italic>i</italic>)</sup>, and similarly for the unconstrained and constrained space of parses, 𝒴<sup>(<italic>i</italic>)</sup> and <inline-formula><inline-graphic xlink:href="btn177i9.jpg"/></inline-formula>.</p>
+    </fn>
+    <fn id="FN5">
+      <p><sup>5</sup>By default, we used <italic>C</italic>=1. We found that when running the online Pegasos optimization algorithm (<xref ref-type="sec" rid="SEC2.4.3">Section 2.4.3</xref>) for a fixed number of iterations, the resulting generalization performance for RAF is relatively insensitive to the value of <italic>C</italic> used, provided that <italic>C</italic> is not too large.</p>
+    </fn>
+    <fn id="FN6">
+      <p><sup>6</sup>By default, we used γ<sup>FN paired</sup>=10, and γ<sup>FP paired</sup>=γ<sup>FN aligned</sup>=γ<sup>FP aligned</sup>=1 in order to emphasize prediction of correct base pairings.</p>
+    </fn>
+    <fn id="FN7">
+      <p><sup>7</sup>In practice, we found that using cutoffs of ɛ<sub>aligned</sub>∼0.01 and ɛ<sub>paired</sub> ∼ 0.002 gave a good trade-off between speed and accuracy of our algorithm when using CONTRAlign and CONTRAfold; these cutoffs correspond roughly to average sparsity factors of ∼10 each, respectively.</p>
+    </fn>
+    <fn id="FN8">
+      <p><sup>8</sup>That is, <inline-formula><inline-graphic xlink:href="btn177i10.jpg"/></inline-formula> whenever <inline-formula><inline-graphic xlink:href="btn177i11.jpg"/></inline-formula> for some <italic>j</italic><sub>1</sub>&lt;<italic>j</italic>&lt;<italic>j</italic><sub>2</sub>, or <inline-formula><inline-graphic xlink:href="btn177i12.jpg"/></inline-formula> for some <italic>l</italic><sub>1</sub>&lt;<italic>l</italic>&lt;<italic>l</italic><sub>2</sub>.</p>
+    </fn>
+    <fn id="FN9">
+      <p><sup>9</sup>Note that in these bounds, we assume an <italic>O</italic>(<italic>c</italic>) bound on the number of base-pairing partners per position, and an <italic>O</italic>(<italic>d</italic>) bound on the number of aligning partners per position. A weaker condition would be to assume an <italic>O</italic>(<italic>cL</italic>) bound on the total number of candidate base-pairing partners for sequences <italic>a</italic> and <italic>b</italic> and similarly, an <italic>O</italic>(<italic>dL</italic>) bound on the total number of candidate aligned positions; under these conditions, we obtain a worst-case space complexity of <italic>O</italic>(min(<italic>c</italic>,<italic>d</italic>)<sup>2</sup> <italic>L</italic><sup>2</sup>) and a worst case time complexity of <italic>O</italic>(min(<italic>c</italic>,<italic>d</italic>)<sup>2</sup><italic>dL</italic><sup>3</sup>).</p>
+    </fn>
+  </fn-group>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>C.B.D. was supported by an NSF Graduate Research Fellowship. C.S.F. was supported by an A*STAR National Science Scholarship. This material is based in part upon work supported by the NSF under grant number EF-0312459.</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="B1">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Andronescu</surname>
+            <given-names>M</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Efficient parameter estimation for RNA secondary structure prediction</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <fpage>19</fpage>
+        <lpage>28</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B2">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bertsekas</surname>
+            <given-names>DP</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Convex analysis and optimization</article-title>
+        <year>2003</year>
+        <publisher-name>Athena Scientific</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="B3">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brion</surname>
+            <given-names>p</given-names>
+          </name>
+          <name>
+            <surname>Westhof</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Hierarchy and dynamics of RNA folding</article-title>
+        <source>Annu. Rev. Biophys. Biomol. Struct</source>
+        <year>1997</year>
+        <volume>26</volume>
+        <fpage>113</fpage>
+        <lpage>137</lpage>
+        <pub-id pub-id-type="pmid">9241415</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B4">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dalli</surname>
+            <given-names>D</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>STRAL: progressive alignment of non-coding RNA using base pairing probability vectors in quadratic time</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <fpage>1593</fpage>
+        <lpage>1599</lpage>
+        <pub-id pub-id-type="pmid">16613908</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B5">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dieffenbach</surname>
+            <given-names>CW</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>General concepts for PCR primer design</article-title>
+        <source>PCR Methods Appl</source>
+        <year>1993</year>
+        <volume>3</volume>
+        <fpage>30</fpage>
+        <lpage>37</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B6">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Do</surname>
+            <given-names>CB</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>PROBCONS: probabilistic consistency-based multiple sequence alignment</article-title>
+        <source>Genome Res</source>
+        <year>2005</year>
+        <volume>15</volume>
+        <fpage>330</fpage>
+        <lpage>340</lpage>
+        <pub-id pub-id-type="pmid">15687296</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B7">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Do</surname>
+            <given-names>CB</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>CONTRAlign: discriminative training for protein sequence alignment</article-title>
+        <source>RECOMB</source>
+        <year>2006a</year>
+        <fpage>160</fpage>
+        <lpage>174</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B8">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Do</surname>
+            <given-names>CB</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>CONTRAfold: RNA secondary structure prediction without physics-based models</article-title>
+        <source>Bioinformatics</source>
+        <year>2006b</year>
+        <volume>22</volume>
+        <fpage>e90</fpage>
+        <lpage>e98</lpage>
+        <pub-id pub-id-type="pmid">16873527</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B9">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dowell</surname>
+            <given-names>RD</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Efficient pairwise RNA structure prediction and alignment using sequence alignment constraints</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2006</year>
+        <volume>7</volume>
+        <fpage>400</fpage>
+        <pub-id pub-id-type="pmid">16952317</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B10">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Computational genomics of noncoding RNA genes</article-title>
+        <source>Cell</source>
+        <year>2002</year>
+        <volume>109</volume>
+        <fpage>137</fpage>
+        <lpage>140</lpage>
+        <pub-id pub-id-type="pmid">12007398</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B11">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Feng</surname>
+            <given-names>DF</given-names>
+          </name>
+          <name>
+            <surname>Doolittle</surname>
+            <given-names>RF</given-names>
+          </name>
+        </person-group>
+        <article-title>Progressive sequence alignment as a prerequisite to correct phylogenetic trees</article-title>
+        <source>J. Mol. Evol</source>
+        <year>1987</year>
+        <volume>25</volume>
+        <fpage>351</fpage>
+        <lpage>360</lpage>
+        <pub-id pub-id-type="pmid">3118049</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B12">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gardner</surname>
+            <given-names>PP</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A benchmark of multiple sequence alignment programs upon structural RNAs</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <fpage>2433</fpage>
+        <lpage>2439</lpage>
+        <pub-id pub-id-type="pmid">15860779</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B13">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gorodkin</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Finding the most significant common sequence and structure motifs in a set of RNA sequences</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3724</fpage>
+        <lpage>3732</lpage>
+        <pub-id pub-id-type="pmid">9278497</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B14">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gorodkin</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Discovering common stem-loop motifs in unaligned RNA sequences</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>2135</fpage>
+        <lpage>2144</lpage>
+        <pub-id pub-id-type="pmid">11353083</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B15">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Griffiths-Jones</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam: annotating non-coding RNAs in complete genomes</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <fpage>D121</fpage>
+        <lpage>D124</lpage>
+        <pub-id pub-id-type="pmid">15608160</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B16">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Harmanci</surname>
+            <given-names>AO</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Efficient pairwise RNA structure prediction using probabilistic alignment constraints in Dynalign</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2007</year>
+        <volume>8</volume>
+      </element-citation>
+    </ref>
+    <ref id="B17">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hofacker</surname>
+            <given-names>IL</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Fast folding and comparison of RNA secondary structures (The Vienna RNA Package)</article-title>
+        <source>Monatsh. Chem</source>
+        <year>1994</year>
+        <volume>125</volume>
+        <fpage>167</fpage>
+        <lpage>188</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B18">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hofacker</surname>
+            <given-names>IL</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Secondary structure prediction for aligned RNA sequences</article-title>
+        <source>J. Mol. Biol</source>
+        <year>2002</year>
+        <volume>319</volume>
+        <fpage>1059</fpage>
+        <lpage>1066</lpage>
+        <pub-id pub-id-type="pmid">12079347</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B19">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hofacker</surname>
+            <given-names>IL</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Alignment of RNA base pairing probability matrices</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>2222</fpage>
+        <lpage>2227</lpage>
+        <pub-id pub-id-type="pmid">15073017</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B20">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Holmes</surname>
+            <given-names>I</given-names>
+          </name>
+        </person-group>
+        <article-title>Accelerated probabilistic inference of RNA structure evolution</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2005</year>
+        <volume>6</volume>
+      </element-citation>
+    </ref>
+    <ref id="B21">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kiryu</surname>
+            <given-names>H</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Murlet: a practical multiple alignment tool for structural RNA sequences</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <fpage>1588</fpage>
+        <lpage>1598</lpage>
+        <pub-id pub-id-type="pmid">17459961</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B22">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Knudsen</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Hein</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Pfold: RNA secondary structure prediction using stochastic context-free grammars</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>3423</fpage>
+        <lpage>3428</lpage>
+        <pub-id pub-id-type="pmid">12824339</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B23">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lindgreen</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>MASTR: multiple alignment and structure prediction of non-coding RNAs using simulated annealing</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <fpage>3304</fpage>
+        <lpage>3311</lpage>
+        <pub-id pub-id-type="pmid">18006551</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B24">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mathews</surname>
+            <given-names>DH</given-names>
+          </name>
+          <name>
+            <surname>Turner</surname>
+            <given-names>DH</given-names>
+          </name>
+        </person-group>
+        <article-title>Dynalign: an algorithm for finding the secondary structure common to two RNA sequences</article-title>
+        <source>J. Mol. Biol</source>
+        <year>2002</year>
+        <volume>317</volume>
+        <fpage>191</fpage>
+        <lpage>203</lpage>
+        <pub-id pub-id-type="pmid">11902836</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B25">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mathews</surname>
+            <given-names>DH</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Expanded sequence dependence of thermodynamic parameters improves prediction of RNA secondary structure</article-title>
+        <source>J. Mol. Biol</source>
+        <year>1999</year>
+        <volume>288</volume>
+        <fpage>911</fpage>
+        <lpage>940</lpage>
+        <pub-id pub-id-type="pmid">10329189</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B26">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Matthews</surname>
+            <given-names>BW</given-names>
+          </name>
+        </person-group>
+        <article-title>Comparison of predicted and observed secondary structure of T4 phage lysozyme</article-title>
+        <source>Biochim. Biophys. Acta</source>
+        <year>1975</year>
+        <volume>405</volume>
+        <fpage>442</fpage>
+        <lpage>451</lpage>
+        <pub-id pub-id-type="pmid">1180967</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B27">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McCaskill</surname>
+            <given-names>JS</given-names>
+          </name>
+        </person-group>
+        <article-title>The equilibrium partition function and base pair binding probabilities for RNA secondary structure</article-title>
+        <source>Biopolymers</source>
+        <year>1990</year>
+        <volume>29</volume>
+        <fpage>1105</fpage>
+        <lpage>1119</lpage>
+        <pub-id pub-id-type="pmid">1695107</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B28">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sankoff</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Simultaneous solution of the RNA folding, alignment and protosequence problems</article-title>
+        <source>SIAM J. Appl. Math</source>
+        <year>1985</year>
+        <volume>45</volume>
+        <fpage>810</fpage>
+        <lpage>825</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B29">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Shalev-Shwartz</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Singer</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>Logarithmic regret algorithms for strongly convex repeated games, 2007</article-title>
+        <year>2007</year>
+      </element-citation>
+    </ref>
+    <ref id="B30">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Shalev-Shwartz</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Pegasos: Primal estimated sub-gradient solver for svm</article-title>
+        <source>ICML</source>
+        <year>2007</year>
+        <fpage>807</fpage>
+        <lpage>814</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B31">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sneath</surname>
+            <given-names>PH</given-names>
+          </name>
+          <name>
+            <surname>Sokal</surname>
+            <given-names>RR</given-names>
+          </name>
+        </person-group>
+        <article-title>Numerical taxonomy</article-title>
+        <source>Nature</source>
+        <year>1962</year>
+        <volume>193</volume>
+        <fpage>855</fpage>
+        <lpage>860</lpage>
+        <pub-id pub-id-type="pmid">13914561</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B32">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tabei</surname>
+            <given-names>Y</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>SCARNA: fast and accurate structural alignment of RNA sequences by matching fixed-length stem fragments</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <fpage>1723</fpage>
+        <lpage>1729</lpage>
+        <pub-id pub-id-type="pmid">16690634</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B33">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Taskar</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Max-margin markov networks</article-title>
+        <source>NIPS 16</source>
+        <year>2003</year>
+      </element-citation>
+    </ref>
+    <ref id="B34">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Thompson</surname>
+            <given-names>JD</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A comprehensive comparison of multiple sequence alignment programs</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <fpage>2682</fpage>
+        <lpage>2690</lpage>
+        <pub-id pub-id-type="pmid">10373585</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B35">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Torarinsson</surname>
+            <given-names>E</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Thousands of corresponding human and mouse genomic regions unalignable in primary sequence contain common RNA structure</article-title>
+        <source>Genome Res</source>
+        <year>2006</year>
+        <volume>16</volume>
+        <fpage>885</fpage>
+        <lpage>889</lpage>
+        <pub-id pub-id-type="pmid">16751343</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B36">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Torarinsson</surname>
+            <given-names>E</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Multiple structural alignment and clustering of RNA sequences</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <fpage>926</fpage>
+        <lpage>932</lpage>
+        <pub-id pub-id-type="pmid">17324941</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B37">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Touzet</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Perriquet</surname>
+            <given-names>O</given-names>
+          </name>
+        </person-group>
+        <article-title>CARNAC: folding families of related RNAs</article-title>
+        <source>Nucleic Acids Res., 32 (Web Server)</source>
+        <year>2004</year>
+        <fpage>W142</fpage>
+        <lpage>W145</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B38">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wallace</surname>
+            <given-names>IM</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>M-Coffee: combining multiple sequence alignment methods with T-Coffee</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2006</year>
+        <volume>34</volume>
+        <fpage>1692</fpage>
+        <lpage>1699</lpage>
+        <pub-id pub-id-type="pmid">16556910</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B39">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wexler</surname>
+            <given-names>Y</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A study of accessible motifs and RNA folding complexity</article-title>
+        <source>J. Comput. Biol</source>
+        <year>2007</year>
+        <volume>14</volume>
+        <fpage>856</fpage>
+        <lpage>872</lpage>
+        <pub-id pub-id-type="pmid">17691898</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B40">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Will</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Inferring noncoding RNA families and classes by means of genome-scale structure-based clustering</article-title>
+        <source>PLoS Comput. Biol</source>
+        <year>2007</year>
+        <volume>3</volume>
+      </element-citation>
+    </ref>
+    <ref id="B41">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Xu</surname>
+            <given-names>X</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>RNA Sampler: a new sampling based algorithm for common RNA secondary structure prediction and structural alignment</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <fpage>1883</fpage>
+        <lpage>1891</lpage>
+        <pub-id pub-id-type="pmid">17537756</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+  <app-group>
+    <app id="APP1">
+      <title>APPENDIX</title>
+      <sec>
+        <title>A.1 RAF features</title>
+        <p>The features used by the RAF program, as evaluated in this article, consist of alignment features, <inline-formula><inline-graphic xlink:href="btn177i13.jpg"/></inline-formula> and pairing features, <inline-formula><inline-graphic xlink:href="btn177i14.jpg"/></inline-formula>. Specifically, the alignment features, <bold>φ</bold><sup>aligned</sup>(<italic>i</italic>, <italic>k</italic>)∈ℝ<sup>4</sup> for a candidate alignment match (<italic>a</italic><sub><italic>i</italic></sub>, <italic>b</italic><sub><italic>k</italic></sub>) are
+<disp-formula id="M8"><label>(A1)</label><graphic xlink:href="btn177m8"/></disp-formula>
+The pairing features, <bold>φ</bold><sup>paired</sup>(<italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic>)∈ℝ<sup>4</sup> for a conserved base pairing 〈(<italic>a</italic><sub><italic>i</italic></sub>, <italic>a</italic><sub><italic>j</italic></sub>), (<italic>b</italic><sub><italic>k</italic></sub>, <italic>b</italic><sub><italic>l</italic></sub>)〉 are given by <bold>φ</bold><sup>paired</sup>(<italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic>)=<bold>φ</bold><sup>paired</sup>(<italic>a</italic><sub><italic>i</italic></sub>, <italic>a</italic><sub><italic>j</italic></sub>)+<bold>φ</bold><sup>paired</sup>(<italic>b</italic><sub><italic>k</italic></sub>, <italic>b</italic><sub><italic>l</italic></sub>). In turn, <bold>φ</bold><sup>paired</sup>(<italic>a</italic><sub><italic>i</italic></sub>, <italic>a</italic><sub><italic>j</italic></sub>)∈ℝ<sup>4</sup> is given by
+<disp-formula id="M9"><label>(A2)</label><graphic xlink:href="btn177m9"/></disp-formula>
+and similarly for <bold>φ</bold><sup>paired</sup>(<italic>b</italic><sub><italic>k</italic></sub>, <italic>b</italic><sub><italic>l</italic></sub>). Thus, the model contains a total of eight features whose weights must be learned. Here, the posterior probabilities for aligned positions and base-pairing positions are computed using the CONTRAlign (Do <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2006a</xref>) and CONTRAfold (Do <italic>et al.</italic>, <xref ref-type="bibr" rid="B8">2006b</xref>) programs, respectively.</p>
+      </sec>
+      <sec>
+        <title>B.1 The RAF inference engine</title>
+        <p>In the section, we describe the RAF inference engine for fast approximate simultaneous alignment and consensus folding for pairs of sequences. In particular, we first present some exact recurrences for alignment and folding, and then use restrictions on the set of allowed base pairings and aligned positions to achieve an improvement in computational complexity.</p>
+        <sec>
+          <title>B.1.1 Recurrences</title>
+          <p>First, we describe a straightforward <italic>O</italic>(<italic>L</italic><sup>6</sup>) dynamic programming recurrence for computing the optimal simultaneous alignment and consensus fold for a pair of sequences <italic>a</italic> and <italic>b</italic>.</p>
+          <p>To compute the optimal parse of <italic>a</italic> and <italic>b</italic>, we construct 2 four-dimensional matrices, <italic>S</italic> and <italic>D</italic>. Here, <italic>S</italic><sub><italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic></sub> denotes the optimal score for aligning and folding <italic>a</italic><sub><italic>i</italic>+1</sub><italic>a</italic><sub><italic>i</italic>+2</sub>…<italic>a</italic><sub><italic>j</italic></sub> with <italic>b</italic><sub><italic>k</italic>+1</sub><italic>b</italic><sub><italic>k</italic>+2</sub>…<italic>b</italic><sub><italic>l</italic></sub>. Furthermore, <italic>D</italic><sub><italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic></sub> denotes the optimal score for aligning and folding these same substrings, subject to the additional constraint that the outermost positions (<italic>a</italic><sub><italic>i</italic>+1</sub>,<italic>a</italic><sub><italic>j</italic></sub>) and (<italic>b</italic><sub><italic>k</italic>+1</sub>,<italic>b</italic><sub><italic>l</italic></sub>) form conserved base pairs.</p>
+          <p>For 0≤<italic>i</italic>≤<italic>j</italic>≤|<italic>a</italic>| and 0≤<italic>k</italic>≤<italic>l</italic>≤|<italic>b</italic>|, we have
+<disp-formula id="M10"><label>(B1)</label><graphic xlink:href="btn177m10"/></disp-formula>
+and for 0≤<italic>i</italic>&lt;<italic>i</italic>+2≤<italic>j</italic>≤|<italic>a</italic>| and 0≤<italic>k</italic>&lt;<italic>k</italic>+2≤<italic>l</italic>≤|<italic>b</italic>|,
+<disp-formula id="M11"><label>(B2)</label><graphic xlink:href="btn177m11"/></disp-formula>
+Here, recurrence (B1) takes the form of a standard Needleman-Wunsch procedure for aligning the substring <italic>a</italic><sub><italic>i</italic>+1</sub><italic>a</italic><sub><italic>i</italic>+2</sub>… <italic>a</italic><sub><italic>j</italic></sub> with <italic>b</italic><sub><italic>k</italic>+1</sub><italic>b</italic><sub><italic>k</italic>+2</sub>…<italic>b</italic><sub><italic>l</italic></sub>, with an extra case to handle bifurcations in the base-pairing structure of the RNAs. At the end of the recurrence, <italic>S</italic><sub>0</sub>,|<italic>a</italic>|;0,|<italic>b</italic>| gives the score of the optimal alignment and consensus fold of the input sequences <italic>a</italic> and <italic>b</italic>. By using traceback pointers in the standard way, the optimal parse can be recovered easily once the recurrence has been evaluated.</p>
+          <p>In the next section, we explore how these recurrences may be sped up considerably if a constraint set 𝒞 of allowed base pairings and aligned positions is known ahead of time. For complexity analysis, we assume <italic>O</italic>(<italic>c</italic>) and <italic>O</italic>(<italic>d</italic>) bounds on the number of candidate base pairing and alignment partners per sequence position, respectively.</p>
+        </sec>
+        <sec>
+          <title>B.1.2 Exploiting base-pairing sparsity</title>
+          <p>LocARNA (Will <italic>et al.</italic>, <xref ref-type="bibr" rid="B40">2007</xref>) was the first program for simultaneous alignment and folding of RNA to take advantage of base pairing sparsity in a manner that significantly improved in both running time and memory usage. In this section, we recount the innovations of LocARNA as they are applied in RAF. In the next section, we extend these ideas to also account for alignment sparsity.</p>
+          <p>First, observe that since all parses in 𝒴<sub>𝒞</sub> contain only conserved base pairings, the evaluation of (<xref ref-type="disp-formula" rid="M11">B2</xref>) may be restricted to only those <italic>D</italic><sub><italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic></sub> cells for which both (<italic>a</italic><sub><italic>i</italic>+1</sub>,<italic>a</italic><sub><italic>j</italic></sub>)∈𝒞 and (<italic>b</italic><sub><italic>k</italic>+1</sub>,<italic>b</italic><sub><italic>l</italic></sub>)∈𝒞. Similarly, the inner loop for considering bifurcations in (<xref ref-type="disp-formula" rid="M10">B1</xref>) may also be restricted to only those <italic>j</italic>′ and <italic>l</italic>′ for which both (<italic>a</italic><sub><italic>j</italic>′+1</sub>,<italic>a</italic><sub><italic>j</italic></sub>)∈𝒞 and (<italic>b</italic><sub><italic>l</italic>′+1</sub>,<italic>b</italic><sub><italic>l</italic></sub>)∈𝒞. Since the bottleneck in the dynamic programming complexity is the number of executions of the innermost loop in (<xref ref-type="disp-formula" rid="M10">B1</xref>), it follows that restricting the considered bifurcations in the manner described above yields an <italic>O</italic>(<italic>c</italic><sup>2</sup><italic>L</italic><sup>4</sup>) running time; in particular, for each <italic>i</italic> and <italic>k</italic>, computing all values of <italic>S</italic><sub><italic>i</italic>,•;<italic>k</italic>,•</sub> takes <italic>O</italic>(<italic>c</italic><sup>2</sup><italic>L</italic><sup>2</sup>) time as each entry of the <italic>D</italic> matrix is touched at most once. This optimization was originally implemented as part of the LocARNA (Will <italic>et al.</italic>, <xref ref-type="bibr" rid="B40">2007</xref>) and FoldAlignM (Torarinsson <italic>et al.</italic>, <xref ref-type="bibr" rid="B36">2007</xref>) algorithms.</p>
+          <p>Second, consider the task of computing all entries in the <italic>D</italic> matrix. From (B2), we see that the values <italic>D</italic><sub><italic>i</italic>,•;<italic>k</italic>,•</sub> depend only on <italic>S</italic><sub><italic>i</italic>+1,•;<italic>k</italic>+1,•</sub>. Similarly, from (<xref ref-type="disp-formula" rid="M10">B1</xref>), the values <italic>S</italic><sub><italic>i</italic>+1,•;<italic>k</italic>+1,•</sub> depend only on <italic>D</italic><sub><italic>j</italic>′,<italic>j</italic>;<italic>l</italic>′,<italic>l</italic></sub> for <italic>j</italic>′≥<italic>i</italic>+1 and <italic>l</italic>′≥<italic>k</italic>+1. Thus, ordering computations in the following way allows the recurrences to be evaluated in a single pass:
+<disp-formula><graphic xlink:href="btn177um5"/></disp-formula>
+Furthermore, since <italic>S</italic><sub><italic>i</italic>+1,•;<italic>k</italic>+1,•</sub> is only needed while computing <italic>D</italic><sub><italic>i</italic>,•;<italic>k</italic>,•</sub> (but not for any later values of <italic>i</italic> and <italic>k</italic>), we need only to retain one <italic>S</italic><sub><italic>i</italic>+1,•;<italic>k</italic>+1,•</sub> matrix in memory at any given time while computing the <italic>D</italic> matrix. This observation was originally incorporated in the LocARNA program of Will <italic>et al.</italic>, (<xref ref-type="bibr" rid="B40">2007</xref>).</p>
+          <p>Finally, observe that once the <italic>D</italic> matrix has been computed, the score <italic>S</italic><sub>0,|<italic>a</italic>|;0,|<italic>b</italic>|</sub> of the optimal parse is easily obtainable in <italic>O</italic>(<italic>c</italic><sup>2</sup><italic>L</italic><sup>2</sup>) time by recomputing <italic>S</italic><sub>0,•;0,•</sub>. Likewise, computing the full traceback requires at most <italic>O</italic>(<italic>c</italic><sup>2</sup><italic>L</italic><sup>3</sup>) time, negligible relative to the cost of computing the <italic>D</italic> matrix itself. Thus, we obtain an overall <italic>O</italic>(<italic>c</italic><sup>2</sup><italic>L</italic><sup>4</sup>) time complexity with <italic>O</italic>(<italic>c</italic><sup>2</sup><italic>L</italic><sup>2</sup>) space complexity (for storing the <italic>D</italic> matrix).</p>
+        </sec>
+        <sec>
+          <title>B.1.3 Exploiting alignment sparsity</title>
+          <p>To exploit sparsity in the set of allowed aligned positions in 𝒞, we again use the strategy of limiting the DP region. We accomplish this by first considering the simpler problem of computing the reduced DP region 𝒜 (known as the <italic>alignment envelope</italic>) for pairwise sequence alignment without folding scores. Using 𝒜, we then define a reduced DP region for our original alignment and folding task.</p>
+          <p>For the first step, consider the following restatement of recurrence (<xref ref-type="disp-formula" rid="M10">B1</xref>) using the notation <inline-formula><inline-graphic xlink:href="btn177i15.jpg"/></inline-formula>, where we have omitted the case involving bifurcations/base pairing:
+<disp-formula><graphic xlink:href="btn177um6"/></disp-formula>
+As before, <inline-formula><inline-graphic xlink:href="btn177i16.jpg"/></inline-formula> represents the optimal score of aligning <italic>a</italic><sub>1</sub><italic>a</italic><sub>2</sub>…<italic>a</italic><sub><italic>j</italic></sub> to <italic>b</italic><sub>1</sub> <italic>b</italic><sub>2</sub> … <italic>b</italic><sub><italic>l</italic></sub>. Here, our goal is to find 𝒜, the minimal set of cells containing no holes,<xref ref-type="fn" rid="FN8"><sup>8</sup></xref> such that for every parse <italic>y</italic>∈𝒴<sub>𝒞</sub>, there exists some DP path through 𝒜 corresponding to an alignment with the same set of aligned positions. Under the assumption that 𝒜 contains no holes, we can represent 𝒜 by keeping track of its boundaries: for each <italic>j</italic>∈{0,1,…,|<italic>a</italic>|}, let 〈{𝒜}.<sc>First</sc>[<italic>j</italic>], 𝒜.<sc>Last</sc>[<italic>j</italic>]〉 denote the first and last positions <italic>l</italic>∈{0,1,…,|<italic>b</italic>|} such that <inline-formula><inline-graphic xlink:href="btn177i17.jpg"/></inline-formula>.</p>
+          <p>We compute these boundaries in linear time using the following procedure. First, we adjust the boundaries to include <inline-formula><inline-graphic xlink:href="btn177i18.jpg"/></inline-formula> and <inline-formula><inline-graphic xlink:href="btn177i19.jpg"/></inline-formula> for each candidate aligning pair (<italic>a</italic><sub><italic>j</italic></sub>,<italic>b</italic><sub><italic>l</italic></sub>)∈𝒞. In addition, we also include the corners <inline-formula><inline-graphic xlink:href="btn177i20.jpg"/></inline-formula> and <inline-formula><inline-graphic xlink:href="btn177i21.jpg"/></inline-formula> in 𝒜. Finally, we force the boundaries of 𝒜 to satisfy the monotonicity conditions
+<disp-formula><graphic xlink:href="btn177um7"/></disp-formula>
+in such a way that guarantees all DP cells <inline-formula><inline-graphic xlink:href="btn177i22.jpg"/></inline-formula> are accessible via some DP path from <inline-formula><inline-graphic xlink:href="btn177i23.jpg"/></inline-formula> to <inline-formula><inline-graphic xlink:href="btn177i24.jpg"/></inline-formula>.</p>
+          <p>For the second step, we define the reduced DP region for our original simultaneous alignment and folding recurrences as the set ℛ of all positions <italic>S</italic><sub><italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic></sub> such that <inline-formula><inline-graphic xlink:href="btn177i25.jpg"/></inline-formula> and <inline-formula><inline-graphic xlink:href="btn177i26.jpg"/></inline-formula>. To use this reduced DP region ℛ, then, we simply force <italic>S</italic><sub><italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic></sub>=−∞ for all <italic>S</italic><sub><italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic></sub> ∉ ℛ. Under this restriction, we can reduce the amount of computation performed in the recurrence (<xref ref-type="disp-formula" rid="M10">B1</xref>) by iterating only over cells <italic>S</italic><sub><italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic></sub>∈ℛ, and similarly, restricting the evaluation of the <italic>D</italic> matrix in (<xref ref-type="disp-formula" rid="M11">B2</xref>) to only those cells <italic>D</italic><sub><italic>i</italic>, <italic>j</italic>; <italic>k</italic>, <italic>l</italic></sub> for which <italic>S</italic><sub><italic>i</italic>+1,<italic>j</italic>−1;<italic>k</italic>+1,l−1</sub>∈ℛ. To ensure that each allowed parse belongs to 𝒴<sub>𝒞</sub>, we could penalize any base pairing or aligned position not in 𝒞 by −∞. In practice, we instead augment 𝒞 to include all aligned matches allowed by ℛ, since this can be done at no increase in computational complexity.</p>
+          <p>To analyze the new computational complexity of the algorithm, we begin by bounding the size of <italic>D</italic> matrix in two different ways. First, for each of the <italic>O</italic>(<italic>cL</italic>) base pairs (<italic>a</italic><sub><italic>i</italic></sub>, <italic>a</italic><sub><italic>j</italic></sub>)∈𝒞, there are <italic>O</italic>(<italic>d</italic>) aligning partners for <italic>a</italic><sub><italic>i</italic></sub> and <italic>O</italic>(<italic>d</italic>) aligning partners for <italic>a</italic><sub><italic>j</italic></sub>, giving a total size of <italic>O</italic>(<italic>cd</italic><sup>2<italic>L</italic></sup>). Alternatively, for each of the <italic>O</italic>(<italic>dL</italic>) aligning pairs (<italic>a</italic><sub><italic>i</italic></sub>, <italic>b</italic><sub><italic>k</italic></sub>)∈𝒞, there are <italic>O</italic>(<italic>c</italic>) base-pairing partners for <italic>a</italic><sub><italic>i</italic></sub> and <italic>O</italic>(<italic>c</italic>) base-pairing partners for <italic>b</italic><sub><italic>k</italic></sub>, giving a total size of <italic>O</italic>(<italic>c</italic><sup>2<italic>dL</italic></sup>). Thus, the size of the <italic>D</italic> matrix is <italic>O</italic>(min(<italic>c</italic>,<italic>d</italic>)·<italic>cdL</italic>).</p>
+          <p>As in Section B.1.2, the space complexity of the algorithm is dominated by cost of storing the <italic>D</italic> matrix, and hence, is <italic>O</italic>(min(<italic>c</italic>,<italic>d</italic>)·<italic>cdL</italic>). Similarly, the time complexity can be estimated as the number of evaluations of the innermost loop in the bifurcation case of (<xref ref-type="disp-formula" rid="M10">B1</xref>). Since the innermost loop touches each entry of the <italic>D</italic> matrix at most once for each <italic>i</italic> and <italic>k</italic>, and since there are <italic>O</italic>(<italic>dL</italic>) choices of (<italic>a</italic><sub><italic>i</italic></sub>, <italic>b</italic><sub><italic>k</italic></sub>)∈𝒜, it follows that the time complexity of the algorithm is <italic>O</italic>(min(<italic>c</italic>,<italic>d</italic>)·<italic>cd</italic><sup>2</sup><italic>L</italic><sup>2</sup>).<xref ref-type="fn" rid="FN9"><sup>9</sup></xref></p>
+        </sec>
+      </sec>
+      <sec>
+        <title>C.1 Norm bound</title>
+        <p>In this section, we derive a bound on the maximum norm of the optimal parameter vector <bold>w</bold>* for (<xref ref-type="disp-formula" rid="M4">4</xref>). From standard arguments (see, e.g. Taskar <italic>et al.</italic>, <xref ref-type="bibr" rid="B33">2003</xref>), the dual optimization problem is
+<disp-formula><graphic xlink:href="btn177um8"/></disp-formula>
+where
+<disp-formula><graphic xlink:href="btn177um9"/></disp-formula>
+By strong duality, for any solutions (<bold>w</bold><sup>*</sup>,<bold>ξ</bold><sup>*</sup>) and <bold>α</bold><sup>*</sup> of the primal and dual optimization problems, respectively, the values of the primal and dual objectives must be equal, i.e.,
+<disp-formula id="M12"><label>(C1)</label><graphic xlink:href="btn177m12"/></disp-formula>
+Now, suppose that <italic>D</italic><sub><italic>i</italic></sub>∈ℝ for <italic>i</italic>=1,…,<italic>m</italic> satisfy
+<disp-formula id="M13"><label>(C2)</label><graphic xlink:href="btn177m13"/></disp-formula>
+In the case of the RAF loss function, for example, we can use
+<disp-formula><graphic xlink:href="btn177um10"/></disp-formula>
+Then the KKT optimality condition <bold>w</bold><sup>*</sup>=<bold>w</bold>(<bold>α</bold><sup>*</sup>), the primal constraint that <inline-formula><inline-graphic xlink:href="btn177i27.jpg"/></inline-formula> for <italic>i</italic>=1,…,<italic>m</italic>, and (<xref ref-type="disp-formula" rid="M12">C1</xref>) imply that
+<disp-formula><graphic xlink:href="btn177um11"/></disp-formula>
+Therefore, <inline-formula><inline-graphic xlink:href="btn177i28.jpg"/></inline-formula>. ▪</p>
+      </sec>
+    </app>
+  </app-group>
+</back>

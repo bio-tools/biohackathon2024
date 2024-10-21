@@ -1,0 +1,1042 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3218665</article-id>
+    <article-id pub-id-type="publisher-id">gb-2010-11-10-r99</article-id>
+    <article-id pub-id-type="pmid">20932289</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2010-11-10-r99</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Method</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Improved variant discovery through local re-alignment of short-read next-generation sequencing data using SRMA</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Homer</surname>
+          <given-names>Nils</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <xref ref-type="aff" rid="I3">3</xref>
+        <email>nhomer@cs.ucla.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Nelson</surname>
+          <given-names>Stanley F</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>snelson@ucla.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Computer Science, University of California - Los Angeles, Boelter Hall, Los Angeles, CA 90095, USA</aff>
+    <aff id="I2"><label>2</label>Department of Human Genetics, David Geffen School of Medicine, University of California - Los Angeles, 695 Charles Young Drive South, Los Angeles, CA 90025, USA</aff>
+    <aff id="I3"><label>3</label>Current address: Ion Torrent, Life Technologies, 7000 Shoreline Court, South San Francisco, CA 94080, USA</aff>
+    <pub-date pub-type="ppub">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>8</day>
+      <month>10</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <issue>10</issue>
+    <fpage>R99</fpage>
+    <lpage>R99</lpage>
+    <history>
+      <date date-type="received">
+        <day>26</day>
+        <month>6</month>
+        <year>2010</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>25</day>
+        <month>8</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>8</day>
+        <month>10</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Homer and Nelson; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Homer and Nelson; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an open access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/2010/11/10/R99"/>
+    <abstract>
+      <p>A primary component of next-generation sequencing analysis is to align short reads to a reference genome, with each read aligned independently. However, reads that observe the same non-reference DNA sequence are highly correlated and can be used to better model the true variation in the target genome. A novel short-read micro re-aligner, SRMA, that leverages this correlation to better resolve a consensus of the underlying DNA sequence of the targeted genome is described here.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Whole-genome human re-sequencing is now feasible using next generation sequencing technology. Technologies such as those produced by Illumina, Life, and Roche 454 produce millions to billions of short DNA sequences that can be used to reconstruct the diploid sequence of a human genome. Ideally, such data alone could be used to <italic>de novo </italic>assemble the genome in question [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B6">6</xref>]. However, the short read lengths (25 to 125 bases), the size and repetitive nature of the human genome (3.2 × 10<sup>9 </sup>bases), as well as the modest error rates (approximately 1% per base) make such <italic>de novo </italic>assembly of mammalian genomes intractable. Instead, short-read sequence alignment algorithms have been developed to compare each short sequence to a reference genome [<xref ref-type="bibr" rid="B7">7</xref>-<xref ref-type="bibr" rid="B12">12</xref>]. Observing multiple reads that differ similarly from the reference sequence in their respective alignments identifies variants. These alignment algorithms have made it possible to accurately and efficiently catalogue many types of variation between human individuals and those causative for specific diseases.</p>
+    <p>Because alignment algorithms map each read independently to the reference genome, alignment artifacts could result, such that SNPs, insertions, and deletions are improperly placed relative to their true location. This leads to local alignment errors due to a combination of sequencing error, equivalent positions of the variant being equally likely, and adjacent variants or nearby errors driving misalignment of the local sequence. These local misalignments lead to false positive variant detection, especially at apparent heterozygous positions. For example, insertions and deletions towards the ends of reads are difficult to anchor and resolve without the use of multiple reads. In some cases, strict quality and filtering thresholds are used to overcome the false detection of variants, at the cost of reducing power [<xref ref-type="bibr" rid="B13">13</xref>]. Since each read represents an independent observation of only one of two possible haplotypes (assuming a diploid genome), multiple read observations could significantly reduce false-positive detection of variants. Algorithms to solve the multiple sequence alignment problems typically compare multiple sequences to one another in the final step of fragment assembly. These algorithms use graph-based approaches, including weighted sequence graphs [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B15">15</xref>] and partial order graphs [<xref ref-type="bibr" rid="B16">16</xref>,<xref ref-type="bibr" rid="B17">17</xref>]. Read re-alignment methods also have been developed [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B18">18</xref>] for finishing fragment assembly but have not been applied to the short reads produced by next generation sequencing technologies.</p>
+    <p>In this study, a new method to perform local re-alignment of short reads is described, called SRMA: the Short-Read Micro re-Aligner. Short-read sequence alignment to a reference genome and <italic>de novo </italic>assembly are two approaches to reconstruct individual human genomes. Our proposed method has the advantage of utilizing previously developed short-read mapping as the input, coupled with an assembly-inspired approach applied over discrete small windows of the genome whereby multiple reads are used to identify a local consensus sequence. The proposed method overcomes problems specific to alignment and genome-wide assembly, respectively, with the former treating reads independently and the latter requiring nearly error-free data. Unlike <italic>de novo </italic>assembly, SRMA only finds a novel sequence variant if at least one read in the initial alignment previously observed this variant. <italic>De novo </italic>assembly algorithms, such as ABySS and Velvet [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B5">5</xref>,<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B19">19</xref>], could be applied to reads aligned to local regions of the genome to produce a local consensus sequence, which would need to be put in context to the reference sequence. This approach may still show low sensitivity due to the moderate error found in the data and has not been implemented in practice. For this reason, an important contribution of SRMA is to automate the return of alignments for each read relative to the reference.</p>
+    <p>SRMA uses the prior alignments from a standard sequence alignment algorithm to build a variant graph in defined local regions. The locally mapped reads in their original form are then re-aligned to this variant graph to produce new local alignments. This relies on the presence of at least one read that observes the correct variant, which is subsequently used to inform the alignments of the other overlapping reads. Observed variants are incorporated into a variant graph, which allows for alignments to be re-positioned using information provided by the multiple reads overlapping a given base. We demonstrate through human genomic DNA simulations and empirical data that SRMA improved sensitivity to correctly identify variants and to reduce false positive variant detection.</p>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <sec>
+      <title>Local re-alignment of simulated data</title>
+      <p>To assess the performance of local re-alignment on a dataset with a known diploid sequence, two whole genome human re-sequencing experiments were simulated (see Materials and methods) to generate 1 billion 50 base-paired end reads for a total of 100 Gb of genomic sequence representing a mean haploid coverage of 15 × for either Illumina or ABI SOLiD data. SNPs, small deletions, and small insertions were introduced to provide known variants and test improvements of SRMA for their discovery genome-wide, as described in the Materials and methods. The data were initially aligned with BWA (the Burrows Wheeler Alignment tool) [<xref ref-type="bibr" rid="B9">9</xref>] and then locally re-aligned with SRMA. For ABI SOLiD data, SRMA is able to utilize the original color sequence and qualities in their encoded form. However, BWA does not retain this information, so that only the decoded base sequence and base qualities produced by BWA were used by SRMA. The aligned reads were used for variant calling before and after local SRMA re-alignment by implementing the MAQ consensus model within SAMtools [<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B20">20</xref>].</p>
+      <p>In Figure <xref ref-type="fig" rid="F1">1</xref>, we plot receiver operator characteristic (ROC) curves for the detection of the known SNPs, deletions, and insertions. For all types of variants, performing local re-alignment with SRMA greatly reduced the false-positive rate while maintaining the same level or increased sensitivity prior to SRMA. The false-positive reduction is more evident for indels, largely due to the ambiguity of placing indels relative to the reference sequence based on the initial gapped alignment. At this level of mean coverage, false discovery can be reduced to a rate of 10<sup>-6 </sup>for all variants while maintaining &gt;80% power (sensitivity). We note that because inserted bases are directly observed, insertions are more powerfully corrected to the actual sequence relative to deletions. This may help explain the relatively greater improvement in the false positive rate for insertions over deletions at comparable sensitivities.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Local re-alignment receiver operator characteristic curves for simulated human genome re-sequencing data</bold>. A synthetic diploid human genome with SNPs, deletions, and insertions was created from a reference human genome (hg18) as described in main text. One billion paired 50-mer reads for both base space and color space were simulated from this synthetic genome to assess the true positive and false positive rates of variant calling after re-sequencing. An increasing SNP quality filter was used to generate each curve. The simulated dataset was aligned with BWA (v.0.5.7-5) with the default parameters [<xref ref-type="bibr" rid="B9">9</xref>]. The alignments from BWA and SRMA were variant called using the MAQ consensus model implemented in SAMtools (v.0.1.17) using the default settings [<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B20">20</xref>]. For the simulated datasets, the resulting variant calls were assessed for accuracy by comparing the called variants against the known introduced sites of variation. The BWA alignments were locally re-aligned with SRMA with variant inclusive settings (<italic>c </italic>= 2 and <italic>p </italic>= 0.1).</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-10-r99-1"/>
+      </fig>
+      <p>These simulations assumed ideal conditions: no genomic contamination, a simple error model with a modest uniform error rate, and a simplification that includes only a subset of all possible variants (SNPs, deletions, and insertions). Nevertheless, the false positive rates achieved after variant calling with no filtering criteria applied is striking and indicates that local re-alignment can be a powerful tool to improve variant calling from short read sequencing. Longer insertions (&gt;5 bp) are not sufficiently examined in the simulation model. However, we note that longer indels are supported by SRMA, but SRMA requires that the initial global alignment permits the sensitive alignment of reads with longer indels to the approximate correct genomic position.</p>
+    </sec>
+    <sec>
+      <title>Local re-alignment of empirical data</title>
+      <p>To assess the performance of local re-alignment with SRMA on a real-world dataset, a previously published whole-genome human cancer cell line (U87MG) was used (SRA009912.1) [<xref ref-type="bibr" rid="B13">13</xref>]. This dataset was aligned with BFAST (Blat-like Fast Accurate Search Tool) [<xref ref-type="bibr" rid="B7">7</xref>], which reported the original color sequence and color qualities accompanying each alignment. This allows local re-alignment to be performed in color space by adapting the existing two-base encoding algorithm to work on the variant graph structure [<xref ref-type="bibr" rid="B12">12</xref>,<xref ref-type="bibr" rid="B21">21</xref>]. The aligned sequences were then used for variant-calling with SAMtools [<xref ref-type="bibr" rid="B20">20</xref>], which also reported the zygosity of each call.</p>
+      <p>In the case of SNPs called from color space (two-base encoded) data, the decoded reads can be improperly decoded such that SNP positions have a reference allele bias, which is reflected in the original alignments. Thus, in order to assess if SRMA is improving the overall fraction of reads appropriately aligned, we analyzed in aggregate all variant positions to determine if the ratio of reference/variants at heterozygous positions is shifted towards the expected 50%. With respect to heterozygous-called variants, a binomial distribution centered around 0.5 frequency based on sampling/coverage is expected. The observed variant allele frequency after SRMA is substantially shifted towards this expected distribution (Figure <xref ref-type="fig" rid="F2">2</xref>). Similarly, at homozygous positions, the non-reference allele is substantially closer to 100% across observed variant positions for SNPs, deletions, and insertions (Figure <xref ref-type="fig" rid="F2">2</xref>). For example, the median allele frequencies for heterozygous SNPs, deletions, and insertions before SRMA were 0.404, 0.038, and 0.038, respectively, and after SRMA were 0.434, 0.538, and 0.328, respectively. This demonstrates the ability of SRMA to improve variant calling, especially for indels.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Allele frequency distribution with local re-alignment of U87MG</bold>. SRMA was applied to the alignments produced with BFAST of a human cancer cell line (U87MG; SRA009912.1). Variants were called with SAMtools before and after application of SRMA (see Materials and methods). Homozygous and heterozygous calls were examined independently using zygosity calls produced by SAMtools. The observed non-reference allele frequency for SNPs, deletions, and insertions are plotted for homozygous (left panels) or heterozygous variants (right panels). Ideally, non-reference allele frequencies for homozygous and heterozygous variants approach 1.0 and 0.5, respectively. The absolute counts of observed variants are plotted (y-axis) against non-reference allele frequency ranges (x-axis).</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-10-r99-2"/>
+      </fig>
+      <p>To further examine the accuracy of the variant calls genome-wide, indels were compared to the known database of common variants found in dbSNP (dbSNP Build ID: 129) [<xref ref-type="bibr" rid="B22">22</xref>]. We sought to determine if the indel matches a previously observed indel in dbSNP, which is plotted as the discordance rate (one minus concordance; Figure <xref ref-type="fig" rid="F3">3</xref>). An indel was called concordant if the length of the called indel matched that of any indel in dbSNP within five bases. This 'wiggle' of five bases was used since the precise location of an indel relative to the reference is not always systematically and consistently described in dbSNP. SRMA improves the concordance between observed indels within the sequencing data and indels reported in dbSNP. The discordance rate of indels is inflated due to the lack of completeness within the variant databases, as well as artifacts introduced by tandem repeats, and artifacts related to the arbitrary position of indels relative to the reference in dbSNP. However, using similar metrics, SRMA measurably improves the concordance: greater than 99% of SNPs (data not shown) and greater than 90% of indels were concordant with dbSNP regardless of the stringency threshold applied.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>dbSNP concordance before and after local re-alignment of U87MG</bold>. SRMA was applied to the alignments produced with BFAST of a human cancer cell line (U87MG; SRA009912.1). Variants were called with SAMtools before and after application of SRMA (see Materials and methods). Deletions and insertions (indels) called within U87MG were compared with those indels reported in dbSNP (v129). An increasing minimum SNP quality filter was used to improve concordance (y-axis) while reducing the number of indels observed at dbSNP positions (x-axis). Using SRMA significantly reduced the discordance (one minus concordance) between observed indels at dbSNP positions.</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-10-r99-3"/>
+      </fig>
+      <p>To further assess the quality of SNP calls, heterozygous genotypes from an Illumina SNP microarray were compared with genotypes called from sequence data before and after application of SRMA to estimate SNP concordance. In Figure <xref ref-type="fig" rid="F4">4</xref>, the concordance between heterozygous calls and genotypes is reported after filtering positions using three metrics: consensus quality, base coverage, and SNP quality. A true positive occurred if a heterozygous SNP was called with the sequence data and genotyped as a heterozygote. A genotype was discordant if a heterozygous SNP was called with the sequence data but the genotype was called homozygous on the DNA microarray. For all metrics, local SRMA re-alignment reduces the discordance rate while preserving sensitivity. It is interesting to note that the discordance rate after SRMA approaches the assumed DNA microarray error rate, thus limiting further utility of this type of comparison.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>SNP microarray concordance with known genotypes before and after local re-alignment of U87MG</bold>. SRMA was applied to the alignments produced with BFAST of a human cancer cell line (U87MG; SRA009912.1). Heterozygous genotypes from an Illumina SNP microarray were compared with genotypes called from sequence data before and after application of SRMA (see Materials and methods). A minimum threshold on three different variant-calling metrics was applied, respectively, to improve the concordance (y-axis) while reducing the total number of SNP positions on the microarray that were called. Regardless of the metric, SRMA reduced the discordance (one minus concordance) of heterozygous SNPs reported by the SNP microarray and sequencing data.</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-10-r99-4"/>
+      </fig>
+      <p>The variant calls of SRMA are improved genome-wide by SRMA, and several dramatic examples of sequence improvement can be demonstrated. For instance, a 15-bp deletion flanked by a nearby C-to-T SNP was observed in the coding sequence of ALPK2 in the original BFAST alignments of U87MG and was confirmed by Sanger sequencing. However, a large fraction of the original alignments did not contribute to the calling of this haploid event (Figure <xref ref-type="fig" rid="F5">5a</xref>), instead displaying spurious SNPs, deletions, and insertions. This nicely demonstrates the inherent difficulty of comparing a short read sequence to a reference sequence in the presence of variation and sequencing error, even though the short reads were all aligned to the correct location in the genome. After re-alignment with SRMA (Figure <xref ref-type="fig" rid="F5">5b</xref>), the majority of the reads support both the 15-bp deletion and SNP, while false variation has been virtually eliminated.</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>A deletion and SNP in ALPK2 in U87MG</bold>. SRMA was applied to the alignments produced with BFAST of a human cancer cell line (U87MG; SRA009912.1). <bold>(a,b) </bold>The resulting alignments from within the coding region of ALPK2 (chr18:54,355,303-54,355,477) are shown before applying SRMA (a) and after applying SRMA (b). In this haploid region, Sanger sequencing confirmed a 15-bp deletion and a C-to-T SNP eight bases downstream of the deletion. Panel (a) shows the difficulty of aligning sequence reads from a region with a large deletion and a SNP, as false variation is observed (SNPs and indels). Nevertheless, some reads in <bold>(a) </bold>(BFAST) do correctly observe the deletion and SNP, which are therefore included in the variant graph created by SRMA. After local re-alignment using SRMA <bold>(b)</bold>, the majority of the reads support the presence of the deletion and SNP, while false variation has been eliminated. The Integrated Genomics Viewer was used to view the alignments [<xref ref-type="bibr" rid="B30">30</xref>].</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-10-r99-5"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Performance of local re-alignment</title>
+      <p>The running time and memory required by this re-alignment procedure is based on the number of start nodes as well as the complexity of the variant graph. More start nodes (larger <italic>w</italic>) will increase the number of paths examined. Furthermore, any variant within the graph will lead to a larger branching factor (nodes with multiple neighbors either upstream or downstream) and increase the number of paths examined. Highly polymorphic genomes will also increase the graph's complexity. The complexity of the graph is also influenced by the sequencing technology. For technologies that sequence DNA bases directly, sequencing errors that are indistinguishable from variants will thus be represented in the graph. The two-base encoded data produced by the ABI SOLiD system in practice tends to have fewer spurious variants. With such an encoding, it is more difficult to interpret sequencing error in the encoded color sequence in such a fashion as to produce base changes in the decoded base sequence. Nevertheless, without filtering using the <italic>c </italic>or <italic>p </italic>parameters, any observed base difference from an alignment will be included in the graph. Therefore, setting reasonable parameters for <italic>c </italic>and <italic>p </italic>beyond removing spurious variants is important to bound the number of search paths and make re-alignment computationally feasible. In practice, the settings used in our evaluations (<italic>c </italic>= 2 and <italic>p </italic>= 0.1) work well for human genome re-sequencing experiments</p>
+      <p>SRMA was run in a Map-Reduce framework using a cluster submission script (for Sun Grid Engine (SGE) or Portable Batch System (PBS) systems) provided with the SRMA distribution. The alignments to the reference genome were implicitly split into 1-Mb regions and processed in parallel on a large computer cluster; the re-alignments from each region were then merged in a hierarchical fashion. This allows for the utilization of multi-core computers, with one re-alignment per core, as well as parallelization across a computer cluster or a cloud. The average peak memory utilization per process was 876 Mb (on a single-core), with a maximum peak memory utilization of 1.25 GB. On average, each 1-Mb region required approximately 2.58 minutes to complete, requiring approximately 86.17 hours total running time for the whole U87MG genome. SRMA also supports re-alignment within user-specified regions for efficiency, so that only regions of interest need to be re-aligned. This is particularly useful for exome-sequencing or targeted re-sequencing data.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>Here we describe a novel local re-alignment algorithm, SRMA, which can significantly reduce the false positive variant detection rate with short-read next generation sequencing technology. While global sequence alignment examines each read independently, multiple reads aligned over a common position are highly correlated especially when a single diploid genome is being sequenced. SRMA uses these correlated alignments to build a limited graph structure that represents these alignments and their differences in compact form such that the alternative allele is more readily observed. The original reads are then re-aligned within a local coordinate window to improve the resulting alignments relative to the target genome rather than a reference genome.</p>
+    <p>Simulations of whole genome human re-sequencing data from both ABI SOLiD and Illumina sequencing technology were used to assess SRMA under simplified conditions in which the variant positions and alleles are known. SRMA was able to improve the ultimate variant calling using a variety of measures on the simulated data from two different popular aligners, BWA and BFAST. These aligners were selected based on their sensitivity to insertions and deletions since a property of SRMA is that it produces a better consensus around indel positions. The initial alignments from BFAST allow local SRMA re-alignment using the original color sequence and qualities to be assessed as BFAST retains this color space information. This further reduces the bias towards calling the reference allele at SNP positions in ABI SOLiD data, and reduces the false discovery rate of new variants. Thus, local re-alignment is a powerful approach to improving genomic sequencing with next generation sequencing technologies.</p>
+    <p>We note as well that while clearly demonstrating improvements in human genomic sequencing, more substantial improvements in variant discovery would be expected when a more distantly related genome is used as the reference. Currently, SRMA does not support enumerating over insertions or deletions caused by homopolymer errors that can be found in 454 data and other flow-based technologies. Nevertheless, similar to utilizing the original color sequence for ABI SOLiD data, the original flow-space data from 454 data could be used during re-alignment and represents future work. Incorporating known variants, for example from dbSNP, into the variant graph as a prior also represents future work. SRMA is publicly available under the GPL license at [<xref ref-type="bibr" rid="B23">23</xref>].</p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec>
+      <title>Overview of SRMA</title>
+      <p>This method relies on short-read alignment algorithms to first align each read to a reference sequence [<xref ref-type="bibr" rid="B7">7</xref>-<xref ref-type="bibr" rid="B12">12</xref>]. After all reads are aligned, they are passed to SRMA for re-alignment. SRMA first builds a variant graph from these initial alignments. Once the variant graph is built, all reads are re-aligned to the variant graph. If the new alignment compared to the original is found, it is reported and annotated as being re-aligned by SRMA, otherwise the original alignment is reported. A novel aspect of this method is the process of building the variant graph iteratively for each genomic region, while reporting new alignments for each read initially aligned within that region. While <italic>de novo </italic>assembly (or re-assembly) algorithms report novel sequences without comparing the reads to a reference sequence, this method provides new improved alignments relative to a reference sequence improving downstream consensus calling. Iterative application of SRMA is possible, whereby further rounds of building a variant graph and read re-alignment are performed, but is not examined here.</p>
+    </sec>
+    <sec>
+      <title>Creating a variant graph from existing alignments</title>
+      <p>Here we seek to use individual sequence reads to create a series of possible variant options that include the true variants present within the target genome being sequenced. Ultimately, the goal is to distinguish between true variants and sequencing errors genome-wide. Since, in the interest of novel mutation discovery, we must allow for all possible base positions being variant, as well as for an exponentially larger number of possible indels, we opt for an approach that creates a variant graph that includes all aligned reads at a given position in the genome prior to performing re-alignment. This graph is a compact mathematical representation of the initially determined alignments. Each alignment is represented as a path through the graph, although not every path through the graph corresponds to an actual alignment.</p>
+      <p>The variant graph is composed of nodes. Each node represents a DNA base at a specific position relative to the forward strand of the reference genome. Two nodes share an undirected edge if they are adjacent read bases in an existing alignment. For example, the variant graph of the reference sequence that is aligned perfectly to itself consists of one node per reference base, with edges connecting nodes that represent adjacent bases in the reference. In this case, the variant graph has one path. To properly order the nodes in the graph relative to the reference, each node is also assigned a position and an offset. The offset is non-zero only if the node represents an insertion relative to the reference. Insertions relative to the reference are given the reference position of the next non-inserted base with higher physical position on the forward strand, and with its offset set as the number of bases from the beginning of the insertion. Insertions at the same reference position can be combined by merging the paths that represent their longest common prefix and longest common suffix, respectively. A single nucleotide substitution would be annotated to have the same position as its relative reference base. In summary, nodes are described as three distinct types: reference, substitution, and insertion. A node's position, base, type, and offset are unique among all nodes in the graph and define a canonical ordering over all nodes in the graph.</p>
+      <p>Initially, the graph is empty. Bases that match the reference and variants are incorporated into the graph by adding new nodes and edges. Substitutions and insertions are represented as additional nodes in the graph. Deletions, on the other hand, are added as edges that connect nodes that have a positional difference greater than one. An example of creating a variant graph from four alignments is shown in Figure <xref ref-type="fig" rid="F6">6</xref>. The variant graph also stores the number of alignments that pass through each node and edge, corresponding to the coverage. This is useful for eliminating unlikely paths when performing re-alignment and will be discussed later.</p>
+      <fig id="F6" position="float">
+        <label>Figure 6</label>
+        <caption>
+          <p><bold>The creation of a variant graph</bold>. Four alignments (left) are successively used to create a variant graph (right). <bold>(a) </bold>An alignment of a read that matches the reference. The associated variant graph consists of nodes that represent each base of the read. <bold>(b) </bold>An alignment of a read with a base difference at the second position. The base difference adds a new node that is connected to the existing first and third node. <bold>(c) </bold>An alignment of a read that has a base difference and a deletion relative to the reference. A new edge connecting the sixth and ninth nodes is added to the graph. <bold>(d) </bold>An alignment of a read that has a base difference, a deletion, and an insertion relative to the reference. Two new nodes are added creating a path from the previously existing SNP at the second position to the reference base at the second position. <bold>(e) </bold>The resulting variant graph with each edge labeled with the number of alignment paths containing this edge.</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-10-r99-6"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Alignment to a variant graph</title>
+      <p>Once the variant graph is constructed from all aligned reads, local re-alignment of the reads proceeds through a series of weighted steps to optimize the final alignments. The variant graph is not modified after re-alignment begins. A dynamic programming procedure is used to compare a read to the variant graph in a similar manner to the Smith-Waterman algorithm [<xref ref-type="bibr" rid="B24">24</xref>-<xref ref-type="bibr" rid="B27">27</xref>]. Each path through the graph represents a potential (new) alignment. All paths that begin within <italic>w </italic>base positions from the start of the existing alignment are considered as start nodes for a new alignment. A node in the graph is visited at most <italic>w </italic>times per re-alignment, even though every path reachable from a starting node is examined. Note that the direction of the paths through the graph match the direction implied by the strand of the original alignment. Therefore, the graph is a directed acyclic graph (DAG) during each local re-alignment, with a partial ordering imposed on the nodes as was explained earlier (position, base, type, and offset). All valid paths from the starting nodes can be efficiently examined using a breadth-first traversal using a heap data structure.</p>
+      <p>The heap stores nodes sorted by their partial order, the current path length, and the current alignment score, in that order; the path length and alignment score are also stored in the heap. Initially, the start nodes are added to the heap with a path length of one and an alignment score based on comparing the read's first base to the base represented by the start node. If the read base matches the start node base, then no penalty is added to the previous re-alignment score. Otherwise, a negative score based on the original base quality of the read is added to the previous re-alignment score to return the current re-alignment score. Other alignment scoring schemes are possible, but mismatched bases are scored using base quality since it has been shown to improve alignment quality [<xref ref-type="bibr" rid="B28">28</xref>].</p>
+      <p>The heap is polled while it is non-empty. Paths to the given node that have the same path length and a smaller alignment score can be removed (from the top of the heap) to remove suboptimal alignment paths. Paths to the same node but with different lengths result from differing start nodes, deletions, and insertions. This pruning step uses a dynamic programming procedure, where the best paths to and from the current node are assumed to be conditionally independent given their respective path lengths (number of read bases examined). Next, if the path length equals the length of the read, all of the bases in the read have been examined. The best (highest alignment score) complete path, if any, is compared to the current path and updated accordingly. Otherwise, the path is extended to each child (successor) of the given node. For each child node, the child node's base is compared to the corresponding base in the read (determined by the path length), with the alignment score modified as above. The child node, incremented path length, and updated alignment score are added to the heap. Once the heap is empty, the path with the best score is returned to give a new alignment. This new alignment may match or differ from the original alignment depending on the graph structure.</p>
+      <p>As observed during graph creation, the original alignment is represented as a path through the graph, and therefore will be reconsidered during re-alignment. In fact, the original alignment can be used to set a bound on the minimum re-alignment score. Since the alignment score implemented above decreases monotonically, any path with lower alignment score than the original alignment can be removed from the heap. If the original alignment is likely to be the best alignment after re-alignment, then this bound significantly reduces the practical running time of local re-alignment.</p>
+      <p>The entire variant graph does not need to be constructed before beginning re-alignment, but rather only nodes in the graph that are reachable from the starting nodes need be considered. Therefore, only original alignments that pass through any of these reachable nodes need to be included when creating the variant graph for a specific alignment. Thus, the variant graph can be dynamically built from previous read alignments, with nodes removed from the graph when no longer reachable from the next read re-alignment. This allows only a small local window of the variant graph to be explicitly built and kept in memory, significantly reducing memory requirements.</p>
+    </sec>
+    <sec>
+      <title>Accounting for sampling and coverage</title>
+      <p>Two input parameters prune potential alignment paths through the graph: minimum node/edge coverage, and minimum edge probability. Given a minimum node/edge coverage <italic>c</italic>, only nodes observed in least <italic>c </italic>original alignments are considered. The minimum edge probability <italic>p </italic>considers the all edges through non-insertion nodes (that is, zero offset) at a given genomic position. The total number of observations <italic>N </italic>across all nodes with the same position (and zero offset) along with the minimum edge probability <italic>p </italic>is used to bound paths through edges incoming to nodes at that position. Suppose an incoming edge to a node is observed <italic>n </italic>times, then the edge is pruned if Pr(<italic>x </italic>≤ <italic>n </italic>| <italic>N</italic>) &lt;<italic>p</italic>. This probability is modeled using the binomial cumulative distribution function under the assumption that two possible alleles (nodes) are possible at a given position:</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M1" name="gb-2010-11-10-r99-i1" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>Pr</mml:mi>
+              <mml:mrow>
+                <mml:mo>(</mml:mo>
+                <mml:mrow>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>x</mml:mi>
+                      <mml:mo>≤</mml:mo>
+                      <mml:mi>n</mml:mi>
+                    </mml:mrow>
+                    <mml:mo>|</mml:mo>
+                  </mml:mrow>
+                  <mml:mi>N</mml:mi>
+                </mml:mrow>
+                <mml:mo>)</mml:mo>
+              </mml:mrow>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:msubsup>
+                  <mml:mo>∑</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>0</mml:mn>
+                  </mml:mrow>
+                  <mml:mi>x</mml:mi>
+                </mml:msubsup>
+                <mml:mrow>
+                  <mml:mrow>
+                    <mml:mo>(</mml:mo>
+                    <mml:mrow>
+                      <mml:mtable>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mi>N</mml:mi>
+                          </mml:mtd>
+                        </mml:mtr>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mi>x</mml:mi>
+                          </mml:mtd>
+                        </mml:mtr>
+                      </mml:mtable>
+                    </mml:mrow>
+                    <mml:mo>)</mml:mo>
+                  </mml:mrow>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mrow>
+                    <mml:mo>(</mml:mo>
+                    <mml:mrow>
+                      <mml:mn>0.5</mml:mn>
+                    </mml:mrow>
+                    <mml:mo>)</mml:mo>
+                  </mml:mrow>
+                </mml:mrow>
+                <mml:mi>x</mml:mi>
+              </mml:msup>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mrow>
+                    <mml:mo>(</mml:mo>
+                    <mml:mrow>
+                      <mml:mn>0.5</mml:mn>
+                    </mml:mrow>
+                    <mml:mo>)</mml:mo>
+                  </mml:mrow>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>N</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>x</mml:mi>
+                </mml:mrow>
+              </mml:msup>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:msubsup>
+                  <mml:mo>∑</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>0</mml:mn>
+                  </mml:mrow>
+                  <mml:mi>x</mml:mi>
+                </mml:msubsup>
+                <mml:mrow>
+                  <mml:mrow>
+                    <mml:mo>(</mml:mo>
+                    <mml:mrow>
+                      <mml:mtable>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mi>N</mml:mi>
+                          </mml:mtd>
+                        </mml:mtr>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mi>x</mml:mi>
+                          </mml:mtd>
+                        </mml:mtr>
+                      </mml:mtable>
+                    </mml:mrow>
+                    <mml:mo>)</mml:mo>
+                  </mml:mrow>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mrow>
+                    <mml:mo>(</mml:mo>
+                    <mml:mrow>
+                      <mml:mn>0.5</mml:mn>
+                    </mml:mrow>
+                    <mml:mo>)</mml:mo>
+                  </mml:mrow>
+                </mml:mrow>
+                <mml:mi>N</mml:mi>
+              </mml:msup>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>While this is a valid assumption if the genome has two copies of each chromosome (diploid), deviations from this do not greatly change the pruning strategy as both input parameters are used in conjunction with an <italic>OR </italic>logical relationship: a path through a node/edge is included if it passes one or both of the filters. Within high coverage locations, the former filter removes variants that occur by random chance due to sequencing error but is intended to remain sensitive to the detection of alleles that can be obscured by alignment ambiguities. In contrast, within low coverage regions, the former filter will overly penalize variants that were not observed due to insufficient sampling. Thus, the latter filter is designed to include variants in low coverage regions while strictly penalizing variants that do not occur frequently in high coverage regions. These parameters are important for both removing spurious variants and inclusively including potentially real variants in low coverage regions.</p>
+    </sec>
+    <sec>
+      <title>Leveraging ABI SOLiD two-base encoded data</title>
+      <p>Special considerations need to be made to incorporate sequencing reads produced by the ABI SOLiD platform, which are generated in a two-base encoded form. When re-aligning such data to the variant graph, a modified version of the two-base encoded dynamic programming algorithm is used [<xref ref-type="bibr" rid="B12">12</xref>,<xref ref-type="bibr" rid="B21">21</xref>]. In this case, the decoded DNA sequence must exactly match the bases represented by a valid path in the variant graph. The re-alignment score is produced by using the original color sequence and quality scores and is calculated by comparing the original color in the color sequence with the expected color. The expected color is determined by encoding the two bases connected by the previously examined edge in the path, or encoding the known start adapter and first base in the path (for starting nodes). By constraining the decoded bases to match bases represented by nodes in the graph, the computational complexity of the original dynamic programming procedure is reduced to be equivalent to that of the base or nucleotide space sequence comparison.</p>
+    </sec>
+    <sec>
+      <title>Simulated and empirical data</title>
+      <p>Two simulated datasets were created to evaluate SRMA, one simulating data from an Illumina sequencer, and one simulating data from an ABI SOLiD sequencer. A uniform 1% per-base error rate was used for the Illumina dataset, while a uniform 5% per-color read error rate was used for the ABI SOLiD dataset. In practice, sequencing error per read is not uniform, tending to be low at the 5' end (the beginning) of the sequence read and higher towards the end of each read, but that is not modeled here. The distance between the two ends of each paired end read was randomly drawn from a normal distribution of mean 500 bases and standard deviation of 50 bases. Polymorphisms were added to the simulated genome at a rate of 1/1000 with a 1/3 probability of being a homozygous variation. Insertions and deletions each accounted for 5% of all polymorphisms. The probability of an insertion or deletion extending beyond one base was 0.3 per extended base to simulate observed in/del distributions in the human genome. The whole-genome simulation program and subsequent accuracy evaluation can be found in the DNA Analysis (DNAA) package [<xref ref-type="bibr" rid="B29">29</xref>].</p>
+      <p>To empirically test the feasibility and utility of SRMA in a whole genome context, a previously published human whole-genome brain cancer dataset was obtained from the Sequence Read Archive (SRA009912.1) [<xref ref-type="bibr" rid="B13">13</xref>]. The original alignments were obtained, which were performed by BFAST [<xref ref-type="bibr" rid="B7">7</xref>], and retained the original color sequence and qualities to allow for color space local re-alignment [<xref ref-type="bibr" rid="B12">12</xref>,<xref ref-type="bibr" rid="B21">21</xref>]. The alignments from BFAST and SRMA were variant-called using the SOAP consensus model implemented in SAMtools (v.0.1.17) using the default settings [<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B20">20</xref>]. The subsequent alignments were locally re-aligned with SRMA with variant inclusive settings (<italic>c </italic>= 2 and <italic>p </italic>= 0.1).</p>
+      <p>SAMtools reports three metrics for each variant position: SNP quality, consensus quality, and base coverage. The SNP quality is the Phred-scaled probability that the consensus is identical to the reference, while the consensus quality is the Phred-scaled likelihood that the called genotype is wrong. Typically, a minimum SNP quality filter can be used to reduce false positives while somewhat reducing sensitivity.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>ABI: Applied Biosystems Inc.; BFAST: Blat-like Fast Accurate Search Tool; bp: base pair; BWA: Burrows Wheeler Alignment tool; dbSNP: Single Nucleotide Polymorphism Database; SNP: single nucleotide polymorphism; SRA: Sequence Read Archive; SRMA: Short-Read Micro re-Aligner.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>NH designed and implemented the algorithm, and drafted the manuscript. SFN drafted the manuscript. All authors read and approved the final manuscript.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>This research was supported by the NIH Neuroscience Microarray Consortium (U24NS052108) as well as grants from the NIMH (R01 MH071852), and NHGRI (U01HG005210). We would like to thank Michael Brudno, Buhm Han, and Hyun Min Kang for their valuable comments, and members of the Nelson Lab, Kevin Squire, Hane Lee, and Bret Harry, for input and computational infrastructure support. Finally, we would like to thank the developers of the Picard Java API, which was used in the implementation of SRMA.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kent</surname>
+          <given-names>WJ</given-names>
+        </name>
+        <name>
+          <surname>Haussler</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Assembly of the working draft of the human genome with GigAssembler.</article-title>
+        <source>Genome Res</source>
+        <year>2001</year>
+        <volume>11</volume>
+        <fpage>1541</fpage>
+        <lpage>1548</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.183201</pub-id>
+        <pub-id pub-id-type="pmid">11544197</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Myers</surname>
+          <given-names>EW</given-names>
+        </name>
+        <article-title>The fragment assembly string graph.</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>Suppl 2</issue>
+        <fpage>ii79</fpage>
+        <lpage>85</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti1114</pub-id>
+        <pub-id pub-id-type="pmid">16204131</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pevzner</surname>
+          <given-names>PA</given-names>
+        </name>
+        <name>
+          <surname>Tang</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Waterman</surname>
+          <given-names>MS</given-names>
+        </name>
+        <article-title>An Eulerian path approach to DNA fragment assembly.</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <fpage>9748</fpage>
+        <lpage>9753</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.171285098</pub-id>
+        <pub-id pub-id-type="pmid">11504945</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Simpson</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Efficient construction of an assembly string graph using the FM-index.</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>i367</fpage>
+        <lpage>373</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq217</pub-id>
+        <pub-id pub-id-type="pmid">20529929</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Simpson</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Jackman</surname>
+          <given-names>SD</given-names>
+        </name>
+        <name>
+          <surname>Schein</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Birol</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>ABySS: a parallel assembler for short read sequence data.</article-title>
+        <source>Genome Res</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1117</fpage>
+        <lpage>1123</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.089532.108</pub-id>
+        <pub-id pub-id-type="pmid">19251739</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zerbino</surname>
+          <given-names>DR</given-names>
+        </name>
+        <name>
+          <surname>Birney</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Velvet: algorithms for de novo short read assembly using de Bruijn graphs.</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>821</fpage>
+        <lpage>829</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.074492.107</pub-id>
+        <pub-id pub-id-type="pmid">18349386</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Homer</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Merriman</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Nelson</surname>
+          <given-names>SF</given-names>
+        </name>
+        <article-title>BFAST: an alignment tool for large scale genome resequencing.</article-title>
+        <source>PLoS One</source>
+        <year>2009</year>
+        <volume>4</volume>
+        <fpage>e7767</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0007767</pub-id>
+        <pub-id pub-id-type="pmid">19907642</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome.</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-3-r25</pub-id>
+        <pub-id pub-id-type="pmid">19261174</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Fast and accurate short read alignment with Burrows-Wheeler transform.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1754</fpage>
+        <lpage>1760</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp324</pub-id>
+        <pub-id pub-id-type="pmid">19451168</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Mapping short DNA sequencing reads and calling variants using mapping quality scores.</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>1851</fpage>
+        <lpage>1858</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.078212.108</pub-id>
+        <pub-id pub-id-type="pmid">18714091</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Kristiansen</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>SOAP: short oligonucleotide alignment program.</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <fpage>713</fpage>
+        <lpage>714</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btn025</pub-id>
+        <pub-id pub-id-type="pmid">18227114</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rumble</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Lacroute</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Dalca</surname>
+          <given-names>AV</given-names>
+        </name>
+        <name>
+          <surname>Fiume</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Sidow</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Brudno</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>SHRiMP: accurate mapping of short color-space reads.</article-title>
+        <source>PLoS Comput Biol</source>
+        <year>2009</year>
+        <volume>5</volume>
+        <fpage>e1000386</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pcbi.1000386</pub-id>
+        <pub-id pub-id-type="pmid">19461883</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Clark</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Homer</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>O'Connor</surname>
+          <given-names>BD</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Eskin</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Merriman</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Nelson</surname>
+          <given-names>SF</given-names>
+        </name>
+        <article-title>U87MG decoded: the genomic sequence of a cytogenetically aberrant human cancer cell line.</article-title>
+        <source>PLoS Genet</source>
+        <year>2010</year>
+        <volume>6</volume>
+        <fpage>e1000832</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pgen.1000832</pub-id>
+        <pub-id pub-id-type="pmid">20126413</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Benno</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Martin</surname>
+          <given-names>V</given-names>
+        </name>
+        <article-title>Weighted sequence graphs: boosting iterated dynamic programming using locally suboptimal solutions.</article-title>
+        <source>Discrete Appl Math</source>
+        <year>2003</year>
+        <volume>127</volume>
+        <fpage>95</fpage>
+        <lpage>117</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0166-218X(02)00288-3</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Vladimir</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Stephen</surname>
+          <given-names>MR</given-names>
+        </name>
+        <name>
+          <surname>Michael</surname>
+          <given-names>B</given-names>
+        </name>
+        <person-group person-group-type="editor">Crandall KA, Lagergren J</person-group>
+        <article-title>Read mapping algorithms for single molecule sequencing data.</article-title>
+        <source>Proceedings of the 8th International Workshop on Algorithms in Bioinformatics: September 15-19 2008; Karlsruhe, Germany</source>
+        <year>2008</year>
+        <publisher-name>Springer-Verlag</publisher-name>
+        <fpage>38</fpage>
+        <lpage>49</lpage>
+        <comment>[<italic>Lecture Notes in Computer Science</italic>, volume 5251]</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lee</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Generating consensus sequences from partial order multiple sequence alignment graphs.</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <fpage>999</fpage>
+        <lpage>1008</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg109</pub-id>
+        <pub-id pub-id-type="pmid">12761063</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lee</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Grasso</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Sharlow</surname>
+          <given-names>MF</given-names>
+        </name>
+        <article-title>Multiple sequence alignment using partial order graphs.</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>452</fpage>
+        <lpage>464</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/18.3.452</pub-id>
+        <pub-id pub-id-type="pmid">11934745</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Anson</surname>
+          <given-names>EL</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>EW</given-names>
+        </name>
+        <article-title>ReAligner: a program for refining DNA sequence multi-alignments.</article-title>
+        <source>J Comput Biol</source>
+        <year>1997</year>
+        <volume>4</volume>
+        <fpage>369</fpage>
+        <lpage>383</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.1997.4.369</pub-id>
+        <pub-id pub-id-type="pmid">9278066</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Simpson</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Efficient construction of an assembly string graph using the FM-index.</article-title>
+        <source>Bioinformatics</source>
+        <volume>26</volume>
+        <fpage>i367</fpage>
+        <lpage>373</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq217</pub-id>
+        <pub-id pub-id-type="pmid">20529929</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Handsaker</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Wysoker</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Fennell</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Homer</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Marth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>The Sequence Alignment/Map format and SAMtools.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2078</fpage>
+        <lpage>2079</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp352</pub-id>
+        <pub-id pub-id-type="pmid">19505943</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Homer</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Merriman</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Nelson</surname>
+          <given-names>SF</given-names>
+        </name>
+        <article-title>Local alignment of two-base encoded DNA sequence.</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>175</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-10-175</pub-id>
+        <pub-id pub-id-type="pmid">19508732</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sherry</surname>
+          <given-names>ST</given-names>
+        </name>
+        <name>
+          <surname>Ward</surname>
+          <given-names>MH</given-names>
+        </name>
+        <name>
+          <surname>Kholodov</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Baker</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Phan</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Smigielski</surname>
+          <given-names>EM</given-names>
+        </name>
+        <name>
+          <surname>Sirotkin</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>dbSNP: the NCBI database of genetic variation.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>308</fpage>
+        <lpage>311</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/29.1.308</pub-id>
+        <pub-id pub-id-type="pmid">11125122</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="other">
+        <article-title>SRMA: the Short Read Micro re-Aligner.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://srma.sourceforge.net">http://srma.sourceforge.net</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gotoh</surname>
+          <given-names>O</given-names>
+        </name>
+        <article-title>An improved algorithm for matching biological sequences.</article-title>
+        <source>J Mol Biol</source>
+        <year>1982</year>
+        <volume>162</volume>
+        <fpage>705</fpage>
+        <lpage>708</lpage>
+        <pub-id pub-id-type="doi">10.1016/0022-2836(82)90398-9</pub-id>
+        <pub-id pub-id-type="pmid">7166760</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Myers</surname>
+          <given-names>EW</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Optimal alignments in linear space.</article-title>
+        <source>Comput Appl Biosci</source>
+        <year>1988</year>
+        <volume>4</volume>
+        <fpage>11</fpage>
+        <lpage>17</lpage>
+        <pub-id pub-id-type="pmid">3382986</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Needleman</surname>
+          <given-names>SB</given-names>
+        </name>
+        <name>
+          <surname>Wunsch</surname>
+          <given-names>CD</given-names>
+        </name>
+        <article-title>A general method applicable to the search for similarities in the amino acid sequence of two proteins.</article-title>
+        <source>J Mol Biol</source>
+        <year>1970</year>
+        <volume>48</volume>
+        <fpage>443</fpage>
+        <lpage>453</lpage>
+        <pub-id pub-id-type="doi">10.1016/0022-2836(70)90057-4</pub-id>
+        <pub-id pub-id-type="pmid">5420325</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Smith</surname>
+          <given-names>TF</given-names>
+        </name>
+        <name>
+          <surname>Waterman</surname>
+          <given-names>MS</given-names>
+        </name>
+        <article-title>Identification of common molecular subsequences.</article-title>
+        <source>J Mol Biol</source>
+        <year>1981</year>
+        <volume>147</volume>
+        <fpage>195</fpage>
+        <lpage>197</lpage>
+        <pub-id pub-id-type="doi">10.1016/0022-2836(81)90087-5</pub-id>
+        <pub-id pub-id-type="pmid">7265238</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Smith</surname>
+          <given-names>AD</given-names>
+        </name>
+        <name>
+          <surname>Xuan</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>MQ</given-names>
+        </name>
+        <article-title>Using quality scores and longer reads improves accuracy of Solexa read mapping.</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>128</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-9-128</pub-id>
+        <pub-id pub-id-type="pmid">18307793</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="other">
+        <article-title>DNAA: the DNA Analysis Package.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://dnaa.sourceforge.net">http://dnaa.sourceforge.net</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="other">
+        <article-title>IGV: the Integrated Genomics Viewer.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.broadinstitute.org/igv/">http://www.broadinstitute.org/igv/</ext-link>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

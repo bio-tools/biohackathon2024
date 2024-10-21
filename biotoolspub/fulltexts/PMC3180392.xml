@@ -1,0 +1,1073 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 1?>
+<processing-meta base-tagset="archiving" mathml-version="3.0" table-model="xhtml" tagset-family="jats">
+  <restricted-by>pmc</restricted-by>
+</processing-meta>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3180392</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-12-369</article-id>
+    <article-id pub-id-type="pmid">21923903</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-12-369</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Thawing Frozen Robust Multi-array Analysis (fRMA)</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>McCall</surname>
+          <given-names>Matthew N</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>mccallm@gmail.com</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>Rafael A</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>rafa@jhu.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Biostatistics and Computational Biology, University of Rochester Medical Center, Rochester, NY, USA</aff>
+    <aff id="I2"><label>2</label>Department of Biostatistics, Johns Hopkins University, 615 North Wolfe Street, Baltimore, MD, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2011</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>16</day>
+      <month>9</month>
+      <year>2011</year>
+    </pub-date>
+    <volume>12</volume>
+    <fpage>369</fpage>
+    <lpage>369</lpage>
+    <history>
+      <date date-type="received">
+        <day>7</day>
+        <month>4</month>
+        <year>2011</year>
+      </date>
+      <date date-type="accepted">
+        <day>16</day>
+        <month>9</month>
+        <year>2011</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2011 McCall and Irizarry; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2011</copyright-year>
+      <copyright-holder>McCall and Irizarry; licensee BioMed Central Ltd.</copyright-holder>
+      <license>
+        <ali:license_ref xmlns:ali="http://www.niso.org/schemas/ali/1.0/" specific-use="textmining" content-type="ccbylicense">https://creativecommons.org/licenses/by/2.0/</ali:license_ref>
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="https://creativecommons.org/licenses/by/2.0/">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/12/369"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>A novel method of microarray preprocessing - Frozen Robust Multi-array Analysis (fRMA) - has recently been developed. This algorithm allows the user to preprocess arrays individually while retaining the advantages of multi-array preprocessing methods. The <italic>frozen </italic>parameter estimates required by this algorithm are generated using a large database of publicly available arrays. Curation of such a database and creation of the frozen parameter estimates is time-consuming; therefore, fRMA has only been implemented on the most widely used Affymetrix platforms.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We present an R package, frmaTools, that allows the user to quickly create his or her own frozen parameter vectors. We describe how this package fits into a preprocessing workflow and explore the size of the training dataset needed to generate reliable frozen parameter estimates. This is followed by a discussion of specific situations in which one might wish to create one's own fRMA implementation. For a few specific scenarios, we demonstrate that fRMA performs well even when a large database of arrays in unavailable.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>By allowing the user to easily create his or her own fRMA implementation, the frmaTools package greatly increases the applicability of the fRMA algorithm. The frmaTools package is freely available as part of the Bioconductor project.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>1 Background</title>
+    <p>In microarray data analysis, the process of converting probe-level flourescent intensities from a scanner to gene-level expression estimates is commonly referred to as <italic>preprocessing</italic>. The vast majority of preprocessing algorithms require multiple arrays to be analyzed simultaneously, and in general such <italic>multi-array </italic>preprocessing algorithms outperform single-array algorithms [<xref ref-type="bibr" rid="B1">1</xref>]. Therefore, it is not surprising that four of the most widely used preprocessing algorithms - RMA [<xref ref-type="bibr" rid="B2">2</xref>], gcRMA [<xref ref-type="bibr" rid="B3">3</xref>], MBEI [<xref ref-type="bibr" rid="B4">4</xref>], and PLIER [<xref ref-type="bibr" rid="B5">5</xref>] - are multi-array.</p>
+    <p>However, multi-array preprocessing algorithms restrict scientific inquiry because it is necessary to analyze all arrays simultaneously. Because data preprocessed separately cannot be combined without introducing artifacts [<xref ref-type="bibr" rid="B6">6</xref>-<xref ref-type="bibr" rid="B10">10</xref>], the total number of arrays one can compare is limited by computer memory, restricting large meta-analyses; furthermore, datasets that grow incrementally need to be preprocessed each time an array is added. Lastly, for microarrays to aid in clinical diagnosis and treatment, one needs to obtain information based on a single sample hybridized to a single microarray.</p>
+    <p>Recent work by McCall et al. (2010) provided a method of single-array preprocessing, Frozen Robust Multiarray Analysis (fRMA), that retains the advantages of multi-array preprocessing. The fundamental idea behind fRMA is a simple but powerful one - parameter estimates are precomputed based on a large biologically diverse database of microarrays and then <italic>frozen</italic>. These frozen parameter estimates can then be used to preprocess new array(s). In addition to allowing arrays to be preprocessed individually or in small batches and combined for subsequent analysis, fRMA resulted in improved performance when analyzing microarray data in the typical multi-array setting, especially when the new data consisted of arrays from different batches [<xref ref-type="bibr" rid="B10">10</xref>].</p>
+    <p>It should be noted that fRMA allows the user to easily combine Affymetrix microarrays from different batches; however, these arrays must all be from the same platform. For example, fRMA cannot be used to preprocess Affymetrix Human Genome U133A and U133 Plus 2.0 arrays together. To combine different platforms, one would need to first preprocess the data from each platform separately using fRMA and then combine the data using an additional batch correction algorithm such as ComBat [<xref ref-type="bibr" rid="B11">11</xref>] or Surrogate Variable Analysis (SVA) [<xref ref-type="bibr" rid="B12">12</xref>].</p>
+    <p>The primary limitation of fRMA is that it requires a curated database of microarrays to generate the frozen parameter vectors. As such, fRMA has currently been implemented for only the three most widely used Affymetrix microarray platforms - Human Genome U133 Plus 2.0, Human Genome U133A, and Mouse Genome 430 2.0. Efforts are underway to implement fRMA on two more platforms - Arabidopsis ATH1 Genome and Rat Genome 230 2.0.</p>
+    <p>To address this limitation, we have created an R package, frmaTools, designed to allow the user to easily create the frozen parameter vectors necessary to run fRMA. By decentralizing fRMA implementation, each group can contribute a database and parameter estimates specific to their area of research. We begin by describing the frmaTools package itself and how it interfaces with the standard frma package. Next we examine the size and scope of data necessary for a platform-wide implementation of fRMA. We then turn our attention to situations in which one might want to generate custom parameter vectors for a specific experiment.</p>
+  </sec>
+  <sec>
+    <title>2 Implementation</title>
+    <p>The computational tools described here are written in the open-source statistical language R and are available as part of the Bioconductor project [<xref ref-type="bibr" rid="B13">13</xref>], a collaborative effort to produce computational tools for biological data. As previously described in [<xref ref-type="bibr" rid="B10">10</xref>], we have implemented the primary tools necessary to preprocess and analyzed data from a single microarray hybridization in the R package, frma. This package provides the fundamental framework for single array preprocessing and analysis; however, it requires precomputed frozen parameter vectors. For platforms on which fRMA has been already implemented these frozen parameter vectors are contained in Bioconductor data packages of the form <italic>&lt;</italic>platform<italic>&gt;</italic>frmavecs and are automatically used by frma. To extend the fRMA algorithm to a new platform, one need only create a data package or supply ones own frozen parameter vectors directly to frma.</p>
+    <p>To preprocess single arrays using fRMA, one needs 5 frozen parameter vectors: (1) the reference normalization distribution, (2) the probe effect estimates, (3) the within batch residual variance, (4) the between batch residual variance, and (5) the within probeset average standard deviation. Optionally, a sixth vector of median standard errors is necessary to compute a measure of array quality. By default, the frma function attempts to load the appropriate data package for the AffyBatch object given as input. However, it is possible for the user to supply some or all of the frozen parameter vectors allowing the user to preprocess data using their own fRMA implementation.</p>
+    <p>The frmaTools package was developed to allow users to easily create their own frozen parameter vectors for use with frma. It contains two primary functions - makeVectorsAffyBatch and makeVectorPackage. The former is used to create the frozen parameter vectors used by frma; the latter both creates the vectors and builds a R data package for them. By creating a data package, one can share frozen parameter vectors with other researchers and track changes over time. The interface between the affy, frma, and frmaTools packages can best be understood by examining a typical workflow (Figure <xref ref-type="fig" rid="F1">1</xref>).</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Diagram of a typical workflow</bold>. A typical workflow using the affy, frma, and frmaTools packages to obtain fRMA gene expression estimates in the form of an ExpressionSet or frmaExpressionSet object. Above each arrow is the function used to transform one object into the next. The dashed lines divide the figure by the package used.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-12-369-1"/>
+    </fig>
+  </sec>
+  <sec>
+    <title>3 Results and Discussion</title>
+    <sec>
+      <title>3.1 Training Data</title>
+      <p>The frozen parameter vectors used in the fRMA algorithm are generated using a training dataset comprised of a balanced sample from multiple batches. For example, in the three current implementations of fRMA, 5 arrays from each of 200 different batches are used. In this case, batch is defined as a unique combination of tissue type and experiment id (e.g. normal liver from GSE2004). Here the between batch variability in probe effects captures all the potential differences between experiments - different labs, different technicians, different environmental conditions, etc. - as well as differences due to the hybridized tissue type.</p>
+      <p>One of the fundamental assumptions underlying fRMA is that the training data is both large enough and diverse enough that the vast majority of probes that differ in performance across batches can be detected as such in the training data. Some probes may only perform poorly in a small handful of tissues or laboratory conditions, so it is advantageous to include as many different tissues and experiments as possible to maximize our chance of detecting unreliable probes. When implementing fRMA on widely used platforms for which there is a plethora of publicly available data, it is advisable to use as many arrays as possible. This allows one to obtain the most information about the behavoir of probes across a wide variety of tissues and experiments. In these situations, the size of the training dataset should only be constrained by computer memory.</p>
+      <p>For a fixed amount of memory corresponding to a fixed number of arrays in the training dataset, the primary question is whether it is better to include a greater number of batches (and thereby fewer arrays per batch) or a greater number of arrays per batch (and thereby fewer batches). To address this question, we examined a variety of training datasets of varying number of batches and batch size. For each combination we repeated the random sampling used to select the training arrays 100 times. For each set of parameter vectors, we preprocessed a single average-quality array (GSM282373) and computed the median absolute deviation (MAD) across the 100 replicates for each probeset. To assess the consistency of fRMA for a variety of training datasets, we report the median and inter-quartile range (IQR) of the within-gene MADs (Table <xref ref-type="table" rid="T1">1</xref>).</p>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Training data size affects fRMA reproducibility</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th/>
+              <th align="center">Batch Size</th>
+              <th/>
+              <th/>
+              <th/>
+              <th/>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td/>
+              <td/>
+              <td align="center">
+                <bold>3</bold>
+              </td>
+              <td align="center">
+                <bold>5</bold>
+              </td>
+              <td align="center">
+                <bold>10</bold>
+              </td>
+              <td align="center">
+                <bold>15</bold>
+              </td>
+              <td align="center">
+                <bold>20</bold>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>Number of Batches</bold>
+              </td>
+              <td align="center">5</td>
+              <td align="center">0.7585 (0.1574)</td>
+              <td align="center">0.7573 (0.1437)</td>
+              <td align="center">0.8515 (0.1435)</td>
+              <td align="center">0.5812 (0.1231)</td>
+              <td align="center">0.4439 (0.0916)</td>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">10</td>
+              <td align="center">0.6795 (0.0799)</td>
+              <td align="center">0.7173 (0.0858)</td>
+              <td align="center">0.6563 (0.0641)</td>
+              <td align="center">0.4506 (0.1073)</td>
+              <td align="center">0.3878 (0.0901)</td>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">20</td>
+              <td align="center">0.5696 (0.0654)</td>
+              <td align="center">0.4691 (0.0523)</td>
+              <td align="center">0.5180 (0.0506)</td>
+              <td align="center">0.4551 (0.0561)</td>
+              <td align="center">0.3299 (0.0629)</td>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">30</td>
+              <td align="center">0.4429 (0.0491)</td>
+              <td align="center">0.3884 (0.0482)</td>
+              <td align="center">0.3387 (0.0380)</td>
+              <td align="center">0.3697 (0.0537)</td>
+              <td align="center">0.3036 (0.0440)</td>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">40</td>
+              <td align="center">0.3290 (0.0450)</td>
+              <td align="center">0.3700 (0.0488)</td>
+              <td align="center">0.2598 (0.0368)</td>
+              <td align="center">0.2642 (0.0303)</td>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">50</td>
+              <td align="center">0.3093 (0.0424)</td>
+              <td align="center">0.3107 (0.0339)</td>
+              <td align="center">0.2307 (0.0291)</td>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">60</td>
+              <td align="center">0.2661 (0.0374)</td>
+              <td align="center">0.2454 (0.0322)</td>
+              <td align="center">0.1955 (0.0261)</td>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">70</td>
+              <td align="center">0.2529 (0.0322)</td>
+              <td align="center">0.2286 (0.0295)</td>
+              <td align="center">0.2089 (0.0261)</td>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">80</td>
+              <td align="center">0.2256 (0.0281)</td>
+              <td align="center">0.2098 (0.0285)</td>
+              <td align="center">0.1616 (0.0259)</td>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">90</td>
+              <td align="center">0.1922 (0.0274)</td>
+              <td align="center">0.2058 (0.0248)</td>
+              <td align="center">0.1566 (0.0163)</td>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">100</td>
+              <td align="center">0.1891 (0.0277)</td>
+              <td align="center">0.1976 (0.0261)</td>
+              <td align="center">0.1128 (0.0167)</td>
+              <td/>
+              <td/>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Median and IQR of the across-replicate median absolute deviations (MAD) for different batch sizes (columns) and number of batches (rows) used to train the fRMA algorithm. The median provides an estimate of the typical MAD; the IQR provides an estimate of the variability seen in MADs across replicates.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>As one would expect, increasing the number of batches while holding batch size constent, typically improves the consistency of the results. However, increasing batch size while holding the number of batches constant appears to result in increased consistency in general, but this increase is far less reliable than increasing the number of batches. Specifically, increasing the batch size from 3 to 5 is just as likely to decrease consistency as increase it. However, increasing batch size from 5 to 10 or 10 to 15 yields increased consistency more often than not, and increasing batch size from 15 to 20, results in increased consistency for all batch sizes examined. This suggests that consistency is driven primarily by the ability to detect probes whose behavior differs between batches rather than detection of probes that are highly variable within batches and that detection of highly variable probes within batches requires a sizable investment in terms of the number of arrays per batch. Finally, the improvements in consistency due to adding additional batches, seem to diminish as the number of batches increases. Taken together these findings suggest that, one should first seek to increase the number of batches and then the number of samples per batch.</p>
+      <p>However, for future fRMA implementations, computer memory may not be the limiting factor. For newer microarray platforms, it is often the case that a relatively small number of labs have conducted one or more large experiments possibly involving a wide variety of tissues. As Table <xref ref-type="table" rid="T1">1</xref> suggests, this is not the ideal situation and training fRMA on such data may not capture the behavior of a number of probes. In such a situation, it may be more appropriate to consider a custom fRMA implementation for either a single large dataset or a single lab. Such an implementation will be described in Section 3.4.</p>
+    </sec>
+    <sec>
+      <title>3.2 Alternative CDF</title>
+      <p>Affymetrix microarray platforms by default use probe target definitions based on the knowledge available when they were created. Since then, our understanding of the human and mouse transcriptomes has greatly improved. Multiple studies have demonstrated that using updated probe annotations can significantly improve gene expression estimates and detection of differential expression [<xref ref-type="bibr" rid="B14">14</xref>-<xref ref-type="bibr" rid="B16">16</xref>].</p>
+      <p>While the original implementation of fRMA was based on the default Affymetrix probe annotation, the latest version of the frma package gives one the option to use the version 13 Entrez Gene probe annotation [<xref ref-type="bibr" rid="B14">14</xref>]. However, there are numerous other probe annotations that might be of interest (e.g. RefSeq, Ensembl, etc.). The frmaTools package allows one to choose any of the alternative annotations to create one's own fRMA implementation.</p>
+    </sec>
+    <sec>
+      <title>3.3 New Platform</title>
+      <p>Although we strive to implement fRMA on all Affymetrix microarray platforms for which there is a sufficient amount of publicly available data, fRMA may not currently be implemented on a platform of interest. If there is enough data publicly available, one has the option of creating one's own implementation by following the recommendations outlined in Section 3.1 and using the frmaTools package described in Section 2. However, for a relatively new microarray platform, there may not be enough publicly available data. In this case, one might consider creating a custom fRMA implementation. We describe this option in the following section.</p>
+    </sec>
+    <sec>
+      <title>3.4 Custom implementations of fRMA</title>
+      <p>The fRMA preprocessing algorithm typically requires a large diverse dataset to estimate the frozen parameters. The dataset is required to span a large number of batches in order to capture the variability in probe behavior, so that when preprocessing a new array, one can appropriately down-weight probes known to have either large between- or within-batch variance. While it is always possible that a probe that appears reliable in the training data performs poorly on a new array, the chance of this occurring can be minimized by training on a large diverse dataset.</p>
+      <p>However, a large diverse dataset is not always available either because the microarray platform is relatively new or because the data being analyzed differs from the publicly available data in some fundamental manner (e.g. a non-standard lab protocol or non-human RNA hybridized to a human array). In these cases, one might consider creating one's own custom fRMA implementation that is specific to a certain dataset, lab, or experiment.</p>
+      <sec>
+        <title>3.4.1 RMA-like implementation</title>
+        <p>If it is infeasible (due to lack of data) or undesireable (due to properties of the data) to use a standard fRMA implementation to analyze one's data, it could be beneficial to implement fRMA in a manner that mimics RMA. While the primary advantage of fRMA over RMA is the ability to preprocess a single microarray, the fRMA algorithm also improved the RMA model by recognizing that some probes within a probe set were more variable than others and down-weighting such probes [<xref ref-type="bibr" rid="B10">10</xref>]. For this reason, one might be interested in applying fRMA within a large dataset in the same manner one would apply RMA.</p>
+        <p>Such an implementation can easily be accomplished using the frmaTools package. To illustrate the ability of fRMA to mimic RMA when analyzing a single dataset, we compared the expression values generated by RMA to those generated by 3 different fRMA implementations:</p>
+        <p>1. the default fRMA implementation trained on a large diverse sample of arrays,</p>
+        <p>2. fRMA trained on a balanced random sample from the experiment being analyzed,</p>
+        <p>3. same as (2) but using all the arrays to form the reference normalization distribution.</p>
+        <p>As one would expect, the differences in expression values are much greater between the default fRMA implementation and RMA than between the two custom fRMA implementations and RMA (Figure <xref ref-type="fig" rid="F2">2</xref>). It is important to assess whether the observed differences between the custom fRMA implementation and RMA are due differences in performance. To assess this, we used a large pseudo-simulated spike-in dataset generated by extending the Affymetrix Human Genome U133A spike-in dataset. Specifically, we replicated each of the original arrays 3 times to create 9 batches of 14 arrays, each with a latin square spike-in design. We then added both random noise and random batch effects to each probe based on that probe's observed behavior in a large biologically diverse dataset. This resulted in a dataset with probe-specific noise and batch effects comparable to a typical large dataset.</p>
+        <fig id="F2" position="float">
+          <label>Figure 2</label>
+          <caption>
+            <p><bold>fRMA can mimic RMA</bold>. Distribution of difference in expression estimates for 22283 probesets across 200 breast tumor arrays (GSE11121) between 3 different fRMA implementations and RMA. The 3 fRMA implementations are as follows: (1) the default fRMA implementation (dotted line), (2) fRMA trained on a balanced random sample from the arrays being analyzed (dashed line), and (3) fRMA trained on a balanced random sample from the arrays being analyzed and using the same reference distribution for quantile normalization as RMA.</p>
+          </caption>
+          <graphic xlink:href="1471-2105-12-369-2"/>
+        </fig>
+        <p>We used this extended spike-in dataset to assess the performance of RMA and fRMA trained on only these data. Specifically, we assessed the accuracy, precision, and overall performance of both methods in three expression strata using the methodology proposed in [<xref ref-type="bibr" rid="B17">17</xref>]. We assessed accuracy by computing the <italic>signal detection slope</italic>, the slope from regressing observed expression on nominal concentration in the <italic>log</italic><sub>2 </sub>scale. The signal detect slope is the expected difference in observed expression when the true difference is a fold change of 2, with the optimal result being a slope of one. We assessed precision by computing the standard deviation and 99.5th percentile of the <italic>null log-ratios</italic>, log-ratios from transcripts which were not spiked in and therefore should not be differentially expressed. The standard deviation is an estimate of the variability in log-ratios for non-differentially expressed genes; the 99.5th percentile assesses outliers - 0.5% of non-differentially expressed genes are expected to exceed this value. Finally, we report the signal-to-noise ratio (SNR) and the probability of a gene with a true <italic>log</italic><sub>2 </sub>fold change of 2 being in a list of the 100 genes with the highest fold change (POT).</p>
+        <p>In all three strata, fRMA outperformed RMA with regard to precision and overall performance (Table <xref ref-type="table" rid="T2">2</xref>). In the low and medium strata, fRMA also had better accuracy than RMA; however, in the high strata, RMA and fRMA had comparable accuracy with RMA performing slightly better. The primary difference between the two preprocessing methods is that fRMA does not treat all probes as equally reliable - it down-weights probes that have high within- or between-batch variance. These results suggest that when preprocessing a fairly large dataset, it is potentially beneficial to use a custom fRMA implementation if a standard fRMA implementation is not available.</p>
+        <table-wrap id="T2" position="float">
+          <label>Table 2</label>
+          <caption>
+            <p>Comparison of RMA and fRMA based on bias, precision, and overall performance</p>
+          </caption>
+          <table frame="hsides" rules="groups">
+            <thead>
+              <tr>
+                <th/>
+                <th align="center">Preprocessing</th>
+                <th align="center">Slope (SD)</th>
+                <th align="center">Null SD</th>
+                <th align="center">Null 99.5%</th>
+                <th align="center">SNR</th>
+                <th align="center">POT</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left">
+                  <bold>Low</bold>
+                </td>
+                <td align="center">RMA</td>
+                <td align="center">0.14 (0.54)</td>
+                <td align="center">0.47</td>
+                <td align="center">1.46</td>
+                <td align="center">0.30</td>
+                <td align="center">0.01</td>
+              </tr>
+              <tr>
+                <td/>
+                <td align="center">fRMA</td>
+                <td align="center">0.20 (0.48)</td>
+                <td align="center">0.40</td>
+                <td align="center">1.24</td>
+                <td align="center">0.50</td>
+                <td align="center">0.02</td>
+              </tr>
+              <tr>
+                <td colspan="7">
+                  <hr/>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <bold>Medium</bold>
+                </td>
+                <td align="center">RMA</td>
+                <td align="center">0.69 (0.55)</td>
+                <td align="center">0.39</td>
+                <td align="center">1.26</td>
+                <td align="center">1.77</td>
+                <td align="center">0.15</td>
+              </tr>
+              <tr>
+                <td/>
+                <td align="center">fRMA</td>
+                <td align="center">0.75 (0.49)</td>
+                <td align="center">0.34</td>
+                <td align="center">1.11</td>
+                <td align="center">2.21</td>
+                <td align="center">0.23</td>
+              </tr>
+              <tr>
+                <td colspan="7">
+                  <hr/>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <bold>High</bold>
+                </td>
+                <td align="center">RMA</td>
+                <td align="center">0.61 (0.42)</td>
+                <td align="center">0.33</td>
+                <td align="center">0.99</td>
+                <td align="center">1.85</td>
+                <td align="center">0.18</td>
+              </tr>
+              <tr>
+                <td/>
+                <td align="center">fRMA</td>
+                <td align="center">0.60 (0.36)</td>
+                <td align="center">0.28</td>
+                <td align="center">0.86</td>
+                <td align="center">2.14</td>
+                <td align="center">0.23</td>
+              </tr>
+            </tbody>
+          </table>
+          <table-wrap-foot>
+            <p>Comparison of RMA and fRMA trained on the modified spike-in data. For three intensity strata, we report assessments of accuracy (column 1), precision (columns 2 &amp; 3), and overall performance (columns 4 &amp; 5).</p>
+          </table-wrap-foot>
+        </table-wrap>
+      </sec>
+      <sec>
+        <title>3.4.2 Incrementally growing, large dataset</title>
+        <p>Another reason one might wish to create a custom fRMA implementation is to analyze a dataset in which samples are added in small batches over a period of time and intermediate analysis would be beneficial. For example, suppose researchers are interested in investigating a gene signature for breast cancer prognosis when treated with a novel chemotheraputic drug. At the start of treatment, a biopsy of each patient's breast tumor is hybridized to a single microarray. As the results begin to trickle in, the researchers are able to train the fRMA model based on the currently available data and use that model to predict the response of patients currently undergoing treatment.</p>
+        <p>In contrast, most multi-array preprocessing methods would require the entire dataset to be preprocessed each time a new array was added. This poses several potential problems. First, although preprocessing hundreds of arrays with RMA requires relatively little computational time, other multi-array preprocessing methods take significantly longer. Second, while RMA requires little computational time, it does require large amounts of memory - preprocessing 200 arrays requires over 11GB of RAM; for 500 arrays, this increases to over 30GB. Third, once an array has been preprocessed with fRMA, it's gene expression estimates will remain the same regardless of any additional arrays that are added to the data. The same cannot be said of multi-array preprocessing methods, which would provide different expression estimates for a given array each time an additional array is added and the data are preprocessed again.</p>
+        <p>To assess the applicability of the fRMA algorithm in such a situation, we consider a dataset of 200 breast tumor samples (GSE11121) collected from patients over 477 days from Jan 29th, 2004 to March 20th, 2005. The arrays were grouped in 13 batches by the date on which the array was scanned. We defined a batch as consecutive dates over which at least 5 arrays were hybridized. Only 16 out of the 200 arrays did not fall into a batch.</p>
+        <p>First, we trained the fRMA algorithm using 5 arrays randomly selected from each of the 13 batches and stored the resulting parameter vectors. We then trained the fRMA algorithm using only the first N batches where we let N vary from 3 to 9. We then used each of these sets of parameter vectors to preprocess all 200 arrays. Finally, we subtracted the expression estimates based on all 13 batches from the expression estimates based on each of the other subsets. As one would expect, the distributions of these differences are centered close to zero and their spread decreases as the number of training batches increases (Figure <xref ref-type="fig" rid="F3">3</xref>). The bias, deviation of the center of the distribution from zero, can be explained primarily by the quantile normalization reference distribution. In fact, if we quantile normalize to a fixed reference distribution, all of the distributions are centered roughly at zero (Figure <xref ref-type="fig" rid="F4">4</xref>). On the other hand, the spread of the distribution is primarily due to the summarization step, in particular, the probe effect estimation. From this example, we can also gain insight into the number of batches one should include in the training data for a custom fRMA implementation. While training on the first 3 batches produced expression estimates that differed the most from training on the full dataset, the differences were actually remarkably small - 1.6% of the absolute differences exceeded 1, and 9.4% exceeded 0.5, with the median absolute difference equal to 0.15. If instead one were to train on roughly the first half of the data (the first 7 batches), only 0.2% of the absolute differences exceeded 1, and 2% exceeded 0.5, with the median absolute difference equal to 0.08. This suggests that training on just the first 3 batches would allow one to detect moderate to large changes in gene expression and that training on the first half of the data, perhaps from an initial pilot study, would be enough to detect relatively small changes in gene expression.</p>
+        <fig id="F3" position="float">
+          <label>Figure 3</label>
+          <caption>
+            <p><bold>fRMA can be used with incrementally growing datasets</bold>. Distribution of difference in expression estimates for 22283 probesets across 200 breast tumor arrays (GSE11121) when preprocessing with fRMA trained using the first N batches and fRMA trained using all batches.</p>
+          </caption>
+          <graphic xlink:href="1471-2105-12-369-3"/>
+        </fig>
+        <fig id="F4" position="float">
+          <label>Figure 4</label>
+          <caption>
+            <p><bold>Using the same normalization vector reduces bias</bold>. Same as Figure 3 except that the same normalization vector is used for all of the implementations. This suggests that differences in the center of the distributions are primarily due to differences in the reference distribution used in quantile normalization and that differences in the spread of the distributions are primarily due to estimation of the probe effects.</p>
+          </caption>
+          <graphic xlink:href="1471-2105-12-369-4"/>
+        </fig>
+      </sec>
+      <sec>
+        <title>3.4.3 A different definition of batch</title>
+        <p>In the current implementations of fRMA, batch is defined as the combination of tissue and experiment. However, there are certainly batch effects present within many experiments [<xref ref-type="bibr" rid="B18">18</xref>]; therefore, it could be advantageous to define batch in a different way. For example, in Section 3.4.2 we defined batch based on the date on which an array was scanned. There are many other potential sources of variation in an experiment any of which could be used to investigate batch effects. The frmaTools package allows the user the flexibility to define batch in any way he or she desires.</p>
+        <p>In fact, even if the user eventually plans to use a preprocessing method other than fRMA, examining the frozen parameter vectors generated by frmaTools may provide insights in to batch effects present in the data that need to be addressed in some manner. Specifically, we can compute an F-statistic for each probe, defined as the ratio of between-batch and within-batch variance, to assess whether that probe displays a batch effect in a given data set. To illustrate this, we computed these ratios for the data presented in Section 3.4.1 and the data presented in Section 3.4.2. In the former case, 20.3% of probes show a statistically significant batch effect, while in the latter case, only 1.8% of probes show a batch effect. Thus by simply comparing the within- and between-batch probe variances produced by frmaTools, we can assess the extent of batch effects within a given dataset.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec>
+    <title>4 Conclusions</title>
+    <p>We have described a novel R package, frmaTools, that allows the user to easily create his or her own fRMA implementation. We have described how this new package fits into a standard analysis workflow and the size and scope of data necessary to make use of it. This package will allow researchers to use fRMA on a much wider range of datasets and annotations. Furthermore, we have described several situations in which a dataset-specific custom fRMA implementation might be advantageous. The frmaTools package makes such custom implemenations straightforward. The frmaTools package is freely available as part of the Bioconductor project and as Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Availability and requirements</title>
+    <p>• <bold>Project name: </bold>frmaTools</p>
+    <p>• <bold>Project home page: </bold><ext-link ext-link-type="uri" xlink:href="http://www.bioconductor.org/packages/release/bioc/html/frmaTools.html">http://www.bioconductor.org/packages/release/bioc/html/frmaTools.html</ext-link></p>
+    <p>• <bold>Operating system(s): </bold>Platform independent</p>
+    <p>• <bold>Programming language: </bold>R</p>
+    <p>• <bold>Other requirements: </bold>R <italic>&gt;</italic>= 2.10</p>
+    <p>• <bold>License: </bold>GNU GPL</p>
+    <p>• <bold>Any restrictions to use by non-academics: </bold>None</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>MNM conceived the study, created the R package, and wrote the manuscript. RAI conceived the study and edited the manuscript. All authors read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>frmaTools package</bold>. The R/Bioconductor package frmaTools (version 1.4.0), providing tools for advanced use of the frma package.</p>
+      </caption>
+      <media xlink:href="1471-2105-12-369-S1.GZ">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements and Funding</title>
+    <p>We thank the maintainers of GEO and ArrayExpress for making the data publicly available. We thank Marvin Newhouse, Harris Jaffe, and Jiong Yang for helping manage the data. The work of MNM was partially funded by National Institutes of Health (T32GM074906). The work of RAI was partially funded by National Institutes of Health (R01GM083084).</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Bolstad</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Low-level analysis of high-density oligonucleotide array data: background, normalization and summarization</article-title>
+        <source>PhD thesis</source>
+        <year>2004</year>
+        <publisher-name>University of California</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hobbs</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Collin</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Beazer-Barclay</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Antonellis</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Scherf</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Speed</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Exploration, normalization, and summaries of high density oligonucleotide array probe level data</article-title>
+        <source>Biostatistics</source>
+        <year>2003</year>
+        <volume>4</volume>
+        <issue>2</issue>
+        <fpage>249</fpage>
+        <pub-id pub-id-type="doi">10.1093/biostatistics/4.2.249</pub-id>
+        <?supplied-pmid 12925520?>
+        <pub-id pub-id-type="pmid">12925520</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wu</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Gentleman</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Martinez-Murillo</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Spencer</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>A model-based background adjustment for oligonucleotide expression arrays</article-title>
+        <source>Journal of the American Statistical Association</source>
+        <year>2004</year>
+        <volume>99</volume>
+        <issue>468</issue>
+        <fpage>909</fpage>
+        <lpage>917</lpage>
+        <pub-id pub-id-type="doi">10.1198/016214504000000683</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Model-based analysis of oligonucleotide arrays: Expression index computation and outlier detection</article-title>
+        <source>Proceedings of the National Academy of Sciences</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <fpage>31</fpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.011404098</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="other">
+        <collab>Affymetrix</collab>
+        <article-title>Guide to probe logarithmic intensity error (PLIER) estimation</article-title>
+        <source>Technical Note</source>
+        <year>2005</year>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Choi</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Yu</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Kim</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Yoo</surname>
+          <given-names>O</given-names>
+        </name>
+        <article-title>Combining multiple microarray studies and modeling interstudy variation</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>suppl 1</issue>
+        <fpage>i84</fpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg1010</pub-id>
+        <?supplied-pmid 12855442?>
+        <pub-id pub-id-type="pmid">12855442</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Xu</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Tan</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Naiman</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Geman</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Winslow</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Robust prostate cancer marker genes emerge from direct integration of inter-study microarray data</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>20</issue>
+        <fpage>3905</fpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti647</pub-id>
+        <?supplied-pmid 16131522?>
+        <pub-id pub-id-type="pmid">16131522</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>DeConde</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hawley</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Falcon</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Clegg</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Knudsen</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Etzioni</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Combining results of microarray experiments: a rank aggregation approach</article-title>
+        <source>Statistical Applications in Genetics and Molecular Biology</source>
+        <year>2006</year>
+        <volume>5</volume>
+        <fpage>15</fpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ramasamy</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Mondry</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Holmes</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Altman</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Key issues in conducting a meta-analysis of gene expression microarray datasets</article-title>
+        <source>PLoS medicine</source>
+        <year>2008</year>
+        <volume>5</volume>
+        <issue>9</issue>
+        <fpage>e184</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pmed.0050184</pub-id>
+        <?supplied-pmid 18767902?>
+        <pub-id pub-id-type="pmid">18767902</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>McCall</surname>
+          <given-names>MN</given-names>
+        </name>
+        <name>
+          <surname>Bolstad</surname>
+          <given-names>BM</given-names>
+        </name>
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>RA</given-names>
+        </name>
+        <article-title>Frozen robust multiarray analysis (fRMA)</article-title>
+        <source>Biostatistics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <issue>2</issue>
+        <fpage>242</fpage>
+        <lpage>253</lpage>
+        <pub-id pub-id-type="doi">10.1093/biostatistics/kxp059</pub-id>
+        <?supplied-pmid 20097884?>
+        <pub-id pub-id-type="pmid">20097884</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Johnson</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Rabinovic</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Adjusting batch effects in microarray expression data using empirical Bayes methods</article-title>
+        <source>Biostatistics</source>
+        <year>2007</year>
+        <volume>8</volume>
+        <fpage>118</fpage>
+        <?supplied-pmid 16632515?>
+        <pub-id pub-id-type="pmid">16632515</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Leek</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Storey</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Capturing heterogeneity in gene expression studies by surrogate variable analysis</article-title>
+        <source>PLoS Genetics</source>
+        <year>2007</year>
+        <volume>3</volume>
+        <issue>9</issue>
+        <fpage>e161</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pgen.0030161</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gentleman</surname>
+          <given-names>RC</given-names>
+        </name>
+        <name>
+          <surname>Carey</surname>
+          <given-names>VJ</given-names>
+        </name>
+        <name>
+          <surname>Bates</surname>
+          <given-names>DM</given-names>
+        </name>
+        <name>
+          <surname>Bolstad</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Dettling</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ellis</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Gautier</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Ge</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Gentry</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hornik</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Hothorn</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Huber</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Iacus</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Leisch</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Maechler</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Rossini</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Sawitzki</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Tierney</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>JYH</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Bioconductor: Open software development for computational biology and bioinformatics</article-title>
+        <source>Genome Biology</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>R80</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2004-5-10-r80</pub-id>
+        <?supplied-pmid 15461798?>
+        <pub-id pub-id-type="pmid">15461798</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Dai</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Boyd</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Kostov</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Athey</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Bunney</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Speed</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Akil</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Watson</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Meng</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>Evolving gene/transcript definitions significantly alter the interpretation of GeneChip data</article-title>
+        <source>Nucleic acids research</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <issue>20</issue>
+        <fpage>e175</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gni179</pub-id>
+        <?supplied-pmid 16284200?>
+        <pub-id pub-id-type="pmid">16284200</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lu</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>X</given-names>
+        </name>
+        <article-title>The effect of GeneChip gene definitions on the microarray study of cancers</article-title>
+        <source>Bioessays</source>
+        <year>2006</year>
+        <volume>28</volume>
+        <issue>7</issue>
+        <fpage>739</fpage>
+        <lpage>746</lpage>
+        <pub-id pub-id-type="doi">10.1002/bies.20433</pub-id>
+        <?supplied-pmid 16850407?>
+        <pub-id pub-id-type="pmid">16850407</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sandberg</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Larsson</surname>
+          <given-names>O</given-names>
+        </name>
+        <article-title>Improved precision and accuracy for microarrays using updated probe set definitions</article-title>
+        <source>BMC bioinformatics</source>
+        <year>2007</year>
+        <volume>8</volume>
+        <fpage>48</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-8-48</pub-id>
+        <?supplied-pmid 17288599?>
+        <pub-id pub-id-type="pmid">17288599</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>McCall</surname>
+          <given-names>MN</given-names>
+        </name>
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>RA</given-names>
+        </name>
+        <article-title>Consolidated strategy for the analysis of microarray spike-in data</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2008</year>
+        <volume>36</volume>
+        <issue>17</issue>
+        <fpage>e108</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkn430</pub-id>
+        <?supplied-pmid 18676452?>
+        <pub-id pub-id-type="pmid">18676452</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Leek</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Scharpf</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Bravo</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Simcha</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Johnson</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Geman</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Baggerly</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Tackling the widespread and critical impact of batch effects in high-throughput data</article-title>
+        <source>Nature Reviews Genetics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <issue>10</issue>
+        <fpage>733</fpage>
+        <lpage>739</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg2825</pub-id>
+        <?supplied-pmid 20838408?>
+        <pub-id pub-id-type="pmid">20838408</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

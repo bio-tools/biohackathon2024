@@ -1,0 +1,1536 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Genomics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Genomics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Genomics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2164</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3394418</article-id>
+    <article-id pub-id-type="publisher-id">1471-2164-13-S2-S4</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2164-13-S2-S4</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Haplotype and minimum-chimerism consensus determination using short sequence data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>O'Neil</surname>
+          <given-names>Shawn T</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>soneil@nd.edu</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A2">
+        <name>
+          <surname>Emrich</surname>
+          <given-names>Scott J</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>semrich@nd.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Computer Science and Engineering, University of Notre Dame, Notre Dame, IN 46556, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2012</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>12</day>
+      <month>4</month>
+      <year>2012</year>
+    </pub-date>
+    <volume>13</volume>
+    <issue>Suppl 2</issue>
+    <supplement>
+      <named-content content-type="supplement-title">Selected articles from the First IEEE International Conference on Computational Advances in Bio and medical Sciences (ICCABS 2011): Genomics</named-content>
+      <named-content content-type="supplement-editor">Ion Mandoiu, Teresa Przytycka, and Sanguthevar Rajasekaran</named-content>
+    </supplement>
+    <fpage>S4</fpage>
+    <lpage>S4</lpage>
+    <permissions>
+      <copyright-statement>Copyright ©2012 O'Neil and Emrich; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2012</copyright-year>
+      <copyright-holder>O'Neil and Emrich; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2164/13/S2/S4"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Assembling haplotypes given sequence data derived from a single individual is a well studied problem, but only recently has haplotype assembly been considered for population-sampled data. We discuss a software tool called Hapler, which is designed specifically for low-diversity, low-coverage data such as ecological samples derived from natural populations. Because such data may contain error as well as ambiguous haplotype information, we developed methods that increase confidence in these assemblies. Hapler also reconstructs full consensus sequences while minimizing and identifying possible chimeric points.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>Experiments on simulated data indicate that Hapler is effective at assembling haplotypes from gene-sized alignments of short reads. Further, in our tests Hapler-generated consensus sequences are less chimeric than the alternative consensus approaches of majority vote and viral quasispecies estimation regardless of error rate, read length, or population haplotype bias.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>The analysis of genetically diverse sequence data is increasingly common, particularly in the field of ecoinformatics where transcriptome sequencing of natural populations is a cost effective alternative to genome sequencing. For such studies, it is important to consider and identify haplotype diversity. Hapler provides robust haplotype information and identifies possible phasing errors in consensus sequences, providing valuable information for population studies and downstream usage of resulting assemblies.</p>
+      </sec>
+    </abstract>
+    <conference>
+      <conf-date>3-5 February 2011</conf-date>
+      <conf-name>First IEEE International Conference on Computational Advances in Bio and medical Sciences (ICCABS 2011)</conf-name>
+      <conf-loc>Orlando, FL, USA</conf-loc>
+    </conference>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>The assembly and analysis of short-read sequence data presents a number of well known challenges including error correction, correct determination of repetitive regions, and accurate identification of genetic variation such as single nucleotide polymorphisms (SNPs) and insertions/deletions (indels). The end result of an assembly is a set of consensus sequences that ideally matches genetic sequence found on naturally occurring chromosomes. When input reads are all sourced from highly inbred individuals (e.g., from clonal lines of <italic>Drosophila</italic>), this is easy to ensure: any variation should result from sequencing error, and the popular "majority vote" mechanism will create a correct consensus [<xref ref-type="bibr" rid="B1">1</xref>].</p>
+    <p>When reads are sourced from non-inbred individuals, the majority vote mechanism reduces to an uninformed parsimony approach; we assume the existence of a "most frequent" consensus and rely on coverage depth to identify it. Unfortunately, this approach disregards the extant sequence diversity, and does not identify possible errors in the consensus assembly caused by it. Thus, proper analysis of diverse data should focus on the assembly or reassembly of haplotypes--consensus sequences that match to at least one of the diverse set of chromosomes in the sample.</p>
+    <p>Reconstructing haplotypes from low cost, low fidelity data sources has been an active area of research for over 20 years [<xref ref-type="bibr" rid="B2">2</xref>], but not always in the context of sequence assembly. For example, genotype (SNP-chip) data sourced from many diploid individuals of a population or lineage provides alleles present in each individual, but does not associate co-occurring alleles across loci and requires statistical methods to infer haplotypes [<xref ref-type="bibr" rid="B3">3</xref>].</p>
+    <p>Haplotypes can also be reconstructed given an assembly (or alignment against a reference) of the polymorphic reads. Because reads may span multiple variant loci, each read may contain a small amount of haplotype information. When the number of haplotypes is known to be two, this is known as the <italic>single-individual haplotype assembly problem</italic>.</p>
+    <p>Here, we are interested in a recent variant of the problem: assembling haplotypes from read data where the true number of source haplotypes is unknown, which we call the <italic>population haplotype assembly problem</italic>. For the related problem of viral quasispecies estimation, Eriksson et al. and Zagondi et al. previously formulated a graph-theoretic solution called ShoRAH [<xref ref-type="bibr" rid="B4">4</xref>,<xref ref-type="bibr" rid="B5">5</xref>], which was applied to high diversity, high coverage data (e.g., HIV data representing 6.8% pairwise genetic divergence sequenced to 2100X [<xref ref-type="bibr" rid="B5">5</xref>]). This application benefits from high diversity, because overlapping individual reads are likely to share informative SNPs, and errors can be more clearly identified because of high coverage.</p>
+    <p>Many recent biological studies, however, have sequenced genetic data from pools of higher-order individuals. For example, population-level <italic>de novo </italic>transcriptome assemblies provide a low cost alternative to whole genome sequencing for ecologically important non-model species [<xref ref-type="bibr" rid="B6">6</xref>]. Such populations represent less genetic diversity (6 to 20 SNPs per kilobase) and are sequenced to shallower depths (6-23X) [<xref ref-type="bibr" rid="B7">7</xref>-<xref ref-type="bibr" rid="B11">11</xref>]. For haplotyping, these properties result in difficulties that we address here:</p>
+    <p>• Less concrete haplotype information is available.</p>
+    <p>• Sequencing errors are more difficult to identify.</p>
+    <p>This paper expands on Hapler [<xref ref-type="bibr" rid="B12">12</xref>], a tool for assembling reliable haplotypes given a preliminary alignment of genetically diverse reads. Here, we describe and discuss the methods used by Hapler in detail, including a new feature that reconstructs full consensus sequences. This reconstruction identifies and minimizes possible chimeric crossover points (points at which different haplotypes may be contributing to the consensus due to lack of phasing information) while maximizing the read coverage, effectively recovering the parsimony principle of majority vote. Because the length of discernible haplotype regions is usually limited by read length, we focus on gene-sized alignments as would be found in transcriptome studies. The core of the graph theoretic formulation of Eriksson et al. relies on a maximum unweighted matching of a bipartite representation of the alignment. Our formulation builds on this and incorporates 1) <italic>in-situ </italic>isolation of reads likely containing errors, via a weighted matching of a related representation, and 2) parameter adjustable "quality" constraints, reducing the probability of reconstructing chimeric haplotypes (see Methods). This is accomplished by exploiting the mechanism of the Hungarian weighted matching method, sampling from the space of possible haplotypings and retaining only commonalities; by default, this parameter is kept high to ensure high-quality output.</p>
+    <p>We test Hapler by simulating sequencing, alignment, haplotype assembly and consensus reconstruction for population-sourced data representing diversities of 1.2% and 4.4%. These simulations indicate that the novel methods employed by Hapler effectively assemble correct haplotype regions, and that the quality of results produced will scale with the quality of future input data: as datasets grow to contain longer reads and fewer sequencing errors, more correct and complete haplotypes will result.</p>
+    <p>Finally, we find that the consensus sequences produced include less chimerism than related approaches of quasispecies estimation and majority vote.</p>
+    <sec>
+      <title>Related work</title>
+      <p>Combinatorial approaches for the single-individual haplotype assembly problem abound (e.g. [<xref ref-type="bibr" rid="B13">13</xref>-<xref ref-type="bibr" rid="B16">16</xref>]). In these approaches, certain columns in the alignment <italic>M </italic>are identified as SNP columns. Based on these, a <italic>conflict graph G<sub>M </sub></italic>is created wherein each node represents one read, and nodes in <italic>G<sub>M </sub></italic>are connected if their reads <italic>conflict</italic>, i.e., overlap at some SNP column and disagree in the allele. Some SNP columns may contain <italic>gaps</italic>, positions where the allele is unknown. In this paper, we distinguish deletion alleles ('<italic>-</italic>') that cause conflicts from gap positions ('<italic>~</italic>'), which do not. For example, paired-end reads and newer strobe reads can be viewed as long sequences containing one or more sections of contiguous gaps that do not contain discernible SNPs.</p>
+      <p>In the single individual haplotype assembly problem, the conflict graph will necessarily be bipartite in the absence of sequencing errors. In this case, computing the bipartition reconstructs haplotypes. When sequencing errors are present, the graph may not be bipartite. Various optimizations exist for inducing bipartiteness such as Minimum SNP Removal (MSR) and Minimum Fragment Removal (MFR), though these are NP-Hard unless the reads are all gapless [<xref ref-type="bibr" rid="B17">17</xref>]. Other models are NP-Hard even in the gapless case [<xref ref-type="bibr" rid="B18">18</xref>]. Because of similar theoretical constraints in Hapler, all results presented here assume gapless reads (see Conclusion, Methods).</p>
+      <p>Recently, the MFR problem has been extended to when the number of known haplotypes is increased from two to a known constant <italic>k </italic>[<xref ref-type="bibr" rid="B19">19</xref>]. Non-graph theoretic approaches also exist for the single individual haplotype assembly problem (e.g [<xref ref-type="bibr" rid="B20">20</xref>,<xref ref-type="bibr" rid="B21">21</xref>]). The related problem of determining haplotypes from unphased genotype "SNP-chip" data of several diploid individuals has also received extensive attention; see Salem et al. for a comprehensive review [<xref ref-type="bibr" rid="B3">3</xref>].</p>
+      <p>In our formulation of the population haplotype assembly problem, the goal is not to bipartition <italic>G<sub>M</sub></italic>, but rather to minimally color it--or, equivalently, minimally clique cover the complement "compatibility" graph <inline-formula><mml:math id="M1" name="1471-2164-13-S2-S4-i1" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msubsup></mml:math></inline-formula>--assuming sequencing errors have been addressed (Figure <xref ref-type="fig" rid="F1">1</xref>). In the context of the quasispecies estimation problem, Eriksson et al. observed that with gapless data the set of irredundant reads and their conflict information induce a partial order. Thus, Dilworth's theorem applies, and it is sufficient to find a chain decomposition of a transitive orientation, <inline-formula><mml:math id="M2" name="1471-2164-13-S2-S4-i2" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>M</mml:mi></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op"> ⃗</mml:mo></mml:mover></mml:math></inline-formula>, of the compatibility graph. Such a chain decomposition is found via a maximum unweighted matching in a bipartite graph representation of the "reachability" relationships in <inline-formula><mml:math id="M3" name="1471-2164-13-S2-S4-i3" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>M</mml:mi></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op"> ⃗</mml:mo></mml:mover></mml:math></inline-formula>. Recently, the method of Eriksson et al. has been improved upon by Astrovskaya et al., who incorporated probabilistic weights [<xref ref-type="bibr" rid="B22">22</xref>]. Both of these methods attempt to reconstruct full end-to-end haplotype consensus sequences by relying on suffcient per-haplotype coverage [<xref ref-type="bibr" rid="B4">4</xref>,<xref ref-type="bibr" rid="B5">5</xref>].</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Example conflict graph <italic>G<sub>M </sub></italic>overlayed on a multiple alignment, with alleles shown only for variant loci</bold>. These reads likely represent two haplotypes, with a sequencing error in read number 6. Hapler considers that there are many possible colorings of conflict graphs (e.g., dark and light are both proper colorings for read number 1), each representing a different reconstruction consistent with the data.</p>
+        </caption>
+        <graphic xlink:href="1471-2164-13-S2-S4-1"/>
+      </fig>
+      <p>Reconstructing consensus sequences with a focus on identifying and minimizing chimerism has been minimally studied. For single individual haplotype assembly, the number of possible crossover points is fully determined by the number of connected components with at least two nodes in the bipartite conflict graph [<xref ref-type="bibr" rid="B20">20</xref>]. The Celera Assembler incorporated a window-based phasing heuristic, reporting a number of "variant regions" for each consensus [<xref ref-type="bibr" rid="B23">23</xref>].</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <p>We previously tested Hapler's haplotype assembly abilities on a low diversity dataset, including a single outgroup haplotype for higher diversity tests [<xref ref-type="bibr" rid="B12">12</xref>]. These initial results suggested that Hapler can effectively assemble haplotype regions, however the inclusion of only a single outgroup sequence limited the generality of the conclusions. Here, we test both Hapler's haplotyping and consensus reconstruction abilities on data sourced from a 600 bp barcoding region of the COI gene of <italic>Melitaea cinxia</italic>, a well-studied butterfly. Of the known haplotypes for this gene, we chose eight from two distinct clades (Supplementary Figure <xref ref-type="fig" rid="F1">1</xref>, Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>[<xref ref-type="bibr" rid="B24">24</xref>]). The first, "Clade 1," consists of four haplotypes containing 7 SNPs for a total diversity of 1.16%, just below that estimated for the transcriptome as a whole (1.2%, [<xref ref-type="bibr" rid="B8">8</xref>]). This clade represents our "low diversity" test data. The second clade also consists of four haplotypes, and contains 10 SNPs. When combined, these two clades contain 24 SNPs, for a total diversity of 4.0%. These combined clades represent our "high diversity" data.</p>
+    <p>Unless otherwise specified, we simulated sequencing and perfect assembly by randomly selecting subsequences of haplotypes of a specific length. For the low diversity dataset, we sequenced each of the four haplotypes to 6X coverage to achieve total coverage similar to recent transcriptome sequencing projects (23X in [<xref ref-type="bibr" rid="B11">11</xref>]). For the high diversity dataset, each of the eight haplotypes was sequenced to 3X coverage. Because we are interested in testing up to Sanger size read lengths on full gene transcripts, each COI barcoding variant was quadrupled in length by concatenating the COI variant, the variant with T's and C's switched, the variant with A's and G's switched, and the variant with A's and T's switched. This process retains the same level of diversity and allows for comparisons to other tools that map reads to a reference. This process did not introduce inter-SNP distances longer than those present in the original COI barcoding variants.</p>
+    <p>If a sequencing error <italic>e </italic>is specified, each base of each read is mutated to one of the remaining three bases (uniformly chosen) with probability <italic>e</italic>. Unless otherwise specified, default parameters were used for Hapler ("Binomial" SNP calling with default parameters, minimum of 20 coloring repetitions, see Methods).</p>
+    <sec>
+      <title>Read length and diversity</title>
+      <p>We first tested Hapler's ability to assemble correct haplotypes by varying simulated read lengths without sequencing error and assuming perfect SNP calling. For each read length, we assembled haplotypes over 5 trials of random simulated sequencing. All haplotype regions reported here exclude the "universal" haplotype, which is composed of reads that are common to all complete haplotypes (see Methods). For all tests, we call a haplotype assembly correct if it is an <italic>exact </italic>subsequence of some original COI sequence, otherwise it is incorrect.</p>
+      <p>Figure <xref ref-type="fig" rid="F2">2(a)</xref> shows the results for the low diversity data: each point represents an assembled haplotype region. The vertical axis shows haplotype assembly length (see Methods for details) while color indicates coverage, determined by non-redundant and accompanying redundant reads assigned to that haplotype. Horizontal-axis jitter has been added for readability. Similar results are shown in Figure <xref ref-type="fig" rid="F2">2(b)</xref> for the high-diversity dataset.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Haplotype assemblies of the low and high diversity datasets to 24X total coverage, varying read length, with 0% error rate</bold>. Correct haplotype assemblies (see text) are represented with circles; erroneous assemblies are shown as triangles and offset for legibility. For these five trials, chimerism is rare and longer read lengths provide longer haplotype assemblies as expected.</p>
+        </caption>
+        <graphic xlink:href="1471-2164-13-S2-S4-2"/>
+      </fig>
+      <p>Results for both datasets are largely similar: in both cases, longer sequences result in longer haplotypes, and longer haplotypes tend to have higher coverage. In both cases, we see improvements between 200 bp and 400 bp reads. This is unsurprising, as all extended COI variants share identical regions with other variants of size ≈ 250 bp. Lack of <italic>&gt;</italic>250 bp reads prevents phasing across these regions, which Hapler correctly infers. For the low diversity dataset, all reconstructed haplotypes were correct; for the high diversity dataset, of the 2,766 assembled sequences only seven were incorrect chimeras, shown offset for readability in Figure <xref ref-type="fig" rid="F2">2(b)</xref>.</p>
+    </sec>
+    <sec>
+      <title>Error rate</title>
+      <p>Next, we tested Hapler's performance with sequencing errors. For these tests, we fixed read lengths to 400 bp (representative of 454 FLX Titanium technology). In order to show the results for haplotype assembly in the general case, for each sequencing error rate <italic>e </italic>in Figure <xref ref-type="fig" rid="F3">3(a)</xref>, we show the haplotypes assembled over 5 trials.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Haplotype assemblies varying error rate for the low diversity dataset over five trials of sequencing to 24X total coverage</bold>. Figure 3(b) aggregates all results of 3(a) binned by coverage, identifying counts and percents of correct versus incorrect assemblies. Even with high rates of sequencing error, high coverage indicates a likely correct assembly.</p>
+        </caption>
+        <graphic xlink:href="1471-2164-13-S2-S4-3"/>
+      </fig>
+      <p>As the error rate increases, the average length of correct haplotypes decreases, while the number of incorrect haplotypes increases. Length of incorrect haplotypes is comparable to correct haplotypes, particularly for high error rates. However, when error rate is high the average coverage of incorrect haplotypes is low, indicating that Hapler successfully isolates sequencing errors as anomalous, rare haplotypes with little support.</p>
+      <p>Figure <xref ref-type="fig" rid="F3">3(b)</xref> shows counts of all correct and incorrect haplotype assemblies of Figure <xref ref-type="fig" rid="F3">3(a)</xref> binned by coverage, as well as the percentage correct for each bin. This figure indicates that average cutoff can be an effective metric for determining whether haplotypes represent reality--at 2X or higher coverage, nearly all assembled haplotypes are correct as the within-haplotype majority vote mechanism (see Methods) is able to filter out sequencing errors. Results for the high diversity dataset were similar, though haplotype assembly lengths suffered in comparison, particularly at high error rates where true SNPs are difficult to distinguish from rare alleles (Supplementary Figures <xref ref-type="fig" rid="F2">2(a)</xref> and <xref ref-type="fig" rid="F2">2(b)</xref>, Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>). When coverage is doubled, results are improved at the highest error rates (Supplementary Figures <xref ref-type="fig" rid="F2">2(c)</xref> and <xref ref-type="fig" rid="F2">2(d</xref>), Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>). For this test, we also evaluated the full length consensus sequences produced by Hapler, the majority vote, and the most populous quasispecies estimated by ViSpA [<xref ref-type="bibr" rid="B22">22</xref>]. We emphasize that while ViSpA can account for many haplotypes, it is designed for much higher diversity and sequencing depths for viral quasispecies applications; here we use parameters <italic>n </italic>= 1 and <italic>t </italic>= 80 as appropriate for lower-diversity datasets [<xref ref-type="bibr" rid="B22">22</xref>]. Although a wide variety of software exists for the single individual haplotype assembly problem, these solutions assume two haplotypes are to be constructed, and thus would be inappropriate for comparison to ViSpA and Hapler for data representing many haplotypes.</p>
+      <p>We evaluated each of these consensus generation techniques by computing the minimum number of crossovers (pairs of SNP loci which must be supported by different haplotypes) necessary to reconstruct the consensus amongst 1) original input haplotypes, representing "true" crossovers, and 2) Hapler assembled haplotypes, representing "estimated" crossovers; in both cases, sequencing errors included in consensus sequences at SNP positions also incur crossovers (see Methods). For chimerism analyses, each data point is an average of 50 sequencings/assemblies/consensus reconstructions.</p>
+      <p>Figure <xref ref-type="fig" rid="F4">4</xref> shows the chimerism analysis varying error rate. At low error rates, the Hapler consensus contains between 0.5 and two true chimerisms on average, increasing to just over three at higher error rates. The majority vote holds steady at ≈ 5 crossover points on average, regardless of error rate. ViSpA significantly improves on the results of ShoRAH (consistently incurring ≈ 12 crossovers, not shown) and improves on the majority vote, particularly at low error rates.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Chimerism analysis varying error rate</bold>. True crossover numbers indicate the minimum number of crossovers through sequenced haplotypes needed to reconstruct the consensus. Hapler estimated crossover numbers indicate the minimum number of crossovers through Hapler-assembled haplotypes needed to reconstruct the consensus. Each datapoint represents an average of 50 measurements.</p>
+        </caption>
+        <graphic xlink:href="1471-2164-13-S2-S4-4"/>
+      </fig>
+      <p>Hapler's estimate of the number of crossover points trends between one and two above the true number for its own and the majority vote consensus. At high error rates, the estimated number of crossovers for the ViSpA consensus diverges from the true number faster than for the other two. For the high diversity dataset (Supplementary Figure <xref ref-type="fig" rid="F3">3</xref>, Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>), the true number of crossovers for Hapler only increases by approximately one, whereas the number for the majority vote suffers significantly incurring over 10 crossovers on average.</p>
+    </sec>
+    <sec>
+      <title>Random repetitions</title>
+      <p>Because many possible haplotypings may exist, we randomly repeat the colorings that produce haplotype assemblies and only infer information common to all of them (see Methods). By default, Hapler runs a minimum of 20 such repetitions, and continues until the number of haplotypes assembled has stabilized for the previous 50% of repetitions. For Figure <xref ref-type="fig" rid="F5">5(a)</xref>, we use artificially low numbers of repetitions on the low diversity dataset; read length was held at 400 bp and the error rate was held at 0.01, and we again show haplotype assemblies produced over 5 trials of sequencing.</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Haplotype assemblies and consensus chimerism analysis varying coloring repetitions (for Hapler) and <italic>n </italic>(for ViSpA) for the low diversity dataset</bold>. Figure 5(a) shows that haplotype assemblies are shorter but less likely to be chimeric as the number of repetitions increases, while 5(b) shows that when full length consensus sequences are reconstructed, true rates of chimerism are low even when few repetitions are used.</p>
+        </caption>
+        <graphic xlink:href="1471-2164-13-S2-S4-5"/>
+      </fig>
+      <p>With only a single minimum coloring most haplotype assemblies, while long, are incorrect chimeras. As the number of repetitions increases, correct haplotype inferences quickly begin to outnumber incorrect ones and the lengths of both correct and incorrect haplotypes drop. We quickly see an asymptotic behavior: correct haplotypes reach a minimum length and incorrect haplotypes reach a small average coverage. Results were similar for the high diversity dataset (Supplementary Figure <xref ref-type="fig" rid="F4">4(a)</xref>, Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>). Figure <xref ref-type="fig" rid="F5">5(b)</xref> shows the chimerism analysis for consensus reconstructions. While we varied the number of repetitions used by Hapler from 1 to 12, we also varied the <italic>n </italic>parameter used by ViSpA from 1 to 12. When the number of repetitions is very small, we see Hapler for the first time consistently underestimating the number of crossovers. In this case, although the number of true crossovers is steady for Hapler's consensus sequences at approximately two, Hapler estimates zero crossovers because of its assembly of long (but actually chimeric) haplotypes. For both the low and high diversity datasets, the estimated chimerism approximates or exceeds the true chimerism after four colorings (Figure <xref ref-type="fig" rid="F5">5(b)</xref>, Supplementary Figure <xref ref-type="fig" rid="F4">4(b)</xref>, Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>).</p>
+    </sec>
+    <sec>
+      <title>Unequal haplotype representation</title>
+      <p>The situation tested thus far--equal representation of several haplotypes--represents a difficult scenario for the majority vote mechanism, which is expected to perform better when a single haplotype is more prevalent. In this section, we modified the low diversity dataset such that one haplotype is represented three times in the "population" while the other three haplotypes are represented once. We simulated sequencing of these to 4X coverage each (12X for the most populous haplotype, 4X each for the remaining three) keeping the read length at 400 bp and varying error rate. Figure <xref ref-type="fig" rid="F6">6(a)</xref> shows the haplotype region assembly results over 5 trials of sequencing; these are similar to those of Figure <xref ref-type="fig" rid="F3">3(a)</xref>, though at high error rates assembled haplotypes are shorter.</p>
+      <fig id="F6" position="float">
+        <label>Figure 6</label>
+        <caption>
+          <p><bold>Haplotype assemblies and chimerism analysis for the low diversity dataset with a single over-represented haplotype</bold>. These results indicate that high error rates reduce the length of haplotype assemblies compared to equal haplotype representation, however true chimerism is generally lower in reconstructed consensus sequences.</p>
+        </caption>
+        <graphic xlink:href="1471-2164-13-S2-S4-6"/>
+      </fig>
+      <p>Figure <xref ref-type="fig" rid="F6">6(b)</xref> shows the chimerism results for consensus sequences. The majority vote and Hapler are able to reduce chimerism overall in this test, while ViSpA shows improvement at low error rates. Even with a single haplotype representing 50% of the population, the majority vote consistently contains approximately three crossovers while Hapler significantly improves on this, particularly for low error rates. The continued poor results for the majority vote may seem surprising, however, there are four loci in the expanded COI haplotypes where the most populous haplotype differs from all others. Majority vote requires not only a most populous haplotype, but a true majority haplotype. This is not always guaranteed, particularly in populations with high gene flow (see, e.g., [<xref ref-type="bibr" rid="B25">25</xref>]).</p>
+    </sec>
+    <sec>
+      <title>Runtime</title>
+      <p>Hapler's robustness comes at a computational cost: repeated weighted matching dominates the runtime at <italic>O </italic>(<italic>rn</italic><sup>3</sup>), where <italic>r </italic>is the number of repetitions and <italic>n </italic>is the number of irredundant reads in the largest haplotype block (see Methods). Even when the largest haplotype block is small, reconstruction of the minimum chimerism consensus runs in <italic>O </italic>(<italic>mk</italic><sup>2</sup>) time and space, where <italic>m </italic>is the number of called SNPs and <italic>k </italic>is the number of haplotype regions.</p>
+      <p>Table <xref ref-type="table" rid="T1">1</xref> shows runtimes, simulating sequencing of the low diversity dataset with 400 bp reads and a high error rate of 5% to various depths. Using the "Simple" SNP caller ensured that each read would be considered as an irredundant read that would also become an individual haplotype assembly (# reads = <italic>n </italic>= <italic>k</italic>). These tests were run on a dual core 2.2 GHz desktop with 8 GB of RAM, though all tests used only a single core and less than 200 MB of resident memory. Hapler used 100 repetitions.</p>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Runtimes</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="center">Coverage</th>
+              <th align="center"># SNPs</th>
+              <th align="center"># Reads</th>
+              <th align="center">Runtime</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">5X</td>
+              <td align="center">1482</td>
+              <td align="center">120</td>
+              <td align="center">15 secs</td>
+            </tr>
+            <tr>
+              <td align="center">10X</td>
+              <td align="center">1970</td>
+              <td align="center">240</td>
+              <td align="center">61 secs</td>
+            </tr>
+            <tr>
+              <td align="center">15X</td>
+              <td align="center">2186</td>
+              <td align="center">360</td>
+              <td align="center">155 secs</td>
+            </tr>
+            <tr>
+              <td align="center">20X</td>
+              <td align="center">2280</td>
+              <td align="center">480</td>
+              <td align="center">430 secs</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Runtimes, simulating sequencing of the low diversity dataset with high error rate and "Simple" SNP caller (so that each read is considered as a unique haplotype).</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>As expected, runtimes grow super-linearly with the number of reads (though perhaps not as quickly as the worst case <italic>n</italic><sup>3 </sup>factor would suggest). For comparison to the Table <xref ref-type="table" rid="T1">1</xref>, we consider an example 114 kilobase contig of the population-sourced <italic>Anopheles gambiae </italic>genome assembly (Lawniczak et al., [<xref ref-type="bibr" rid="B26">26</xref>]) comprised of 984 reads containing 879 non-redundant reads with the largest of 12 haplotype blocks containing 481. For this contig, Hapler called 2,845 SNPs (using the "Simple Strict" SNP caller, see Methods) and reconstructed a consensus with 146 estimated crossovers in 12 minutes 38 seconds. All individual Hapler runs contributing to Figures <xref ref-type="fig" rid="F2">2</xref> through 6 ran in under 12 seconds.</p>
+    </sec>
+  </sec>
+  <sec sec-type="conclusions">
+    <title>Conclusions</title>
+    <p>Until recently, the analysis of genetically diverse short read data has focused on identifying single-locus polymorphisms such as SNPs (and, using mate-pair data, longer polymorphisms such as inversions and long indels [<xref ref-type="bibr" rid="B27">27</xref>]). However, haplotypic information is often more useful than locus-specific information [<xref ref-type="bibr" rid="B28">28</xref>,<xref ref-type="bibr" rid="B29">29</xref>]. Here, we described a new software tool called Hapler designed to accurately assemble haplotypes from low diversity, low coverage data. Assemblies can be improved by minimizing the number of haplotypes supported by the data while maximizing the number with minimal support, and sampling from the many possible consistent haplotypings to infer only robust haplotype regions (see Methods).</p>
+    <p>The theoretical foundations of Hapler require that sequences be gapless. In support of this requirement, initial experiments that incorporated mate-pair information only produced few incorrect haplotypes, with many internal errors. For this reason Hapler currently does not incorporate mate-pair information. Hapler's added robustness does come at a computational cost, but experimental runtime analysis indicates that runtime will nevertheless be adequate for single alignments up to 100 kilobases in length, though low levels of phasing information are likely to prevent useful results over regions of this size. Runtimes also suggest that Hapler will be useful in practice for whole-transcriptome assemblies, where contig alignments are on the order of a few kilobases in length.</p>
+    <p>Although low levels of phasing information may prevent assembly of many long haplotype regions in some applications, Hapler can use the few long and highly covered regions to produce a full consensus minimizing possible chimerism. In this regard, Hapler performs well compared to the majority vote and quasispecies estimation tools (using the most frequent quasispecies estimate as the consensus). Perhaps most telling, of the 350 consensus sequences produced by Hapler over various error rates for Figure <xref ref-type="fig" rid="F4">4</xref>, 20 were exact matches to some sequenced haplotype, whereas the other approaches produced no exact matches. Results were similar when varying parameters (Hapler: 185, ViSpA: 2, majority vote: 0) and in the unequal representation test (Hapler: 208, ViSpA: 3, majority vote: 4). We emphasize that quasispecies estimation tools are designed for datasets of much higher coverage and diversity, and thus optimize criteria and utilize parameters specific to those applications.</p>
+    <p>Hapler can estimate the chimerism of any consensus against its own haplotype region assemblies. This estimate will naturally overestimate the true chimerism (due to Hapler's conservative methods); however, in most tests Hapler's estimated chimerism for the approaches tested preserved the ranking of true chimerism. The only exception we found was when error rates were high (Figure <xref ref-type="fig" rid="F4">4</xref>), and Hapler estimated ViSpA as having a higher chimerism than the majority vote, when in fact ViSpA performed similarly to or slightly better than the majority vote.</p>
+    <p>Finally, Hapler not only minimizes chimerism in its consensus reconstructions, it also identifies where possible chimeric points might occur. This is useful information, for example, when designing microarray probes or PCR primers that may fail if they include chimeric sequence.</p>
+    <sec>
+      <title>Software availability</title>
+      <p>Hapler is packaged as a single Java.jar file, and has been tested with Java 1.6, requiring no other dependencies. It is available at <ext-link ext-link-type="uri" xlink:href="http://www.nd.edu/~biocmp/hapler">http://www.nd.edu/~biocmp/hapler</ext-link> and is released under an LGPL license. Hapler is also easy to use: to reconstruct haplotypes for a list of contig IDs in an Amos bank, one can simply use the Amos tools in conjunction with Hapler: bank2contig -E eIDList.txt amosBank | java - jar Hapler.jar --input -.</p>
+    </sec>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <p>Hapler takes as input read alignments either in TIGR [<xref ref-type="bibr" rid="B30">30</xref>] or SAM [<xref ref-type="bibr" rid="B31">31</xref>] format, as well as an optional list of positions to consider as variant loci. A polynomial time solution requires that reads do not contain gaps, thus mate-pair information is currently ignored. For each multiple alignment, Hapler executes the following steps:</p>
+    <p>1. (Optional) SNP calling.</p>
+    <p>2. Masking of redundant reads.</p>
+    <p>3. Determination of haplotype blocks from connected components of <italic>G<sub>M</sub></italic>, and determination of the "universal" haplotype.</p>
+    <p>4. For each haplotype block <italic>M </italic>':</p>
+    <p>(a) Determining the transitive compatibility graph <inline-formula><mml:math id="M4" name="1471-2164-13-S2-S4-i4" overflow="scroll"><mml:mrow><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:mrow></mml:math></inline-formula>.</p>
+    <p>(b) Minimum coloring of <inline-formula><mml:math id="M5" name="1471-2164-13-S2-S4-i5" overflow="scroll"><mml:mrow><mml:msubsup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msubsup></mml:mrow></mml:math></inline-formula>, maximizing the number of single-node colors.</p>
+    <p>(c) Randomly repeating step b), identifying commonalities in colorings, and assembling haplotype regions.</p>
+    <p>5. Reconstructing an overall consensus, minimizing possible crossover points while maximizing SNP allele coverage.</p>
+    <p>6. If given a consensus sequence to evaluate, computing the minimum number of crossovers to support it with haplotype regions. If also given a set of "true" haplotypes, computing the minimum number of crossovers through these to support the given and reconstructed consensus sequences.</p>
+    <p>As the sections below discuss, it is primarily steps 3), 4b), and 4c) that improve haplotype assembly quality.</p>
+    <sec>
+      <title>SNP calling</title>
+      <p>Although step 4b) is designed to isolate reads that likely contain errors so they can be ignored (see below), many sequencing technologies induce frequent errors that are easy to identify. For example, 454 data is plagued by indel errors adjacent to homopolymer runs [<xref ref-type="bibr" rid="B32">32</xref>]. Hapler currently incorporates a number of methods for identifying which variant loci should be used in haplotyping:</p>
+      <p>• Simple: Any variant locus regardless of allele frequency is treated as a SNP locus.</p>
+      <p>• Simple Strict (default): Any variant locus where a minority allele is present at least twice or is covered by less than 10 reads is treated as a SNP.</p>
+      <p>• 454: A variant locus is a SNP if 1) the majority allele is not a '-' and 2) either a) the number of non-'-' alleles is at least two, or b) there is any non-'-' allele that is not part of a homopolymer run of length ≥ 3.</p>
+      <p>• Binomial (default): Given an estimated error rate <italic>e </italic>(default 0.005) and sequence alphabet <italic>A</italic>, at a non-polymorphic locus the expected occurrence rate of the second most frequent character (under an equal substitution model) will be <italic>e/</italic>(|<italic>A| - </italic>1). Thus, this method uses a Bonferroni corrected Binomial test to call SNPs: for each locus, we call a SNP if the actual second most frequent character count is greater than <italic>F</italic><sup>-1</sup>(<sup>1 </sup>- <italic>α/L</italic>; <italic>d</italic>, <italic>e/</italic>(|<italic>A</italic>| - 1)), where <italic>F </italic><sup>- 1 </sup>is the inverse cumulative Binomial distribution function, <italic>α </italic>is the p-value cutoff (default 0.05), <italic>L </italic>is the length of the alignment, and <italic>d </italic>is the read depth at the locus.</p>
+      <p>• User Provided: The user can provide a file containing a list of loci for each alignment to consider as SNPs, allowing for sophisticated external SNP-callers such as QualitySNP [<xref ref-type="bibr" rid="B33">33</xref>] and PyroBayes [<xref ref-type="bibr" rid="B32">32</xref>].</p>
+    </sec>
+    <sec>
+      <title>Masking of redundant reads</title>
+      <p>A read <italic>R<sub>r </sub></italic>is called "redundant" if the SNPs covered by <italic>R<sub>r </sub></italic>are a subset of those covered by some other read <italic>R</italic>, and <italic>R<sub>r </sub></italic>and <italic>R </italic>do not conflict. Hapler scans the reads first in order of first covered SNP position and secondly by length; for each such read <italic>R</italic>, those reads <italic>R<sub>r </sub></italic>which are made redundant by <italic>R </italic>are subsumed, or "masked" by <italic>R</italic>. <italic>R<sub>r </sub></italic>is then removed from consideration as a masking read itself. This is necessary to ensure that the compatibility graph <inline-formula><mml:math id="M6" name="1471-2164-13-S2-S4-i6" overflow="scroll"><mml:mrow><mml:msubsup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msubsup></mml:mrow></mml:math></inline-formula> can be transitively oriented [<xref ref-type="bibr" rid="B4">4</xref>]: consider ordered reads <italic>x</italic>, <italic>y </italic>and <italic>z</italic>, where <italic>y </italic>does not share SNPs with <italic>z</italic>. If <italic>x </italic>shares SNPs with both, does not conflict with <italic>y </italic>(which is redundant) but does conflict with <italic>z</italic>, this produces a non-transitive relationship.</p>
+    </sec>
+    <sec>
+      <title>Determination of haplotype blocks and the universal haplotype</title>
+      <p>For low-diversity data, <italic>G<sub>M </sub></italic>may consist of multiple connected components. In this case, no information exists to determine whether reads from different connected components could belong to the same haplotype. Thus, for each alignment, haplotypes are assembled for each connected component separately. It can be shown that SNP loci covered by reads of each component form contiguous stretches--hence the usage of the phrase "haplotype block" [<xref ref-type="bibr" rid="B34">34</xref>].</p>
+      <p>Reads in connected components of size one are consistent with all possible haplotypes, and are combined into a "universal" haplotype consistent with all other assembled haplotype regions.</p>
+    </sec>
+    <sec>
+      <title>Determination of block compatibility graphs</title>
+      <p>Once a connected component <italic>G<sub>M</sub></italic><sub>' </sub>has been isolated, the directed, transitive, block compatibility graph <inline-formula><mml:math id="M7" name="1471-2164-13-S2-S4-i7" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula> is easily created: if read <italic>S<sub>x </sub></italic>starts before read <italic>S<sub>y </sub></italic>and does not conflict with <italic>S<sub>y</sub></italic>, a directed edge is drawn from the node representing <italic>S<sub>x </sub></italic>in <inline-formula><mml:math id="M8" name="1471-2164-13-S2-S4-i8" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula> to that representing <italic>S<sub>y</sub></italic>.</p>
+    </sec>
+    <sec>
+      <title>Minimum coloring</title>
+      <p>Because we consider only unmasked reads, any compatibility graph <inline-formula><mml:math id="M9" name="1471-2164-13-S2-S4-i9" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula> is fully transitive: a minimum path cover solves minimum clique cover, solving minimum coloring of the conflict connected component <italic>G<sub>M </sub></italic><sub>'</sub>.</p>
+      <p>Although the application of Dilworth's theorem in [<xref ref-type="bibr" rid="B4">4</xref>] is correct (equating the path covering and coloring numbers), the constructive algorithm that uses a "reachability" bipartite representation is not strictly necessary: any directed acyclic graph can be path covered using a different, "connects-to" bipartite representation [<xref ref-type="bibr" rid="B35">35</xref>]. Here, nodes in <inline-formula><mml:math id="M10" name="1471-2164-13-S2-S4-i10" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula> are represented on the left and right of a bipartite graph <italic>B<sub>M </sub></italic><sub>' </sub>, and node <italic>x </italic>from the left of <italic>B<sub>M </sub></italic><sub>' </sub>connects to <italic>y </italic>from the right if <italic>x </italic>is directly connected to <italic>y </italic>in <inline-formula><mml:math id="M11" name="1471-2164-13-S2-S4-i11" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula>. Figure <xref ref-type="fig" rid="F7">7(a)</xref> shows this unweighted representation (and a colored maximum matching) for the conflict graph of Figure <xref ref-type="fig" rid="F1">1</xref>. This representation affords us two advantages. First, we can modify it to maximize the number of paths (haplotypes) that consist of a single read, isolating reads that are likely to contain errors. This requires the use of a weighted bipartite matching algorithm such as the Hungarian method [<xref ref-type="bibr" rid="B36">36</xref>]. Second, we can more effectively take advantage of the mechanics of the Hungarian method to sample in a random fashion from the set of minimum color solutions (see next section).</p>
+      <fig id="F7" position="float">
+        <label>Figure 7</label>
+        <caption>
+          <p><bold>Unweighted and modified weighted bipartite representations of the conflict graph shown in Figure 1, with associated solutions and colorings shown</bold>. For the unweighted case, multiple minimum colorings are possible: read 1 could be colored blue or yellow. Adding small-weight edges between node pairs maximizes the number of single-node colors. Thus, read 1 is forced to be colored with reads 5 and 3, isolating read 6 which likely contains a sequencing error.</p>
+        </caption>
+        <graphic xlink:href="1471-2164-13-S2-S4-7"/>
+      </fig>
+      <p>Regarding the first point, solving a maximum unweighted matching on <italic>B<sub>M </sub></italic><sub>' </sub>and computing connected components (after contracting left and right nodes representing the same node in <inline-formula><mml:math id="M12" name="1471-2164-13-S2-S4-i12" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula>) would give a minimum path cover of <inline-formula><mml:math id="M13" name="1471-2164-13-S2-S4-i13" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula>[<xref ref-type="bibr" rid="B35">35</xref>]. However, we are given no guarantees about any properties of this path cover, other than its minimality. To remedy this, we modify <italic>B<sub>M </sub></italic><sub>' </sub>to produce <inline-formula><mml:math id="M14" name="1471-2164-13-S2-S4-i14" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>B</mml:mi></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>ε</mml:mi></mml:mrow></mml:msubsup></mml:math></inline-formula> in the following way: Let <italic>n </italic>be the number of nodes in <inline-formula><mml:math id="M15" name="1471-2164-13-S2-S4-i15" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula>. We connect each pair of nodes <italic>x<sub>l </sub></italic>and <italic>x<sub>r </sub></italic>(from the left and right of <italic>B<sub>M </sub></italic><sub>'</sub>, respectively) representing the same node in <inline-formula><mml:math id="M16" name="1471-2164-13-S2-S4-i16" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula> by an edge of weight 1 <italic>/</italic>(<italic>n </italic>+ 1). Original edges are given weight of 1.</p>
+      <p><bold>Theorem 1</bold>. <italic>Computing connected components of a maximum weighted matching of </italic><inline-formula><mml:math id="M17" name="1471-2164-13-S2-S4-i17" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>B</mml:mi></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>ε</mml:mi></mml:mrow></mml:msubsup></mml:math></inline-formula><italic>followed by contraction of nodes representing the same node in </italic><inline-formula><mml:math id="M18" name="1471-2164-13-S2-S4-i18" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula><italic>produces a minimum path cover of </italic><inline-formula><mml:math id="M19" name="1471-2164-13-S2-S4-i19" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula><italic>, while secondarily maximizing the number of paths consisting of a single node</italic>.</p>
+      <p><italic>Proof</italic>. As noted in [<xref ref-type="bibr" rid="B35">35</xref>], connected components in an unweighted matching of the original <italic>B<sub>M </sub></italic><sub>' </sub>produce a minimum path cover of <italic><inline-formula><mml:math id="M20" name="1471-2164-13-S2-S4-i20" overflow="scroll"><mml:mover class="overrightarrow"><mml:mrow><mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mi>G</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow></mml:msub></mml:mrow><mml:mo class="MathClass-op">⃗</mml:mo></mml:mover></mml:math></inline-formula></italic>, where <italic>n </italic>- <italic>k </italic>is the number of paths and <italic>k </italic>is the number of edges selected in the matching. It is easy to see that selection of any edge of weight 1 <italic>/</italic>(<italic>n </italic>+ 1) in <inline-formula><mml:math id="M21" name="1471-2164-13-S2-S4-i21" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>B</mml:mi></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>ε</mml:mi></mml:mrow></mml:msubsup></mml:math></inline-formula> produces a single-node path. It is suffcient to show that the total number of paths produced does not change.</p>
+      <p>Let <inline-formula><inline-graphic xlink:href="1471-2164-13-S2-S4-i22.gif"/></inline-formula> be a maximum unweighted matching of <italic>B<sub>M </sub></italic><sub>', </sub>which selects <italic>k </italic>edges. Now consider any maximum weighted matching of <inline-formula><mml:math id="M22" name="1471-2164-13-S2-S4-i23" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>B</mml:mi></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>ε</mml:mi></mml:mrow></mml:msubsup></mml:math></inline-formula> and let the total weight selected be <italic>k</italic>'. Clearly, <italic>k</italic>' ≥ <italic>k</italic>; <italic>k</italic>' must also be less than <italic>k </italic>+ 1 (otherwise <inline-formula><inline-graphic xlink:href="1471-2164-13-S2-S4-i24.gif"/></inline-formula> wasn't a maximum matching). This implies that <italic>k </italic>integer edges and some number of small weight edges are selected. Since <italic>k</italic>' is maximum, the number of single node paths is maximized, while the number of post-contraction edges remains the same as in the unweighted matching: <italic>k</italic>. As before, the number of paths is defined by <italic>n </italic>- <italic>k</italic>.    □</p>
+      <p>Figure <xref ref-type="fig" rid="F7">7(b)</xref> shows this modified bipartite graph and the weighted matching produced, which forces the use of the light coloring for read number 1 in Figure <xref ref-type="fig" rid="F1">1</xref>, isolating the remaining read (number 6) that likely contains a sequencing error.</p>
+    </sec>
+    <sec>
+      <title>Random repetition of coloring and haplotype assembly</title>
+      <p>In general, colorings of <italic>G<sub>M </sub></italic><sub>' </sub>described by Theorem 1 are not unique, and different colorings can produce different haplotypings. If we can sample in a pseudo-random fashion from the coloring solution set a large number of times, we can increase the confidence in our haplotype assemblies: reads that are always similarly colored are likely to be from the same haplotype in reality. This is the final haplotype information used by Hapler. Because the Hungarian method considers augmenting paths based on the order of the inputs, the matching output can be drastically altered for each iteration merely by by randomizing the ordering of nodes in <inline-formula><mml:math id="M23" name="1471-2164-13-S2-S4-i25" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>B</mml:mi></mml:mrow><mml:mrow><mml:msup><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>′</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>ε</mml:mi></mml:mrow></mml:msubsup></mml:math></inline-formula> before calling the Hungarian method.</p>
+      <p>Once a set of reads has been identified as belonging to the same haplotype, a haplotype region is assembled. For non-SNP loci covered by reads in the haplotype region, this is the majority vote of the multiple alignment as a whole. For SNP loci, we use the allele of reads belonging to the haplotype. Using the entire alignment in non-SNP positions reduces the possibility of including sequencing errors at non-variant loci, since haplotype-specific coverage is frequently quite low. For loci not covered by reads in the haplotype region, we use a '<italic>~</italic>' character to represent lacking information.</p>
+      <sec>
+        <title>Determining assembled haplotype region length</title>
+        <p>Here we note that haplotype assemblies need not be contiguous, though in practice they almost always are. Consider a multiple alignment of only three reads {<italic>A</italic>, <italic>B</italic>, <italic>C</italic>}, where <italic>A </italic>conflicts with <italic>B</italic>, <italic>B </italic>conflicts with <italic>C</italic>, but <italic>A </italic>and <italic>C </italic>do not overlap. In this case, all minimal colorings will put <italic>A </italic>and <italic>C </italic>together, even though they do not overlap. (Similarly, the universal haplotype will consist of contiguous sequenced regions separated by gaps induced by haplotype blocks.) Thus, for Figures plotting haplotype region lengths (e.g., Figures <xref ref-type="fig" rid="F2">2(a), (b)</xref>, and <xref ref-type="fig" rid="F3">3(a)</xref>) we actually plot the number of bases in the haplotype region rather than the length. Again, in almost all cases regions are contiguous and this measure is equal to the length, and in the rare situations where this is not the case it underestimates the "length."</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Consensus reconstruction</title>
+      <p>One possibility for reconstructing an overall consensus sequence is to find a minimum tiling path through haplotype assemblies, from the first base in the alignment to the last. This formulation, however, is complicated by 1) the possibility of haplotype assemblies being non-contiguous (see above) and 2) the existence of the universal haplotype: switching to a universal haplotype region should not be penalized. Thus, we aim to reconstruct the full consensus only at SNP positions, filling in non-SNP loci with the majority vote of the overall alignment. Given a consensus sequence <inline-formula><inline-graphic xlink:href="1471-2164-13-S2-S4-i26.gif"/></inline-formula>, we define a "possible crossover" as any two adjacent SNPs <italic>S<sub>j </sub></italic>and <italic>S<sub>k</sub></italic>, where no haplotype assembly supports (covers and agrees with) <inline-formula><inline-graphic xlink:href="1471-2164-13-S2-S4-i27.gif"/></inline-formula> at both <italic>S<sub>j </sub></italic>and <italic>S<sub>k</sub></italic>.</p>
+      <p>A consensus with minimal possible crossovers can easily be computed via dynamic programming. First, for each SNP <italic>S<sub>i </sub></italic>we identify the set of haplotype assemblies that cover it, call this <italic>H</italic>(<italic>S<sub>i</sub></italic>). Let <italic>m</italic>(<italic>H<sub>q</sub></italic>, <italic>S<sub>i</sub></italic>) be the minimum number of crossovers needed to reconstruct a consensus for the first <italic>i </italic>SNPs (represented in order as <italic>S</italic><sub>1 </sub>to <italic>S<sub>m </sub></italic>if there are <italic>m </italic>SNP loci), ending with haplotype assembly <italic>H<sub>q </sub></italic>providing the allele for <italic>S<sub>i</sub></italic>. At the base of the dynamic program, for all <italic>H<sub>q </sub></italic>∈ <italic>H</italic>(<italic>S</italic><sub>1</sub>), <italic>m</italic>(<italic>H<sub>q</sub></italic>, <italic>S</italic><sub>1</sub>) = 0. The solution for other haplotype/SNP combinations can then be computed as</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M24" name="1471-2164-13-S2-S4-i28" overflow="scroll">
+            <mml:mrow>
+              <mml:mtable class="gathered">
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:mo class="MathClass-op">∀</mml:mo>
+                    <mml:msub>
+                      <mml:mrow>
+                        <mml:mi>H</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>q</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:mo class="MathClass-rel">∈</mml:mo>
+                    <mml:mi>H</mml:mi>
+                    <mml:mrow>
+                      <mml:mo class="MathClass-open">(</mml:mo>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>S</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                      <mml:mo class="MathClass-close">)</mml:mo>
+                    </mml:mrow>
+                    <mml:mo class="MathClass-punc">,</mml:mo>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo class="MathClass-rel">∈</mml:mo>
+                    <mml:mrow>
+                      <mml:mo class="MathClass-open">{</mml:mo>
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                        <mml:mi>.</mml:mi>
+                        <mml:mi>.</mml:mi>
+                        <mml:mi>.</mml:mi>
+                        <mml:mi>m</mml:mi>
+                      </mml:mrow>
+                      <mml:mo class="MathClass-close">}</mml:mo>
+                    </mml:mrow>
+                    <mml:mo class="MathClass-punc">,</mml:mo>
+                    <mml:mi>m</mml:mi>
+                    <mml:mrow>
+                      <mml:mo class="MathClass-open">(</mml:mo>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>H</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>q</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo class="MathClass-punc">,</mml:mo>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>S</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                      <mml:mo class="MathClass-close">)</mml:mo>
+                    </mml:mrow>
+                    <mml:mo class="MathClass-rel">=</mml:mo>
+                  </mml:mtd>
+                </mml:mtr>
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:munder class="msub">
+                      <mml:mrow>
+                        <mml:mtext>min</mml:mtext>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>H</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>r</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo class="MathClass-rel">∈</mml:mo>
+                        <mml:mi>H</mml:mi>
+                        <mml:mrow>
+                          <mml:mo class="MathClass-open">(</mml:mo>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>S</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo class="MathClass-bin">-</mml:mo>
+                            <mml:mn>1</mml:mn>
+                          </mml:mrow>
+                          <mml:mo class="MathClass-close">)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                    </mml:munder>
+                    <mml:mrow>
+                      <mml:mo class="MathClass-open">{</mml:mo>
+                      <mml:mrow>
+                        <mml:mi>m</mml:mi>
+                        <mml:mrow>
+                          <mml:mo class="MathClass-open">(</mml:mo>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>H</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>r</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo class="MathClass-punc">,</mml:mo>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>S</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo class="MathClass-bin">-</mml:mo>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mo class="MathClass-close">)</mml:mo>
+                        </mml:mrow>
+                        <mml:mo class="MathClass-bin">+</mml:mo>
+                        <mml:mn>1</mml:mn>
+                        <mml:mo class="MathClass-bin">-</mml:mo>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>I</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>H</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>r</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo class="MathClass-rel">=</mml:mo>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>H</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>q</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                      <mml:mo class="MathClass-close">}</mml:mo>
+                    </mml:mrow>
+                    <mml:mi>.</mml:mi>
+                  </mml:mtd>
+                </mml:mtr>
+                <mml:mtr>
+                  <mml:mtd/>
+                </mml:mtr>
+              </mml:mtable>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>In fact, Hapler optimizes the consensus sequence <italic>C </italic>via dynamic programming based on several criteria of decreasing importance:</p>
+      <p>1. Minimizing the number of possible crossover points in <italic>C</italic>.</p>
+      <p>2. Maximizing the total supporting read coverage (both redundant and irredundant) of alleles used at SNP positions in <italic>C</italic>.</p>
+      <p>3. Minimizing the number of unique haplotype assemblies used.</p>
+      <p>In practice, there may be many paths through haplotype assemblies that minimize possible crossover points. In the case of ties, criterion 2 chooses assemblies for <italic>C </italic>that are high in coverage, minimizing sequencing error and increasing the probability that a possible crossover point is not actually a true crossover point in reality (similar to the uninformed majority vote). Criterion 2 also governs where a necessary crossover from one haplotype assembly to another will occur. If two assemblies overlap at SNP loci, the highest covered will be "crossed into" and "crossed out of" greedily.</p>
+      <p>Criterion 3 will seldom be called upon in practice, as ties in both criteria 1 and 2 are unlikely. Nevertheless, within the constraints of a minimal set of haplotype crossovers maximizing coverage, we prefer to utilize a minimum number of explanatory haplotype regions. A graphical representation can be found in Figure <xref ref-type="fig" rid="F8">8</xref>; pseudocode can be found in Supplementary File 1.</p>
+      <fig id="F8" position="float">
+        <label>Figure 8</label>
+        <caption>
+          <p><bold>Dynamic programming representation used for reconstructing minimum chimerism consensus sequences</bold>. At each SNP locus, the haplotype assemblies overlapping that locus are identified, and a minimum chimerism, maximum coverage path is identified. Shown are example haplotype assemblies overlapping three SNPs, as well as the locus-specific coverages of each haplotype assembly.</p>
+        </caption>
+        <graphic xlink:href="1471-2164-13-S2-S4-8"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Consensus evaluation</title>
+      <p>Given a set of "true" haplotypes or a set of assembled haplotype regions <inline-formula><inline-graphic xlink:href="1471-2164-13-S2-S4-i29.gif"/></inline-formula>, Hapler can evaluate the chimerism of a given consensus sequence <italic>C<sup>' </sup></italic>against <inline-formula><inline-graphic xlink:href="1471-2164-13-S2-S4-i29.gif"/></inline-formula>. This is done using a dynamic programming approach similar to that used for consensus reconstruction, with the only differences being 1) SNPs are identified any polymorphic locus in <inline-formula><inline-graphic xlink:href="1471-2164-13-S2-S4-i29.gif"/></inline-formula>, and 2) <italic>H<sub>C</sub></italic>(<italic>S<sub>i</sub></italic>) is used rather than <italic>H</italic>(<italic>S<sub>i</sub></italic>) where <italic>H<sub>C</sub></italic>(<italic>S<sub>i</sub></italic>) defines not only those haplotypes that cover SNP <italic>S<sub>i </sub></italic>but those that cover and agree with the allele of <italic>C' </italic>at <italic>S<sub>i</sub></italic>. If no haplotype covers and agrees with <italic>C<sup>' </sup></italic>at a SNP <italic>S<sub>i</sub></italic>, then <italic>S<sub>i </sub></italic>is associated with a new, unique "error" haplotype for that locus. This will incur two crossovers in the evaluation--one into the unique error haplotype at <italic>S<sub>i </sub></italic>and one out of it. Thus, errors at SNP loci not supported by any haplotype are heavily penalized. However, sequencing errors in the consensus are not considered if they do not coincide with SNP loci in <inline-formula><inline-graphic xlink:href="1471-2164-13-S2-S4-i29.gif"/></inline-formula>.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>STO designed the methods, wrote the software, performed the analysis and drafted the manuscript. SJE helped conceive the study, supervised experimental analysis and helped draft the manuscript. Both authors read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>An additional PDF file providing Supplementary Materials, including consensus reconstruction pseudocode and supplementary figures (oneil_bmc2011_supp.pdf, Additional File </bold><xref ref-type="supplementary-material" rid="S1">1</xref><bold>) is available online</bold>.</p>
+      </caption>
+      <media xlink:href="1471-2164-13-S2-S4-S1.pdf" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>The authors would like to thank Prof. Jessica Hellmann for bringing this problem to our attention and members of the Hellmann lab for data preparation and useful discussions. We also thank Irina Astrovskaya for sharing the ViSpA manuscript preprint. This work was supported in part by a fellowship to STO as part of the University of Notre Dame's strategic research investment in global health.</p>
+    <p>This article has been published as part of <italic>BMC Genomics </italic>Volume 13 Supplement 2, 2012: Selected articles from the First IEEE International Conference on Computational Advances in Bio and medical Sciences (ICCABS 2011): Genomics. The full contents of the supplement are available online at <ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/bmcgenomics/supplements/13/S2">http://www.biomedcentral.com/bmcgenomics/supplements/13/S2</ext-link>.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Shumway</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Genome sequence assembly: algorithms and issues</article-title>
+        <source>Computer</source>
+        <year>2002</year>
+        <fpage>47</fpage>
+        <lpage>54</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Clark</surname>
+          <given-names>AG</given-names>
+        </name>
+        <article-title>Inference of haplotypes from PCR-amplified samples of diploid populations</article-title>
+        <source>Mol Biol Evol</source>
+        <year>1990</year>
+        <volume>7</volume>
+        <issue>2</issue>
+        <fpage>111</fpage>
+        <lpage>122</lpage>
+        <pub-id pub-id-type="pmid">2108305</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Salem</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Wessel</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Schork</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>A comprehensive literature review of haplotyping software and methods for use with unrelated individuals</article-title>
+        <source>Human Genomics</source>
+        <year>2005</year>
+        <volume>2</volume>
+        <fpage>39</fpage>
+        <lpage>66</lpage>
+        <pub-id pub-id-type="pmid">15814067</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Eriksson</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Mitsuya</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Rhee</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Gharizadeh</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Ronaghi</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Shafer</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Beerenwinkel</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>Viral Population Estimation Using Pyrosequencing</article-title>
+        <source>PLoS Computational Biology</source>
+        <year>2008</year>
+        <volume>4</volume>
+        <issue>5</issue>
+        <fpage>e1000074+</fpage>
+        <pub-id pub-id-type="pmid">18437230</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zagordi</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Klein</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>DÃumer</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Beerenwinkel</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>Error correction of next-generation sequencing data and reliable estimation of HIV quasispecies</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2010</year>
+        <volume>38</volume>
+        <issue>21</issue>
+        <fpage>7400</fpage>
+        <lpage>7409</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkq655</pub-id>
+        <pub-id pub-id-type="pmid">20671025</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wheat</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Rapidly developing functional genomics in ecological model systems via 454 transcriptome sequencing</article-title>
+        <source>Genetica</source>
+        <year>2010</year>
+        <volume>138</volume>
+        <issue>4</issue>
+        <fpage>433</fpage>
+        <lpage>451</lpage>
+        <pub-id pub-id-type="doi">10.1007/s10709-008-9326-y</pub-id>
+        <pub-id pub-id-type="pmid">18931921</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Turner</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Hahn</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Locus- and population-specific selection and differentiation between incipient species of <italic>Anopheles gambiae</italic></article-title>
+        <source>Molecular Biology and Evolution</source>
+        <year>2007</year>
+        <volume>24</volume>
+        <issue>9</issue>
+        <fpage>2132</fpage>
+        <lpage>2138</lpage>
+        <pub-id pub-id-type="doi">10.1093/molbev/msm143</pub-id>
+        <pub-id pub-id-type="pmid">17636041</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Vera</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Wheat</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Fescemyer</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Frilander</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Crawford</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Hanski</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Marden</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Rapid transcriptome characterization for a nonmodel organism using 454 pyrosequencing</article-title>
+        <source>Molecular Ecology</source>
+        <year>2008</year>
+        <volume>17</volume>
+        <issue>7</issue>
+        <fpage>1636</fpage>
+        <lpage>1647</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.1365-294X.2008.03666.x</pub-id>
+        <pub-id pub-id-type="pmid">18266620</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Anderson</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>Mitchell-Olds</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Ecological genetics and genomics of plant defences: evidence and approaches</article-title>
+        <source>Funct Ecol</source>
+        <year>2011</year>
+        <volume>25</volume>
+        <fpage>312</fpage>
+        <lpage>324</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.1365-2435.2010.01785.x</pub-id>
+        <pub-id pub-id-type="pmid">21532968</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>O'Neil</surname>
+          <given-names>ST</given-names>
+        </name>
+        <name>
+          <surname>Dzurisin</surname>
+          <given-names>JDK</given-names>
+        </name>
+        <name>
+          <surname>Carmichael</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Lobo</surname>
+          <given-names>NF</given-names>
+        </name>
+        <name>
+          <surname>Emrich</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Hellmann</surname>
+          <given-names>JJ</given-names>
+        </name>
+        <article-title>Population level transcriptome sequencing of nonmodel organisms <italic>Erynnis propertius </italic>and <italic>Papilio zelicaon</italic></article-title>
+        <source>BMC Genomics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>310+</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-11-310</pub-id>
+        <pub-id pub-id-type="pmid">20478048</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ewen-Campen</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Shaner</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Panfilio</surname>
+          <given-names>KA</given-names>
+        </name>
+        <name>
+          <surname>Suzuki</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Roth</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Extavour</surname>
+          <given-names>CG</given-names>
+        </name>
+        <article-title>The maternal and early embryonic transcriptome of the milkweed bug <italic>Oncopeltus fasciatus</italic></article-title>
+        <source>BMC Genomics</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>61</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-12-61</pub-id>
+        <pub-id pub-id-type="pmid">21266083</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>O'Neil</surname>
+          <given-names>ST</given-names>
+        </name>
+        <name>
+          <surname>Emrich</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <article-title>Robust haplotype reconstruction of eukaryotic read data with Hapler</article-title>
+        <source>ICCABS '11: Proceedings of the IEEE 1st International Conference on Computational Advances in Bio and medical Sciences </source>
+        <fpage>141</fpage>
+        <lpage>146</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Lancia</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Bafna</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Istrail</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Lippert</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Schwartz</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>SNPs problems, complexity, and algorithms</article-title>
+        <source>ESA '01: Proceedings of the 9th Annual European Symposium on Algorithms</source>
+        <year>2001</year>
+        <fpage>182</fpage>
+        <lpage>193</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bonizzoni</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Vedova</surname>
+          <given-names>GD</given-names>
+        </name>
+        <name>
+          <surname>Dondi</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>The haplotyping problem: an overview of computational models and solutions</article-title>
+        <source>Journal of Computer Science and Technology</source>
+        <year>2003</year>
+        <volume>18</volume>
+        <issue>6</issue>
+        <fpage>675</fpage>
+        <lpage>688</lpage>
+        <pub-id pub-id-type="doi">10.1007/BF02945456</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Schwartz</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Theory and algorithms for the haplotype assembly problem</article-title>
+        <source>Communications in Information and Systems</source>
+        <year>2010</year>
+        <volume>10</volume>
+        <fpage>23</fpage>
+        <lpage>38</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Xie</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Wu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>X</given-names>
+        </name>
+        <article-title>Computational models and algorithms for the single individual haplotyping problem</article-title>
+        <source>Current Bioinformatics</source>
+        <year>2010</year>
+        <volume>5</volume>
+        <fpage>18</fpage>
+        <lpage>28</lpage>
+        <pub-id pub-id-type="doi">10.2174/157489310790596411</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bafna</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Istrail</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Lancia</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Rizzi</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Polynomial and APX-hard cases of the individual haplotyping problem</article-title>
+        <source>Theoretical Computer Science</source>
+        <year>2005</year>
+        <volume>335</volume>
+        <fpage>109</fpage>
+        <lpage>125</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.tcs.2004.12.017</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Cilibrasi</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Leo</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Kelk</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Tromp</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>The complexity of the single individual SNP haplotyping problem</article-title>
+        <source>Algorithmica</source>
+        <year>2007</year>
+        <volume>49</volume>
+        <fpage>13</fpage>
+        <lpage>36</lpage>
+        <pub-id pub-id-type="doi">10.1007/s00453-007-0029-z</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Wu</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Zhao</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>X</given-names>
+        </name>
+        <article-title>A dynamic programming algorithm for the k-haplotyping problem</article-title>
+        <source>Acta Mathematicae Applicatae Sinica</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <issue>3</issue>
+        <fpage>405</fpage>
+        <lpage>412</lpage>
+        <pub-id pub-id-type="doi">10.1007/s10255-006-0315-6</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Panconesi</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Sozio</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Fast hare: a fast heuristic for single individual SNP haplotype reconstruction</article-title>
+        <source>Algorithms in Bioinformatics</source>
+        <year>2004</year>
+        <fpage>266</fpage>
+        <lpage>277</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>He</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Choi</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Pipatsrisawat</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Darwiche</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Eskin</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Optimal algorithms for haplotype assembly from whole-genome sequence data</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <issue>12</issue>
+        <fpage>i183</fpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq215</pub-id>
+        <pub-id pub-id-type="pmid">20529904</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Astrovskaya</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Tork</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Mangul</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Westbrooks</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Mandoiu</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Balfe</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Zelikovsky</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Inferring viral quasispecies spectra from 454 pyrosequencing reads</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <issue>Suppl 6</issue>
+        <fpage>S1</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-12-S6-S1</pub-id>
+        <pub-id pub-id-type="pmid">21989211</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Denisov</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Walenz</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Halpern</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Axelrod</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Levy</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Sutton</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Consensus generation and variant detection by Celera Assembler</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <issue>8</issue>
+        <fpage>1035</fpage>
+        <lpage>1040</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btn074</pub-id>
+        <pub-id pub-id-type="pmid">18321888</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Dincă</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Zakharov</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Hebert</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Vila</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Complete DNA barcode reference library for a country's butterfly fauna reveals high performance for temperate Europe</article-title>
+        <source>Proceedings of the Royal Society B: Biological Sciences</source>
+        <year>2011</year>
+        <volume>278</volume>
+        <issue>1704</issue>
+        <fpage>347</fpage>
+        <pub-id pub-id-type="doi">10.1098/rspb.2010.1089</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zakharov</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Hellmann</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Genetic differentiation across a latitudinal gradient in two co-occurring butterfly species: revealing population differences in a context of climate change</article-title>
+        <source>Molecular Ecology</source>
+        <year>2008</year>
+        <volume>17</volume>
+        <fpage>189</fpage>
+        <lpage>208</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.1365-294X.2007.03488.x</pub-id>
+        <pub-id pub-id-type="pmid">17784923</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lawniczak</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Emrich</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Holloway</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Regier</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Olson</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>White</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Redmond</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Fulton</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Appelbaum</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Godfrey</surname>
+          <given-names>J</given-names>
+        </name>
+        <etal/>
+        <article-title>Widespread divergence between incipient <italic>Anopheles gambiae </italic>species revealed by whole genome sequences</article-title>
+        <source>Science</source>
+        <year>2010</year>
+        <volume>330</volume>
+        <issue>6003</issue>
+        <fpage>512</fpage>
+        <pub-id pub-id-type="doi">10.1126/science.1195755</pub-id>
+        <pub-id pub-id-type="pmid">20966253</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lee</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Cheran</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Brudno</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>A robust framework for detecting structural variations in a genome</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <issue>13</issue>
+        <fpage>i59</fpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btn176</pub-id>
+        <pub-id pub-id-type="pmid">18586745</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Davidson</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Research suggests importance of haplotypes over SNPs</article-title>
+        <source>Nature Biotechnology</source>
+        <year>2000</year>
+        <volume>18</volume>
+        <issue>11</issue>
+        <fpage>1134</fpage>
+        <lpage>1135</lpage>
+        <pub-id pub-id-type="doi">10.1038/81100</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hoehe</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Timmermann</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Lehrach</surname>
+          <given-names>H</given-names>
+        </name>
+        <article-title>Human inter-individual DNA sequence variation in candidate genes, drug targets, the importance of haplotypes and pharmacogenomics</article-title>
+        <source>Current Pharmaceutical Biotechnology</source>
+        <year>2003</year>
+        <volume>4</volume>
+        <fpage>351</fpage>
+        <lpage>378</lpage>
+        <pub-id pub-id-type="doi">10.2174/1389201033377300</pub-id>
+        <pub-id pub-id-type="pmid">14683431</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Kosack</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Using the TIGR assembler in shotgun sequencing projects</article-title>
+        <source>Methods in Molecular Biology</source>
+        <year>2004</year>
+        <volume>255</volume>
+        <fpage>279</fpage>
+        <lpage>294</lpage>
+        <pub-id pub-id-type="pmid">15020832</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Handsaker</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Wysoker</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Fennell</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Homer</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Marth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>The sequence alignment/map format and SAMtools</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <issue>16</issue>
+        <fpage>2078</fpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp352</pub-id>
+        <pub-id pub-id-type="pmid">19505943</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Quinlan</surname>
+          <given-names>AR</given-names>
+        </name>
+        <name>
+          <surname>Stewart</surname>
+          <given-names>DA</given-names>
+        </name>
+        <name>
+          <surname>Stromberg</surname>
+          <given-names>MP</given-names>
+        </name>
+        <name>
+          <surname>Marth</surname>
+          <given-names>GT</given-names>
+        </name>
+        <article-title>Pyrobayes: an improved base caller for SNP discovery in pyrosequences</article-title>
+        <source>Nature Methods</source>
+        <year>2008</year>
+        <volume>5</volume>
+        <issue>2</issue>
+        <fpage>179</fpage>
+        <lpage>181</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1172</pub-id>
+        <pub-id pub-id-type="pmid">18193056</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B33">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tang</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Vosman</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Voorrips</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Van Der Linden</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Leunissen</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>QualitySNP: a pipeline for detecting single nucleotide polymorphisms and insertions/deletions in EST data from diploid and polyploid species</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2006</year>
+        <volume>7</volume>
+        <fpage>438</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-7-438</pub-id>
+        <pub-id pub-id-type="pmid">17029635</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B34">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wall</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Pritchard</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Haplotype blocks and linkage disequilibrium in the human genome</article-title>
+        <source>Nature Reviews Genetics</source>
+        <year>2003</year>
+        <volume>4</volume>
+        <issue>8</issue>
+        <fpage>587</fpage>
+        <lpage>597</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg1123</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B35">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Nemhauser</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Trotter</surname>
+          <given-names>L</given-names>
+          <suffix>Jr</suffix>
+        </name>
+        <name>
+          <surname>Nauss</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Set partitioning and chain decomposition</article-title>
+        <source>Management Science</source>
+        <year>1974</year>
+        <volume>20</volume>
+        <issue>11</issue>
+        <fpage>1413</fpage>
+        <lpage>1423</lpage>
+        <pub-id pub-id-type="doi">10.1287/mnsc.20.11.1413</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B36">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kuhn</surname>
+          <given-names>H</given-names>
+        </name>
+        <article-title>The Hungarian method for the assignment problem</article-title>
+        <source>Naval Research Logistics Quarterly</source>
+        <year>1955</year>
+        <volume>2</volume>
+        <issue>1-2</issue>
+        <fpage>83</fpage>
+        <lpage>97</lpage>
+        <pub-id pub-id-type="doi">10.1002/nav.3800020109</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

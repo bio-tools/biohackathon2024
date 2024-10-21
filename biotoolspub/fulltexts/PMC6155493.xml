@@ -1,0 +1,642 @@
+<?all-math-mml yes?>
+<?use-mml?>
+<?properties open_access?>
+<?properties manuscript?>
+<?ManuscriptPrefix new?>
+<?iso-abbr Nat. Methods?>
+<?submitter-system ukmss?>
+<?submitter-canonical-name Nature Publishing Group?>
+<?submitter-canonical-id NATURE-STRUCTUR?>
+<?submitter-userid 1005?>
+<?submitter-authority publisher?>
+<?submitter-login NPG?>
+<?submitter-name Nature Publishing Group?>
+<?domain wtpa?>
+<?origin ukpmcpa?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-journal-id">101215604</journal-id>
+    <journal-id journal-id-type="pubmed-jr-id">32338</journal-id>
+    <journal-id journal-id-type="nlm-ta">Nat Methods</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Nat. Methods</journal-id>
+    <journal-title-group>
+      <journal-title>Nature methods</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1548-7091</issn>
+    <issn pub-type="epub">1548-7105</issn>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">6155493</article-id>
+    <article-id pub-id-type="pmid">28504682</article-id>
+    <article-id pub-id-type="doi">10.1038/nmeth.4295</article-id>
+    <article-id pub-id-type="manuscript">ems72432</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Testing for differential abundance in mass cytometry data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Lun</surname>
+          <given-names>Aaron T. L.</given-names>
+        </name>
+        <xref ref-type="aff" rid="A1">1</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Richard</surname>
+          <given-names>Arianne C.</given-names>
+        </name>
+        <xref ref-type="aff" rid="A1">1</xref>
+        <xref ref-type="aff" rid="A2">2</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Marioni</surname>
+          <given-names>John C.</given-names>
+        </name>
+        <xref ref-type="aff" rid="A1">1</xref>
+        <xref ref-type="aff" rid="A3">3</xref>
+        <xref ref-type="aff" rid="A4">4</xref>
+        <xref ref-type="corresp" rid="CR1">*</xref>
+      </contrib>
+    </contrib-group>
+    <aff id="A1"><label>1</label>Cancer Research UK Cambridge Institute, University of Cambridge, Cambridge, United Kingdom</aff>
+    <aff id="A2"><label>2</label>Cambridge Institute for Medical Research, University of Cambridge, Cambridge, United Kingdom</aff>
+    <aff id="A3"><label>3</label>EMBL European Bioinformatics Institute, Wellcome Genome Campus, Cambridge, United Kingdom</aff>
+    <aff id="A4"><label>4</label>Wellcome Trust Sanger Institute, Wellcome Genome Campus, Cambridge, United Kingdom</aff>
+    <author-notes>
+      <corresp id="CR1"><label>*</label>Corresponding author: <email>marioni@ebi.ac.uk</email></corresp>
+    </author-notes>
+    <pub-date pub-type="nihms-submitted">
+      <day>15</day>
+      <month>9</month>
+      <year>2018</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>15</day>
+      <month>5</month>
+      <year>2017</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <month>7</month>
+      <year>2017</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>25</day>
+      <month>9</month>
+      <year>2018</year>
+    </pub-date>
+    <volume>14</volume>
+    <issue>7</issue>
+    <fpage>707</fpage>
+    <lpage>709</lpage>
+    <!--elocation-id from pubmed: 10.1038/nmeth.4295-->
+    <permissions>
+      <license>
+        <license-p>Users may view, print, copy, and download text and data-mine the content in such documents, for the purposes of academic research, subject always to the full Conditions of use:<ext-link ext-link-type="uri" xlink:href="http://www.nature.com/authors/editorial_policies/license.html#terms">http://www.nature.com/authors/editorial_policies/license.html#terms</ext-link></license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p id="P1">When comparing biological conditions using mass cytometry data, one key challenge is to identify cellular populations that change in abundance. Here, we present a novel computational strategy for detecting these “differentially abundant” populations, by assigning cells to hyperspheres, testing for significant differences between conditions and controlling the spatial false discovery rate. The method’s performance is established using simulations and real data where it finds novel patterns of differential abundance.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <p id="P2">Mass cytometry allows researchers to simultaneously characterise the expression of many (&gt; 30) protein markers in each of millions of cells<xref rid="R1" ref-type="bibr">1</xref>. Antibodies specific to markers of interest are conjugated to heavy metal isotopes and used to stain a population of cells. Single-cell droplets are formed and vaporized to ionize the metals, and the quantity of each isotope bound to each cell is measured by time-of-flight mass spectrometry. The resolution of mass spectrometry avoids problems with spectral overlap that are frequently encountered in conventional flow cytometry with fluorescent markers. This means that more markers can be quantified for each cell, improving resolution of distinct subpopulations and enabling deep phenotyping of cellular profiles in fields such as immunology, haematopoietic development and cancer<xref rid="R2" ref-type="bibr">2</xref>, <xref rid="R3" ref-type="bibr">3</xref>, <xref rid="R4" ref-type="bibr">4</xref>, <xref rid="R5" ref-type="bibr">5</xref>, <xref rid="R6" ref-type="bibr">6</xref>. The ability of mass cytometry to assay more markers leads to a concomitant increase in the dimensionality of the data. This complicates the data analysis as manual gating and visual examination of biaxial plots (as commonly used in flow cytometry) are no longer feasible when multiple marker combinations have to be considered. To address this, bespoke computational tools such as SPADE<xref rid="R7" ref-type="bibr">7</xref> and X-shift<xref rid="R8" ref-type="bibr">8</xref> have been developed, focusing on clustering cells into biologically relevant subpopulations based on the “intensity” of each marker (i.e., the signal of the corresponding isotope in the mass spectrum) and quantifying the abundance of each subpopulation in the total cell pool. However, these approaches fail to directly address an important question of multiparameter multi-group experiments – namely, what differs between groups?</p>
+  <p id="P3">To this end, an alternative analytical strategy is to identify subpopulations that change in abundance between biological conditions<xref rid="R9" ref-type="bibr">9</xref>, <xref rid="R10" ref-type="bibr">10</xref>. For example, certain immune compartments are enriched or depleted upon drug treatment, and the composition of cell types changes during development. Detection of these differentially abundant (DA) subpopulations is useful as it can provide insights into the cause or effect of the biological differences between conditions. Existing methods for DA analysis cluster cells from all samples into empirical subpopulations, before checking each cluster for characteristics (e.g., marker intensities or cell abundance) that differ between conditions<xref rid="R11" ref-type="bibr">11</xref>, <xref rid="R12" ref-type="bibr">12</xref>. While intuitive, this approach is sensitive to the parametrization of the initial clustering step. Uncertainty will be introduced into the cluster definitions when the data are noisy or the cells are not clearly separated<xref rid="R13" ref-type="bibr">13</xref>. This is particularly relevant for markers that are expressed across a range of intensities without clear changes in cellular density at subpopulation boundaries, such as CD38 and HLA-DR to mark activated T cells or CD24 and CD38 to define plasmablasts among B cells<xref rid="R14" ref-type="bibr">14</xref>. Ambiguity in clustering can affect the performance of the subsequent DA analysis, e.g., if DA and non-DA subpopulations are erroneously clustered together.</p>
+  <p id="P4">Here, we present a novel computational strategy to perform DA analyses of mass cytometry data (<xref ref-type="fig" rid="F1">Figure 1</xref>) that does not rely on an initial clustering step. Firstly, we assign cells from all samples to hyperspheres in the multi-dimensional marker space. Consider a mass cytometry data set with <italic>S</italic> samples and <italic>M</italic> markers. Each cell in each sample defines a point in the <italic>M</italic>-dimensional space, with coordinates defined by its intensities. We consider <italic>M</italic>-dimensional hyperspheres where each hypersphere is centred on an existing cell and has radius r=0.5√<italic>M</italic> to offset the increasing sparsity of the data as the number of dimensions increases. All cells lying within a hypersphere are then assigned to that hypersphere. (Each cell can be counted multiple times if it is assigned to overlapping hyperspheres.) We count the number of cells from each sample assigned to each hypersphere, yielding <italic>S</italic> counts per hypersphere. For each marker, we also compute its median intensity for all cells in each hypersphere. This provides a median-based position for the hypersphere, representing a central point in <italic>M</italic>-dimensional space around which most of the cells in the hypersphere are located. See <xref ref-type="supplementary-material" rid="SD1">Supplementary Note 1, Supplementary Figures 1-4 and Supplementary Table 1</xref> for more details. We also assume that marker intensities are comparable across samples – some strategies for handling sample-specific intensity shifts are described in <xref ref-type="supplementary-material" rid="SD1">Supplementary Note 2 and Supplementary Figures 5-6</xref>.</p>
+  <p id="P5">Next, we use the count data for each hypersphere to test for significant differences in cell abundance between conditions. The null hypothesis is that there is no change in the average counts between conditions within each hypersphere. Testing is performed with negative binomial generalized linear models (NB GLMs), which explicitly account for the discrete nature of counts; model overdispersion due to biological variability between replicate samples; and can accommodate complex experimental designs involving multiple factors and covariates. We use the NB GLM implementation in the edgeR package<xref rid="R15" ref-type="bibr">15</xref>, which was originally designed for analyzing read count data from RNA sequencing experiments. However, the same mathematical framework can be applied here to cell counts. In particular, edgeR uses empirical Bayes shrinkage to share information across hyperspheres. This improves estimation of the dispersion parameter in the presence of limited replicates, increasing the reliability and power of downstream inferences. (See <xref ref-type="supplementary-material" rid="SD1">Supplementary Note 3 and Supplementary Figures 7-8</xref> for more details.) Indeed, edgeR is more powerful than the commonly used Mann-Whitney test for detecting differences in hypersphere counts in simulated data, while still controlling the type I error rate (<xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 9</xref>).</p>
+  <p id="P6">Finally, we use the hypersphere <italic>p</italic>-values to control the false discovery rate (FDR) across the multi-dimensional space, i.e., the spatial FDR. To illustrate, consider the total volume occupied by the set of DA hyperspheres. (This is a union rather than a sum of the hypersphere volumes, due to overlaps between hyperspheres.) Roughly speaking, the spatial FDR can be interpreted as the proportion of this volume that is occupied by false positive hyperspheres. This is not equivalent to the FDR across the individual hyperspheres, due to the differences in the density of hyperspheres across the space. For example, the FDR across hyperspheres in <xref ref-type="fig" rid="F1">Figure 1d</xref> is 25% while the spatial FDR across volume is 50%. To control the spatial FDR, each hypersphere is weighted by the reciprocal of its density (calculated in terms of the neighbouring hyperspheres). A weighted version of the Benjamini-Hochberg (BH) method<xref rid="R16" ref-type="bibr">16</xref> is then applied to the <italic>p</italic>-values and weights for all hyperspheres. If one were to split the high-dimensional space into non-overlapping partitions of equal volume, the total weight of hyperspheres within each non-empty partition would be similar, i.e., each partition of the space makes a similar contribution to the BH correction, regardless of how many hyperspheres it contains. Thus, weighting allows the FDR to be controlled across volume, rather than across hyperspheres. (See <xref ref-type="supplementary-material" rid="SD1">Supplementary Note 4 and Supplementary Figure 10</xref> for a more precise description of the spatial FDR.) We demonstrate that our weighting scheme successfully controls the spatial FDR in simulated data, whereas a naïve approach without weighting does not (<xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 11</xref>).</p>
+  <p id="P7">Several options are available for examining DA hyperspheres after the statistical analysis. We can identify significant hyperspheres that are not redundant to – i.e., do not lie within a certain distance of – hyperspheres with smaller <italic>p</italic>-values (<xref ref-type="supplementary-material" rid="SD1">Supplementary Note 5</xref>). The resulting subset of hyperspheres is small enough for detailed inspection of the marker intensities with a graphical interface (<xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 12</xref>) to characterise each hypersphere. A complementary approach is to perform dimensionality reduction on the positions of the putative DA hyperspheres, yielding a low-dimensional representation of the differential subspaces for plotting. The plot is annotated based on examination of the marker intensities, incorporating biological expertise on the relationships between specific markers and cell types. This allows identification of biologically relevant subpopulations from the DA hyperspheres.</p>
+  <p id="P8">We demonstrate our approach using data from a study of mouse embryonic fibroblast (MEF) reprogramming<xref rid="R17" ref-type="bibr">17</xref>. In this study, three transgenic MEF reporter systems (<italic>Oct4</italic>-GFP, <italic>Nanog</italic>-GFP or <italic>Nanog</italic>-Neo) were reprogrammed to induced pluripotent stem cells. Samples were collected across various points of the reprogramming time course for each MEF reprogramming system. We applied our method to each time course to detect changes in abundance over time, defining putative DA hyperspheres as those detected at a spatial FDR of 5%. In this manner, we detected 7416, 5947 and 21532 DA hyperspheres in the <italic>Oct4</italic>-GFP, <italic>Nanog</italic>-GFP and <italic>Nanog</italic>-Neo time courses, respectively. We applied <italic>t</italic>-SNE<xref rid="R18" ref-type="bibr">18</xref> to the positions of detected hyperspheres to visualize them in a spatial context (<xref ref-type="fig" rid="F2">Figure 2</xref>, <xref ref-type="supplementary-material" rid="SD1">Supplementary Figures 13-18</xref>). In the <italic>Oct4</italic>-GFP analysis, we recovered previously identified DA subpopulations, including the three reprogramming end points; as well as distinct DA subpopulations that were not clearly characterised in the original analysis, such as a subpopulation of SC4-like cells with phosphorylated STAT3, AMPK and PLK1 that exhibited a non-linear change in abundance over time (<xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 19</xref>) – see <xref ref-type="supplementary-material" rid="SD1">Supplementary Note 6</xref> for details.</p>
+  <p id="P9">We also applied our method on another data set examining the effect of interleukin 10 (IL-10) treatment on bone marrow mononuclear cells (BMMCs) across five healthy donors<xref rid="R6" ref-type="bibr">6</xref>. Importantly, this data set contained matched stimulated and unstimulated samples from each donor. This experimental design is easily accommodated by the GLM machinery in edgeR, highlighting the flexibility of our framework. We observed changes in abundance associated with phosphorylated STAT3 expression, consistent with the expected biology of IL-10, as well as several interesting DA subpopulations that were not identified by the original study (see <xref ref-type="supplementary-material" rid="SD1">Supplementary Note 7, Supplementary Figures 20-21</xref> for details). More generally, shifts in marker intensity for signalling molecules or activation markers will cause changes in abundance that can be detected by the DA analysis (<xref ref-type="supplementary-material" rid="SD1">Supplementary Note 8, Supplementary Figure 22</xref>).</p>
+  <p id="P10">Finally, we compared our approach to CITRUS<xref rid="R12" ref-type="bibr">12</xref>, an existing method that uses an initial clustering step for comparative analysis of mass cytometry data. We simulated a simple scenario involving two adjacent subpopulations with opposite changes in abundance between conditions (<xref ref-type="supplementary-material" rid="SD1">Supplementary Note 9, Supplementary Figure 23</xref>). These subpopulations were consistently detected as being differentially abundant by our hypersphere-based method but not by CITRUS. We also tested the performance of CITRUS for detecting differentially abundant subpopulations across time in the MEF reprogramming data set. CITRUS did not detect a number of subpopulations that were found by our method (<xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 24</xref>), nor did it detect any new subpopulations. This suggests that the use of hyperspheres, in combination with edgeR and the spatial FDR, can improve detection of subtle changes in abundance within complex subpopulations that are difficult to cluster.</p>
+  <p id="P11">As mass cytometry becomes more accessible, large-scale experiments containing many conditions and replicates are likely to become increasingly routine. Indeed, a growing number of studies are using mass cytometry in fields such as immunology, haematopoietic development and cancer. We anticipate that our differential abundance analysis pipeline will be useful to researchers planning to perform comparative studies with such data sets.</p>
+  <sec sec-type="methods" id="S1" specific-use="web-only">
+    <title>Online Methods</title>
+    <sec id="S2">
+      <title>Data preparation</title>
+      <p id="P12">In this section, we describe the processing of data from the MEF reprogramming study<xref rid="R17" ref-type="bibr">17</xref>. For processing of data from the BMMC study<xref rid="R6" ref-type="bibr">6</xref>, see <xref ref-type="supplementary-material" rid="SD1">Supplementary Note 7</xref> for details.</p>
+      <p id="P13">We obtained de-barcoded flow cytometry standard (FCS) files for each time course from Cytobank (accession number 43324). We applied the logicle transformation<xref rid="R19" ref-type="bibr">19</xref> to the marker intensities in each sample. The transformation parameters were estimated with the estimateLogicle function from the flowCore package<xref rid="R20" ref-type="bibr">20</xref>, using pooled cells from all samples in each time course. (This avoids spurious differences from sample-specific transformation.) We gated out cell events with low intensities for the two DNA markers (Iridium-191 and 193), where the threshold was defined as three median absolute deviations below the median intensity for the pooled cells. We saved the transformed and gated intensities into new FCS files for processing with our pipeline. Only the intensities for relevant markers (i.e., no DNA, barcodes) were used for further analysis. Note that normalization of marker intensities between samples is not required for this data set because the samples in each time course were barcoded and pooled for antibody staining and mass cytometry.</p>
+    </sec>
+    <sec id="S3">
+      <title>Statistical methods for testing differences</title>
+      <p id="P14">To compute <italic>p</italic>-values, hypersphere counts were analyzed using the quasi-likelihood (QL) method in edgeR. First, we filtered out hyperspheres with an average count below 5. This improves efficiency by removing tests without enough information to reject the null hypothesis. For the remaining hyperspheres, we fitted a mean-dependent trend to the NB dispersion estimates. We fitted a NB GLM to the counts for each hypersphere, using the trended dispersion for each hypersphere and the log-transformed total number of cells as the offset for each sample. We estimated the QL dispersion from the GLM deviance and stabilized the estimates by empirical Bayes shrinkage towards a second mean-dependent trend. Finally, we used the QL F-test with a specified contrast to compute a <italic>p</italic>-value for each hypersphere. Details of the statistical framework are provided in <xref ref-type="supplementary-material" rid="SD1">Supplementary Note 3</xref>.</p>
+      <p id="P15">For the time course analyses, we used a design matrix constructed from a B-spline basis matrix with a time covariate and 3 degrees of freedom. This provided 9, 11 and 10 residual degrees of freedom for dispersion estimation in the <italic>Oct4</italic>-GFP, <italic>Nanog</italic>-GFP and <italic>Nanog</italic>-Neo data sets, respectively. Contrasts were constructed to test whether all spline coefficients were equal to zero. This represents a null hypothesis that time has no effect on abundance. The use of splines accommodates both linear and non-linear trends in abundance with respect to time.</p>
+    </sec>
+    <sec id="S4">
+      <title>Visualizing the differential hyperspheres</title>
+      <p id="P16">For each hypersphere detected at a spatial FDR of 5%, we defined the median-based position as a set of intensity values across all markers. These values were used to perform <italic>t</italic>-SNE via the Rtsne package (<ext-link ext-link-type="uri" xlink:href="https://cran.r-project.org/web/packages/Rtsne">https://cran.r-project.org/web/packages/Rtsne</ext-link>), using a perplexity value of 10. To colour the plot based on differential abundance, a GLM was fitted to the counts for each hypersphere using a design matrix with time as a covariate. This yields a log<sub>2</sub>-fold change in abundance per day for each hypersphere, corresponding to a blue-to-red gradient for negative-to-positive values respectively. (We assume a linear change in abundance over time for simplicity. This does not affect the significance statistics, which are computed with a spline to account for non-linear trends.) To colour the plot based on marker intensity, the 1<sup>st</sup> and 99<sup>th</sup> percentiles of the intensities for all cells were computed for each marker. A linear gradient between these two percentiles was constructed using the viridis colour scheme (<ext-link ext-link-type="uri" xlink:href="https://cran.r-project.org/web/packages/viridis">https://cran.r-project.org/web/packages/viridis</ext-link>). Each hypersphere was then assigned a colour based on the location of its median marker intensity on the gradient.</p>
+    </sec>
+    <sec id="S5">
+      <title>Using CITRUS to analyze the MEF data</title>
+      <p id="P17">To run CITRUS (v0.08), the citrus.full command was used with the featureType argument set to “abundances” and the modelType argument set to “sam”. The family argument was set to “continuous” to identify changes in abundance over time. Downsampling was performed to 1000 cells per sample and the minimum cluster size was set to 5%, based on the default settings. Detected clusters were defined as those reported at a FDR of 5%, as reported by the SAM method. For each detected cluster, the median-based centre was determined and the hypersphere with the closest position to the cluster centre in <italic>M</italic>-dimensional space was identified. Each cluster centre was mapped onto the <italic>t</italic>-SNE plot of DA hyperspheres using the coordinates of its closest hypersphere. Note that a cluster centre was not mapped if the distance to the closest hypersphere was greater than 0.5√<italic>M</italic>. If an unmapped DA cluster was present, it was treated as being undetected by the hypersphere-based approach.</p>
+    </sec>
+    <sec id="S6">
+      <title>Implementation of cell counting software</title>
+      <p id="P18">All simulation and analysis code were written in R. Methods in the cydar package were written in a combination of R and C++. Cell counting, nearest-neighbour detection and density estimation were performed using an approach similar to that in X-shift<xref rid="R8" ref-type="bibr">8</xref>. Briefly, <italic>k</italic>-means clustering was performed on all cells, setting <italic>k</italic> = √<italic>N</italic> where <italic>N</italic> is the total number of cells. Let |<italic>j</italic> – <italic>t</italic>| denote the Euclidean distance between cell <italic>j</italic> and the centre of cluster <italic>t</italic> in the <italic>M</italic>-dimensional marker space. Similarly, let |<italic>h</italic> − <italic>t</italic>| denote the distance between the centres of <italic>t</italic> and hypersphere <italic>h</italic>. Both of these distances only need to be computed once per cell – in the latter case, this is because each hypersphere is centred on a cell. By applying the triangle inequality, a cell <italic>j</italic> in cluster <italic>t</italic> was only considered for assignment to a hypersphere <italic>h</italic> if <italic>r</italic> + |<italic>j</italic> − <italic>t</italic>| ≥ |<italic>h</italic> − <italic>t</italic>|. For cells not satisfying this requirement, the distance between <italic>j</italic> and <italic>h</italic> was not computed to avoid unnecessary work. Similarly, <italic>j</italic> was only considered as a possible neighbour of a cell <italic>j'</italic> if <italic>d<sub>n</sub></italic> + |<italic>j</italic> − <italic>t</italic>| ≥ |<italic>j'</italic> - <italic>t</italic>| where <italic>d<sub>n</sub></italic> is the distance to the current <italic>n</italic><sup>th</sup> nearest neighbour (where the value of <italic>d<sub>n</sub></italic> is continually updated once a closer <italic>n</italic><sup>th</sup> nearest neighbour is identified). This speeds up the pipeline while yielding the same results as a naïve approach that computes distances between every pair of cells. On a desktop machine, the analysis takes 10-20 minutes to run for each of the MEF reprogramming time courses.</p>
+    </sec>
+  </sec>
+  <sec sec-type="supplementary-material" id="SM">
+    <title>Supplementary Material</title>
+    <p id="P19">The Supplementary Materials is a single PDF file that consists of Sections 1-9 and contains Supplementary Figures 1-24 and Supplementary Table 1.</p>
+    <supplementary-material content-type="local-data" id="SD1">
+      <label>Supplementary Materials</label>
+      <media xlink:href="NIHMS72432-supplement-Supplementary_Materials.pdf" mimetype="application" mime-subtype="pdf" orientation="portrait" xlink:type="simple" id="d36e550" position="anchor"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack id="S7">
+    <title>Acknowledgements</title>
+    <p>This work was supported by Cancer Research UK (core funding to J.C.M., award no. A17197), the University of Cambridge and Hutchison Whampoa Limited. J.C.M. was also supported by core funding from EMBL.</p>
+  </ack>
+  <fn-group>
+    <fn id="FN1">
+      <p id="P20">Code availability</p>
+      <p id="P21">Simulation and analysis code are accessible at <ext-link ext-link-type="uri" xlink:href="http://github.com/MarioniLab/DAMethods2016">http://github.com/MarioniLab/DAMethods2016</ext-link>. Methods in the DA analysis pipeline are publicly available in the cydar package (mass CYtometry for Differential Abundance analyses in R) from the open-source Bioconductor project at <ext-link ext-link-type="uri" xlink:href="http://bioconductor.org/packages/cydar">http://bioconductor.org/packages/cydar</ext-link>, or by downloading the Supplementary Software associated with this paper.</p>
+    </fn>
+    <fn id="FN2">
+      <p id="P22">
+        <bold>Data availability</bold>
+      </p>
+      <p id="P23">All data sets used here are publicly available from Cytobank (<ext-link ext-link-type="uri" xlink:href="https://community.cytobank.org">https://community.cytobank.org</ext-link>), using the accession number 43324 for the MEF study and 44185 for the BMMC study.</p>
+    </fn>
+    <fn id="FN3" fn-type="con">
+      <p id="P24">
+        <bold>Author Contributions</bold>
+      </p>
+      <p id="P25">A.T.L.L. developed the analysis pipeline, tested it with simulations and applied it to the real data. A.C.R. interpreted the results to identify the DA subpopulations. J.C.M. provided direction and advice on method development and biological interpretation. All authors wrote and approved the final manuscript.</p>
+    </fn>
+    <fn fn-type="COI-statement" id="FN4">
+      <p id="P26">
+        <bold>Competing financial interests</bold>
+      </p>
+      <p id="P27">The authors declare no competing financial interests.</p>
+    </fn>
+  </fn-group>
+  <ref-list>
+    <ref id="R1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ornatsky</surname>
+            <given-names>OI</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Anal Chem</source>
+        <year>2008</year>
+        <volume>80</volume>
+        <fpage>2539</fpage>
+        <lpage>2547</lpage>
+        <pub-id pub-id-type="pmid">18318509</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R2">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Leipold</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Newell</surname>
+            <given-names>EW</given-names>
+          </name>
+          <name>
+            <surname>Maecker</surname>
+            <given-names>HT</given-names>
+          </name>
+        </person-group>
+        <source>Methods Mol Biol</source>
+        <year>2015</year>
+        <volume>1343</volume>
+        <fpage>81</fpage>
+        <lpage>95</lpage>
+        <pub-id pub-id-type="pmid">26420710</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Leelatian</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Diggins</surname>
+            <given-names>KE</given-names>
+          </name>
+          <name>
+            <surname>Irish</surname>
+            <given-names>JM</given-names>
+          </name>
+        </person-group>
+        <source>Methods Mol Biol</source>
+        <year>2015</year>
+        <volume>1346</volume>
+        <fpage>99</fpage>
+        <lpage>113</lpage>
+        <pub-id pub-id-type="pmid">26542718</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hansmann</surname>
+            <given-names>L</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Cancer Immunol Res</source>
+        <year>2015</year>
+        <volume>3</volume>
+        <fpage>650</fpage>
+        <lpage>660</lpage>
+        <pub-id pub-id-type="pmid">25711758</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bendall</surname>
+            <given-names>SC</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Science</source>
+        <year>2011</year>
+        <volume>332</volume>
+        <fpage>687</fpage>
+        <lpage>696</lpage>
+        <pub-id pub-id-type="pmid">21551058</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Levine</surname>
+            <given-names>JH</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Cell</source>
+        <year>2015</year>
+        <volume>162</volume>
+        <fpage>184</fpage>
+        <lpage>197</lpage>
+        <pub-id pub-id-type="pmid">26095251</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Qiu</surname>
+            <given-names>P</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Nat Biotechnol</source>
+        <year>2011</year>
+        <volume>29</volume>
+        <fpage>886</fpage>
+        <lpage>891</lpage>
+        <pub-id pub-id-type="pmid">21964415</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R8">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Samusik</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Good</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Spitzer</surname>
+            <given-names>MH</given-names>
+          </name>
+          <name>
+            <surname>Davis</surname>
+            <given-names>KL</given-names>
+          </name>
+          <name>
+            <surname>Nolan</surname>
+            <given-names>GP</given-names>
+          </name>
+        </person-group>
+        <source>Nat Methods</source>
+        <year>2016</year>
+        <volume>13</volume>
+        <fpage>493</fpage>
+        <lpage>496</lpage>
+        <pub-id pub-id-type="pmid">27183440</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gaudillière</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Sci Transl Med</source>
+        <year>2014</year>
+        <volume>6</volume>
+        <fpage>255ra131</fpage>
+      </element-citation>
+    </ref>
+    <ref id="R10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gaudillière</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Cytometry A</source>
+        <year>2015</year>
+        <volume>87</volume>
+        <fpage>817</fpage>
+        <lpage>829</lpage>
+        <pub-id pub-id-type="pmid">26190063</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Anchang</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Nat Protoc</source>
+        <year>2016</year>
+        <volume>11</volume>
+        <fpage>1264</fpage>
+        <lpage>1279</lpage>
+        <pub-id pub-id-type="pmid">27310265</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R12">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bruggner</surname>
+            <given-names>RV</given-names>
+          </name>
+          <name>
+            <surname>Bodenmiller</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Dill</surname>
+            <given-names>DL</given-names>
+          </name>
+          <name>
+            <surname>Tibshirani</surname>
+            <given-names>RJ</given-names>
+          </name>
+          <name>
+            <surname>Nolan</surname>
+            <given-names>GP</given-names>
+          </name>
+        </person-group>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2014</year>
+        <volume>111</volume>
+        <fpage>E2770</fpage>
+        <lpage>2777</lpage>
+        <pub-id pub-id-type="pmid">24979804</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ronan</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Qi</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Naegle</surname>
+            <given-names>KM</given-names>
+          </name>
+        </person-group>
+        <source>Sci Signal</source>
+        <year>2016</year>
+        <volume>9</volume>
+        <fpage>re6</fpage>
+        <pub-id pub-id-type="pmid">27303057</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R14">
+      <label>14</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Finak</surname>
+            <given-names>G</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Sci Rep</source>
+        <year>2016</year>
+        <volume>6</volume>
+        <fpage>20686</fpage>
+        <pub-id pub-id-type="pmid">26861911</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McCarthy</surname>
+            <given-names>DJ</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Smyth</surname>
+            <given-names>GK</given-names>
+          </name>
+        </person-group>
+        <source>Nucleic Acids Res</source>
+        <year>2012</year>
+        <volume>40</volume>
+        <fpage>4288</fpage>
+        <lpage>4297</lpage>
+        <pub-id pub-id-type="pmid">22287627</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R16">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Benjamini</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Hochberg</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <source>Scand J Stat</source>
+        <year>1997</year>
+        <volume>24</volume>
+        <fpage>407</fpage>
+        <lpage>418</lpage>
+      </element-citation>
+    </ref>
+    <ref id="R17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zunder</surname>
+            <given-names>ER</given-names>
+          </name>
+          <name>
+            <surname>Lujan</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Goltsev</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Wernig</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Nolan</surname>
+            <given-names>GP</given-names>
+          </name>
+        </person-group>
+        <source>Cell Stem Cell</source>
+        <year>2015</year>
+        <volume>16</volume>
+        <fpage>323</fpage>
+        <lpage>337</lpage>
+        <pub-id pub-id-type="pmid">25748935</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R18">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Van der Maaten</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Hinton</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <source>J Mach Learn Res</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>2579</fpage>
+        <lpage>2605</lpage>
+      </element-citation>
+    </ref>
+    <ref id="R19">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Parks</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Roederer</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Moore</surname>
+            <given-names>WA</given-names>
+          </name>
+        </person-group>
+        <source>Cytometry A</source>
+        <year>2006</year>
+        <volume>69</volume>
+        <fpage>541</fpage>
+        <lpage>551</lpage>
+        <pub-id pub-id-type="pmid">16604519</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R20">
+      <label>20</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hahne</surname>
+            <given-names>F</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>BMC Bioinformatics</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>106</fpage>
+        <pub-id pub-id-type="pmid">19358741</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<floats-group>
+  <fig id="F1" orientation="portrait" position="float">
+    <label>Figure 1</label>
+    <caption>
+      <title>Schematic of the differential abundance pipeline.</title>
+      <p>(a) Cells from samples 1 or 2 are distributed across the multi-dimensional marker space (two markers shown here for simplicity). Hyperspheres (yellow, <italic>h<sub>1</sub></italic>-<italic>h<sub>4</sub></italic>) centred on selected cells are constructed, and the number of cells from each sample inside each hypersphere is counted. (b) Counts for each hypersphere are tested for significant differences between samples. This yields a <italic>p</italic>-value representing the evidence against the null hypothesis of no differences. (c) Multiple testing correction of hypersphere <italic>p</italic>-values is performed by controlling the spatial FDR. Positions of significant hyperspheres at a given spatial FDR threshold are visualized by dimensionality reduction (e.g., PCA). (d) The spatial FDR is roughly equivalent to the proportion of the volume occupied by false positive hyperspheres. Each hypersphere has a median-based position (small circles) and occupies a volume of the high-dimensional space (shown as the dotted ring for two hyperspheres). The total occupied volume is the union of individual hypersphere volumes. Two groups of hyperspheres are shown – one containing true positives with genuine differences in abundance, the other containing false positives – that occupy a similar total volume <italic>V</italic> with different densities.</p>
+    </caption>
+    <graphic xlink:href="emss-72432-f001"/>
+  </fig>
+  <fig id="F2" orientation="portrait" position="float">
+    <label>Figure 2</label>
+    <caption>
+      <title>Differentially abundant subpopulations in the <italic>Oct4</italic>-GFP time course, detected at a spatial FDR of 5%.</title>
+      <p>(a) A <italic>t</italic>-SNE plot of the median positions of DA hyperspheres. Each point represents a hypersphere and is coloured according to its average log-fold change in abundance over time. Grey points represent hyperspheres with significant but non-linear changes in abundance. Subpopulations were annotated based on results in Zunder et al.<xref rid="R17" ref-type="bibr">17</xref>, with additional distinguishing features for each subpopulation noted in parentheses. OSKM: reprogramming factors (OCT4, SOX2, KLF4, c-MYC), NE: non-expressing, MET: mesenchymal-epithelial transition, SC4: partially reprogrammed cell line, ESC: embryonic stem cells, mixed 4F: mixed stoichiometry of the OSKM factors. (b) The same plots coloured by the median intensity of selected markers in each hypersphere. The colour range for each marker was bounded at the 1<sup>st</sup> and 99<sup>th</sup> percentiles of the intensities across all cells.</p>
+    </caption>
+    <graphic xlink:href="emss-72432-f002"/>
+  </fig>
+</floats-group>

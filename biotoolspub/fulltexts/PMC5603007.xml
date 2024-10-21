@@ -1,0 +1,1243 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//Springer-Verlag//DTD A++ V2.4//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName A++V2.4.dtd?>
+<?SourceDTD.Version 2.4?>
+<?ConverterInfo.XSLTName springer2nlmx2.xsl?>
+<?ConverterInfo.Version 1?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">5603007</article-id>
+    <article-id pub-id-type="pmid">28915787</article-id>
+    <article-id pub-id-type="publisher-id">1816</article-id>
+    <article-id pub-id-type="doi">10.1186/s12859-017-1816-4</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>mmquant: how to count multi-mapping reads?</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes">
+        <name>
+          <surname>Zytnicki</surname>
+          <given-names>Matthias</given-names>
+        </name>
+        <address>
+          <email>matthias.zytnicki@inra.fr</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1"/>
+      </contrib>
+      <aff id="Aff1">MIAT, Toulouse INRA, BP 52627, Castanet-Tolosan cedex, 31326 France </aff>
+    </contrib-group>
+    <pub-date pub-type="epub">
+      <day>15</day>
+      <month>9</month>
+      <year>2017</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>15</day>
+      <month>9</month>
+      <year>2017</year>
+    </pub-date>
+    <pub-date pub-type="collection">
+      <year>2017</year>
+    </pub-date>
+    <volume>18</volume>
+    <elocation-id>411</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>19</day>
+        <month>4</month>
+        <year>2017</year>
+      </date>
+      <date date-type="accepted">
+        <day>6</day>
+        <month>9</month>
+        <year>2017</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author(s) 2017</copyright-statement>
+      <license license-type="OpenAccess">
+        <license-p><bold>Open Access</bold> This article is distributed under the terms of the Creative Commons Attribution 4.0 International License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons license, and indicate if changes were made. The Creative Commons Public Domain Dedication waiver (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</ext-link>) applies to the data made available in this article, unless otherwise stated.</license-p>
+      </license>
+    </permissions>
+    <abstract id="Abs1">
+      <sec>
+        <title>Background</title>
+        <p>RNA-Seq is currently used routinely, and it provides accurate information on gene transcription. However, the method cannot accurately estimate duplicated genes expression. Several strategies have been previously used (drop duplicated genes, distribute uniformly the reads, or estimate expression), but all of them provide biased results.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We provide here a tool, called mmquant, for computing gene expression, included duplicated genes. If a read maps at different positions, the tool detects that the corresponding genes are duplicated; it merges the genes and creates a merged gene. The counts of ambiguous reads is then based on the input genes and the merged genes.</p>
+      </sec>
+      <sec>
+        <title>Conclusion</title>
+        <p>mmquant is a drop-in replacement of the widely used tools htseq-count and featureCounts that handles multi-mapping reads in an unabiased way.</p>
+      </sec>
+      <sec>
+        <title>Electronic supplementary material</title>
+        <p>The online version of this article (doi:10.1186/s12859-017-1816-4) contains supplementary material, which is available to authorized users.</p>
+      </sec>
+    </abstract>
+    <kwd-group xml:lang="en">
+      <title>Keywords</title>
+      <kwd>RNA-Seq</kwd>
+      <kwd>Quantification</kwd>
+      <kwd>Multi-mapping reads</kwd>
+    </kwd-group>
+    <custom-meta-group>
+      <custom-meta>
+        <meta-name>issue-copyright-statement</meta-name>
+        <meta-value>© The Author(s) 2017</meta-value>
+      </custom-meta>
+    </custom-meta-group>
+  </article-meta>
+</front>
+<body>
+  <sec id="Sec1">
+    <title>Background</title>
+    <p>RNA-Seq has emerged as the standard method to analyze several genes in one experiment. Among the different contexts in which RNA-Seq is used, differential gene expression is arguably the most common. This method can be decomposed into several steps, although variations exist: read mapping, gene quantification, and test for differential gene expression (see Fig. <xref rid="Fig1" ref-type="fig">1</xref>). Gene quantification aims at estimating the level of expression of a gene, given the number of reads that map to this gene.
+<fig id="Fig1"><label>Fig. 1</label><caption><p>Possible bioinformatics pipe-line for RNA-Seq differential expression analysis. The analysis starts with several FASTQ files, produced by the sequencing of several replicates of two conditions (e.g. wild type <italic>vs</italic> mutant). When a genome is available, the reads are mapped, e.g. with STAR [<xref ref-type="bibr" rid="CR15">15</xref>], and the corresponding positions are stored into a BAM file. A quantification tool, such as mmquant, presented here, counts the number of reads per gene. Statistical test for differential expression is performed by a third tool, like DESeq2 [<xref ref-type="bibr" rid="CR6">6</xref>]</p></caption><graphic xlink:href="12859_2017_1816_Fig1_HTML" id="MO1"/></fig>
+</p>
+    <p>In complex genomes, many genes are duplicated, and they constitute the majority of the genes in polyploid genomes such as wheat. In this configuration, a read produced by a duplicated gene may be mapped equally well to each homologous gene, giving rise to multi-mapping reads. These reads are complex to use in the quantification step, and several methods have been used to circumvent this problem.</p>
+    <p>For instance, the authors of featureCounts [<xref ref-type="bibr" rid="CR1">1</xref>] designed in-built annotations, that have merged duplicated and overlapping genes. Recently, [<xref ref-type="bibr" rid="CR2">2</xref>] proposed an on-line method, that requires no pre-processing of the annotation. If a read maps to gene A and gene B, a new “merged gene” is created, and the read is attributed to this merged gene, named gene A–B (see Fig. <xref rid="Fig2" ref-type="fig">2</xref>). The method provides counts for the genes given in input and for the merged genes. Merged genes can be used as standard genes in the downstream analysis. This method uses all the information given by the RNA-Seq sequencing on ambiguous reads, without any assumption nor inference.
+<fig id="Fig2"><label>Fig. 2</label><caption><p>Overview of the method, on an example. <bold>a</bold>: A toy configuration, with three genes in black: A, B, and C. Notice that A and B overlap. Six reads have been mapped to the genome, some of them (reads 2, 4, and 6) map at two different locations. If a read maps unambiguously to a unique locus and matches a unique gene (like read 1), we attribute the corresponding gene to the read (here, gene A). If a read, like read 2, matches two different genes, we create a “merged” gene, here A–C, and attribute this merged gene to the read. If a read (read 3) does not match any gene, it is not used. If a read (read 4) matches a gene (gene A) and an intergenic region, the read is attributed to the gene only. If a read (read 5) matches two different genes because the genes overlap, the read is also attributed to the merged gene (gene A–B). Similarly, if a read (read 6) matches two overlapping genes and an other gene, the three genes are merged (A–B–C). Table <bold>b</bold> provides the attributed gene for each read. <bold>c</bold> is the quantification table and the output of the tool for this configuration. Genes are sorted in lexicographical order, as shown in the example. As a consequence, merged gene (A, B) will always be displayed as A–B, and never as B–A</p></caption><graphic xlink:href="12859_2017_1816_Fig2_HTML" id="MO2"/></fig>
+</p>
+    <p>The designers of the method [<xref ref-type="bibr" rid="CR2">2</xref>] provided a prototype that implemented the approach. However, the prototype supposes that the read and the annotation files have a pre-defined format. Fine-tuning parameters, available in most standard quantification tools, are missing (e.g. overlap type and library type, see <italic>infra</italic>). Last, it involves several Perl files and thus is slow, not appropriate for large datasets involving many RNA-Seq experiments. In this paper, we present a new tool that implements the aforementioned method, together with state-of-the-art characteristics in terms of usability, especially speed and options. We believe that this tool will be useful to the RNA-Seq users, because it is simple (a drop-in replacement of the highly used featureCounts [<xref ref-type="bibr" rid="CR1">1</xref>] or htseq-count [<xref ref-type="bibr" rid="CR3">3</xref>]) and more informative, with no drawback.</p>
+    <p>The rest of the paper is organized as follows. We will first detail the implementation of our tool. Then, we will compare the results given by our tool and other state-of-the-art tools. We will conclude by mentioning future directions.</p>
+  </sec>
+  <sec id="Sec2">
+    <title>Implementation</title>
+    <p>Briefly, the default method supposes that the reads have been sorted beforehand. Many other tools, such as visualization tools, have the same requirement, and, arguably, this step should be performed anyway. Since both input sets are sorted, the search is approximately linear with respect to the size of the input and the size of the output. If the reads are not sorted, we sort the genes into a vector, cut the genome into non-overlapping bins (default size: approximately 10kb) and store the index of the first gene in or after each bin. For each read, we scan the genes starting from the position indexed by the bin of the 5’-most position of the read.</p>
+    <p>For comparison, htseq-count requires that the reads be sorted either by position or by name. featureCounts requires paired-end reads to be sorted by name.</p>
+    <p>mmquant proceeds in two steps for quantification. The first step decides whether a read <italic>matches</italic> a gene it overlaps with. Depending on the value <italic>ℓ</italic> of the “-l” parameter, provided by the user, the read matches the gene iff: 
+<list list-type="bullet"><list-item><p><italic>ℓ</italic>≤0 and the read is totally included in the gene;</p></list-item><list-item><p><italic>ℓ</italic>≥1 and <italic>n</italic>≥<italic>ℓ</italic>, where <italic>n</italic> is the number of overlapping base pairs between the read and the gene;</p></list-item><list-item><p>0&lt;<italic>ℓ</italic>&lt;1 and <italic>n</italic>≥<italic>ℓ</italic>×<italic>s</italic>, where <italic>n</italic> has been previously defined, and <italic>s</italic> is the size of the read.</p></list-item></list>
+</p>
+    <p>The first step is the search of all the matching genes for a given read. If a read maps at several locations, the mapping tool sets the NH tag (that provides the number of hits) of the SAM/BAM files to a value greater than one. mmquant uses this information and keeps the read and the matching genes in memory until all the hits have been scanned.</p>
+    <p>The second step resolves ambiguities. When a read matches several genes, some matching genes can be possibly discarded, depending on the number of overlapping base pairs. The rules that mmquant uses are provided in Fig. <xref rid="Fig3" ref-type="fig">3</xref>.
+<fig id="Fig3"><label>Fig. 3</label><caption><p>Ambiguous reads resolution. <bold>a</bold>: The read is included in both genes A and B. Here, the resolution cannot be solved, and the read will be attributed to gene A–B. <bold>b</bold>: The read is not totally included in gene A, neither in gene B. <italic>n</italic>
+<sub><italic>A</italic></sub> nucleotides of the read overlap with gene A, and <italic>n</italic>
+<sub><italic>B</italic></sub> overlap with gene B, and <italic>n</italic>
+<sub><italic>A</italic></sub>&gt;<italic>n</italic>
+<sub><italic>B</italic></sub>. If <italic>n</italic>
+<sub><italic>A</italic></sub>≫<italic>n</italic>
+<sub><italic>B</italic></sub>, we may attribute the read to gene A only. However, if <italic>n</italic>
+<sub><italic>A</italic></sub>≈<italic>n</italic>
+<sub><italic>B</italic></sub>, the ambiguity cannot be resolved, and the read is attributed to A–B. The two following cases show the rules to resolve ambiguity. <bold>c</bold>: We suppose here that <italic>n</italic>
+<sub><italic>A</italic></sub>&gt;<italic>n</italic>
+<sub><italic>B</italic></sub>+<italic>N</italic>, where <italic>N</italic> is a parameter set by the user (default: 30). In this case, mmquant will attribute the read to gene A only. <bold>d</bold>: We suppose here that <italic>n</italic>
+<sub><italic>A</italic></sub>&gt;<italic>n</italic>
+<sub><italic>B</italic></sub>×<italic>P</italic>, where <italic>P</italic> is given by the user (default: 2). The read will be attributed uniquely to gene A. <bold>e</bold>: Here, the single end read contains an intron. Exon-wise, the read can be attributed to gene A or B. In case of ambiguity, introns are compared. The intron of the read matches the intron of gene A, whereas gene B has no intron there. The read is thus attributed to A. <bold>f</bold>: The read is ambiguous exon-wise. We compute <italic>nA</italic>′ and <italic>nB</italic>′, the number of nucleotides shared by the intron of the read and the introns of genes A and B respectively. Ambiguity is solved using <italic>nA</italic>′, <italic>nB</italic>′ and the rules given in <bold>c</bold> and <bold>d</bold>. <bold>g</bold>: The read is paired-end. In case of ambiguity, <italic>n</italic>
+<sub><italic>A</italic></sub> and <italic>n</italic>
+<sub><italic>B</italic></sub> are computed as the sums of the overlapping bases between the two reads and the gene A and B respectively. The rules presented in <bold>c</bold> and <bold>d</bold> apply next</p></caption><graphic xlink:href="12859_2017_1816_Fig3_HTML" id="MO3"/></fig>
+</p>
+    <p>The tool supports paired-end reads, and checks that both ends may match the same transcript, in a way that is consistent with the sequencing strategy (forward–reverse, reverse–forward, etc.). The fragments (i.e. the pairs of reads) are then counted for quantification.</p>
+    <p>For comparison, htseq-count has three modes: “union”, “intersection-strict” and “intersection-nonempty”. The reader can consult the htseq-count article [<xref ref-type="bibr" rid="CR3">3</xref>] for a description of these modes. mmquant can emulate the “union” —the recommended mode— and the “intersection-strict” modes, with parameters “-l 1” and “-l -1” respectively, but not the “intersection-nonempty”. Ambiguous reads are not used for quantification. In featureCounts, two parameters (“minOverlap” and “fracOverlap”) are used instead of our “-l” parameter. Default strategy discards multi-matching reads. These reads can be used for quantification when the options “-M” and “-O” are set. In this case, a read will be attributed to each matching gene (with a normalized weight if the option “fraction” is used). However, this practice is discouraged because it almost always provides biased results. Besides, the “largestOverlap” option makes it possible to assign a read to the gene that has the largest number of overlapping bases. This strategy can be emulated by mmquant.</p>
+  </sec>
+  <sec id="Sec3" sec-type="results">
+    <title>Results</title>
+    <p>We tested our method on recent data, taken from [<xref ref-type="bibr" rid="CR4">4</xref>]. Briefly, this article uses RNA-Seq of human brain to find genes that are differentially expressed in individuals diagnosed with bipolar disorder. The article uses two sequencing protocols (GA-IIx and HiSeq) and microarray to validate the results. Our aim is not to reproduce their pipe-line (parameters and software versions have not been provided in the article), but to show the differences between the most used gene quantification tools (htseq-count and featureCounts), and our tool. We focused on the HiSeq dataset, that contained 6 replicates in each condition, because HiSeq is probably the most used sequencing machine now. Reads are 100 bp (base pairs) long, each sample is paired-end and contains approximately 200 millions reads. Admittedly, this dataset is challenging because duplicated genes are known to play a major role in human brain [<xref ref-type="bibr" rid="CR5">5</xref>].</p>
+    <p>Our pipe-line uses STAR v2.5.0a (with parameters recommended by ENCODE) and DESeq2 v1.14.1 [<xref ref-type="bibr" rid="CR6">6</xref>] with default options and adjusted <italic>p</italic>-value at 5%, whereas [<xref ref-type="bibr" rid="CR4">4</xref>] used TopHat, htseq-count and DESeq (arguably the reference tools at the time of publication). In the original paper, the author found only 11 differentially expressed genes (with adjusted <italic>p</italic>-value at 5%). We found all of them with our pipe-line and all the quantification tools, except one, a pseudo-gene (probably due to a problem of TopHat, which, on the earliest versions, was known to favor pseudo-genes with no intron compared to mature transcripts).</p>
+    <p>htseq-count was used in the “union” mode because it is the recommended one. As a consequence, if a read overlaps two genes, htseq-count considers that the read is ambiguous and does not use it for quantification. featureCounts was used with options “-p -B -C” and mmquant was used with the “-l 1” parameter (which compares a gene and a read as soon as they overlap by 1 bp).</p>
+    <p>Strikingly, the <italic>p</italic>-values obtained with the three different quantification strategies show a great variability (see Additional file 1). htseq-count, featureCounts and mmquant (excluding merged genes) gave 734, 835 and 763 differentially expressed genes respectively. Most of the difference comes from the way reads are assigned to the genes. htseq-count and mmquant may attribute a read to a gene as soon as they have at least one common base pair, whereas featureCounts requires the read to included in the gene. Consequently, htseq-count and mmquant count more reads per gene than featureCounts. Moreover, mmquant has several rules to resolve ambiguities, such as reads matching several genes, whereas htseq-count and featureCounts discard such reads. As a consequence, mmquant finds more reads per gene than htseq-count. Then, mmquant tests more genes (non-merged and merged genes) than the other tools. Thus, the adjusted <italic>p</italic>-value is higher even with the same raw <italic>p</italic>-value. This is a usual trade-off between specificity and sensitivity. Last, the ajusted <italic>p</italic>-value threshold emphasize these differences. For instance, 133 of the 158 genes that are found by featureCounts and not by mmquant have an adjusted <italic>p</italic>-value less that 10%, when using mmquant.</p>
+    <p>mmquant found that 5–6% of the reads where multi-mapped and could be attributed to several genes. As a consequence, it found 254 additional differentially expressed merged genes, involving 516 new genes. Note that one fourth of the differentially expressed genes is merged. We tried to find an over-represented function for the genes involved in the merged set, using DAVID [<xref ref-type="bibr" rid="CR7">7</xref>]. However, almost half of them have no known function, probably because they are duplicated, and no over-represented function was clearly linked to bipolar disorder.</p>
+    <p>We then considered the 33 merged genes with adjusted <italic>p</italic>-value &lt; 1%, which represented very good candidates. These merged genes included 75 genes that were not detected otherwise (neither by htseq-count nor featureCounts, nor in the non-merged genes found by mmquant). This gene list includes new excellent candidates with putative links to bipolar disorder, including <italic>ADK</italic> [<xref ref-type="bibr" rid="CR8">8</xref>], <italic>GTF2I</italic> [<xref ref-type="bibr" rid="CR9">9</xref>], <italic>hnRNP-A1</italic> [<xref ref-type="bibr" rid="CR10">10</xref>], <italic>HTRA2</italic> [<xref ref-type="bibr" rid="CR11">11</xref>], <italic>PKD1</italic> [<xref ref-type="bibr" rid="CR12">12</xref>] and <italic>RERE</italic> [<xref ref-type="bibr" rid="CR13">13</xref>], which have been linked to various brain-related diseases (see Additional file <xref rid="MOESM2" ref-type="media">2</xref>). Some of these genes have complex regulation systems in <italic>cis</italic>: <italic>ADK</italic> and <italic>HTRA2</italic> contain overlapping processed pseudogenes and antisense transcripts or genes, and mmquant merges these annotations on the fly. Other genes, like <italic>GTF2I</italic>, <italic>hnRNP-A1</italic>, <italic>PKD1</italic>, and <italic>RERE</italic>, are duplicated genes, or have produced a pseudo-gene in another locus. It is out of the scope of this study to validate these genes, but we would like to emphasize that, because these genes are duplicated, or overlap with other genes, they have been removed from the standard analysis.</p>
+    <p>Concerning time, featureCounts is the fastest tool, taking 8–11min per sample; mmquant is second with 21–29 min (+1–3 min if the reads are not sorted); htseq-count, written in Python, takes 4h15min–5h29min. mmquant is slower than featureCounts because it has to store (and look up) all the reads that have been mapped several times. We obtained this results allocating one thread per BAM file, but featureCounts can be further accelerated by allocating more than one thread per input file, whereas mmquant and htseq-count cannot.</p>
+    <p>To confirm these results, we used several differential RNA-Seq datasets available from the Gene Expression Omnibus (GEO) [<xref ref-type="bibr" rid="CR14">14</xref>], summarized in Table <xref rid="Tab1" ref-type="table">1</xref>. We used several model multicellular eukaryotes, with different sequencing types and depths. Figures here globally confirm previous results. The number of differentially expressed genes given by each tool is comparable. featureCounts and htseq-count provide near-identical results for single-end data. featureCounts is the fastest tool, mmquant is somewhat slower, and htseq-count is an order of magnitude slower. In mouse, we found that the raw counts and the (unadjusted) <italic>p</italic>-values of the non-merged genes were almost identical in the three methods. However, since mmquant adds a large number of merged genes, the adjusted <italic>p</italic>-values increase, and thus 3 differentially genes are not found by mmquant. In yeast, we observed that the added merged genes altered the count distribution: the library sizes and over-dispersion parameters are sensibly different with and without merged genes. As a consequence, mmquant finds less differentially expressed genes. We believe that our method is more accurate, because it uses more data to infer the count distributions. Notice that mmquant always finds new merged genes.
+<table-wrap id="Tab1"><label>Table 1</label><caption><p>Results on other datasets</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left">Organism</th><th align="left"><italic>D. melanogaster</italic></th><th align="left"><italic>M. musculus</italic></th><th align="left"><italic>A. thaliana</italic></th><th align="left"><italic>S. cerevisiae</italic></th></tr></thead><tbody><tr><td align="left">GEO accession</td><td align="left">GSE80323</td><td align="left">GSE86865</td><td align="left">GSE89850</td><td align="left">GSE83827</td></tr><tr><td align="left">reference</td><td align="left">[<xref ref-type="bibr" rid="CR16">16</xref>]</td><td align="left">[<xref ref-type="bibr" rid="CR17">17</xref>]</td><td align="left">[<xref ref-type="bibr" rid="CR18">18</xref>]</td><td align="left">[<xref ref-type="bibr" rid="CR19">19</xref>]</td></tr><tr><td align="left"># exp. genes</td><td align="left">16383</td><td align="left">24516</td><td align="left">25170</td><td align="left">6722</td></tr><tr><td align="left"># merged genes</td><td align="left">7237</td><td align="left">25302</td><td align="left">5903</td><td align="left">4782</td></tr><tr><td align="left">type</td><td align="left">paired</td><td align="left">single</td><td align="left">paired</td><td align="left">single</td></tr><tr><td align="left"># replicates</td><td align="left">4</td><td align="left">3</td><td align="left">3</td><td align="left">2</td></tr><tr><td align="left"># reads</td><td align="left">27M–33M</td><td align="left">39M–47M</td><td align="left">12M–16M</td><td align="left">10M–14M</td></tr><tr><td align="left"># hits</td><td align="left">28M–34M</td><td align="left">53M–70M</td><td align="left">12M–15M</td><td align="left">13M–17M</td></tr><tr><td align="left"># fc genes</td><td align="left">1446</td><td align="left">13</td><td align="left">4622</td><td align="left">546</td></tr><tr><td align="left"># htsc genes</td><td align="left">1432</td><td align="left">13</td><td align="left">4557</td><td align="left">546</td></tr><tr><td align="left"># mm genes</td><td align="left">1441</td><td align="left">10</td><td align="left">4599</td><td align="left">388</td></tr><tr><td align="left"># fc and htsc</td><td align="left">1420</td><td align="left">13</td><td align="left">4503</td><td align="left">546</td></tr><tr><td align="left"># fc and mm</td><td align="left">1415</td><td align="left">10</td><td align="left">4534</td><td align="left">387</td></tr><tr><td align="left"># htsc and mm</td><td align="left">1399</td><td align="left">10</td><td align="left">4458</td><td align="left">387</td></tr><tr><td align="left"># mm merged only</td><td align="left">191</td><td align="left">2</td><td align="left">394</td><td align="left">97</td></tr><tr><td align="left">fc time</td><td align="left">1mn28–</td><td align="left">1mn25–</td><td align="left">0mn46–</td><td align="left">0mn16–</td></tr><tr><td align="left"/><td align="left">1mn56</td><td align="left">2mn38</td><td align="left">1mn10</td><td align="left">0mn29</td></tr><tr><td align="left">htsc time</td><td align="left">36mn–</td><td align="left">21mn–</td><td align="left">20mn–</td><td align="left">4mn11–</td></tr><tr><td align="left"/><td align="left">46mn</td><td align="left">25mn</td><td align="left">26mn</td><td align="left">5mn58</td></tr><tr><td align="left">mm time</td><td align="left">2mn35–</td><td align="left">2mn06–</td><td align="left">1mn19–</td><td align="left">0mn20–</td></tr><tr><td align="left"/><td align="left">3mn31</td><td align="left">2mn42</td><td align="left">1mn43</td><td align="left">0mn28</td></tr><tr><td align="left">mm time unsorted</td><td align="left">3mn31–</td><td align="left">2mn22–</td><td align="left">1mn28–</td><td align="left">0mn24–</td></tr><tr><td align="left"/><td align="left">4mn18</td><td align="left">2mn53</td><td align="left">2mn11</td><td align="left">0mn31</td></tr></tbody></table><table-wrap-foot><p>The description of each line follows. # exp. genes: number of expressed genes (at least one read in one of the replicates); # merged genes: number of merged genes found by mmquant; type: single-end or paired-end; # replicates: number of replicates in each of the two conditions; # reads: number of reads sequenced; # hits: number of hits given by STAR; # fc genes: number of differentially expressed genes found by featureCounts; # htsc genes: number of differentially expressed genes found by htseq-count; # mm genes: number of differentially expressed non-merged genes found my mmquant; # mm merged only: number of genes that constitute the differentially expressed merged genes, and that are not found by the other two methods; # fc and htsc: number of differentially expressed genes found by both featureCounts and htseq-count; fc time: time spent by featureCounts; mm time unsorted: time spent by mmquant, using unsorted data</p></table-wrap-foot></table-wrap>
+</p>
+  </sec>
+  <sec id="Sec4" sec-type="conclusion">
+    <title>Conclusion</title>
+    <p>Gene quantification is an essential step of many RNA-Seq analyses. Yet, the assumption used by the quantification tools is not always fully understood, especially concerning multi-mapping reads. With mmquant, we provide a simple tool, that includes these reads in the quantification step, with no assumption on the read distribution. On our test sample, we found that these multi-mapping reads could provide up to 25% new differentially expressed merged genes. These genes were outside of the scope of previous analyses, thus biasing their results. We hope that, with mmquant, a drop-in replacement of previous tools, the genomic “dark matter” will be at last explored.</p>
+    <p>In the future, we would like to extend the concept to feature quantification. In some protocols, especially sRNA-Seq, one may want to count the number of reads per feature, such as miRNA, tRNA, rRNA, etc. Even though a read maps at several loci, all the loci may belong to the same feature. This method could help reducing ambiguities and providing useful results as well.</p>
+  </sec>
+  <sec id="Sec5">
+    <title>Availability and requirements</title>
+    <p>
+      <list list-type="bullet">
+        <list-item>
+          <p>Project name: mmquant</p>
+        </list-item>
+        <list-item>
+          <p>Project home page: <ext-link ext-link-type="uri" xlink:href="https://bitbucket.org/mzytnicki/multi-mapping-counter">https://bitbucket.org/mzytnicki/multi-mapping-counter</ext-link> and <ext-link ext-link-type="uri" xlink:href="https://toolshed.g2.bx.psu.edu/repository?repository_id=93e0efd7b8426c9c">https://toolshed.g2.bx.psu.edu/repository?repository_id=93e0efd7b8426c9c</ext-link> for in the Galaxy Tool Shed</p>
+        </list-item>
+        <list-item>
+          <p>Operating system(s): Linux</p>
+        </list-item>
+        <list-item>
+          <p>Programming language: C++</p>
+        </list-item>
+        <list-item>
+          <p>Other requirements: C++11 or higher, and zlib</p>
+        </list-item>
+        <list-item>
+          <p>License: Lesser General Public License 3.0</p>
+        </list-item>
+      </list>
+    </p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Additional files</title>
+    <sec id="Sec6">
+      <p>
+        <supplementary-material content-type="local-data" id="MOESM1">
+          <media xlink:href="12859_2017_1816_MOESM1_ESM.pdf">
+            <label>Additional file 1</label>
+            <caption>
+              <p>Comparison of the <italic>p</italic>-value distributions. Each square outside of the diagonal compares a couple of tools. For instance, the top-right square compares featureCounts with mmquant. Each dot is a gene, its <italic>x</italic>-axis value is −log of the <italic>p</italic>-value given by a tool, whereas the <italic>y</italic>-axis value is −log of the <italic>p</italic>-value given by the other tool. In the aforementioned square, the value on the <italic>x</italic>-axis is given using the mmquant strategy, and the value on the <italic>y</italic>-axis is given using the featureCounts strategy. All axes are log-scaled, and <italic>p</italic>-values have been increased by 10<sup>5</sup> to render 0s. (PDF 1771.52 kb)</p>
+            </caption>
+          </media>
+        </supplementary-material>
+      </p>
+      <p>
+        <supplementary-material content-type="local-data" id="MOESM2">
+          <media xlink:href="12859_2017_1816_MOESM2_ESM.pdf">
+            <label>Additional file 2</label>
+            <caption>
+              <p>List of differentially expressed merged genes, related to brain diseases. For each of the six “merged genes” potentially linked to brain diseases, we provide the actual genes they are made of, as well as their genomic loci. Notice that merged genes 3 to 6 involve two to three different loci. (PDF 48 kb)</p>
+            </caption>
+          </media>
+        </supplementary-material>
+      </p>
+    </sec>
+  </sec>
+</body>
+<back>
+  <glossary>
+    <title>Abbreviations</title>
+    <def-list>
+      <def-item>
+        <term>BAM</term>
+        <def>
+          <p>Binary alignment map</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>bp</term>
+        <def>
+          <p>Base pairs</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>GC%</term>
+        <def>
+          <p>Guanine–cytosine content</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>GEO</term>
+        <def>
+          <p>Gene expression omnibus</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>h</term>
+        <def>
+          <p>Hours</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>kb</term>
+        <def>
+          <p>Kilo-base</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>M</term>
+        <def>
+          <p>Millions</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>mn</term>
+        <def>
+          <p>Minutes</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>qRT-PCR</term>
+        <def>
+          <p>Quantitative reverse transcription polymerase chain reaction</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>SAM</term>
+        <def>
+          <p>Sequence alignment map</p>
+        </def>
+      </def-item>
+    </def-list>
+  </glossary>
+  <fn-group>
+    <fn>
+      <p>
+        <bold>Electronic supplementary material</bold>
+      </p>
+      <p>The online version of this article (doi:10.1186/s12859-017-1816-4) contains supplementary material, which is available to authorized users.</p>
+    </fn>
+    <fn>
+      <p>
+        <bold>Availability of data and materials</bold>
+      </p>
+      <p>The main dataset supporting the conclusions of this article is available in the GEO repository, <ext-link ext-link-type="uri" xlink:href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE53239">GSE53239</ext-link>. The other datasets are <ext-link ext-link-type="uri" xlink:href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE80323">GSE80323</ext-link> (fruit fly), <ext-link ext-link-type="uri" xlink:href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE86865">GSE86865</ext-link> (mouse), <ext-link ext-link-type="uri" xlink:href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE89850">GSE89850</ext-link> (thale cress), and <ext-link ext-link-type="uri" xlink:href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE83827">GSE83827</ext-link> (yeast).</p>
+    </fn>
+  </fn-group>
+  <ack>
+    <title>Acknowledgements</title>
+    <p>The author thanks Mick Watson for useful comments on mmquant.</p>
+    <sec id="d29e1226">
+      <title>Funding</title>
+      <p>Not applicable.</p>
+    </sec>
+  </ack>
+  <notes notes-type="author-contribution">
+    <title>Authors’ contributions</title>
+    <p>MZ conceived the study, developed the software and wrote the manuscript. The author read and approved the final version of this manuscript.</p>
+  </notes>
+  <notes notes-type="COI-statement">
+    <sec id="d29e1237">
+      <title>Ethics approval and consent to participate</title>
+      <p>Not applicable.</p>
+    </sec>
+    <sec id="d29e1242">
+      <title>Consent for publication</title>
+      <p>Not applicable.</p>
+    </sec>
+    <sec id="d29e1247">
+      <title>Competing interests</title>
+      <p>The author declares that he has no competing interests.</p>
+    </sec>
+    <sec id="d29e1252">
+      <title>Publisher’s Note</title>
+      <p>Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.</p>
+    </sec>
+  </notes>
+  <ref-list id="Bib1">
+    <title>References</title>
+    <ref id="CR1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Liao</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Smyth</surname>
+            <given-names>GK</given-names>
+          </name>
+          <name>
+            <surname>Shi</surname>
+            <given-names>W</given-names>
+          </name>
+        </person-group>
+        <article-title>featureCounts: an efficient general purpose program for assigning sequence reads to genomic features</article-title>
+        <source>Bionformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <issue>7</issue>
+        <fpage>923</fpage>
+        <lpage>30</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btt656</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR2">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Robert</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Watson</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Errors in RNA-Seq quantification affect genes of relevance to human disease</article-title>
+        <source>Genome Biol</source>
+        <year>2015</year>
+        <volume>16</volume>
+        <fpage>177</fpage>
+        <pub-id pub-id-type="doi">10.1186/s13059-015-0734-x</pub-id>
+        <?supplied-pmid 26335491?>
+        <pub-id pub-id-type="pmid">26335491</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Anders</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Pyl</surname>
+            <given-names>PT</given-names>
+          </name>
+          <name>
+            <surname>Huber</surname>
+            <given-names>W</given-names>
+          </name>
+        </person-group>
+        <article-title>HTSeq–a Python framework to work with high-throughput sequencing data</article-title>
+        <source>Bionformatics</source>
+        <year>2015</year>
+        <volume>31</volume>
+        <issue>2</issue>
+        <fpage>166</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu638</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Akula</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Barb</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Jiang</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Wendland</surname>
+            <given-names>JR</given-names>
+          </name>
+          <name>
+            <surname>Choi</surname>
+            <given-names>KH</given-names>
+          </name>
+          <name>
+            <surname>Sen</surname>
+            <given-names>SK</given-names>
+          </name>
+          <name>
+            <surname>Hou</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>DTW</given-names>
+          </name>
+          <name>
+            <surname>Laje</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Johnson</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Lipska</surname>
+            <given-names>BK</given-names>
+          </name>
+          <name>
+            <surname>Kleinman</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Corrada-Bravo</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Detera-Wadleigh</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Munson</surname>
+            <given-names>PJ</given-names>
+          </name>
+          <name>
+            <surname>McMahon</surname>
+            <given-names>FJ</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA-sequencing of the brain transcriptome implicates dysregulation of neuroplasticity, circadian rhythms and GTPase binding in bipolar disorder</article-title>
+        <source>Mol Psychiatry</source>
+        <year>2014</year>
+        <volume>19</volume>
+        <issue>11</issue>
+        <fpage>1179</fpage>
+        <lpage>85</lpage>
+        <pub-id pub-id-type="doi">10.1038/mp.2013.170</pub-id>
+        <?supplied-pmid 24393808?>
+        <pub-id pub-id-type="pmid">24393808</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Geschwind</surname>
+            <given-names>DH</given-names>
+          </name>
+          <name>
+            <surname>Konopka</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>Neuroscience: Genes and human brain evolution</article-title>
+        <source>Nature</source>
+        <year>2012</year>
+        <volume>486</volume>
+        <fpage>481</fpage>
+        <lpage>2</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature11380</pub-id>
+        <?supplied-pmid 22722844?>
+        <pub-id pub-id-type="pmid">22722844</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Love</surname>
+            <given-names>MI</given-names>
+          </name>
+          <name>
+            <surname>Huber</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Anders</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2</article-title>
+        <source>Genome Biol</source>
+        <year>2014</year>
+        <volume>15</volume>
+        <fpage>550</fpage>
+        <pub-id pub-id-type="doi">10.1186/s13059-014-0550-8</pub-id>
+        <?supplied-pmid 25516281?>
+        <pub-id pub-id-type="pmid">25516281</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Huang</surname>
+            <given-names>DW</given-names>
+          </name>
+          <name>
+            <surname>Sherman</surname>
+            <given-names>BT</given-names>
+          </name>
+          <name>
+            <surname>Lempicki</surname>
+            <given-names>RA</given-names>
+          </name>
+        </person-group>
+        <article-title>Systematic and integrative analysis of large gene lists using DAVID bioinformatics resources</article-title>
+        <source>Nat Protoc</source>
+        <year>2009</year>
+        <volume>4</volume>
+        <fpage>44</fpage>
+        <lpage>57</lpage>
+        <pub-id pub-id-type="doi">10.1038/nprot.2008.211</pub-id>
+        <pub-id pub-id-type="pmid">19131956</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR8">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Boison</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Adenosine kinase, epilepsy and stroke: mechanisms and therapies</article-title>
+        <source>Trends Pharmacol Sci</source>
+        <year>2006</year>
+        <volume>27</volume>
+        <fpage>652</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.tips.2006.10.008</pub-id>
+        <?supplied-pmid 17056128?>
+        <pub-id pub-id-type="pmid">17056128</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sakurai</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Dorr</surname>
+            <given-names>NP</given-names>
+          </name>
+          <name>
+            <surname>Takahashi</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>McInnes</surname>
+            <given-names>LA</given-names>
+          </name>
+          <name>
+            <surname>Elder</surname>
+            <given-names>GA</given-names>
+          </name>
+          <name>
+            <surname>Buxbaum</surname>
+            <given-names>JD</given-names>
+          </name>
+        </person-group>
+        <article-title>Haploinsufficiency of <italic>Gtf2i</italic>, a gene deleted in Williams Syndrome, leads to increases in social interactions</article-title>
+        <source>Autism Res</source>
+        <year>2011</year>
+        <volume>4</volume>
+        <fpage>28</fpage>
+        <lpage>39</lpage>
+        <pub-id pub-id-type="doi">10.1002/aur.169</pub-id>
+        <?supplied-pmid 21328569?>
+        <pub-id pub-id-type="pmid">21328569</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Liu</surname>
+            <given-names>XY</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>HL</given-names>
+          </name>
+          <name>
+            <surname>Su</surname>
+            <given-names>JB</given-names>
+          </name>
+          <name>
+            <surname>Ding</surname>
+            <given-names>FH</given-names>
+          </name>
+          <name>
+            <surname>Zhao</surname>
+            <given-names>JJ</given-names>
+          </name>
+          <name>
+            <surname>Chai</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>YX</given-names>
+          </name>
+          <name>
+            <surname>Cui</surname>
+            <given-names>SC</given-names>
+          </name>
+          <name>
+            <surname>Sun</surname>
+            <given-names>FY</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>ZY</given-names>
+          </name>
+          <name>
+            <surname>Xu</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>XH</given-names>
+          </name>
+        </person-group>
+        <article-title>Regulation of RAGE splicing by hnRNP A1 and Tra2 <italic>β</italic>-1 and its potential role in AD pathogenesis</article-title>
+        <source>J Neurochem</source>
+        <year>2015</year>
+        <volume>133</volume>
+        <fpage>187</fpage>
+        <lpage>98</lpage>
+        <pub-id pub-id-type="doi">10.1111/jnc.13069</pub-id>
+        <?supplied-pmid 25689357?>
+        <pub-id pub-id-type="pmid">25689357</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Patterson</surname>
+            <given-names>VL</given-names>
+          </name>
+          <name>
+            <surname>Zullo</surname>
+            <given-names>AJ</given-names>
+          </name>
+          <name>
+            <surname>Koenig</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Stoessel</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Jo</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Han</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Choi</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>DeWan</surname>
+            <given-names>AT</given-names>
+          </name>
+          <name>
+            <surname>Thomas</surname>
+            <given-names>JL</given-names>
+          </name>
+          <name>
+            <surname>Kuan</surname>
+            <given-names>CY</given-names>
+          </name>
+          <name>
+            <surname>Hoh</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Neural-Specific Deletion of <italic>Htra2</italic> Causes Cerebellar Neurodegeneration and Defective Processing of Mitochondrial OPA1</article-title>
+        <source>PLOS ONE</source>
+        <year>2014</year>
+        <volume>9</volume>
+        <fpage>1</fpage>
+        <lpage>24</lpage>
+      </element-citation>
+    </ref>
+    <ref id="CR12">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wodarczyk</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Rowe</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Chiaravalli</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Pema</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Qian</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Boletta</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>A Novel Mouse Model Reveals that Polycystin-1 Deficiency in Ependyma and Choroid Plexus Results in Dysfunctional Cilia and Hydrocephalus</article-title>
+        <source>PLOS ONE</source>
+        <year>2009</year>
+        <volume>4</volume>
+        <fpage>1</fpage>
+        <lpage>14</lpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0007137</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fregeau</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Hernández-García</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Jordan</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Cho</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Schnur</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Monaghan</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Juusola</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Rosenfeld</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Bhoj</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Zackai</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Sacharow</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Barañano</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Bosch</surname>
+            <given-names>DM</given-names>
+          </name>
+          <name>
+            <surname>de Vries</surname>
+            <given-names>BA</given-names>
+          </name>
+          <name>
+            <surname>Lindstrom</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Schroeder</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>James</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Kulch</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Lalani</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>van Haelst</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>van Gassen</surname>
+            <given-names>KI</given-names>
+          </name>
+          <name>
+            <surname>van Binsbergen</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Barkovich</surname>
+            <given-names>AJ</given-names>
+          </name>
+          <name>
+            <surname>Scott</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Sherr</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>De Novo Mutations of <italic>RERE</italic> Cause a Genetic Syndrome with Features that Overlap Those Associated with Proximal 1p36 Deletions</article-title>
+        <source>Trends Pharmacol Sci</source>
+        <year>2017</year>
+        <volume>98</volume>
+        <fpage>963</fpage>
+        <lpage>70</lpage>
+      </element-citation>
+    </ref>
+    <ref id="CR14">
+      <label>14</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Barrett</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Wilhite</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Ledoux</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Evangelista</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Tomashevsky</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Marshall</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Phillippy</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Sherman</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Holko</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Yefanov</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Robertson</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Serova</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Davis</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Soboleva</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>NCBI GEO: archive for functional genomics data sets–update</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2013</year>
+        <volume>41</volume>
+        <fpage>991</fpage>
+        <lpage>5</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gks1193</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dobin</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Davis</surname>
+            <given-names>CA</given-names>
+          </name>
+          <name>
+            <surname>Schlesinger</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Drenkow</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Zaleski</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Jha</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Batut</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Chaisson</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Gingeras</surname>
+            <given-names>TR</given-names>
+          </name>
+        </person-group>
+        <article-title>STAR: ultrafast universal RNA-seq aligner</article-title>
+        <source>Bionformatics</source>
+        <year>2013</year>
+        <volume>29</volume>
+        <issue>1</issue>
+        <fpage>15</fpage>
+        <lpage>21</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bts635</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR16">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hateleya</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Hosamanib</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Bhardwajb</surname>
+            <given-names>SR</given-names>
+          </name>
+          <name>
+            <surname>Pachtera</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Bhattacharyab</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Transcriptomic response of Drosophila melanogaster pupae developed in hypergravity</article-title>
+        <source>Genomics</source>
+        <year>2016</year>
+        <volume>108</volume>
+        <fpage>158</fpage>
+        <lpage>67</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.ygeno.2016.09.002</pub-id>
+        <pub-id pub-id-type="pmid">27621057</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Liu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Ni</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Cao</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Signer</surname>
+            <given-names>RAJ</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Gu</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Hu</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Dickerson</surname>
+            <given-names>KE</given-names>
+          </name>
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>SE</given-names>
+          </name>
+          <name>
+            <surname>Chandel</surname>
+            <given-names>NS</given-names>
+          </name>
+          <name>
+            <surname>DeBerardinis</surname>
+            <given-names>RJ</given-names>
+          </name>
+          <name>
+            <surname>Zhou</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Shao</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Xu</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Regulation of mitochondrial biogenesis in erythropoiesis by mTORC1-mediated protein translation</article-title>
+        <source>Nat Cell Biol</source>
+        <year>2017</year>
+        <volume>19</volume>
+        <fpage>626</fpage>
+        <lpage>38</lpage>
+        <pub-id pub-id-type="doi">10.1038/ncb3527</pub-id>
+        <?supplied-pmid 28504707?>
+        <pub-id pub-id-type="pmid">28504707</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR18">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>K</given-names>
+          </name>
+        </person-group>
+        <article-title><italic>Arabidopsis</italic> NF-YCs Mediate the Light-Controlled Hypocotyl Elongation via Modulating Histone Acetylation</article-title>
+        <source>Mol Plant</source>
+        <year>2017</year>
+        <volume>10</volume>
+        <fpage>260</fpage>
+        <lpage>73</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.molp.2016.11.007</pub-id>
+        <?supplied-pmid 27876642?>
+        <pub-id pub-id-type="pmid">27876642</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR19">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Losh</surname>
+            <given-names>JS</given-names>
+          </name>
+          <name>
+            <surname>King</surname>
+            <given-names>AK</given-names>
+          </name>
+          <name>
+            <surname>Bakelar</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Taylor</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Loomis</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Rosenzweig</surname>
+            <given-names>JA</given-names>
+          </name>
+          <name>
+            <surname>Johnson</surname>
+            <given-names>SJ</given-names>
+          </name>
+          <name>
+            <surname>van Hoof</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Interaction between the RNA-dependent ATPase and poly(A) polymerase subunits of the TRAMP complex is mediated by short peptides and important for snoRNA processing</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2015</year>
+        <volume>43</volume>
+        <fpage>1848</fpage>
+        <lpage>58</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkv005</pub-id>
+        <?supplied-pmid 25589546?>
+        <pub-id pub-id-type="pmid">25589546</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

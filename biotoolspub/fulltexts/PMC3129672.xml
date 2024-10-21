@@ -1,0 +1,1662 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3129672</article-id>
+    <article-id pub-id-type="publisher-id">gb-2011-12-3-r22</article-id>
+    <article-id pub-id-type="pmid">21410973</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2011-12-3-r22</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Method</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Improving RNA-Seq expression estimates by correcting for fragment bias</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Roberts</surname>
+          <given-names>Adam</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>adarob@eecs.berkeley.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>Cole</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <xref ref-type="aff" rid="I3">3</xref>
+        <email>cole@broadinstitute.org</email>
+      </contrib>
+      <contrib contrib-type="author" id="A3">
+        <name>
+          <surname>Donaghey</surname>
+          <given-names>Julie</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>donaghey@broadinstitute.org</email>
+      </contrib>
+      <contrib contrib-type="author" id="A4">
+        <name>
+          <surname>Rinn</surname>
+          <given-names>John L</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <xref ref-type="aff" rid="I3">3</xref>
+        <email>john_rinn@harvard.edu</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A5">
+        <name>
+          <surname>Pachter</surname>
+          <given-names>Lior</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I4">4</xref>
+        <email>lpachter@math.berkeley.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Computer Science, 387 Soda Hall, UC Berkeley, Berkeley, CA 94720, USA</aff>
+    <aff id="I2"><label>2</label>Broad Institute, 7 Cambridge Center, Cambridge, MA 02142, USA</aff>
+    <aff id="I3"><label>3</label>Department of Stem Cell and Regenerative Biology, 7 Divinity Avenue, Harvard University, Cambridge, MA 02138, USA</aff>
+    <aff id="I4"><label>4</label>Departments of Mathematics and Molecular &amp; Cell Biology, 970 Evans Hall, UC Berkeley, Berkeley, CA 94720, USA</aff>
+    <pub-date pub-type="ppub">
+      <year>2011</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>16</day>
+      <month>3</month>
+      <year>2011</year>
+    </pub-date>
+    <volume>12</volume>
+    <issue>3</issue>
+    <fpage>R22</fpage>
+    <lpage>R22</lpage>
+    <history>
+      <date date-type="received">
+        <day>4</day>
+        <month>12</month>
+        <year>2010</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>20</day>
+        <month>2</month>
+        <year>2011</year>
+      </date>
+      <date date-type="accepted">
+        <day>16</day>
+        <month>3</month>
+        <year>2011</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2011 Roberts et al.; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2011</copyright-year>
+      <copyright-holder>Roberts et al.; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an open access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/2011/12/3/R22"/>
+    <abstract>
+      <p>The biochemistry of RNA-Seq library preparation results in cDNA fragments that are not uniformly distributed within the transcripts they represent. This non-uniformity must be accounted for when estimating expression levels, and we show how to perform the needed corrections using a likelihood based approach. We find improvements in expression estimates as measured by correlation with independently performed qRT-PCR and show that correction of bias leads to improved replicability of results across libraries and sequencing technologies.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>RNA-Seq technology offers the possibility of accurately measuring transcript abundances in a sample of RNA by sequencing of double stranded cDNA [<xref ref-type="bibr" rid="B1">1</xref>]. Unfortunately, current technological limitations of sequencers require that the cDNA molecules represent only partial fragments of the RNA being probed. The cDNA fragments are obtained by a series of steps, often including reverse transcription primed by random hexamers (RH), or by oligo (dT). Most protocols also include a fragmentation step, typically RNA hydrolysis or nebulization, or alternatively cDNA fragmentation by DNase I treatment or sonication. Many sequencing technologies also require constrained cDNA lengths, so a final gel cutting step for size selection may be included. Figure <xref ref-type="fig" rid="F1">1</xref> shows how some of these procedures are combined in a typical experiment.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Overview of a typical RNA-Seq experiment</bold>. RNA is initially fragmented (1) followed by first-strand synthesis priming (2), which selects the 3' fragment end (in transcript orientation), to make single stranded cDNA. Double stranded cDNA created during second-strand synthesis (3), which selects the 5' fragment end, is then size selected (4) resulting in fragments suitable for sequencing (5). Sequenced reads are mapped to opposite strands of the genome (6), and in the case of known transcript or fragment strandedness, the read alignments reveal the 5' and 3' ends of the sequenced fragment (see Supplementary methods in Additional file <xref ref-type="supplementary-material" rid="S3">3</xref>). All arrows are directed 5' to 3' in transcript orientation.</p>
+      </caption>
+      <graphic xlink:href="gb-2011-12-3-r22-1"/>
+    </fig>
+    <p>The randomness inherent in many of the preparation steps for RNA-Seq leads to fragments whose starting points (relative to the transcripts from which they were sequenced) appear to be chosen approximately uniformly at random. This observation has been the basis of assumptions underlying a number of RNA-Seq analysis approaches that, in computer science terms, invert the 'reduction' of transcriptome estimation to DNA sequencing [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B6">6</xref>]. However, recent careful analysis has revealed both positional [<xref ref-type="bibr" rid="B7">7</xref>] and sequence-specific [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B9">9</xref>] biases in sequenced fragments. Positional bias refers to a local effect in which fragments are preferentially located towards either the beginning or end of transcripts. Sequence-specific bias is a global effect where the sequence surrounding the beginning or end of potential fragments affects their likelihood of being selected for sequencing. These biases can affect expression estimates [<xref ref-type="bibr" rid="B10">10</xref>], and it is therefore important to correct for them during RNA-Seq analysis.</p>
+    <p>Although many biases can be traced back to specifics of the preparation protocols (see Figure <xref ref-type="fig" rid="F2">2</xref> and [<xref ref-type="bibr" rid="B8">8</xref>]), it is currently not possible to predict fragment distributions directly from a protocol. This is due to many factors, including uncertainty in the biochemistry of many steps and the unknown shape and effect of RNA secondary structure on certain procedures [<xref ref-type="bibr" rid="B10">10</xref>]. It is therefore desirable to estimate the extent and nature of bias indirectly by inferring it from the data (fragment alignments) in an experiment. However, such inference is non-trivial due to the fact that fragment abundances are proportional to transcript abundances, so that the expression levels of transcripts from which fragments originate must be taken into account when estimating bias, as Figure <xref ref-type="fig" rid="F2">2</xref> demonstrates. At the same time, expression estimates made without correcting for bias may lead to the over- or under-representation of fragments. Therefore the problems of bias estimation and expression estimation are fundamentally linked, and must be solved together. Likelihood based approaches are well suited to resolving this difficulty, as the bias and abundance parameters can be estimated jointly by maximizing a likelihood function for the data.</p>
+    <fig id="F2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Nucleotide distribution surrounding fragment ends and calculation of bias weights</bold>. <bold>(a) </bold>Sequence logos showing the distribution of nucleotides in a 23 bp window surrounding the ends of fragments from an experiment primed with 'not not so random' (NNSR) hexamers [<xref ref-type="bibr" rid="B11">11</xref>]. The 3' end sequences are complemented (but not reversed) to show the sequence of the primer during first-strand synthesis (see Figure 1). The offset is calculated so that zero is the 'first' base of the end sequence and only non-negative values are internal to the fragment. Counts were taken only from transcripts mapping to single-isoform genes. <bold>(b) </bold>Sequence logo showing normalized nucleotide frequencies after reweighting by initial (not bias corrected) FPKM in order to account for differences in abundance. <bold>(c) </bold>The background distribution for the yeast transcriptome, assuming uniform expression of all single-isoform genes. The difference in 5' and 3' distributions are due to the ends being primed from opposite strands. Comparing (c) to (a) and (b) shows that while the bias is confounded with expression in (a), the abundance normalization reveals the true bias to extend from 5 bp upstream to 5 bp downstream of the fragment end. Taking the ratio of the normalized nucleotide frequencies (b) to the background (c) for the NNSR dataset gives bias weights <bold>(d)</bold>, which further reveal that the bias is partially due to selection for upstream sequences similar to the strand tags, namely TCCGATCTCT in first-strand synthesis (which selects the 5' end) and TCCGATCTGA in second-strand synthesis (which selects the 3' end). Although the weights here are based on independent frequencies, we found correlations among sites in the window and take these into account in our full model to produce more informative weights (see Supplementary methods in Additional file <xref ref-type="supplementary-material" rid="S3">3</xref>). A similar figure to this for the standard Illumina Random Hexamer protocol and plots similar to (d) for all datasets in the paper can be found in Figures S1 and S2 of Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> respectively.</p>
+      </caption>
+      <graphic xlink:href="gb-2011-12-3-r22-2"/>
+    </fig>
+    <p>Our main result is the development of a likelihood based approach for simultaneous estimation of bias parameters and expression levels using the likelihood framework of [<xref ref-type="bibr" rid="B6">6</xref>]. This complements work of [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B10">10</xref>] where corrections are developed based on another likelihood model, and also extends their work by incorporating simultaneous estimation and correction of positional bias. We demonstrate that our method improves expression estimates in comparison with independently obtained qRT-PCR on a benchmark dataset. Using the same data, we also show that our method improves on the approaches of [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B10">10</xref>]. RNA-Seq technology is changing rapidly, and this is evident in the development of numerous preparation protocols (for a recent review see [<xref ref-type="bibr" rid="B11">11</xref>]) and increasingly longer read lengths from sequencing machines [<xref ref-type="bibr" rid="B12">12</xref>]. When assessing the impact of bias correction, we have therefore included both early RNA-Seq data of the type that many laboratories might be producing with older machines, as well as newer data that reflects recent protocol choices and demonstrates the improvements in sequencing technologies. This has required us to make our methods robust to both single- and paired-end reads, strand specific and non-specific protocols, and a variety of priming and fragmentation methods. One of our main findings is that bias correction improves the correlation of expression estimates obtained from sequence data generated using different sample preparations and different sequencing technologies.</p>
+  </sec>
+  <sec>
+    <title>Results and Discussion</title>
+    <sec>
+      <title>Estimating fragment bias in existing protocols</title>
+      <p>Fragment counts in an RNA-Seq experiment are determined by two different phenomena: fragments originating from highly expressed transcripts will appear more often in the data than those originating from lower-expressed transcripts, and library preparations include biases that may preferentially select some potential fragments over others. By fragment bias we mean only the over- or under-representation of fragments due to sequence-specific or positional bias as discussed in the Background. Because expression levels also affect fragment abundances, it is necessary to jointly estimate transcript abundances and bias parameters in order to properly learn the bias directly from RNA-Seq data.</p>
+      <p>This issue is illustrated by example in Figure <xref ref-type="fig" rid="F2">2</xref> where the need for joint estimation of bias parameters and expression values is evidenced by comparison of the raw counts of bases at the starts/ends of fragments (panel a) and the adjusted counts normalized by the abundances of transcripts (panel b). The latter calculation is affected by the bias parameters, so that joint estimation is required. We expanded the likelihood framework described in [<xref ref-type="bibr" rid="B6">6</xref>] in order to perform such parameter estimation (see Materials and methods), resulting in 'learned' bias weights (panel d Figure <xref ref-type="fig" rid="F2">2</xref>) that were used to adjust expected fragment counts in the computation of abundances using our likelihood model. Figure <xref ref-type="fig" rid="F3">3</xref> shows an example of how well these bias estimates capture the over- and under-representations of reads at different positions of a transcript, based on its sequence.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Bias correction within transcripts</bold>. An example showing the effect of bias correction on the read counts for human transcript <monospace>NM_004684</monospace>. The top panel shows raw read counts (number of 3' ends of fragments at each location), and the bottom panel shows the product of the bias parameters (total bias weight defined in the Supplementary methods in Additional file <xref ref-type="supplementary-material" rid="S3">3</xref>) at the same locations. We correctly identify bias at different positions and can therefore correct for the non-uniformity. Note that the bias parameters were learned from the entire dataset excluding reads mapped to this transcript in order to cross-validate our results. The RNA-Seq for the experiment was performed with the NSR protocol [<xref ref-type="bibr" rid="B21">21</xref>], which is why 3' counts were used instead of 5'.</p>
+        </caption>
+        <graphic xlink:href="gb-2011-12-3-r22-3"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Validation by comparison to alternative expression assays</title>
+      <p>We emphasize that our goal was not to validate RNA-Seq <italic>per se</italic>, but rather to show that bias correction improves expression estimation. Therefore, in interpreting the correlations throughout the paper, we focused on improvements in correlation with bias correction and not on the absolute value. In this regard, we report most of our results as fraction discrepancy explained, which we calculated by dividing the change in <italic>R</italic><sup>2 </sup>after bias correction by the difference of the initial <italic>R</italic><sup>2 </sup>from 1 (a perfect correlation). Selected correlation plots can be found in Figure S3 of Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> and all raw expression data in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref>. Furthermore, we mention that we observed that correlation results were sensitive to the extent of filtering of low abundance fragments and we therefore attempted to eliminate filtering in the experiments we performed (see Materials and methods for more detail).</p>
+      <p>A major problem with validating RNA-Seq expression estimates is that there is no clear 'gold standard' for expression estimation. Comparison of RNA-Seq to microarrays has suggested that the former technology is more accurate than the latter [<xref ref-type="bibr" rid="B13">13</xref>]. We examined the recently published NanoString nCounter gene expression system [<xref ref-type="bibr" rid="B14">14</xref>], but noticed many unexplainable outliers and high variance between technical replicates (see Figure S4 of Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> and data in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref>). Quantitative reverse transcription PCR (qRT-PCR) has served as a benchmark in numerous studies but it is not a perfect expression measurement assay [<xref ref-type="bibr" rid="B15">15</xref>], and it is therefore <italic>a priori </italic>unclear which technology currently produces the most accurate expression estimates. Nevertheless, at present we believe it to be the best measure of expression aside from, perhaps, RNA-Seq itself. Due to the previously demonstrated superiority of RNA-Seq over microarrays, and the problems with NanoString, we performed all our benchmarking with respect to qRT-PCR.</p>
+      <p>We began by comparing the expression estimates on the Microarray Quality Control (MAQC) Human Brain Reference (HBR) dataset, which includes 907 transcripts with uniquely mapping TaqMan qRT-PCR probes [<xref ref-type="bibr" rid="B16">16</xref>], with RNA-Seq data from the same sample sequenced by Illumina (SRA012427) [<xref ref-type="bibr" rid="B17">17</xref>] (Figure <xref ref-type="fig" rid="F4">4</xref>). We examined the correlation of the <monospace>Cufflinks</monospace> output with the qRT-PCR expression data and observed an increase of <italic>R</italic><sup>2 </sup>from 0.753 before correction to 0.807 after correction.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Correlation between RNA-Seq and qRT-PCR</bold>. <bold>(a) </bold>Expression estimates before bias correction (tail of arrows) and after correction (points of arrows) for the SRA012427 dataset compared to qRT-PCR values for the same transcripts. Red arrows show decrease in expression after correction and blue an increase. Note that we have zoomed in on lower-expression transcripts (the majority) for clarity. <bold>(b) </bold>Distribution of log-fold change in expression after bias correction.</p>
+        </caption>
+        <graphic xlink:href="gb-2011-12-3-r22-4"/>
+      </fig>
+      <p>We examined the basis for change in correlation by further investigating, for each transcript, whether its expression estimate increased or decreased after bias correction, and by how much. The arrows in Figure <xref ref-type="fig" rid="F4">4</xref> show the direction and extent of expression change with correction, and the overall fold-change distribution. Many fragments show large changes in expression with a median absolute fold change of 1.5 (Figure <xref ref-type="fig" rid="F4">4b</xref>). To establish the significance of the improvement in correlation, we performed a permutation test where we changed the expression estimates of transcripts randomly according to the fold change distribution in Figure <xref ref-type="fig" rid="F4">4b</xref>. We obtained a <italic>P</italic>-value of 0.0007, meaning that the improvement in <italic>R</italic><sup>2 </sup>our correction accomplishes is highly significant. Together, these results show that bias correction may dramatically affect expression estimates via both increases and decreases of expression values, and that these changes provide an overall improvement in abundance estimates.</p>
+    </sec>
+    <sec>
+      <title>Comparison with previous methods</title>
+      <p>In [<xref ref-type="bibr" rid="B8">8</xref>], a method for bias correction is proposed that is based on correcting read counts for transcripts according to the bias learned for patterns at the start of reads (normalized using sequences in the interior of reads). This approach uses less information than our method, as it is restricted to learning bias within the read sequence, and cannot capture bias surrounding the start site. Furthermore, count-based methods do not fully exploit the information available in paired-end reads which allow for the determination of fragment length. Fragment length can help in assigning ambiguously mapped fragments to transcripts and our method takes advantage of this. On the other hand, since read counts have been promoted as an acceptable way to measure abundance [<xref ref-type="bibr" rid="B18">18</xref>], we compared the method to ours using the MAQC qRT-PCR data from the previous section. Figure <xref ref-type="fig" rid="F5">5</xref> shows the results of the method of [<xref ref-type="bibr" rid="B8">8</xref>], both before and after bias correction (<italic>R</italic><sup>2 </sup>= 0.711 before and <italic>R</italic><sup>2 </sup>= 0.715 after correction). To obtain these results we used the software package <monospace>Genominator</monospace>[<xref ref-type="bibr" rid="B8">8</xref>], following the guidelines in the documentation, with the exception that bias was learned separately for each chromosome, as the software was not able to load an entire genome into memory. More details are provided in the Materials and methods section.</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Comparison with previous methods</bold>. A comparison of our method (<monospace>Cufflinks</monospace>) with <monospace>Genominator</monospace>[<xref ref-type="bibr" rid="B8">8</xref>] and <monospace>mseq</monospace>[<xref ref-type="bibr" rid="B10">10</xref>]. The <italic>y</italic>-axis shows the <italic>R</italic><sup>2 </sup>value for the correlation between uncorrected (green) and bias corrected (orange) RNA-Seq expression estimates and qRT-PCR for the three methods. Correlation plots for these data can be found in Figure S3 of Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>.</p>
+        </caption>
+        <graphic xlink:href="gb-2011-12-3-r22-5"/>
+      </fig>
+      <p>We also compared our approach to the <monospace>mseq</monospace> method in [<xref ref-type="bibr" rid="B10">10</xref>]. We again used the MAQC HBR qRT-PCR data and this time prepared the sequences and learned parameters for models following the suggested guidelines in [<xref ref-type="bibr" rid="B10">10</xref>], that is we trained the parameters of a MART model for bias by learning from the 100 most expressed transcripts in the experiment, and then tested on the set of 907 transcripts with uniquely mapping TaqMan probes. In this case, we observed an uncorrected <italic>R</italic><sup>2 </sup>= 0.730 and corrected <italic>R</italic><sup>2 </sup>= 0.755. Note that the even though the expression was again calculated using counts, the initial correlation of <monospace>mseq</monospace> is better than that of <monospace>Genominator</monospace> due to the fact that the implementation in [<xref ref-type="bibr" rid="B10">10</xref>] required us to remap the reads directly to the transcript sequences, which is presumably more accurate than relying on spliced mapping.</p>
+      <p>We suspect that the overall inferior results of both the <monospace>Genominator</monospace> and <monospace>mseq</monospace> in comparison to <monospace>Cufflinks</monospace> are due in part to the fact that the bias parameters cannot be learned from raw read counts, but must be normalized by the expression values of the transcripts from which the reads originate (Figure <xref ref-type="fig" rid="F2">2</xref>). For example, in [<xref ref-type="bibr" rid="B10">10</xref>], bias parameters are learned from what are estimated to be the most highly expressed transcripts based on RPKM, but these are likely to also be the most positively biased transcripts, and are therefore not representative in terms of their sequence content. We also believe that, as we argued in [<xref ref-type="bibr" rid="B6">6</xref>], it is important to account for fragment lengths in estimating expression, and read count based expression measures do not use such information. Another issue affecting <monospace>Genominator</monospace> is that instead of computing the expected read count as is done in <monospace>Cufflinks</monospace> and <monospace>mseq</monospace>, the observed read counts are adjusted. This means that in positions lacking read alignments, there is no correction of bias. We believe this may partially explain the improved performance of <monospace>mseq</monospace> in comparison to <monospace>Genominator</monospace>.</p>
+    </sec>
+    <sec>
+      <title>Technical replicates</title>
+      <p>A recurring worry with RNA-Seq has been that repeated experiments, possibly based on different libraries or performed in different laboratories, may be variable due to experimental 'noise'. We investigated these effects starting with an exploration of the correlation between technical replicates before and after bias correction. We define technical replicates to be the sequencing of two different libraries that have been prepared using the same protocol from a single sample. This differs slightly from some previous uses; in particular, technical replication has also referred to two sequencing experiments from the same library. Such replicates have already been shown to exhibit very little variability [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B19">19</xref>].</p>
+      <p>We postulated that the differences between expression estimates from two different libraries should be reduced after bias correction. We tested this hypothesis in a series of analyses whose results are shown in Figure <xref ref-type="fig" rid="F6">6</xref>. First, we examined libraries prepared in two different experiments from the same MAQC Universal Human Reference (UHR) sample. In the first experiment [<xref ref-type="bibr" rid="B20">20</xref>], which we will refer to by its accession SRA008403, the sample was sequenced from one library preparation. In the second experiment [<xref ref-type="bibr" rid="B19">19</xref>], which we will refer to as SRA010153, the sample was sequenced in four separate library preparations. Although the same protocol was used in all five replicates, the learned bias weights differ somewhat between the data produced by the two labs (see Figure S2 in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>).</p>
+      <fig id="F6" position="float">
+        <label>Figure 6</label>
+        <caption>
+          <p><bold>Variable technical replicates</bold>. Results of correlation tests showing improvement after bias correction for technical replicates. Fraction Explained Discrepancy was calculated by dividing the change in <italic>R</italic><sup>2 </sup>after bias correction by the difference of the initial <italic>R</italic><sup>2 </sup>from one (a perfect correlation). Note that when two RNA-Seq datasets are compared, the correction in the legend was applied to both. The pairwise correlations of the four SRA010153 replicates versus qRT-PCR and SRA008403, respectively, were averaged for the figure. Even though the same RH priming protocol was used in both labs, the bias differs slightly (see Figure S2 of Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>) between the preps, which is why our correction method was able to improve the correlation.</p>
+        </caption>
+        <graphic xlink:href="gb-2011-12-3-r22-6"/>
+      </fig>
+      <p>Figure <xref ref-type="fig" rid="F6">6</xref> shows how correlations of the replicates with qRT-PCR and each other were affected by bias correction. Although the method does improve the pairwise correlations between different library preparations within SRA010153, the initial correlation is already so high (average <italic>R</italic><sup>2 </sup>&gt; 0.96) that we only show the average pairwise correlations against qRT-PCR and the SRA008403 dataset. The greater correlation among the SRA010153 replicates as compared to the correlation between them and SRA008403 further indicates that bias is more similar when the protocol is carried out by the same lab, presumably by the same person. Bias correction clearly recovers much of the differences in quantification between the replicates introduced by sequence and positional bias. Furthermore, as in the initial validation example, the correction brings both sets closer in line with the qRT-PCR standard.</p>
+    </sec>
+    <sec>
+      <title>Library preparation methods</title>
+      <p>In Figure <xref ref-type="fig" rid="F7">7</xref> we demonstrate our ability to correct bias specific to libraries prepared using different protocols. For this experiment, we tried our method on several libraries from a study comparing strand-specific protocols (SRA020818) using the same yeast sample [<xref ref-type="bibr" rid="B11">11</xref>], as well as a dataset generated using the 'not so random' (NSR) priming protocol on the human MAQC HBR sample [<xref ref-type="bibr" rid="B21">21</xref>]. We compared all of these datasets with a standard Random Hexamer (RH) control for the given sample. Note that although the control (RH) and dUTP libraries have the same sequence bias (see Figure S2 in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>) and near-perfect initial correlation (<italic>R</italic><sup>2 </sup>&gt; 0.99), the remaining discrepancy is reduced by positional bias correction.</p>
+      <fig id="F7" position="float">
+        <label>Figure 7</label>
+        <caption>
+          <p><bold>Variable library preparations</bold>. Results of correlation tests showing improvement after bias correction of datasets generated using different library prep methods, all of which are strand-specific. The first four protocols are described in [<xref ref-type="bibr" rid="B11">11</xref>] and the final in [<xref ref-type="bibr" rid="B21">21</xref>]. All datasets were compared against a control that was generated using the standard Illumina RH protocol. The first four datasets used the control from [<xref ref-type="bibr" rid="B11">11</xref>] with the same yeast sample. The last dataset (NSR) was compared against the HBR dataset from SRA010153 since it is also consists of single-end reads.</p>
+        </caption>
+        <graphic xlink:href="gb-2011-12-3-r22-7"/>
+      </fig>
+      <p>Because the NSR dataset was sequenced from the MAQC HBR sample, we were also able to compare it to the qRT-PCR standard. We found that our method explained 33.5% of the discrepancy between an initial estimation and qRT-PCR.</p>
+    </sec>
+    <sec>
+      <title>Sequencing platforms</title>
+      <p>Previous studies on bias in RNA-Seq have focused on experiments performed with Illumina sequencers. To investigate whether bias persists with other prep and sequencing technologies, we examined bias in a SOLiD experiment that sequenced both MAQC samples using the standard whole transcriptome (WT) protocol. We saw clear signs of both sequence-specific and positional bias that differed from the other protocols we had examined (see Figure S2 of Additional le 1).</p>
+      <p>We next compared the expression estimates for the SOLiD dataset with one from Illumina (accession SRA012427) before and after bias correction. In order to illustrate that our improvement in correlation does not come solely from correcting bias in the Illumina dataset, we tested whether there was some improvement from correcting one dataset at a time, as compared to simultaneous correction for both platforms. We found an increase of <italic>R</italic><sup>2 </sup>from 0.74 to 0.88 (Illumina correction) and 0.85 (SOLiD correction) compared to 0.94 for both. These results are summarized in Figure <xref ref-type="fig" rid="F8">8</xref>. While one cannot draw general conclusions based on a single experiment, we note that our approach to quantifying bias should be useful in future studies that aim to quantitatively compare the bias among different sequencing platforms.</p>
+      <fig id="F8" position="float">
+        <label>Figure 8</label>
+        <caption>
+          <p><bold>Bias in different sequence technologies</bold>. Results of correlation tests showing improvement after bias correction of datasets generated using different sequencing technologies. The Illumina dataset is SRA012427 (<italic>x</italic>-axes) and the SOLiD data is SOLiD4_ HBR_PE_50x25 (<italic>y</italic>-axes). Both used the same MAQC HBR sample. Red axes and lines denote uncorrected FPKM values and blue corrected, while purple regression lines denote a comparison between corrected and uncorrected values. Both datasets are being corrected for different biases, which causes their expression estimates to become more correlated. Note that the plot is zoomed in on the lower abundance transcripts for clarity but captures over 98% of those in the experiment.</p>
+        </caption>
+        <graphic xlink:href="gb-2011-12-3-r22-8"/>
+      </fig>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <sec>
+      <title>Bias correction improves expression estimates</title>
+      <p>Our results confirm that bias correction improves expression estimates and should be used to correct bias introduced in library preparations and by sequencing technologies. We note that there is great variability in the extent of bias among protocols, and bias correction can dramatically affect expression estimates even in protocols of choice (for example the dUTP protocol currently favored by the Broad Institute [<xref ref-type="bibr" rid="B11">11</xref>]).</p>
+    </sec>
+    <sec>
+      <title>Implications for differential expression</title>
+      <p>It is particularly important to consider bias correction in the context of differential expression analysis. This can refer to the comparison of expression levels among transcripts in a single experiment (for example alternative isoforms of a gene), to the agglomeration of data produced by different laboratories, or to the comparison of expression among biological replicates.</p>
+      <p>We have shown that bias varies between library preps, even when the same protocol is used. However, our results indicate that this variance is much greater when either different protocols or technologies are used. Therefore, while bias correction can be expected to show small improvements in the former case, it is crucial in modern experiments that seek to combine and compare output from multiple library preps using the same or different protocols. For example, in the Drosophila modENCODE transcriptome experiment described in [<xref ref-type="bibr" rid="B22">22</xref>], both SOLiD and Illumina libraries were used at multiple time points during development. To estimate the improvement that could have been gained in the modENCODE experiment by using our correction, we ran <monospace>Cuffdiff</monospace> (the differential expression analysis tool packaged with <monospace>Cufflinks</monospace>) on the same samples used above to compare bias in the Illumina and SOLiD technologies. We found a 46% decrease in the number of differentially expressed transcripts output by <monospace>Cuffdiff</monospace> when bias correction was enabled.</p>
+    </sec>
+    <sec>
+      <title>Choice of model</title>
+      <p>We have developed a bias correction procedure based on a fragment model for RNA-Seq [<xref ref-type="bibr" rid="B6">6</xref>], in contrast with the site model of [<xref ref-type="bibr" rid="B10">10</xref>]. We note that our choice is based partly on the observation in [<xref ref-type="bibr" rid="B10">10</xref>] that even after bias correction, variability in the counts of reads at individual sites differ considerably from the variance estimate obtained from the binomial model. Thus, it may be that the model of [<xref ref-type="bibr" rid="B10">10</xref>] is not robust in multiple isoform genes where few sites may distinguish isoforms. It is likely, however, that as RNA-Seq protocols improve and are better understood, site models will be preferable due to their improved resolution.</p>
+      <p>The choice of model has an important implication for the impact of positional bias correction: In our fragment model, positional bias correction without sequence-specific correction does not affect relative expression estimates. However, positional bias correction in multiple isoform genes, or when coupled with sequence-specific correction, can affect relative expression estimates (Figure <xref ref-type="fig" rid="F9">9</xref>). Validation of the improvement in expression estimates in multiple isoform genes when taking positional bias into account is complicated by the difficulty in selecting isoform specific primers, and is beyond the scope of this paper. It is important to note that in the site model, positional bias correction can affect relative expression estimates even in single isoform genes because the location of fragments within transcripts directly affects the likelihood function.</p>
+      <fig id="F9" position="float">
+        <label>Figure 9</label>
+        <caption>
+          <p><bold>Positional bias correction effect on expression</bold>. This figure shows the effective length fold change due to positional bias correction for the SRA012427 dataset. So that the parameters would be consistent for all transcripts, we have limited the analysis to transcripts with length greater than 2,433, which is the largest of the 5 length bins we use for measuring positional bias. As expected, all single isoform genes are adjusted in the same way, whereas isoform deconvolution is altered based on the difference in relative position within a transcript for a read that maps to multiple isoforms.</p>
+        </caption>
+        <graphic xlink:href="gb-2011-12-3-r22-9"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>GC content and bias</title>
+      <p>Previous RNA-Seq investigations have revealed correlations between expression levels and GC content, and corrections have been proposed to 'normalize' the data with respect to this effect [<xref ref-type="bibr" rid="B23">23</xref>]. When examining the sequence-specific bias profiles (see Figure S2 of Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>) we noticed GC effects in the estimated parameters and so we investigated the relationship between sequence-specific bias correction and GC content.</p>
+      <p>To make the comparison, we defined the bias of a transcript to be the log fold change in effective length, which is a direct measure of the extent of correction of expression estimate in single isoform genes when incorporating bias correction.</p>
+      <p>Figure <xref ref-type="fig" rid="F10">10</xref> shows the relationship between transcript bias and GC content in two different experiments. In panel a, an example from human RNA-Seq (SRA012427) the correlation is very strong, and shows that GC corrections may be proxies for sequence-specific bias correction. On the other hand, GC content may not always be an effective marker for bias, as shown in panel b from yeast (SRA020818_RH).</p>
+      <fig id="F10" position="float">
+        <label>Figure 10</label>
+        <caption>
+          <p><bold>Correlation of GC content with measured bias</bold>. Panel a shows an example from human and panel b from yeast. Since the log fold change in effective length does not capture the full bias measurement for multiple isoform genes, the plots are limited to those with single isoforms. GC content appears to be correlated with our sequence bias measurements in some datasets, but not in others. GC content alone is not always a good proxy for fragment end bias.</p>
+        </caption>
+        <graphic xlink:href="gb-2011-12-3-r22-10"/>
+      </fig>
+      <p>We concluded that although normalization of expression values by GC content may be a simple way to remove some bias, it may well be a proxy for other effects rather than of inherent significance.</p>
+    </sec>
+    <sec>
+      <title>Implementation</title>
+      <p>RNA-Seq data processing pipelines require multiple steps that include read mapping, transcript assembly, expression estimation and differential expression analysis. A difficulty with analysis is that many of these steps are closely related, and improvements in one area can be leveraged in another only if properly integrated. We have shown that in the case of bias correction, estimation of parameters together with abundances can improve expression estimates, and these can in turn affect differential expression analyses, mapping probabilities, and even assemblies.</p>
+      <p>In order to maximize the benefits of bias correction throughout the RNA-Seq analysis pipeline, we have incorporated it into the <monospace>Cufflinks</monospace> RNA-Seq analysis suite [<xref ref-type="bibr" rid="B6">6</xref>], and have pre-configured the software for specific protocols so that users can reap the benefits of bias correction for both stranded and unstranded protocols, as well as single- and paired-end reads. The software is freely available [<xref ref-type="bibr" rid="B24">24</xref>] and is distributed open source under the Boost Software License, version 1.0.</p>
+    </sec>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec>
+      <title>Parameter estimation and inference</title>
+      <p>Due to the added sensitivity in our model to the location of fragment ends, we now rely on an empirical fragment length distribution whenever possible, as opposed to the Gaussian approximation in [<xref ref-type="bibr" rid="B6">6</xref>]. The fragment length distribution is estimated in one of several ways, depending on what information is provided. If an annotation and paired-end read mappings are given, fragment mappings to single isoform genes are used to determine an empirical distribution. If no annotation is provided, but paired-end read mappings are provided, sufficiently large (≥ 1,000 bp) ranges are found where no fragments have spliced mappings. The mappings in these ranges are used to determine an empirical distribution. If no paired-end fragments are available or not enough are found in these ranges, we use a truncated Gaussian where all lengths less than the minimum read length in the dataset are set to zero probability and the remaining distribution is renormalized. The mean and standard deviation are set according to the distribution specified by the SRA entry, or to 200 and 80, respectively, if the information is unavailable.</p>
+      <p>The likelihood in our model is a function of the relative transcript abundances (<italic>ρ</italic>), consisting of the abundances for individual transcripts <italic>ρ<sub>t </sub></italic>such that <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i1.gif"/></inline-formula> (here <italic>T </italic>denotes the set of all transcripts). In order to simplify computations, we estimate the relative abundances for overlapping sets of transcripts instead of directly estimating the parameters <italic>ρ<sub>t</sub></italic>. We define a locus to be a genomic region containing a set of overlapping transcripts (typically isoforms of a gene) and then write the transcript abundance as <italic>ρ</italic><sub><italic>t </italic></sub>= <italic>β<sub>g</sub></italic>γ<sub>t </sub>where <italic>β<sub>g </sub></italic>is the relative abundance of the locus <italic>g </italic>in which <italic>t </italic>is contained, and is multiplied by a factor γ<italic><sub>t </sub></italic>that determines the proportion of each transcript within the locus. We denote the set of all loci by <italic>G </italic>(for more details see the Supplementary methods of [<xref ref-type="bibr" rid="B6">6</xref>]). Our updated likelihood model, whose full derivation is given in the Supplementary methods in Additional file <xref ref-type="supplementary-material" rid="S3">3</xref> is then given by:<disp-formula><graphic xlink:href="gb-2011-12-3-r22-i2.gif"/></disp-formula></p>
+      <p>where <italic>F </italic>is the set of fragments, <italic>X<sub>g </sub></italic>is the number of fragments with alignments to locus <italic>g</italic>, <italic>I<sub>t</sub></italic>(<italic>f</italic>) is the implied length of a fragment <italic>f </italic>assuming it originated from a transcript <italic>t </italic>(this is needed because only the ends of fragments are sequenced), <italic>D</italic>(<italic>t </italic>, <italic>f</italic>) is the probability of observing a fragment of length <italic>I<sub>t</sub></italic>(<italic>f</italic>) at a known position in a transcript, and the term <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i3.gif"/></inline-formula> is the probability of selecting a fragment of a specific length within a given transcript, based on the bias weights at its 5' and 3' end points.</p>
+      <p>The bias weight <italic>b</italic>(<italic>t</italic>, <italic>i</italic>, <italic>j</italic>) factors as <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i4.gif"/></inline-formula> where <italic>i </italic>and <italic>j </italic>are the 5' and 3' endpoints, respectively, of a fragment mapped to transcript <italic>t</italic>. The <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i5.gif"/></inline-formula> and <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i6.gif"/></inline-formula> weights measure sequence-specific bias and are found by calculating the ratio of the probability of the sequence surrounding the fragment end under the biased model to the uniform (null) model. Note that we model both ends separately due to the differences in sequence selectivity between the priming steps during first- and second-strand synthesis. In our method, these probabilities are actually learned from the data using a variable length Markov model [<xref ref-type="bibr" rid="B25">25</xref>] to capture dependencies between positions in the sequence. Complete details are in the Supplementary methods in Additional file <xref ref-type="supplementary-material" rid="S3">3</xref>.</p>
+      <p>The <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i7.gif"/></inline-formula> and <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i8.gif"/></inline-formula> weights measure the 5' and 3' positional biases, respectively. In [<xref ref-type="bibr" rid="B7">7</xref>] it was shown that positional effects depend on transcript length, so we modeled positional effects using 100 = 20 × 5 parameters, with 5 sets of parameters for different transcript lengths (see Figure S2 of Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>). For each range of transcript lengths, the length is divided into 20 windows, each with its own parameter that reflects the probability that the 5' or 3' end of a fragment lies there as opposed to elsewhere on the transcript. The ratio of these probabilities under the biased model to the uniform (null) model is represented by <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i7.gif"/></inline-formula> and <inline-formula><inline-graphic xlink:href="gb-2011-12-3-r22-i8.gif"/></inline-formula>, respectively.</p>
+      <p>The parameters that need to be estimated in the likelihood function are the abundances <italic>ρ </italic>and the bias parameters described above. We estimate the parameters using coordinate ascent. The model is linear in the <italic>ρ </italic>parameters for fixed bias parameters, and we maximize them as in [<xref ref-type="bibr" rid="B6">6</xref>]. For fixed <italic>ρ</italic>, the bias parameters can be maximized as described in the Supplementary methods in Additional file <xref ref-type="supplementary-material" rid="S3">3</xref>. Therefore, we employ an iterative coordinate ascent procedure that, in effect, jointly maximizes all parameters. We found, however, that the gains in likelihood after the first iteration do not justify the time requirements, and we therefore limit all experiments to a single iteration. An initial <italic>ρ</italic><sub>0 </sub>estimation with uniform bias weights seeds the maximization of the bias parameters. <italic>ρ </italic>is then maximized using these bias parameters, and is used as the final abundance estimate.</p>
+    </sec>
+    <sec>
+      <title>NanoString experiment</title>
+      <p>Cell culture/RNA prep and NanoString: Mouse embryonic stem cells (V6.5) were co-cultured with irradiated mouse embryonic broblasts as described in [<xref ref-type="bibr" rid="B26">26</xref>]. mESCs were passaged once on gelatin alone before RNA extraction. Total RNA was extracted from mESCs using the protocol specified in the RNeasy kit (Qiagen). 100 ng of total RNA was hybridized for 17 hours with lincRNA codeset in technical triplicate. The hybridized material was loaded into the nCounter prep station followed by quantification on the nCounter Digital Analyzer as outlined by NanoString Technologies in their Total RNA Gene Expression nCounter protocol.</p>
+    </sec>
+    <sec>
+      <title>RNA-Seq data</title>
+      <p>All accession numbers refer to data available from the short read archive (SRA) [<xref ref-type="bibr" rid="B27">27</xref>]. The SOLiD data was downloaded from [<xref ref-type="bibr" rid="B28">28</xref>]. The NSR data was provided by the authors of [<xref ref-type="bibr" rid="B21">21</xref>].</p>
+    </sec>
+    <sec>
+      <title>Mapping and annotation</title>
+      <p>To allow for consistent comparison across datasets, all read mapping was carried out using <monospace>TopHat</monospace> 1.1.0 [<xref ref-type="bibr" rid="B29">29</xref>] with supplied annotations and the <monospace>--no-novel-juncs</monospace> option set, except for the SOLiD datasets, which were only available in a pre-aligned form with mapping by <monospace>BioScope</monospace> 1.2.1. All expression estimation and bias correction were done using <monospace>Cufflinks</monospace> 0.9.3 with the same annotation and reference sequence as <monospace>TopHat</monospace>. In the case of strand-specific libraries, the correct <monospace>--library-type</monospace> option was used as per the <monospace>Cufflinks</monospace> manual. For the mouse dataset in the NanoString experiment, the RefSeq refGene annotation for assembly NCBI37/mm9 was used, and was downloaded from the UCSC Genome Browser. For all human datasets, the RefSeq refGene annotation for assembly NCBI36/hg18 [<xref ref-type="bibr" rid="B30">30</xref>] was used, and was downloaded from the UCSC Genome Browser. The only filtering was to remove non-chromosomal and 'random' contigs. After quanti cation with <monospace>Cufflinks</monospace>, the subset of transcripts with 1-to-1 mappings to the TaqMan qRT-PCR probes were selected (as listed in the supplement to [<xref ref-type="bibr" rid="B16">16</xref>]) to be used in the correlation tests. All yeast datasets used the <italic>Ensembl Saccharomyces cerevisiae </italic>annotation, release 59, which was downloaded from the Ensembl website [<xref ref-type="bibr" rid="B31">31</xref>]. Mitochondrial, non-coding, and ribosomal RNA sites were masked in the annotation. All remaining transcripts were used in our correlation tests.</p>
+    </sec>
+    <sec>
+      <title>Comparison with previous methods</title>
+      <sec>
+        <title>
+          <monospace>Genominator</monospace>
+        </title>
+        <p>We downloaded the <monospace>Genominator</monospace> package version 1.4.0 using Bioconductor. We then followed the instructors provided with the <monospace>Genominator</monospace> for 'Working with the ShortRead Package'. We used the same annotations as in our <monospace>Cufflinks</monospace> experiment to define the ranges and transcript lengths for the RPKM calculations. We also used the same read mapping as was used for <monospace>Cufflinks</monospace>. Due to memory limitations of the software, we were forced to learn the weights separately for each chromosome.</p>
+      </sec>
+      <sec>
+        <title>
+          <monospace>mseq</monospace>
+        </title>
+        <p>We downloaded the <monospace>mseq</monospace> package version 1.1 from the Comprehensive R Archive Network (CRAN). Due to the specific <monospace>mseq</monospace> input format requirements, we remapped the reads using <monospace>Bowtie</monospace> version 0.12.5 [<xref ref-type="bibr" rid="B32">32</xref>] with the <monospace>--best</monospace> option and default parameters otherwise. The mapping was then converted to the <monospace>mseq</monospace> input format using a custom <monospace>Python</monospace> script we wrote and that is provided in Additional file <xref ref-type="supplementary-material" rid="S4">4</xref>. We followed the instructions of [<xref ref-type="bibr" rid="B10">10</xref>] and trained the MART model with suggested parameters on the top 100 expressed transcripts, which we determined by computing the RPKM for every transcript. The UTR regions and an additional 100 bases on the ends of transcripts were excluded from the training. The surrounding sequence window was set to be 8 bases before and 12 bases after the first nucleotide in the read, which matches the window of our variable length Markov model and is where we observed bias for the dataset. The resulting sequence preferences were used to find the corrected RPKMs.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Statistical analysis</title>
+      <p>All correlation tests used least squares linear regression, as implemented in the R programming language. We found the <italic>P</italic>-value in Section 2.2 by sampling (with replacement) from the empirical distribution of fold changes 50,000 times for each transcript in order to generate 50,000 randomly adjusted sets of expression values. Of these, only 35 showed correlations better than the values that were corrected by our method (<italic>R</italic><sup>2 </sup>= 0.81).</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>bp: base pair; CRAN: Comprehensive R archive network; FPKM: Fragments per kilobase per million reads sequenced; HBR: Human brain reference; MAQC: Microarray quality control; NNSR: Not not so random (hexamer priming); NSR: Not so random (hexamer priming); qRT-PCR: Quantitative reverse transcription polymerase chain reaction; RH: Random hexamer (priming); RPKM: Reads per kilobase per million reads sequenced; SRA: Short read archive; UHR: Universal human reference; WT: whole transcriptome.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>AR, CT and LP developed the bias correction approach. AR implemented the improvements to the <monospace>Cufflinks</monospace> software. JLR provided reagents and guidance. JD performed the NanoString experiment. AR performed the analysis. AR and LP wrote the paper. All authors read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>Supplementary figures</bold>. Additional figures referred to in the text.</p>
+      </caption>
+      <media xlink:href="gb-2011-12-3-r22-S1.PDF" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S2">
+      <caption>
+        <title>Additional file 2</title>
+        <p><bold>Raw expression data</bold>. Raw expression estimates used in comparisons, including the NanoString expression measurements.</p>
+      </caption>
+      <media xlink:href="gb-2011-12-3-r22-S2.TGZ" mimetype="application" mime-subtype="x-zip-compressed">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S3">
+      <caption>
+        <title>Additional file 3</title>
+        <p><bold>Supplementary methods</bold>. More detail on the likelihood model.</p>
+      </caption>
+      <media xlink:href="gb-2011-12-3-r22-S3.PDF" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S4">
+      <caption>
+        <title>Additional file 4</title>
+        <p><bold>Script for </bold><monospace><bold>mseq</bold></monospace><bold> format conversion</bold>. <monospace>Python</monospace> script that converts standard SAM and FASTA input into the <monospace>mseq</monospace> input format.</p>
+      </caption>
+      <media xlink:href="gb-2011-12-3-r22-S4.PY" mimetype="text" mime-subtype="plain">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>We thank Joshua Levin and Mitchell Guttman for their help with the NanoString experiment. Anat Caspi was instrumental in helping us obtain the SOLiD data. Adam Roberts was supported by an NSF graduate research fellowship.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marguerat</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Bähler</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>RNA-Seq: from technology to biology.</article-title>
+        <source>Cellular and Molecular Life Sciences</source>
+        <year>2010</year>
+        <volume>67</volume>
+        <fpage>569</fpage>
+        <lpage>579</lpage>
+        <pub-id pub-id-type="doi">10.1007/s00018-009-0180-6</pub-id>
+        <pub-id pub-id-type="pmid">19859660</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Jiang</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Statistical inferences for isoform expression in RNA-Seq.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1026</fpage>
+        <lpage>1032</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp113</pub-id>
+        <pub-id pub-id-type="pmid">19244387</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Ruotti</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Stewart</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Thomson</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Dewey</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>RNA-Seq gene expression estimation with read mapping uncertainty.</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>493</fpage>
+        <lpage>500</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp692</pub-id>
+        <pub-id pub-id-type="pmid">20022975</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Nicolae</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Mangul</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Măndoiu</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Zelikovsky</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Estimation of alternative splicing isoform frequencies from RNA-Seq data.</article-title>
+        <source>Algorithms in Bioinformatics</source>
+        <year>2010</year>
+        <volume>6293</volume>
+        <fpage>202</fpage>
+        <lpage>214</lpage>
+        <comment>full_text</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Paşaniuc</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Zaitlen</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Halperin</surname>
+          <given-names>E</given-names>
+        </name>
+        <person-group person-group-type="editor">Berger B</person-group>
+        <article-title>Accurate estimation of expression levels of homologous genes in RNA-seq experiments.</article-title>
+        <source>Research in Computational Molecular Biology</source>
+        <year>2010</year>
+        <publisher-name>Berlin/Heidelberg: Springer</publisher-name>
+        <fpage>397</fpage>
+        <lpage>409</lpage>
+        <comment>[<italic>Lecture Notes in Computer Science</italic>, vol 6044.]</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Williams</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Pertea</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Mortazavi</surname>
+          <given-names>AGK</given-names>
+        </name>
+        <name>
+          <surname>van Baren</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Wold</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>Transcript assembly and quantification by RNA-Seq reveals unannotated transcripts and isoform switching during cell differentiation.</article-title>
+        <source>Nature Biotechnology</source>
+        <year>2010</year>
+        <volume>28</volume>
+        <fpage>511</fpage>
+        <lpage>515</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt.1621</pub-id>
+        <pub-id pub-id-type="pmid">20436464</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bohnert</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Rätsch</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>rQuant.web: a tool for RNA-Seq-based transcript quantitation.</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2010</year>
+        <volume>38</volume>
+        <fpage>W348</fpage>
+        <lpage>W351</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkq448</pub-id>
+        <pub-id pub-id-type="pmid">20551130</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hansen</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Brenner</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Biases in Illumina transcriptome sequencing caused by random hexamer priming.</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2010</year>
+        <volume>38</volume>
+        <fpage>1</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkp1195</pub-id>
+        <pub-id pub-id-type="pmid">19843612</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Srivastava</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>A two-parameter generalized Poisson model to improve the analysis of RNA-seq data.</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2010</year>
+        <volume>38</volume>
+        <fpage>e170</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkq670</pub-id>
+        <pub-id pub-id-type="pmid">20671027</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Jiang</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Modeling non-uniformity in short-read rates in RNA-Seq data.</article-title>
+        <source>Genome Biology</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>R50</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2010-11-5-r50</pub-id>
+        <pub-id pub-id-type="pmid">20459815</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Levin</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Adiconis</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Yassour</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Thompson</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Guttman</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Berger</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Fan</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Friedman</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Nusbaum</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Gnirke</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Regev</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Development and evaluation of RNA-Seq methods.</article-title>
+        <source>Genome Biology</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>P26</fpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kircher</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Kelso</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>High-throughput DNA sequencing - concepts and limitations.</article-title>
+        <source>BioEssays</source>
+        <year>2010</year>
+        <volume>32</volume>
+        <fpage>524</fpage>
+        <lpage>536</lpage>
+        <pub-id pub-id-type="doi">10.1002/bies.200900181</pub-id>
+        <pub-id pub-id-type="pmid">20486139</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bradford</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hey</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Yates</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Pepper</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>A comparison of massively parallel nucleotide sequencing with oligonucleotide microarrays for global transcription profiling.</article-title>
+        <source>BMC Genomics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>282</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-11-282</pub-id>
+        <pub-id pub-id-type="pmid">20444259</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Geiss</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Bumgarner</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Birditt</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Dahl</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Dowidar</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Dunaway</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Fell</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Ferree</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>George</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Grogan</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>James</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Maysuria</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Mitton</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Oliveri</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Osborn</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Peng</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Ratcliffe</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Webster</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Davidson</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Hood</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Dimitrov</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Direct multiplexed measurement of gene expression with color-coded probe pairs.</article-title>
+        <source>Nature Biotechnology</source>
+        <year>2008</year>
+        <volume>26</volume>
+        <fpage>317</fpage>
+        <lpage>325</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt1385</pub-id>
+        <pub-id pub-id-type="pmid">18278033</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Fleige</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Pfaffl</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>RNA integrity and the effect on the real time qRT-PCR performance.</article-title>
+        <source>Molecular Aspects of Medicine</source>
+        <year>2006</year>
+        <volume>27</volume>
+        <fpage>126</fpage>
+        <lpage>139</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.mam.2005.12.003</pub-id>
+        <pub-id pub-id-type="pmid">16469371</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Shi</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Reid</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Shippy</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Warrington</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Baker</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Collins</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>de Longueville</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Kawakasi</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Luo</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Sun</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Willey</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Setterquist</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Fischer</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Tong</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Dragan</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Dix</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Frueh</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Goodsaid</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Herman</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Jensen</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Johnson</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Lobenhofer</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Puri</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Schrf</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Thiery-Mieg</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Wilson</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Wolber</surname>
+          <given-names>P</given-names>
+        </name>
+        <etal/>
+        <article-title>The MicroArray Quality Control (MAQC) project shows inter- and intraplatform reproducibility of gene expression measurements.</article-title>
+        <source>Nature Biotechnology</source>
+        <year>2006</year>
+        <volume>24</volume>
+        <fpage>1151</fpage>
+        <lpage>1161</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt1239</pub-id>
+        <pub-id pub-id-type="pmid">16964229</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Au</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Jiang</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Xing</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Detection of splice junctions from paired-end RNA-Seq data by SpliceMap.</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2010</year>
+        <volume>38</volume>
+        <fpage>4570</fpage>
+        <lpage>4578</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkq211</pub-id>
+        <pub-id pub-id-type="pmid">20371516</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Anders</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Hüber</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Differential expression analysis for sequence count data.</article-title>
+        <source>Genome Biology</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>R106</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2010-11-10-r106</pub-id>
+        <pub-id pub-id-type="pmid">20979621</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bullard</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Purdom</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Hansen</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments.</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>94</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-11-94</pub-id>
+        <pub-id pub-id-type="pmid">20167110</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wang</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Sandberg</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Luo</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Khrebtukova</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Mayr</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Kingsmore</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Schroth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Burge</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Alternative isoform regulation in human tissue transcriptomes.</article-title>
+        <source>Nature</source>
+        <year>2008</year>
+        <volume>456</volume>
+        <fpage>470</fpage>
+        <lpage>476</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature07509</pub-id>
+        <pub-id pub-id-type="pmid">18978772</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Armour</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Castle</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Babak</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Loerch</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Jackson</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Shah</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Dey</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Rohl</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Johnson</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Raymond</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Digital transcriptome profiling using selective hexamer priming for cDNA synthesis.</article-title>
+        <source>Nature Methods</source>
+        <year>2009</year>
+        <volume>6</volume>
+        <fpage>647</fpage>
+        <lpage>649</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1360</pub-id>
+        <pub-id pub-id-type="pmid">19668204</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Graveley</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Brooks</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Carlson</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Landolin</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Artieri</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>van Baren</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Boley</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Booth</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Cherbas</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Davis</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Dobin</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Malone</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Mattiuzzo</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Sturgill</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Tuch</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Zaleski</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Blanchette</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Eads</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Green</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hammonds</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Jiang</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Kapranov</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Langton</surname>
+          <given-names>L</given-names>
+        </name>
+        <etal/>
+        <article-title>The developmental transcriptome of Drosophila melanogaster.</article-title>
+        <source>Nature</source>
+        <year>20101</year>
+        <volume>471</volume>
+        <fpage>473</fpage>
+        <lpage>479</lpage>
+        <pub-id pub-id-type="pmid">21179090</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pickrell</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Marioni</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Pai</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Degner</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Engelhardt</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Nkadori</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Veyrieras</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Stephens</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gilad</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Pritchard</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Understanding mechanisms underlying human gene expression variation with RNA sequencing.</article-title>
+        <source>Nature</source>
+        <year>2010</year>
+        <volume>464</volume>
+        <fpage>768</fpage>
+        <lpage>772</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature08872</pub-id>
+        <pub-id pub-id-type="pmid">20220758</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="other">
+        <article-title>Cufflinks software.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://bio.math.berkeley.edu/cufflinks/">http://bio.math.berkeley.edu/cufflinks/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bühlmann</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Wyner</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Variable length Markov chains.</article-title>
+        <source>The Annals of Statistics</source>
+        <year>1999</year>
+        <volume>2</volume>
+        <fpage>480</fpage>
+        <lpage>513</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Guttman</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Garber</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Levin</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Donaghey</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Robinson</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Adiconis</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Fan</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Koziol</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gnirke</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Nusbaum</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Rinn</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Regev</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Ab initio reconstruction of cell type-specific transcriptomes in mouse reveals the conserved multi-exonic structure of lincRNAs.</article-title>
+        <source>Nature Biotechnology</source>
+        <year>2010</year>
+        <volume>28</volume>
+        <fpage>503</fpage>
+        <lpage>510</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt.1633</pub-id>
+        <pub-id pub-id-type="pmid">20436462</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="other">
+        <article-title>Short read archive.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/sra">http://www.ncbi.nlm.nih.gov/sra</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="other">
+        <article-title>SOLiD software and tools.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://solidsoftwaretools.com/gf/project/wtpe/">http://solidsoftwaretools.com/gf/project/wtpe/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>TopHat: discovering splice junctions with RNA-Seq.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1105</fpage>
+        <lpage>1111</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp120</pub-id>
+        <pub-id pub-id-type="pmid">19289445</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pruitt</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Tatusova</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Klimke</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Maglott</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>NCBI reference sequences:current status, policy and new initiatives.</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2008</year>
+        <volume>37</volume>
+        <fpage>D32</fpage>
+        <lpage>D36</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkn721</pub-id>
+        <pub-id pub-id-type="pmid">18927115</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Flicek</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Amode</surname>
+          <given-names>MR</given-names>
+        </name>
+        <name>
+          <surname>Barrell</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Beal</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Brent</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Clapham</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Coates</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Fairley</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Fitzgerald</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Gordon</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Hendrix</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hourlier</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Johnson</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Kähäri</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Keefe</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Keenan</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Kinsella</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Kokocinski</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Kulesha</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Larsson</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Longen</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>McLaren</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Overduin</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Pritchard</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Riat</surname>
+          <given-names>HS</given-names>
+        </name>
+        <name>
+          <surname>Rios</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Ritchie</surname>
+          <given-names>GRS</given-names>
+        </name>
+        <name>
+          <surname>Ruffier</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Schuster</surname>
+          <given-names>M</given-names>
+        </name>
+        <etal/>
+        <article-title>Ensembl 2011.</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2011</year>
+        <volume>39</volume>
+        <fpage>D800</fpage>
+        <lpage>D806</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkq1064</pub-id>
+        <pub-id pub-id-type="pmid">21045057</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome.</article-title>
+        <source>Genome Biology</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-3-r25</pub-id>
+        <pub-id pub-id-type="pmid">19261174</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

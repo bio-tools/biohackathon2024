@@ -1,0 +1,645 @@
+<?open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">Nucleic Acids Research</journal-id>
+    <journal-title>Nucleic Acids Research</journal-title>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">1160238</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gki478</article-id>
+    <article-id pub-id-type="pmid">15980530</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>YASS: enhancing the sensitivity of DNA similarity search</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Noé</surname>
+          <given-names>Laurent</given-names>
+        </name>
+        <xref ref-type="corresp" rid="cor1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Kucherov</surname>
+          <given-names>Gregory</given-names>
+        </name>
+      </contrib>
+      <aff>
+        <institution>LORIA/INRIA-Lorraine</institution>
+        <addr-line>615 rue du Jardin Botanique, 54602 Villers-les-Nancy, France</addr-line>
+      </aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="cor1"><sup>*</sup>To whom correspondence should be addressed. Tel: +33 3 83 59 30 11; Fax: +33 3 83 27 83 19; Email: <email>Laurent.Noe@loria.fr</email></corresp>
+    </author-notes>
+    <!--For NAR: both ppub and collection dates generated for PMC processing 1/27/05 beck-->
+    <pub-date pub-type="collection">
+      <day>01</day>
+      <month>7</month>
+      <year>2005</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <day>01</day>
+      <month>7</month>
+      <year>2005</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>27</day>
+      <month>6</month>
+      <year>2005</year>
+    </pub-date>
+    <volume>33</volume>
+    <issue>Web Server issue</issue>
+    <fpage>W540</fpage>
+    <lpage>W543</lpage>
+    <history>
+      <date date-type="received">
+        <day>23</day>
+        <month>3</month>
+        <year>2005</year>
+      </date>
+      <date date-type="accepted">
+        <day>15</day>
+        <month>4</month>
+        <year>2005</year>
+      </date>
+    </history>
+    <copyright-statement>© The Author 2005. Published by Oxford University Press. All rights reserved</copyright-statement>
+    <copyright-year>2005</copyright-year>
+    <license license-type="openaccess">
+      <p>The online version of this article has been published under an open access model. Users are entitled to use, reproduce, disseminate, or display the open access version of this article for non-commercial purposes provided that: the original authorship is properly and fully attributed; the Journal and Oxford University Press are attributed as the original place of publication with the correct citation details given; if an article is subsequently reproduced or disseminated not in its entirety but only in part or as a derivative work this must be clearly indicated. For commercial re-use, please contact <email>journals.permissions@oupjournals.org</email></p>
+    </license>
+    <abstract>
+      <p>YASS is a DNA local alignment tool based on an efficient and sensitive filtering algorithm. It applies transition-constrained seeds to specify the most probable conserved motifs between homologous sequences, combined with a flexible hit criterion used to identify groups of seeds that are likely to exhibit significant alignments. A web interface (<ext-link ext-link-type="uri" xlink:href="http://www.loria.fr/projects/YASS/"/>) is available to upload input sequences in fasta format, query the program and visualize the results obtained in several forms (dot-plot, tabular output and others). A standalone version is available for download from the web page.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>Modern bioinformatics relies heavily on alignment programs and motif discovery tools, and numerous comparative genomics projects need ever more precise and faster tools for comparing two or several genomic sequences with different resolutions.</p>
+    <p>Except for small sequences, the exact local alignment algorithm of Smith and Waterman (<xref ref-type="bibr" rid="b1">1</xref>) is not frequently used, and most alignments are obtained using heuristic alignment tools such as FASTA (<xref ref-type="bibr" rid="b2">2</xref>), FLASH (<xref ref-type="bibr" rid="b3">3</xref>), BLAST (<xref ref-type="bibr" rid="b4">4</xref>,<xref ref-type="bibr" rid="b5">5</xref>), BLASTZ (<xref ref-type="bibr" rid="b6">6</xref>) and PatternHunter (<xref ref-type="bibr" rid="b7">7</xref>,<xref ref-type="bibr" rid="b8">8</xref>). All these methods introduce a trade-off between two competing parameters: <italic>selectivity</italic> (or <italic>specificity</italic>) directly affecting the speed of the algorithm and <italic>sensitivity</italic> affecting its precision (i.e. the number of relevant alignments missed). Achieving a good trade-off between sensitivity and selectivity is the key issue in local alignment tools. The recently introduced <italic>spaced seeds</italic> technique (<xref ref-type="bibr" rid="b7">7</xref>,<xref ref-type="bibr" rid="b8">8</xref>) allows an increase in sensitivity without loss in selectivity. This innovation triggered various studies (<xref ref-type="bibr" rid="b9">9</xref>–<xref ref-type="bibr" rid="b15">15</xref>) related to the usage, design and generalizations of spaced seeds.</p>
+    <p>In this note, we present YASS (Yet Another Similarity Searcher)—a new software for computing local alignments of two DNA sequences—and its web server (<ext-link ext-link-type="uri" xlink:href="http://yass.loria.fr/interface.php"/>). Compared with other tools, YASS is based on two innovations. The first is a new spaced seed model called <italic>transition-constrained seeds</italic> that takes advantage of statistical properties of real genomic sequences. The second feature is a new statistically founded <italic>hit criterion</italic> that controls the formation of groups of closely located seeds that are likely to belong to the same alignment. An implementation of these improvements, reported here, provides a fast and sensitive tool for local alignment of large genomic sequences.</p>
+  </sec>
+  <sec>
+    <title>DESCRIPTION</title>
+    <sec>
+      <title>Web interface</title>
+      <p>The main user input (<xref ref-type="fig" rid="fig1">Figure 1A</xref>) consists of one or two sequences in fasta format either chosen from a predefined database or uploaded to the web server.</p>
+      <p>Once sequences have been selected, the user can run the program right away with all other parameters set by default. Alternatively, the user can set other parameters such as the scoring matrix or gap penalties (preselected matrices are proposed), and specify the DNA strain to be processed (direct, complementary or both). The user can also choose to display complete alignments rather than only alignment positions.</p>
+      <p>More advanced parameters are available for expert users. For example, the right choice of the seed pattern can increase the search sensitivity considerably provided that some knowledge of target alignments is available (<xref ref-type="bibr" rid="b10">10</xref>–<xref ref-type="bibr" rid="b14">14</xref>). The web interface provides a preselection of seeds including three transition-constrained seeds, one providing a good performance compromise between coding and non-coding sequences, and the other two tuned respectively for non-coding and coding regions. The accompanying Hedera program (<ext-link ext-link-type="uri" xlink:href="http://www.loria.fr/projects/YASS/hedera.html"/>) is also provided for advanced users in order to design new seed patterns according to different probabilistic models of alignments (<xref ref-type="bibr" rid="b15">15</xref>).</p>
+      <p>Finally, the user can specify some statistical parameters of target alignments, such as the assumed substitution rate or indel rate. These parameters control the hit criterion, i.e. the rules for grouping together closely located seeds to detect similarities.</p>
+      <p>Once the results are obtained, it is possible to generate a clickable dot-plot (<xref ref-type="fig" rid="fig2">Figure 2</xref>) where each alignment is linked to a URL with its text representation (<xref ref-type="fig" rid="fig1">Figure 1C</xref>). A tabular output (<xref ref-type="fig" rid="fig1">Figure 1B</xref>) is also available: alignments are sorted according to their <italic>E</italic>-value and linked to their text representation. Finally, the YASS output can also be downloaded in text format for further analysis.</p>
+      <sec>
+        <title>Technical issues</title>
+        <p>The YASS server available at <ext-link ext-link-type="uri" xlink:href="http://yass.loria.fr/interface.php"/> currently runs Apache 2.0.47 (PHP and Perl-CGI modules) on a Linux Mandrake 9.2. Dot-plots are obtained with the GD graphical library interfaced to PHP. The YASS program has been developed in C and is distributed under the Gnu General Public License.</p>
+        <p>Owing to limitations of computational resources, some restrictions have been made on the web interface. For example, uploaded files are currently limited to 3 Mb, scoring systems can be chosen only among preselected ones and for each parameter a fixed range of possible values has been settled.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Standalone version</title>
+      <p>The standalone version is recommended for frequent users or those who need specific parameters to be set outside preselected values. It provides access to two other output formats, including a BLAST-like tabular format that can be used by existing postprocessing parsers. Note that YASS does not need one of the sequences to be preprocessed (<italic>formatdb</italic> command of BLAST), rather, it treats both sequences on the fly.</p>
+    </sec>
+  </sec>
+  <sec sec-type="methods">
+    <title>METHODS</title>
+    <p>Here we briefly outline the underlying principles of the YASS algorithm, including some novel features. For a more detailed presentation the reader is referred to (<xref ref-type="bibr" rid="b16">16</xref>) (<ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/1471-2105/5/149/"/>).</p>
+    <sec>
+      <title>Seed model</title>
+      <p>Seeds are specified using a seed pattern built over a three-letter alphabet #, @ and –, where # stands for a nucleotide match, – for a don't care symbol and @ for a match or a transition (mutation A↔G or C↔T). The weight of a pattern is defined as the number of # plus half the number of @. The weight is the main characteristic of seed selectivity.</p>
+      <p>The advantage of transition-constrained seeds stems from the biological observation that transition mutations are relatively more frequent than transversions, in both coding and non-coding regions. Typically, biologically relevant alignments contain about the same number of transitions and transversions, whereas transitions are half as frequent in independently and identically distributed random sequences. Transition-constrained seeds increase the possible number of transitions in a hit relative to spaced seeds without the transition constraint, and this is done without loss of sensitivity or efficiency.</p>
+      <p>The sensitivity of a given seed has been estimated using the algorithm of (<xref ref-type="bibr" rid="b15">15</xref>), which is a generalization of the one proposed in (<xref ref-type="bibr" rid="b11">11</xref>). Two main alignment models have been considered: a Bernoulli model (<xref ref-type="bibr" rid="b13">13</xref>) assumed to simulate alignments of non-coding DNA and a hidden Markov model (<xref ref-type="bibr" rid="b10">10</xref>) assumed to simulate alignments of coding DNA. By default, YASS currently uses the seed #@# –– ## –– # – ##@# of weight 9, which provides a good compromise in detecting similarities in both coding and non-coding sequences. The standalone version of YASS allows users to specify their own seeds. Several preselected seeds are provided by the YASS web interface.</p>
+    </sec>
+    <sec>
+      <title>Hit criterion</title>
+      <p>YASS is based on a multi-seed hit criterion that defines a hit as a group of closely located and possibly overlapping seeds. Two seeds belong to the same group if they occur within a bounded distance or, on the other hand, are located at close dot-plot diagonals. Distance threshold parameters are computed according to probabilistic sequence models taking into account substitution and indel rates, similarly to models used in (<xref ref-type="bibr" rid="b17">17</xref>). Note that seeds of a group are allowed to overlap. An additional group size parameter sets a lower bound on the total number of individual matches and transitions of the group. Using the group size results in a flexible criterion that combines a guaranteed selectivity with a good sensitivity on both short and long similarities. More details on the hit criterion can be found in (<xref ref-type="bibr" rid="b16">16</xref>).</p>
+    </sec>
+    <sec>
+      <title>Comparative tests</title>
+      <p>To validate the better performance of transition-constrained seeds compared with ordinary spaced seeds, several comparative experiments have been presented in (<xref ref-type="bibr" rid="b16">16</xref>). Transition-constrained seeds have been shown to be more sensitive with respect to some Bernoulli and hidden Markov models of alignments of coding and non-coding DNA [Tables 1 and 2 in (<xref ref-type="bibr" rid="b16">16</xref>)]. Moreover, transition-constrained seeds have been shown to be more sensitive in detecting alignments of real genomic sequences [Table 3 in (<xref ref-type="bibr" rid="b16">16</xref>)].</p>
+      <p>YASS has been compared with bl2seq (NCBI BLAST 2.2.6) according to several criteria: running time, number of significant alignments found (with <italic>E</italic>-value ≤ 10<sup>−6</sup>) and number of significant alignments found exclusively by one program and their total length [Table 4 in (<xref ref-type="bibr" rid="b16">16</xref>)]. The results show that YASS detects more significant alignments than bl2seq, within a smaller time for large DNA sequences.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>CONCLUSIONS</title>
+    <p>In this paper, we have described YASS—a new DNA local alignment tool. The proposed web interface features several output formats suitable for a <italic>coup d'oeil</italic> analysis as well as for a deeper analysis of alignments. An upcoming release of YASS will include multi-seed indexing strategies and an optimized processor-cache algorithm.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>The authors wish to thank Marie-Pierre Etienne and Pierre Valois for their help during early stages of this work, Mikhail Roytberg for his contribution to the seed design problem and Christophe Valmir for improving the YASS code. The authors have been supported by the ACI IMPBio of the French Ministry of Research. They thank the reviewers for their helpful remarks. Funding to pay the Open Access publication charges for this article was provided by CNRS.</p>
+    <p><italic>Conflict of interest statement</italic>. None declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="b1">
+      <label>1</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Smith</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Waterman</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Identification of common molecular subsequences</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>1981</year>
+        <volume>147</volume>
+        <fpage>195</fpage>
+        <lpage>197</lpage>
+        <pub-id pub-id-type="pmid">7265238</pub-id>
+      </citation>
+    </ref>
+    <ref id="b2">
+      <label>2</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lipman</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Pearson</surname>
+            <given-names>W.</given-names>
+          </name>
+        </person-group>
+        <article-title>Improved tools for biological sequence comparison</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>1988</year>
+        <volume>85</volume>
+        <fpage>2444</fpage>
+        <lpage>2448</lpage>
+        <pub-id pub-id-type="pmid">3162770</pub-id>
+      </citation>
+    </ref>
+    <ref id="b3">
+      <label>3</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Califano</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Rigoutsos</surname>
+            <given-names>I.</given-names>
+          </name>
+        </person-group>
+        <article-title>Flash: a fast look-up algorithm for string homology</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>1993</year>
+        <volume>1</volume>
+        <fpage>56</fpage>
+        <lpage>64</lpage>
+        <pub-id pub-id-type="pmid">7584371</pub-id>
+      </citation>
+    </ref>
+    <ref id="b4">
+      <label>4</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Gish</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Myers</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Lipman</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>Basic local alignment search tool</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>1990</year>
+        <volume>215</volume>
+        <fpage>403</fpage>
+        <lpage>410</lpage>
+        <pub-id pub-id-type="pmid">2231712</pub-id>
+      </citation>
+    </ref>
+    <ref id="b5">
+      <label>5</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Madden</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Schäffer</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Z.</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Lipman</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>Gapped BLAST and PSI-BLAST: a new generation of protein database search programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3389</fpage>
+        <lpage>3402</lpage>
+        <pub-id pub-id-type="pmid">9254694</pub-id>
+      </citation>
+    </ref>
+    <ref id="b6">
+      <label>6</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schwartz</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Kent</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Smit</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Z.</given-names>
+          </name>
+          <name>
+            <surname>Baertsch</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Hardison</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Haussler</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>W.</given-names>
+          </name>
+        </person-group>
+        <article-title>Human-mouse alignments with BLASTZ</article-title>
+        <source>Genome Res.</source>
+        <year>2003</year>
+        <volume>13</volume>
+        <fpage>103</fpage>
+        <lpage>107</lpage>
+        <pub-id pub-id-type="pmid">12529312</pub-id>
+      </citation>
+    </ref>
+    <ref id="b7">
+      <label>7</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ma</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Tromp</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>PatternHunter: faster and more sensitive homology search</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>440</fpage>
+        <lpage>445</lpage>
+        <pub-id pub-id-type="pmid">11934743</pub-id>
+      </citation>
+    </ref>
+    <ref id="b8">
+      <label>8</label>
+      <citation citation-type="confproc">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Burkhardt</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Kärkkäinen</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>Better filtering with gapped q-grams</article-title>
+        <year>2001</year>
+        <conf-name>Proceedings of the 12th Symposium on Combinatorial Pattern Matching (CPM'01)</conf-name>
+        <conf-date>1–4 July</conf-date>
+        <conf-loc>Jerusalem, Israel</conf-loc>
+        <publisher-name>Springer</publisher-name>
+        <fpage>73</fpage>
+        <lpage>85</lpage>
+        <comment><italic>LNCS</italic> 2089</comment>
+      </citation>
+    </ref>
+    <ref id="b9">
+      <label>9</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Ma</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Kisman</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Tromp</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>PatternHunter II: highly sensitive and fast homology search</article-title>
+        <source>J. Bioinform. Comput. Biol.</source>
+        <year>2004</year>
+        <volume>2</volume>
+        <fpage>417</fpage>
+        <lpage>439</lpage>
+        <pub-id pub-id-type="pmid">15359419</pub-id>
+      </citation>
+    </ref>
+    <ref id="b10">
+      <label>10</label>
+      <citation citation-type="confproc">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brejova</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Vinar</surname>
+            <given-names>T.</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Baeza-Yates</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Chavez</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Crochemore</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Optimal spaced seeds for hidden Markov models, with application to homologous coding regions</article-title>
+        <year>2003</year>
+        <conf-name>Proceedings of the 14th Symposium on Combinatorial Pattern Matching</conf-name>
+        <conf-date>25–27 June</conf-date>
+        <conf-loc>Morelia, Mexico</conf-loc>
+        <publisher-name>Springer</publisher-name>
+        <fpage>42</fpage>
+        <lpage>54</lpage>
+        <comment><italic>LNCS</italic> 2676</comment>
+      </citation>
+    </ref>
+    <ref id="b11">
+      <label>11</label>
+      <citation citation-type="confproc">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Buhler</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Keich</surname>
+            <given-names>U.</given-names>
+          </name>
+          <name>
+            <surname>Sun</surname>
+            <given-names>Y.</given-names>
+          </name>
+        </person-group>
+        <article-title>Designing seeds for similarity search in genomic DNA</article-title>
+        <year>2003</year>
+        <conf-name>Proceedings of the 7th Annual International Conference on Computational Molecular Biology (RECOMB'03)</conf-name>
+        <conf-date>10–13 April</conf-date>
+        <conf-loc>Berlin, Germany</conf-loc>
+        <publisher-name>ACM Press</publisher-name>
+        <fpage>67</fpage>
+        <lpage>75</lpage>
+      </citation>
+    </ref>
+    <ref id="b12">
+      <label>12</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Choi</surname>
+            <given-names>K.P.</given-names>
+          </name>
+          <name>
+            <surname>Zeng</surname>
+            <given-names>F.</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>L.</given-names>
+          </name>
+        </person-group>
+        <article-title>Good spaced seeds for homology search</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>1053</fpage>
+        <lpage>1059</lpage>
+        <pub-id pub-id-type="pmid">14764573</pub-id>
+      </citation>
+    </ref>
+    <ref id="b13">
+      <label>13</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Keich</surname>
+            <given-names>U.</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Ma</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Tromp</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>On spaced seeds for similarity search</article-title>
+        <source>Discrete Appl. Math.</source>
+        <year>2004</year>
+        <volume>138</volume>
+        <fpage>253</fpage>
+        <lpage>263</lpage>
+      </citation>
+    </ref>
+    <ref id="b14">
+      <label>14</label>
+      <citation citation-type="confproc">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kucherov</surname>
+            <given-names>G.</given-names>
+          </name>
+          <name>
+            <surname>Noé</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Ponty</surname>
+            <given-names>Y.</given-names>
+          </name>
+        </person-group>
+        <article-title>Estimating seed sensitivity on homogeneous alignments</article-title>
+        <year>2004</year>
+        <conf-name>Proceedings of the IEEE 4th Symposium on Bioinformatics and Bioengineering (BIBE2004)</conf-name>
+        <conf-date>May 19–21</conf-date>
+        <conf-loc>Taichung, Taiwan</conf-loc>
+        <publisher-name>IEEE Computer Society Press</publisher-name>
+        <fpage>387</fpage>
+        <lpage>394</lpage>
+      </citation>
+    </ref>
+    <ref id="b15">
+      <label>15</label>
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kucherov</surname>
+            <given-names>G.</given-names>
+          </name>
+          <name>
+            <surname>Noé</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Roytberg</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>A unifying framework for seed sensitivity and its application to subset seeds</article-title>
+        <year>2004</year>
+        <comment>Rapport de recherche INRIA RR-5374. <ext-link ext-link-type="uri" xlink:href="http://www.inria.fr/rrrt/rr-5374.html"/></comment>
+      </citation>
+    </ref>
+    <ref id="b16">
+      <label>16</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Noé</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Kucherov</surname>
+            <given-names>G.</given-names>
+          </name>
+        </person-group>
+        <article-title>Improved hit criteria for DNA local alignment</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>149</fpage>
+        <pub-id pub-id-type="pmid">15485572</pub-id>
+      </citation>
+    </ref>
+    <ref id="b17">
+      <label>17</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Benson</surname>
+            <given-names>G.</given-names>
+          </name>
+        </person-group>
+        <article-title>Tandem repeats finder: a program to analyse DNA sequences</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <fpage>573</fpage>
+        <lpage>580</lpage>
+        <pub-id pub-id-type="pmid">9862982</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig id="fig1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p>The input window (<bold>A</bold>) allows users to control most YASS parameters, from most basic to more advanced. Results are output in tabular format (<bold>B</bold>), with the possibility of displaying each sequence alignment (<bold>C</bold>).</p>
+      </caption>
+      <graphic xlink:href="gki478f1"/>
+    </fig>
+    <fig id="fig2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p>Three YASS dot-plots are shown, each obtained from pairs of closely related bacterial sequences. Green segments represent alignments of forward reads and red segments correspond to alignments between the reverse complement of one sequence and the forward read of the other.</p>
+      </caption>
+      <graphic xlink:href="gki478f2"/>
+    </fig>
+  </sec>
+</back>

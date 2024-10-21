@@ -1,0 +1,738 @@
+<?DTDIdentifier.IdentifierValue -//NPG//DTD XML Article//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName NPG_XML_Article.dtd?>
+<?SourceDTD.Version 2.7.10?>
+<?ConverterInfo.XSLTName nature2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Sci Rep</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Sci Rep</journal-id>
+    <journal-title-group>
+      <journal-title>Scientific Reports</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">2045-2322</issn>
+    <publisher>
+      <publisher-name>Nature Publishing Group</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">4703976</article-id>
+    <article-id pub-id-type="pii">srep18854</article-id>
+    <article-id pub-id-type="doi">10.1038/srep18854</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>GeNN: a code generation framework for accelerated brain simulations</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Yavuz</surname>
+          <given-names>Esin</given-names>
+        </name>
+        <xref ref-type="corresp" rid="c1">a</xref>
+        <xref ref-type="aff" rid="a1">1</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Turner</surname>
+          <given-names>James</given-names>
+        </name>
+        <xref ref-type="aff" rid="a1">1</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Nowotny</surname>
+          <given-names>Thomas</given-names>
+        </name>
+        <xref ref-type="aff" rid="a1">1</xref>
+      </contrib>
+      <aff id="a1"><label>1</label><institution>Centre for Computational Neuroscience and Robotics, School of Engineering and Informatics, University of Sussex</institution>, Brighton, BN1 9QJ, <country>UK</country></aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="c1">
+        <label>a</label>
+        <email>e.yavuz@sussex.ac.uk</email>
+      </corresp>
+    </author-notes>
+    <pub-date pub-type="epub">
+      <day>07</day>
+      <month>01</month>
+      <year>2016</year>
+    </pub-date>
+    <pub-date pub-type="collection">
+      <year>2016</year>
+    </pub-date>
+    <volume>6</volume>
+    <elocation-id>18854</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>30</day>
+        <month>06</month>
+        <year>2015</year>
+      </date>
+      <date date-type="accepted">
+        <day>19</day>
+        <month>11</month>
+        <year>2015</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2016, Macmillan Publishers Limited</copyright-statement>
+      <copyright-year>2016</copyright-year>
+      <copyright-holder>Macmillan Publishers Limited</copyright-holder>
+      <license xmlns:xlink="http://www.w3.org/1999/xlink" license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/4.0/">
+        <!--author-paid-->
+        <license-p>This work is licensed under a Creative Commons Attribution 4.0 International License. The images or other third party material in this article are included in the article’s Creative Commons license, unless indicated otherwise in the credit line; if the material is not included under the Creative Commons license, users will need to obtain permission from the license holder to reproduce the material. To view a copy of this license, visit <ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</ext-link></license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p>Large-scale numerical simulations of detailed brain circuit models are important for identifying hypotheses on brain functions and testing their consistency and plausibility. An ongoing challenge for simulating realistic models is, however, computational speed. In this paper, we present the GeNN (GPU-enhanced Neuronal Networks) framework, which aims to facilitate the use of graphics accelerators for computational models of large-scale neuronal networks to address this challenge. GeNN is an open source library that generates code to accelerate the execution of network simulations on NVIDIA GPUs, through a flexible and extensible interface, which does not require in-depth technical knowledge from the users. We present performance benchmarks showing that 200-fold speedup compared to a single core of a CPU can be achieved for a network of one million conductance based Hodgkin-Huxley neurons but that for other models the speedup can differ. GeNN is available for Linux, Mac OS X and Windows platforms. The source code, user manual, tutorials, Wiki, in-depth example projects and all other related information can be found on the project website <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="http://genn-team.github.io/genn/">http://genn-team.github.io/genn/</ext-link>.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <p>Simulating biologically relevant and accurate models of brain networks in a reasonable time remains one of the major technical challenges in computational neuroscience. Conventionally, large-scale brain networks are simulated on high performance computing (HPC) CPU clusters over hours or even days, which severely limits the pace of research. Faster simulations would not only benefit accelerated scientific discovery but are also essential in novel real-time applications such as bio-mimetic robotic controllers, brain-machine interfaces or combined experimental and computational approaches such as dynamic clamp. One avenue to faster simulations that is actively pursued in several large initiatives is dedicated neuromorphic hardware<xref ref-type="bibr" rid="b1">1</xref><xref ref-type="bibr" rid="b2">2</xref><xref ref-type="bibr" rid="b3">3</xref>. However, neuromorphic hardware comes with its own challenges and limitations. Neuromorphic computing typically involves low-level programming which can be time consuming to learn and difficult to optimize. More importantly, the hardware will have a limited range of supported computational models and will likely not be available to the majority of computational biologists. Moreover, the code written for one neuromorphic platform is unlikely to transfer to other platforms without major modifications or performance loss. This also makes it difficult to tune models offline on traditional HPC clusters or trial models on workstations before deploying them in neuromorphic real-time settings. In order to provide more flexibility and to allow simulating the same models on multiple platforms, models are now often expressed using high-level model description languages, e.g. PyNN<xref ref-type="bibr" rid="b4">4</xref>, NeuroML/LEMS<xref ref-type="bibr" rid="b5">5</xref>, NineML<xref ref-type="bibr" rid="b6">6</xref> and SpineML<xref ref-type="bibr" rid="b7">7</xref>. Once described in such a standard, models can be simulated on any supported simulator, such as NEURON<xref ref-type="bibr" rid="b8">8</xref>, GENESIS<xref ref-type="bibr" rid="b9">9</xref>, or BRIAN<xref ref-type="bibr" rid="b10">10</xref>, or on neuromorphic hardware, if a matching interface exists. While this partially solves the problem of transferability of models between platforms, it cannot remove the limitations of models that are only supported by a particular back-end. The difficulty that models need to be optimized at a low-level in order to benefit maximally from any particular hardware acceleration also remains unsolved.</p>
+  <p>Graphics processing units (GPUs) offer an interesting middle ground between mainstream HPC solutions and dedicated hardware as an accelerated computational back-end. Initially designed for computer graphics, GPUs are now also used for general-purpose computing since the compute unified device architecture (CUDA) was introduced by NVIDIA in 2006. CUDA allows users to write C-like code and execute it on NVIDIA’s massively parallel GPUs, which makes it easier to use this powerful and easily accessible hardware as an alternative for classical HPC.</p>
+  <p>GPU technology for general purpose computing has attracted the attention of the computational neuroscience community for almost a decade<xref ref-type="bibr" rid="b11">11</xref><xref ref-type="bibr" rid="b12">12</xref><xref ref-type="bibr" rid="b13">13</xref><xref ref-type="bibr" rid="b14">14</xref><xref ref-type="bibr" rid="b15">15</xref><xref ref-type="bibr" rid="b16">16</xref>, with a focus on efficient simulation of spiking neural networks (SNNs). SNNs are particularly suitable because their neurons are typically all governed by the same type of equations and communicate only rarely with discrete events (spikes). This characteristic is a good match for the massively parallel single-instruction-multiple-data (SIMD) architecture of GPUs. Besides their more flexible multi-purpose computational repertoire, another advantage of GPUs over dedicated neuromorphic hardware is that they are relatively low cost and are already widely available to computational neuroscientists as part of their usual workstations. Virtually every modern desktop or even laptop computer is shipped with one or several multi-core GPUs.</p>
+  <p>However, even though the CUDA programming interface is quite flexible and accessible, it remains critical but not trivial to make the right choices on how to parallelize a computational problem, organize its data in memory and optimize memory access patterns. Programmers still need to understand the device architecture in order to optimize parallelism and achieve optimal performance. This requirement of detailed technical knowledge makes the adoption of GPU technology difficult for non-experienced users.</p>
+  <p>The GeNN framework introduced in this paper provides a code generation framework for efficient and flexible implementation of SNN simulations on CUDA to address this challenge. Code generation has previously been shown to reduce implementation work in systems biology<xref ref-type="bibr" rid="b17">17</xref>, increase performance in computational neuroscience<xref ref-type="bibr" rid="b18">18</xref>, and facilitate flexible and efficient use of novel and otherwise difficult-to-use hardware<xref ref-type="bibr" rid="b19">19</xref>. With its code generation approach, GeNN aims to reap these benefits for general purpose GPU acceleration of neuronal networks. GeNN minimizes the exposure of the user to GPU hardware and controller details by automatically translating simple model descriptions into optimized CUDA C code. The framework allows simulating SNNs, for which it was originally designed, as well as any other model that can be expressed as time-step driven update rules on the nodes of a graph that defines the interactions between nodes. The GeNN framework consists of a C++ source library that generates CUDA kernels and runtime code according to a user-specified network model. Generated code is optimized for the particular network configuration provided by the user and for the hardware detected at compile time.</p>
+  <p>Other tools for simulating neuronal networks on GPUs have been developed previously<xref ref-type="bibr" rid="b13">13</xref><xref ref-type="bibr" rid="b14">14</xref><xref ref-type="bibr" rid="b16">16</xref><xref ref-type="bibr" rid="b20">20</xref><xref ref-type="bibr" rid="b21">21</xref><xref ref-type="bibr" rid="b22">22</xref><xref ref-type="bibr" rid="b23">23</xref> . Each simulator typically comes with its own weaknesses and strengths. CARLSim<xref ref-type="bibr" rid="b14">14</xref> and NeMo<xref ref-type="bibr" rid="b13">13</xref> provide C/C++ source libraries enabling SNN simulations on CUDA. Both simulators use Izhikevich neurons, instantaneous rise/exponential decay synapses, and both support the PyNN model definition standard. NeMo uses a powerful scatter-gather messaging algorithm to provide further optimization for sparse random connectivities and supports real time simulation of up to 100 K Izhikevich neurons with a total of 30 M connections. It has bindings for C, MATLAB and Python. Another existing GPU simulator is CNS<xref ref-type="bibr" rid="b16">16</xref>, a framework for layered neural networks, including spiking networks. It has a MATLAB front-end and supports Hodgkin-Huxley neurons, HMAX feature hierarchies and convolutional networks. There are also some extensions for the BRIAN simulator<xref ref-type="bibr" rid="b24">24</xref> but BRIAN will soon provide GPU support mainly through a GeNN interface. EDLUT<xref ref-type="bibr" rid="b21">21</xref> is mainly aimed at simulating event-driven models using pre-calculated lookup tables. Notably the Myriad simulator<xref ref-type="bibr" rid="b22">22</xref> and ANNarchy<xref ref-type="bibr" rid="b23">23</xref> use code generation and provide more flexibility not dissimilar to GeNN, presented here. Myriad focuses on realistic biophysical models using Hodgkin-Huxley neurons, enabling detailed compartmental models and densely integrated models including analogue interactions such as gap junctions. It provides a flexible and extensible interface through a Python module, which is then translated into a C-based implementation layer by code generation. ANNarchy provides description of rate-based and SNN models with flexible neuron and synapse models in a Python script, which is then used to generate C++ code. It supports both OpenMP and CUDA platforms.</p>
+  <p>The GeNN introduced here provides an “out of the box” simulation framework that is fully customizable and flexible. It is entirely based on CUDA-C/C++. In GeNN, users can introduce their own neuron models, synapse models, post-synaptic integration models and synaptic plasticity rules by providing code snippets that are substituted into the network simulation during code generation. With this approach, it is possible to simulate any neuron model that can be expressed in a C code that defines the model variables at the current time as a function of the values of the model variables from the previous time step. Similarly, code can be provided for synaptic mechanisms and custom learning rules. Based on the provided code snippets, GeNN generates GPU kernels and equivalent CPU functions to update neuron variables, propagate spikes (or synaptic events) to post-synaptic neurons, update post-synaptic neuron variables and synapse variables, and then backpropagate the effect of spikes on pre-synaptic neuron and synapse variables, e.g. in the form of spike-timing dependent plasticity (STDP).</p>
+  <p>As a result of the flexibility of user-provided code snippets GeNN can easily be integrated into existing simulation interfaces, which are already well established in the community. Currently interfaces between GeNN and BRIAN 2<xref ref-type="bibr" rid="b25">25</xref> and GeNN and SpineML through the SpineCreator interface<xref ref-type="bibr" rid="b26">26</xref> are under development and close to completion<xref ref-type="bibr" rid="b27">27</xref><xref ref-type="bibr" rid="b28">28</xref>.</p>
+  <p>Besides the fully flexible user-defined models, GeNN also contains built-in neuron, synapse and post-synaptic integration methods and comes with a set of detailed example projects. Built-in models are defined just like any user-defined model and can be used as examples for users to define their own models. GeNN also features synaptic delays and sparse matrix methods for sparse connectivity.</p>
+  <p>In this paper, we present the main features provided by GeNN, how these features can be used and how the generated code executes on the GPU. We then discuss performance benchmarks of GeNN on GPUs and CPUs in three different environments: A desktop workstation, a laptop computer and a high performance GPU which is installed in an HPC cluster. We performed benchmarking for two different network models. The first network is a pulse-coupled network of Izhikevich neurons in response to three different levels of input<xref ref-type="bibr" rid="b29">29</xref>. The second network is a model of the insect olfactory system containing Hodgkin-Huxley neurons with STDP<xref ref-type="bibr" rid="b30">30</xref>. Simulating these two models allowed us to investigate how different model dynamics and model execution times are affected by using GPUs. Both benchmarking models are provided as example projects within GeNN, and can be accessed under the v2.0_benchmark branch, which is fixed to the GeNN version presented here.</p>
+  <sec disp-level="1">
+    <title>Software Design and Implementation</title>
+    <p>GeNN has a unique software design based on code generation in C++ to achieve its aim of facilitating GPU use for SNNs and structurally similar models. GeNN consists of a C++ source package that contains the code of the GeNN meta-compiler and “user-side” examples of network simulations. When using GeNN for a simulation, the user defines a neuronal network in a simple C++ function, which subsequently is included into the meta-compiler code and then compiled. The resulting meta-compiler generates GPU code that is optimized for both the described model and the GPU hardware detected at its runtime. The generated optimized C++/CUDA code can then be compiled with user-side simulation code into a lean stand-alone executable. Designing GeNN in this way has many advantages over more traditional precompiled simulators and interpreters. Because the user’s model definition is included into the meta-compiler code, it can simply be based on C++ classes and does not necessitate formulating and subsequently parsing a separate domain-specific language. Furthermore, because the output of the meta-compilation is C++/CUDA code, users have much freedom to define their own code for elements of the model, e.g., neuron dynamics, synapses, learning rules, which are then included into the meta-compiler output without the need for a separate parser and interpreter or a dependency on external packages. As the GPU hardware is analyzed and code is optimized at execution time of the meta-compiler, adjusting a simulation to new GPU hardware is as easy as re-running the meta-compiler. Finally, the generated code is fully independent of GeNN and can therefore be used in many scenarios, from straightforward computational neuroscience research to complex applications in real-time experimentation and robotics. This flexibility also enables the use of GeNN as a back-end for emerging model description standards such as NeuroML, NineML, SpineML and simulator solutions, e.g. SpineCreator and BRIAN 2. It also allows experienced programmers to inspect and manipulate the generated code, which is generally kept in a human accessible format.</p>
+  </sec>
+  <sec disp-level="1">
+    <title>Model Definition and Code Generation in GeNN</title>
+    <p><xref ref-type="fig" rid="f1">Figure 1</xref> illustrates the workflow for an example model definition and control of its simulation by the user, using the code generated by GeNN. A model in GeNN is a C++ object of type NNModel which is initialized by the user in the modelDefinition() function. This function is the main interaction between the user and the code generation framework. In this function, the user defines the neuron and synapse populations in the model, and sets up other model members if necessary. Neuron and synapse populations contain neuron and synapse models either defined by the user (as explained below), or chosen from the built-in models as summarized in the red boxes in <xref ref-type="fig" rid="f1">Fig. 1</xref>. Details of the built-in models can be found in the online user manual. GeNN uses the information about the network structure (step 1 in <xref ref-type="fig" rid="f1">Fig. 1</xref>), to create C++ and CUDA C source code (step 2), which includes GPU kernel functions for updating neurons, synapses and learning rules, equivalent CPU functions that do the same on the CPU for comparison, routines such as memory allocation and initialization of variables for both GPU and CPU, routines for transferring data between CPU and GPU, and vice versa. Users can then include the generated code in their own simulation code and use the provided functions as needed for their simulations (step 3), and also call modelDefinition() (step 4) to initialize the network model in their simulation. The design choice of not providing the user side code is deliberate and underlies the versatility of GeNN to act in different application environments and as a back-end to other simulators and model description standards. For users who do want the user-side simulation code, numerous examples are provided with GeNN and new examples can be added by users.</p>
+    <p>When generating the GPU code, GeNN takes into account the properties of the detected GPU hardware and of the specified model. Generated code is optimized in several stages. First, GeNN calculates maximal GPU occupancy for all candidate CUDA block sizes and all present GPU devices, considering the number of streaming multiprocessors, the maximum number of threads per block, the maximum number of blocks per streaming multiprocessor, the number of registers and the amount of shared memory needed for the model kernels and available on the detected devices. GeNN will then choose the device that will likely give the best performance and the block sizes for each of the kernels that is likely to lead to good occupancy and good load balance on SMs. The optimization strategy at this step follows the same logic as published in the NVIDIA CUDA occupancy calculator spreadsheet and hence is similar to the methodology used by the popular Thrust library<xref ref-type="bibr" rid="b31">31</xref>. Future versions of GeNN will have a multi-GPU extension where kernels will be distributed across several GPUs. After choosing the GPU and the block size, code is further optimized for coalesced memory access patterns and optimal use of shared memory.</p>
+  </sec>
+  <sec disp-level="1">
+    <title>User-defined Model Entities</title>
+    <p>As mentioned above, networks are made of populations of neurons and synapses described by defined neuron and synapse models. In GeNN, a neuron model is an object of C++ class neuronModel. A neuronModel object has several data members that make up the full description of the neuron model, including parameters, variables, and a number of code snippets. Parameters are properties defined by floating point numbers that do not change over the duration of a simulation, or from one neuron in a population to the next. Variables are of any numeric C++ type and are allowed to change over time or across the members of a population. The code snippets, provided as C++ strings, define the update operations on variables. Within the code strings, the user can refer to the parameters, the variables and to predefined primitives. For example, a simple leaky integrator with dynamics given by</p>
+    <p>
+      <disp-formula id="eq1">
+        <inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e218" xlink:href="srep18854-m1.jpg"/>
+      </disp-formula>
+    </p>
+    <p>that is integrated with a linear forward Euler method can be defined as</p>
+    <p>neuronModel model;</p>
+    <p>model.varNames.push_back(string(“V”));</p>
+    <p>model.varTypes.push_back(string(“float”));</p>
+    <p>model.pNames.push_back(string(“g”));</p>
+    <p>model.pNames.push_back(string(“C”));</p>
+    <p>model.simCode = string(“ $(V)+ = (−$(g)/$(C) *$(V) +$(Isyn))*DT;”);</p>
+    <p>Note, that parameters and variables are enclosed by $() to avoid any possible ambiguity between them and predefined functions such as exp and sin. It is worth noting that the string must contain the entire time-step update code, i.e. the solver as well as the differential equations, if the model is governed by ODEs.</p>
+    <p>It is also possible to define “derived parameters” for parameters such as decay time constants or conductances which always appear in a transformed way in the model. This representation allows pre-computing the combination of the underlying “primitive parameters” and making the generated code more efficient while nevertheless allowing users to input values for the more meaningful “primitive parameters”. For example, in the model above one could define a derived parameter <italic>a</italic> that replaces <italic>g</italic>/<italic>C</italic> in the code string. The user would then also provide a C++ class that relates <italic>a</italic> to <italic>g</italic> and <italic>C</italic> (see the GeNN user manual for details).</p>
+    <p>Other code snippets in the neuronModel are a threshold code, e.g.</p>
+    <p>model.thresholdConditionCode = string(“$(V)&gt; = 0.0”);</p>
+    <p>and a reset code, e.g.</p>
+    <p>model.resetCode = string(“$(V) = −60.0”);</p>
+    <p>The threshold code is evaluated at every time step and its return value (zero for “false” and non-zero for “true”) determines whether a spike is emitted. The reset code is executed whenever such a spike event is detected. There is no explicit mechanism for refractory periods, as they can be expressed in the model.simCode or in model.thresholdConditionCode as a comparison of the time stamp of the last spike and refractory period defined as parameters.</p>
+    <p>The combination of these code snippets allows expressing most of the common neuron models in computational neuroscience and artificial neural networks.</p>
+    <p>A synapse model in GeNN consists of a weightUpdateModel object which contains parameters, variables, and code strings similar to a neuron model. A weightUpdateModel has five code strings: simulation code (simCode), simulation code for events (simCodeEvnt), learning updates (simLearnPost), synapse dynamics (synapseDynamics) and event detection code (evntThreshold). Their meaning is illustrated in <xref ref-type="table" rid="t1">Table 1</xref>.</p>
+    <p>The description of a synapse model is completed by defining a postsynaptic model (postSynModel) which can have its own parameters and variables, and defines two code snippets: code that translates post-synaptic activation to an input current into the post-synaptic neuron, and code that defines “post-synaptic decay”, i.e. common dynamics of the summed post-synaptic “activation variables”, most typically an exponential decay over time. GeNN provides built-in synapse models for simple conductance-based synapses, graded synapses and a learning synapse model using a primitive STDP rule<xref ref-type="bibr" rid="b30">30</xref>.</p>
+    <p>A population of neurons that share the same model definition and parameter set is added to the network by calling the addNeuronPopulation function within the modelDefinition function which sets the number of neurons in the population, the neuron model, model parameters and initial values for model variables, as illustrated in <xref ref-type="fig" rid="f1">Fig. 1</xref>. GeNN includes a set of example projects and built-in neuron models for Poisson input spike trains, Hodgkin-Huxley<xref ref-type="bibr" rid="b32">32</xref>, map<xref ref-type="bibr" rid="b33">33</xref> and Izhikevich<xref ref-type="bibr" rid="b29">29</xref> neurons.</p>
+    <p>A synapse population can be added to the network by calling the addSynapsePopulation function within the modelDefinition function, which sets the synapse model, connectivity type (sparse or dense), conductance method (fixed common conductance or variable conductance for each connection), synaptic delay, postsynaptic integration method, and values for parameters and initial values for variables, as illustrated in <xref ref-type="fig" rid="f1">Fig. 1</xref>.</p>
+  </sec>
+  <sec disp-level="1">
+    <title>Model execution</title>
+    <p>GeNN generates three kernel functions to be executed on the GPU, and equivalent functions for the CPU to allow one-to-one comparisons. The three kernels are the neuron kernel, the synapse kernel and the synaptic learning kernel for post-synaptic backpropagation. GeNN works strictly in a time-step driven fashion with a fixed global time step, which facilitates maximal parallelization of updates. However, users are free to choose any update method for individual neurons or synapses within the global fixed time steps in their code strings, including loops over smaller time steps or higher-order ODE solutions schemes.</p>
+    <p>In the neuron kernel, incoming synaptic currents are integrated as defined by the post-synaptic model of each incoming synapse population and neuron variables are updated at one time step according to the neuron model descriptions for each population. At the end of the neuron update, the threshold conditions are checked in order to detect spikes, and the IDs of the neurons that are spiking are pushed into an array to be transmitted to the synapse kernel. This allows restricting synapse operations to active synapses originating from neurons that actually spiked. All neurons, within a population and across populations, are updated in parallel in a single grid of neuron kernel calls. Continuous synapse dynamics are executed within the neuron kernel to allow the synapse kernel calls to be tailored to spiking pre-synaptic neurons, or neurons that cause other synaptic events if such events are defined in a synapse population.</p>
+    <p>The synapse kernel grid is parallelized with respect to the postsynaptic target neurons, i.e. each thread operates on one post-synaptic target neuron and loops through all incoming spikes. For each pre-synaptic spike, it applies the synapse model defined by its weightUpdateModel. The synapse model can update the variables to be transmitted to the postsynaptic neuron via the defined post-synaptic model. The code of the weightUpdateModel can also contain an update of synaptic weight triggered by pre-synaptic spikes, e.g. in STDP rules.</p>
+    <p>The learning kernel for post-synaptic events is needed when spikes of the post-synaptic neuron also trigger changes in the synapse, e.g. if an STDP rule is used in which weight updates are triggered when the post-synaptic neuron spikes. The learning kernel grid is parallelized across pre-synaptic sources, and loops through post-synaptic spikes to apply the update code provided in the synapse model.</p>
+    <p>The number of threads in the neuron kernel is determined by the number of neurons. The synapse kernel grid follows the total number of target neurons for all synapse populations. There are separate threads for separate synapse populations, even if the same neurons are targeted. The size of the learning kernel grid depends on the number of neurons in pre-synaptic neuron populations for synapse populations where a simLearnPost rule is defined.</p>
+    <p>The different representations for dense and sparse connectivity are explained in <xref ref-type="fig" rid="f2">Fig. 2</xref>. If the connectivity of a synapse population is defined as “dense”, the connections are stored as an all-to-all matrix, and memory access to synapse variables is fully coalesced. When connections are sparse, the so-called YALE sparse matrix format<xref ref-type="bibr" rid="b34">34</xref> is used to store connections in order to minimize memory usage and to potentially decrease execution time by updating only actually existing synapses. However, using sparse projections breaks memory coalescence and necessitates using potentially costly atomic operations so that it may sometimes be faster to use dense connectivity even if the connections are relatively sparse. In the current version of GeNN the decision for which scheme to use is left to the user and is indicated in the addSynapsePopulation call during model definition.</p>
+    <p>Contrary to the neuron populations, it is difficult to optimize the synapse populations with increasing network size. Sparse networks require atomic operations which serialize execution, and dense networks hit the memory limits easily. If the number of maximum connections per neuron is smaller than the block size in a sparsely connected network, GeNN uses shared memory to apply the synaptic update rule. If this is not the case, variables are updated using atomic operations.</p>
+    <p>Synaptic delay is implemented using one-dimensional circular queue array structures for each state and spike variable, with <italic>m</italic> times <italic>n</italic> elements, where <italic>n</italic> is the number of pre-synaptic neurons and <italic>m</italic> is the desired delay time divided by the integration step size. Each variable queue has a position pointer <italic>p</italic>, which is incremented with (<italic>p</italic> + 1) mod <italic>m</italic> after each iteration, and points to the base address of a ‘slot’ in the delay queue. New data for the <inline-formula id="d33e340"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e341" xlink:href="srep18854-m2.jpg"/></inline-formula> neuron is saved to position (<italic>n</italic> * <italic>p</italic>) + <inline-formula id="d33e349"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e350" xlink:href="srep18854-m3.jpg"/></inline-formula>, and ready data, whose delay time has fully elapsed, can be accessed at array index (<inline-formula id="d33e353"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e354" xlink:href="srep18854-m4.jpg"/></inline-formula> – <inline-formula id="d33e356"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e357" xlink:href="srep18854-m5.jpg"/></inline-formula>) mod <italic>m</italic>. Currently, delays have to be identical across the synapses of each synapse population.</p>
+  </sec>
+  <sec disp-level="1">
+    <title>Results</title>
+    <p>In order to evaluate the speed of GPU simulations under different network scenarios, we performed benchmarking simulations of two distinct network models. The first model is a simple pulse-coupled network of Izhikevich neurons<xref ref-type="bibr" rid="b29">29</xref> and the second is a model of insect olfaction<xref ref-type="bibr" rid="b30">30</xref>, modified here to use Hodgkin-Huxley neurons instead of map neurons. Both models are provided as example user projects in GeNN and all the employed network components, i.e. neuron, synapse and learning models, are included in the built-in models.</p>
+    <p>Our benchmarking models and corresponding simulation configurations were designed to investigate the possible factors behind the difference in execution speed between GPUs and CPUs:<list id="l1" list-type="bullet"><list-item><p><bold>Network size</bold>: The number of neurons is the most straightforward factor, as all neurons are updated in parallel on the GPU at every time step. As long as all neurons fit into a number of blocks that can be loaded concurrently onto the GPU for execution, the execution time for one time step is expected to be approximately constant. Once this limit is surpassed, blocks of neuron update threads will also execute consecutively and simulation times start to increase. Our first dimension in benchmarking of the two models investigated here is the number of neurons.The maximal size of a simulated model is determined by how long the user is willing to wait for its completion and by the size of the different memory hardware that is used. Typically, the random access memory of the host machine is much larger than the device memory available on the GPU accelerator so that the main limitation for network size is the size of the GPU device memory. Typically, the greatest demand on this memory is the number of bits needed to hold dense connectivity matrices.</p></list-item><list-item><p><bold>Neuron model</bold>: As described, neuron models are evaluated in parallel and independently in separate GPU threads. Therefore, generally, the higher the fraction of the overall compute time that is spent on neuron updates, the more a user would gain from the massive parallelism of GPUs. In order to test the effect of neuron model complexity on execution speed, we chose two very different neuron models in the two benchmarks. The Izhikevich neuron network was based on simple Izhikevich neurons (on the order of 10 FLOPS<xref ref-type="bibr" rid="b35">35</xref>, while the insect olfaction model was based on more realistic Hodgkin-Huxley (HH) neurons (on the order of 1000 FLOPS<xref ref-type="bibr" rid="b35">35</xref>). In our benchmark, we evaluate five sub-time steps for each HH neuron, taking the instruction count even higher. The FLOPS are estimates according to<xref ref-type="bibr" rid="b35">35</xref> and actual values will depend on the details of the model implementation, the employed hardware and low-level software, such as numerical libraries.</p></list-item><list-item><p><bold>Network Connectivity</bold>: Depending on the memory requirements of the model, sparse or dense connectivity could be used. Using sparse connectivity, it is possible to simulate bigger networks than with dense connectivity which uses all-to-all connectivity matrices. However, sparse connectivity matrix methods break memory coalescence, which is essential for efficient memory operations on GPUs. We simulated the insect olfaction model in sparse and dense configurations in order to investigate the effect of connectivity schemes on simulation speed. We simulated the Izhikevich neuron network only in sparse configuration because the memory limits were reached even for relatively small networks (of only 50,000 neurons) in the dense configuration.</p></list-item><list-item><p><bold>Synaptic transmission</bold>: Brette and Goodman<xref ref-type="bibr" rid="b11">11</xref> pointed out that the bottleneck for the GPU efficiency for SNN simulations is synaptic transmission, as the memory coalescence is broken at this level for sparse connectivity. We tested the impact of synaptic transmission by evaluating different spiking regimes in the Izhikevich neuron network. Additionally, for both benchmarks, we also report the throughput in terms of the number of delivered spikes.</p></list-item><list-item><p><bold>Floating point precision</bold>: Modern CPUs are designed to execute double floating point precision by default while GPUs are typically more efficient with single precision. We executed both models using either single or double precision floating point representations to test the influence of floating point precision on performance.</p></list-item></list></p>
+    <p>We compared execution time and throughput of SNN simulations on three different machines, and compared the execution time to real-time and to the execution time on a single CPU core. The first computer was a Dell Precision T7600 desktop workstation with an NVIDIA<sup>®</sup> Tesla<sup>®</sup> C2070 GPU, the second computer was a Dell Precision M4700 laptop with an NVIDIA<sup>®</sup> Quadro<sup>®</sup> K2000M GPU, and the third machine was a node of a HPC cluster, equipped with an NVIDIA<sup>®</sup> Tesla<sup>®</sup> K40 GPU.</p>
+    <p>GPU and CPU specifications on each machine are detailed in <xref ref-type="table" rid="t2">Table 2</xref>. All tests were performed using CUDA Toolkit 6.5 and GeNN version 2.1.</p>
+    <sec disp-level="2">
+      <title>Benchmark 1: Spike transmission in a pulse-coupled network of Izhikevich neurons</title>
+      <p>We performed simulations of increasing size of a network of 80% excitatory and 20% inhibitory Izhikevich neurons driven by stochastic thalamic input<xref ref-type="bibr" rid="b29">29</xref> . Spikes were transmitted at every 1 ms and the fast variable of the neurons was updated every 0.5 ms. Three different spiking regimes were obtained by injecting three different levels of mean input current to the neurons. In the balanced regime, neurons received two times stronger input on average than in the quiet regime while in the irregular regime they received three times the input used for the quiet regime. Each neuron in the network made 1000 randomly assigned connections. The code for defining the network, including the parameter values in GeNN, is given in Appendix S1.</p>
+      <p>We compared the duration of simulations on the GPU to real-time and to a single CPU core for each regime. In the quiet regime (<xref ref-type="fig" rid="f3">Fig. 3a</xref>), neurons spiked occasionally. In the balanced regime, each neuron spiked at approximately 8 Hz while the network activity exhibited a mixture of alpha and gamma band firing (<xref ref-type="fig" rid="f3">Fig. 3b</xref>). In the irregular regime, neurons spiked more frequently and irregularly (<xref ref-type="fig" rid="f3">Fig. 3c</xref>). For each GPU, the maximum execution speed was achieved in the quiet regime using single precision (<xref ref-type="fig" rid="f3">Fig. 3d</xref>). In this case, 128,000 neurons could be simulated faster than real-time on the K40 (red bar) and 1,024,000 neurons could be simulated at less than 4 times slower than real-time (grey bar). The maximum speedup obtained was 10.8 times faster than a single CPU core of the desktop machine (<xref ref-type="fig" rid="f3">Fig. 3e</xref>).</p>
+      <p>In the more realistic balanced regime, 128,000 neurons could be simulated 2.5× slower than real-time and the simulations ran 4.7 times faster on the GPU than on a single core of the desktop CPU (<xref ref-type="fig" rid="f3">Fig. 3g</xref>). The performance dropped slightly more in the irregular regime, but the difference between balanced and irregular regimes was not as big as the difference between quiet and balanced regimes (<xref ref-type="fig" rid="f3">Fig. 3h,i</xref>).</p>
+      <p>Detailed results for the time taken by the simulation of different network sizes in the balanced regime are shown in <xref ref-type="fig" rid="f3">Fig. 3j</xref>. For very small networks, a CPU core performed as well as the entire GPU, while a larger speedup was obtained as the number of neurons increased. Real-time simulation was achieved for about 50,000 neurons. Throughput reached saturation at 31 million spikes per second for about 10,000 neurons (<xref ref-type="fig" rid="f3">Fig. 3k</xref>). The overall throughput achieved was less in the quiet regime, but it was similar for the irregular and balanced regimes (data not shown). Overall, performance in terms of execution speed and throughput was similar on the C2070 and the K40 in quiet and irregular regimes while the K2000M did not perform as well as the other GPUs. Double precision simulations ran slower than in float precision as expected for all three GPUs, but with a greater drop in performance on the K2000M compared to the other two GPUs. In the quiet regime, the K40 performed twice faster than the C2070.</p>
+      <p>We compared the time spent on each of the three kernels on the GPU in the three regimes (<xref ref-type="fig" rid="f3">Fig. 3l,m,n</xref>). In absolute time, random number generation takes the same time in all three regimes, as random input is calculated and injected to every neuron at every time step regardless of the strength of the input. The time spent on the synapse kernel, however, depends on the number of delivered spikes. In the quiet regime, most of the time was spent on the generation of random input while the synapse kernel took more time when the spiking activity is increased in the mixed and irregular regimes. In these regimes, more than 75% of the time was spent on the synapse kernel while random number generation was the most dominant kernel in the quiet regime. Other operations such as memory transfers between the host and the GPU (included in the dark grey region in the pie chart) also took a noticeable fraction of time in the quiet regime, while these operations were responsible for only a few percent of the execution time in the other regimes. The neuron kernel took a larger proportion of time in double precision compared to single precision, especially for the K2000M.</p>
+    </sec>
+    <sec disp-level="2">
+      <title>Benchmark 2: Insect olfaction model</title>
+      <p>In this benchmark, we implemented a model that demonstrates self-organized clustering of odor evoked activity patterns in the insect olfactory system. The model consists of the antennal lobe projection neurons (PNs), mushroom body Kenyon cells (KCs) and detector neurons (DNs), and an intermediary inhibitory population between the PNs and the KCs, considered to be the lateral horn interneurons (LHIs)<xref ref-type="bibr" rid="b30">30</xref>.</p>
+      <p>The original model which consisted of map neurons<xref ref-type="bibr" rid="b33">33</xref> for fast execution was redesigned to use Hodgkin-Huxley neurons everywhere except the PNs which form the input population and are modeled as Poisson spike trains. Synapse types used in the model are conductance-based excitatory synapses (between PN-KC and PN-LHI), graded inhibitory synapses (between LHI-KC and DN-DN) and synapses with a simple STDP rule (between KC and DN).</p>
+      <p>Spikes were transmitted every 0.2 ms and neuron variables were updated at every 0.04 ms. This time granularity was chosen because it is the most coarse that still results in similar spiking behavior at the end of 50 simulated seconds as simulations using 0.1 ms for spike transmission and 0.02 ms for neuron updates and hence is arguably precise enough for meaningful simulations. For comparison, precision of three invariant significant figures on average over 500 ms simulation time for a single neuron was obtained for a time step of 0.002 ms for the spike update, and 0.0004 ms for the neuron update. Readers interested in more precise simulations with small time steps like this can extrapolate the expected simulation times from the times reported here because execution time scales directly with the inverse of the time step, i.e. half the time step needs twice the simulation time, etc.</p>
+      <p>We simulated two different configurations of the same network, one using methods for dense connectivity, and the other using methods for sparse connectivity. The different connectivity methods were applied to the PN-KC connections and the KC-DN connections.</p>
+      <p>The model consisted of 100 PNs, 20 LHIs, 100 DNs and the size of the KC population varied from 250 to 1,024,000 neurons for benchmarking. We do not report speed comparisons for networks larger than 1,024,000 neurons because in this case most neurons would not make any synapses. Ignoring the issue of including neurons without output connections in the model, it was possible to simulate a network with 8,192,000 KCs using dense connectivity at 85 times slower than real-time, and 16,384,000 neurons using sparse connectivity at 157 times slower than real-time on the Tesla K40 in single floating point precision. Neuron and synapse model parameters are given in Appendix S2.</p>
+      <p>Spiking activity of a network using 1000 KCs is shown in <xref ref-type="fig" rid="f4">Fig. 4a</xref>. DN activity became sparser after 20 simulated seconds as a result of learning (results not shown). We stopped simulations at 5 simulated seconds for benchmarking as we did not observe any change in execution speed before and after learning takes place. This is expected because learning only modifies the spiking activity of the DN population which consists of only 100 neurons. Spiking activity of networks using sparse and dense connectivity methods was the same when the same network configuration was used, except for small deviations in the DN spike count (~10% in single precision, 1% in double precision). These deviations are due to the accumulation of rounding errors and the propagation of these through learning. Interestingly they are different between repeated runs on the GPUs due to differences in scheduling. This problem area will be discussed in a separate paper. KC activity was very sparse, reflecting the physiological behavior of the insect olfactory system.</p>
+      <p>Execution time compared to real-time is shown in <xref ref-type="fig" rid="f4">Fig. 4b</xref> for dense connectivity and in <xref ref-type="fig" rid="f4">Fig. 4d</xref> for sparse connectivity. Even though the Hodgkin-Huxley model requires many instructions per time step, it was possible to simulate a network of 128,000 neurons at only 2.15 times slower than real-time using sparse connectivity and 2.05 times slower than real-time using dense connectivity, in single floating point precision on the Tesla K40. Maximum speedup compared to a single CPU core (<xref ref-type="fig" rid="f4">Fig. 4c</xref> for dense and <xref ref-type="fig" rid="f4">Fig. 4e</xref> for sparse) was very high, especially on the K40 (219× in single precision using dense and 217× using sparse connectivity). When single floating point precision was used, the performance of different GPUs compared to each other was similar, as in the Izhikevich example. However, when double precision was used, the performance dropped drastically on the K2000M.</p>
+      <p>Detailed results for the time taken by the simulation of networks of different sizes for sparse and dense connectivity methods are shown in <xref ref-type="fig" rid="f4">Fig. 4f</xref>, and corresponding approximate throughput is shown in <xref ref-type="fig" rid="f4">Fig. 4g</xref>. It was possible to simulate more than 30,000 neurons in real-time on the K40. As seen in <xref ref-type="fig" rid="f4">Fig. 4f</xref>,g, performance for dense and sparse connectivity methods was very similar on the K40. On the other hand, on the C2070 performance was better in dense connectivity methods and with increasing network size, while on the K2000M sparse connectivity methods were more efficient.</p>
+      <p>The difference between performance of different GPUs can be better understood by looking at the time taken by individual kernels. Unlike in the first benchmark, the proportion of time taken by each kernel for this model (<xref ref-type="fig" rid="f4">Fig. 4h</xref> for dense and <xref ref-type="fig" rid="f4">Fig. 4i</xref> for sparse) was different on each machine. The main difference was due to the learning kernel. Detailed information about the absolute time spent in each kernel is given in <xref ref-type="table" rid="t3">Table 3</xref> for dense connectivity methods and in <xref ref-type="table" rid="t4">Table 4</xref> for sparse connectivity methods. The learning kernel was 100 times slower on the K2000M than on the K40. Furthermore, in the simulations using double precision on the K2000M, the neuron kernel surprisingly took 35 times longer than in single precision, while on the other machines execution speed was only 2 times slower. The learning and synapse kernel execution speeds were less than 10% slower in double compared to single precision.</p>
+    </sec>
+  </sec>
+  <sec disp-level="1">
+    <title>Discussion</title>
+    <p>Computational neuroscience enters a new era where parallel computing becomes indispensable, as conventional computing strategies cannot meet the requirements of large-scale simulations anymore. GPUs have proven to be plausible candidates for parallel computing for scientific purposes, including neuroscience<xref ref-type="bibr" rid="b11">11</xref><xref ref-type="bibr" rid="b12">12</xref> and some of the world’s fastest computers are now GPU based (e.g. the Titan supercomputer, currently ranked second on the list of top500 supercomputers<xref ref-type="bibr" rid="b36">36</xref>).</p>
+    <p>We have presented the GeNN framework which provides a flexible interface for simulating SNNs on NVIDIA GPUs by generating model-driven and hardware-specific C++/CUDA C code. Originally developed for simulating SNNs, it can also be used for time-driven simulation of any type of network that could be expressed as a combination of:<list id="l2" list-type="bullet"><list-item><p><bold>“Neurons”</bold>, i.e. units of the model which are updated independently of each other at every user-defined time step, with dynamics that are defined by ODE solvers or other, time step based, update rules,</p></list-item><list-item><p><bold>“Synapses”</bold>, i.e. connections between “neurons” which define how neurons interact, either triggered by the detection of “spikes”, i.e. conditional events, at the pre-synaptic “neuron”, by other user-defined events, or continuously.</p></list-item><list-item><p><bold>“Synaptic backpropagation”</bold>, i.e. back wards interactions and changes to the connections triggered by events at the postsynaptic “neuron”.</p></list-item></list></p>
+    <p>As GeNN originally has been designed to optimize spike-like interactions between neurons, networks that use discrete communication akin to spikes would benefit better from GPU speedup with GeNN than networks with time-continuous communication between nodes. For this type of models, it may be more convenient to use the Myriad simulator<xref ref-type="bibr" rid="b22">22</xref>, which is designed for networks with dense analogue interactions and for detailed biophysiological models.</p>
+    <p>The main motivation behind GeNN is to let users control model dynamics as much as possible but without needing to worry about GPU-specific low-level programming. Users are free to control the neuron and synapse dynamics, spiking conditions, simulation time step and any interaction with the model between time step updates. New neuron and synapse models are pushed into the model library, making it easy for the user to implement and use new models. Methods for numerical integration of ODEs are implicitly defined by the user in the code snippets that describe state updates of the components (see <xref ref-type="table" rid="t1">Table 1</xref>) allowing for maximal control by the user. Even though we used a simple forward linear Euler method in our benchmark simulations, it is possible to use higher order or implicit integration methods. Doing so directly may involve some coding but the soon-to-be-released brian2genn interface<xref ref-type="bibr" rid="b28">28</xref> will make different solvers available at the push of a button. Model aspects other than its dynamics, e.g. network setup, inputs and current injections, are not handled directly by the generated code, but helper functions and examples are provided as guidelines and users are welcome to directly included or copy them into their simulation codes.</p>
+    <p>The flexibility of the GeNN framework allowed us to investigate the efficiency of SNN simulations on three different GPUs, under different modeling conditions such as using simple Izhikevich vs more complex Hodgkin-Huxley neuron models, dense vs sparse connectivity methods, single or double floating point precision and different spiking regimes. The same model definition source code was used by GeNN in order to generate code that is adjusted to the hardware specifications of each machine.</p>
+    <p>Our benchmarks were performed at comparatively large time steps. While one would require more strict criteria for the simulation time step from a numerical methods perspective, the choices in our benchmarks reflect the practice in computational neuroscience. In this field, the differential equations defining a model do not necessarily hold more truth than the (admittedly imperfect) numerical solution of the equations, and models are judged on their match to experimental observations rather than numerical accuracy with respect to the underlying equations.</p>
+    <p>Using two benchmark networks, we showed that the GPUs outperform a single CPU core for both networks in all cases except in the sparsely connected network of Izhikevich neurons with double precision in an irregular spiking regime. We furthermore observed that the execution time of parallel simulations on GPUs depends strongly and non-trivially on a number of factors.</p>
+    <p>For very small networks, CPU simulations were almost as fast or faster than GPU simulations. This is because in the case of small networks, the GPU streaming multi-processors are not fully occupied, forcing some GPU threads to run empty. As the network size increased, GPUs began to perform better than the CPU.</p>
+    <p>Izhikevich neurons are much simpler than Hodgkin-Huxley neurons, and therefore can be simulated faster both on GPUs and on the CPU, but the relative speedup of the GPU compared to the CPU was ten folds higher for the benchmark which uses Hodgkin-Huxley neurons. This is expected because the proportion of time spent on updating a single neuron compared to spike transmission, which is costly on GPUs, is higher when complex neuron models are used. Other factors such as memory bandwidth and data caching may also play a role in execution speed. One explanation for the outstanding speedup for Hodgkin-Huxley neurons is the better efficiency of the standard math functions in CUDA math libraries. The exponential function is used very frequently in the Traub &amp; Miles version of the Hodgkin Huxley neuron employed here, which contributes to the very high execution speed in the GPUs compared to the CPU. A similar order of speedup was also reported in a previous study<xref ref-type="bibr" rid="b15">15</xref>.</p>
+    <p>We did not observe a big change in performance in dense or sparse connectivity, especially for mid-sized networks. When the network size increased, sparse connectivity ran faster on the K2000M while dense connectivity was more efficient on the C2070, and no change was observed on the K40. These results indicate that it is not possible to generalize performance results for a particular model independent of hardware properties.</p>
+    <p>Simulations of the Izhikevich neuron network with different spiking regimes confirm that synaptic transmission is a limiting factor as suggested in previous studies<xref ref-type="bibr" rid="b13">13</xref><xref ref-type="bibr" rid="b14">14</xref>. Spike transmission is a common problem in parallel simulations of spiking networks for both GPUs<xref ref-type="bibr" rid="b11">11</xref> and clusters of CPUs<xref ref-type="bibr" rid="b37">37</xref>. At this stage, memory bandwidth is bound by hardware limits and appropriate algorithms to optimize transmission patterns are required.</p>
+    <p>Floating point precision is another important factor in GPU simulations. GPUs were originally not designed to use double precision floating point because computer graphics are based on single precision. NVIDIA supports double precision in devices with compute capability 1.3 or higher, and devices with compute capability 2.0 or higher also support fused multiply add (FMA). However, “user grade” NVIDIA GPUs which are not designed for HPC lack dedicated hardware for double precision support, and therefore are very inefficient in double precision arithmetic. The Quadro K2000M is of a generation of GPUs with compute capability 3.0, where double precision operations give 24 times less throughput than single precision operations<xref ref-type="bibr" rid="b38">38</xref>. In our benchmarks, double precision simulations on this GPU were 35 times slower in the neuron kernel than when single precision was used, while the performance decrease from using double precision on the other GPUs was much less drastic with about two folds slower execution. Execution in double precision of the “nbody” simulation from the CUDA Samples resulted in 21 folds slower execution than single precision simulations on our laptop machine, indicating that the big difference largely results from poor double precision support in the laptop GPU. Based on our results we suggest that so-called “consumer cards” can be used for testing and development purposes, but cannot be expected to have a good performance especially if double precision floating point operations are needed or desired. Users may find it useful to develop their models on low-end machines and run their final simulations on higher end GPUs. Interestingly, using double precision instead of single precision changed the execution speed in synapse, learning and random number generation kernels only a little. This suggests that these kernels are much more bound by memory operations and integer arithmetic than by floating point compute operations. Floating point precision may therefore have more drastic effects on execution speed when the neuron kernel is dominant in execution.</p>
+    <p>There are obviously also other important considerations for choosing floating point precision. Using single precision floating point can, e.g., diminish the reproducibility of simulations, regardless of the employed GPU. Numerical floating point operations are non-associative and non-commutative due to differences in rounding errors arising from different update orders. Combined with the nondeterministic execution order of threads on the GPU, this results in a divergence of the simulation results from one run to another. This problem is more prominent for the networks of chaotic or irregular spiking nature, or when spike timing information is used in order to update model variables. Even though using double precision can decrease the occurrence of these divergences, it is not possible to avoid them entirely.</p>
+    <p>Other problems such as hitting the singularities in the Traub-Miles equations can also be experienced when single floating point precision is used. We redressed this particular problem by checking against the singularity points and using l’Hôpital’s rule to compute the correct limit values that need to be returned.</p>
+    <p>We have demonstrated that the execution speed strongly depends on the model of GPU in <xref ref-type="fig" rid="f3">Figs 3</xref> and <xref ref-type="fig" rid="f4">4</xref>. The Tesla C2070 and K40 cards performed fairly well on both benchmarks under every configuration, while the Quadro K2000M was not very effective especially when double precision is used. The learning kernel was a hundred fold slower on K2000M compared to K40, indicating that non-coalesced memory access may be more problematic on consumer cards than GPUs designed for HPC.</p>
+    <p>It should be noted that we did not push either theoretical or practical limits of optimization for both CPUs and GPUs at this stage, as keeping the code flexible was a priority. In our benchmarks, we aimed to compare straightforward but clean CPU code compiled with optimization flags but not passed through a low-level optimization, to a clean GPU code with a level of optimization that is allowed by our code generation approach. Both CPU and GPU implementations can be further optimized by modifying the generated code, for example by including hardware-specific instructions. Investigating the success of these and the many other possible optimizations is beyond the scope of this work but we will continue to investigate performance optimizations in further releases of GeNN.</p>
+    <p>Another aspect that we have not tested here is to consider connectivity patterns other than all-to-all and randomly and sparsely connected neurons. All-to-all connectivity profits from coalesced access to the connectivity matrix but it is not practical for large networks. On the other hand, random connectivity in very large networks is expected to result in a performance drop as coalescence is completely broken, and the only possible strategy is to use atomic operations. Previous studies have shown that modular connectivity patterns are more efficient on the GPU<xref ref-type="bibr" rid="b13">13</xref>. The NVIDIA GPU architecture allows fast memory operations within a block; therefore, it is optimal for modular connectivity. Our results show that all-to-all vs randomly connected sparse connections play a role in execution speed, depending on the hardware.</p>
+    <p>The code generation approach implemented in GeNN makes the framework intrinsically extensible, so that new GPU optimization strategies can be added and strategies of other simulators can be included in the generated code for situations where they are effective. Moreover, GPU kernels and CPU functions can also be combined in order to make the best of heterogeneous computing.</p>
+    <p>GeNN is based on NVIDIA CUDA because this framework has been shown to be competitive compared to other interfaces such as OpenCL, OpenACC and OpenMP<xref ref-type="bibr" rid="b39">39</xref><xref ref-type="bibr" rid="b40">40</xref>. Nevertheless, the same parallelization strategies can be adopted for other parallel platforms if there will be enough interest from the community.</p>
+    <p>There are already a number of tools for facilitating SNN simulations on GPUs<xref ref-type="bibr" rid="b13">13</xref><xref ref-type="bibr" rid="b14">14</xref><xref ref-type="bibr" rid="b16">16</xref><xref ref-type="bibr" rid="b21">21</xref><xref ref-type="bibr" rid="b22">22</xref><xref ref-type="bibr" rid="b23">23</xref><xref ref-type="bibr" rid="b39">39</xref>. Unlike the other simulators, GeNN allows using any type of model units, even if they do not describe neurons or are complex and high-dimensional. The complexity of the individual neurons (model units) is only constrained by the available local memories on the GPU hardware, which determines how many variables can be stored for evaluating the model equations. Moreover, our results indicate that complex models gain the most from the GPU speedup.</p>
+    <p>There are a number of future directions that we have identified. We are currently working on using multiple GPUs and streams in order to increase parallelism and overcome memory limitations. We are also working on improving memory access patterns to minimize latency. In the future releases of GeNN, we are planning to provide code generation for heterogeneous use of CPUs and GPUs by allowing the users to choose parts of the simulation to run on CPUs and on multiple GPUs. Looking further into the future we are planning to extend GeNN, which currently targets exclusively NVIDIA CUDA, to other parallel computing interfaces such as OpenCL (to enable other GPU hardware) and OpenMPI (to enable multi-host solutions).</p>
+    <p>GeNN is more than yet another GPU simulator due to its flexibility of supporting a large class of models and the ensuing ease of integration with existing tools and models. Interfaces with the popular BRIAN 2 simulator and with SpineML through the SpineCreator graphical user interface are in the final stages of development in collaboration with the developers of these software packages. An interface with the PyNN model description standard is planned.</p>
+    <p>GeNN is already being used in a number of projects including the Green Brain Project<xref ref-type="bibr" rid="b41">41</xref> and a sub-project of the Human Brain Project<xref ref-type="bibr" rid="b42">42</xref><xref ref-type="bibr" rid="b43">43</xref>. It has already provided new biological insights by allowing to simulate our insect olfaction model<xref ref-type="bibr" rid="b30">30</xref> with the more realistic Hodgkin-Huxley neurons for the first time and it is used for underpinning the efficient simulation of a model of the honeybee brain in the Green Brain Project<xref ref-type="bibr" rid="b44">44</xref>.</p>
+    <p>The source code, user manual, tutorials, Wiki, in-depth example projects, news and all other related information can be found in the project homepage at <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="http://genn-team.github.io/genn/">http://genn-team.github.io/genn/"&gt;http://genn-team.github.io/genn/</ext-link>. It is an open-source project and contributions are welcome.</p>
+  </sec>
+  <sec disp-level="1">
+    <title>Additional Information</title>
+    <p><bold>How to cite this article</bold>: Yavuz, E. <italic>et al.</italic> GeNN: a code generation framework for accelerated brain simulations. <italic>Sci. Rep.</italic>
+<bold>6</bold>, 18854; doi: 10.1038/srep18854 (2016).</p>
+  </sec>
+  <sec sec-type="supplementary-material" id="S1">
+    <title>Supplementary Material</title>
+    <supplementary-material id="d33e42" content-type="local-data">
+      <caption>
+        <title>Supplementary Information</title>
+      </caption>
+      <media xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep18854-s1.pdf"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>The authors would like to thank Alex Cope, Alan Diamond, Michael Schmuker, Pascale Maul, and Naresh Balaji for their useful comments and contributions to the software development. This work is supported by the EPSRC (Green Brain Project, grant number EP/J019690/1) and a senior research fellowship of the Royal Academy of Engineering and The Leverhulme Trust.</p>
+  </ack>
+  <ref-list>
+    <ref id="b1">
+      <mixed-citation publication-type="other"><name><surname>Khan</surname><given-names>M. M.</given-names></name><italic>et al.</italic> SpiNNaker: mapping neural networks onto a massively-parallel chip multiprocessor. In <italic>IEEE International Joint Conference on Neural Networks (IJCNN-WCCI),</italic> 2849–2856 (IEEE, 2008).</mixed-citation>
+    </ref>
+    <ref id="b2">
+      <mixed-citation publication-type="other"><name><surname>Schemmel</surname><given-names>J.</given-names></name><italic>et al.</italic> A wafer-scale neuromorphic hardware system for large-scale neural modeling. In <italic>Proceedings of the 2010 IEEE International Symposium on Circuits and Systems (ISCAS),</italic> 1947–1950 (IEEE, 2010).</mixed-citation>
+    </ref>
+    <ref id="b3">
+      <mixed-citation publication-type="other"><name><surname>Seo</surname><given-names>J.-s.</given-names></name><italic>et al.</italic> A 45nm CMOS neuromorphic chip with a scalable architecture for learning in networks of spiking neurons. In <italic>Custom Integrated Circuits Conference (CICC), 2011 IEEE,</italic> 1–4 (IEEE, 2011).</mixed-citation>
+    </ref>
+    <ref id="b4">
+      <mixed-citation publication-type="journal"><name><surname>Davison</surname><given-names>A. P.</given-names></name><italic>et al.</italic><article-title>PyNN: a common interface for neuronal network simulators</article-title>. <source>Frontiers in Neuroinformatics</source><volume>2</volume> (<year>2009</year>).</mixed-citation>
+    </ref>
+    <ref id="b5">
+      <mixed-citation publication-type="journal"><name><surname>Gleeson</surname><given-names>P.</given-names></name><italic>et al.</italic><article-title>NeuroML: a language for describing data driven models of neurons and networks with a high degree of biological detail</article-title>. <source>PLoS computational biology</source><volume>6</volume>, <fpage>e1000815</fpage> (<year>2010</year>).<pub-id pub-id-type="pmid">20585541</pub-id></mixed-citation>
+    </ref>
+    <ref id="b6">
+      <mixed-citation publication-type="journal"><name><surname>Raikov</surname><given-names>I.</given-names></name><italic>et al.</italic><article-title>NineML: the network interchange for neuroscience modeling language</article-title>. <source>BMC Neuroscience</source><volume>12</volume>, <fpage>P330</fpage> (<year>2011</year>).</mixed-citation>
+    </ref>
+    <ref id="b7">
+      <mixed-citation publication-type="journal"><name><surname>Cope</surname><given-names>A. J.</given-names></name>, <name><surname>Richmond</surname><given-names>P.</given-names></name> &amp; <name><surname>Allerton</surname><given-names>D.</given-names></name>
+<article-title>The SpineML toolchain: enabling computational neuroscience through flexible tools for creating, sharing, and simulating neural models</article-title>. <source>BMC Neuroscience</source>
+<volume>15</volume>, <fpage>P224</fpage> (<year>2014</year>).</mixed-citation>
+    </ref>
+    <ref id="b8">
+      <mixed-citation publication-type="journal"><name><surname>Hines</surname><given-names>M. L.</given-names></name> &amp; <name><surname>Carnevale</surname><given-names>N. T.</given-names></name>
+<article-title>The NEURON simulation environment</article-title>. <source>Neural computation</source>
+<volume>9</volume>, <fpage>1179</fpage>–<lpage>1209</lpage> (<year>1997</year>).<pub-id pub-id-type="pmid">9248061</pub-id></mixed-citation>
+    </ref>
+    <ref id="b9">
+      <mixed-citation publication-type="journal"><name><surname>Bower</surname><given-names>J. M.</given-names></name> &amp; <name><surname>Beeman</surname><given-names>D.</given-names></name>
+<source>The book of GENESIS: exploring realistic neural models with the GEneral NEural SImulation System</source> (TELOS, Springer-Verlag, New York, <year>1997</year>).</mixed-citation>
+    </ref>
+    <ref id="b10">
+      <mixed-citation publication-type="journal"><name><surname>Goodman</surname><given-names>D. F.</given-names></name> &amp; <name><surname>Brette</surname><given-names>R.</given-names></name>
+<article-title>The brian simulator</article-title>. <source>Frontiers in neuroscience</source>
+<volume>3</volume>, <fpage>192</fpage> (<year>2009</year>).<pub-id pub-id-type="pmid">20011141</pub-id></mixed-citation>
+    </ref>
+    <ref id="b11">
+      <mixed-citation publication-type="journal"><name><surname>Brette</surname><given-names>R.</given-names></name> &amp; <name><surname>Goodman</surname><given-names>D. F.</given-names></name>
+<article-title>Simulating spiking neural networks on GPU</article-title>. <source>Network: Computation in Neural Systems</source>
+<volume>23</volume>, <fpage>167</fpage>–<lpage>182</lpage> (<year>2012</year>).</mixed-citation>
+    </ref>
+    <ref id="b12">
+      <mixed-citation publication-type="journal"><name><surname>Baladron</surname><given-names>J.</given-names></name>, <name><surname>Fasoli</surname><given-names>D.</given-names></name> &amp; <name><surname>Faugeras</surname><given-names>O.</given-names></name>
+<article-title>Three applications of GPU computing in neuroscience</article-title>. <source>Computing in Science and Engineering</source>
+<volume>14</volume>, <fpage>40</fpage>–<lpage>47</lpage> (<year>2012</year>).</mixed-citation>
+    </ref>
+    <ref id="b13">
+      <mixed-citation publication-type="other"><name><surname>Fidjeland</surname><given-names>A. K.</given-names></name>, <name><surname>Roesch</surname><given-names>E. B.</given-names></name>, <name><surname>Shanahan</surname><given-names>M. P.</given-names></name> &amp; <name><surname>Luk</surname><given-names>W.</given-names></name> NeMo: A platform for neural modelling of spiking neurons using GPUs. In <italic>20th IEEE International Conference on Application-specific Systems, Architectures and Processors (ASAP),</italic> 137–144 (IEEE, 2009).</mixed-citation>
+    </ref>
+    <ref id="b14">
+      <mixed-citation publication-type="journal"><name><surname>Nageswaran</surname><given-names>J. M.</given-names></name>, <name><surname>Dutt</surname><given-names>N.</given-names></name>, <name><surname>Krichmar</surname><given-names>J. L.</given-names></name>, <name><surname>Nicolau</surname><given-names>A.</given-names></name> &amp; <name><surname>Veidenbaum</surname><given-names>A. V.</given-names></name>
+<article-title>A configurable simulation environment for the efficient simulation of large-scale spiking neural networks on graphics processors</article-title>. <source>Neural networks</source>
+<volume>22</volume>, <fpage>791</fpage>–<lpage>800</lpage> (<year>2009</year>).<pub-id pub-id-type="pmid">19615853</pub-id></mixed-citation>
+    </ref>
+    <ref id="b15">
+      <mixed-citation publication-type="journal"><name><surname>Pallipuram</surname><given-names>V. K.</given-names></name>, <name><surname>Bhuiyan</surname><given-names>M.</given-names></name> &amp; <name><surname>Smith</surname><given-names>M. C.</given-names></name>
+<article-title>A comparative study of GPU programming models and architectures using neural networks</article-title>. <source>The Journal of Supercomputing</source>
+<volume>61</volume>, <fpage>673</fpage>–<lpage>718</lpage> (<year>2012</year>).</mixed-citation>
+    </ref>
+    <ref id="b16">
+      <mixed-citation publication-type="other"><name><surname>Mutch</surname><given-names>J.</given-names></name>, <name><surname>Knoblich</surname><given-names>U.</given-names></name> &amp; <name><surname>Poggio</surname><given-names>T.</given-names></name> CNS: a GPU-based framework for simulating cortically-organized networks. <italic>Massachusetts Institute of Technology, Cambridge, MA, Tech. Rep. MIT-CSAIL-TR-2010-013/CBCL-286</italic> (2010).</mixed-citation>
+    </ref>
+    <ref id="b17">
+      <mixed-citation publication-type="journal"><name><surname>Swertz</surname><given-names>M. A.</given-names></name> &amp; <name><surname>Jansen</surname><given-names>R. C.</given-names></name>
+<article-title>Beyond standardization: dynamic software infrastructures for systems biology</article-title>. <source>Nature Reviews Genetics</source>
+<volume>8</volume>, <fpage>235</fpage>–<lpage>243</lpage> (<year>2007</year>).</mixed-citation>
+    </ref>
+    <ref id="b18">
+      <mixed-citation publication-type="journal"><name><surname>Goodman</surname><given-names>D. F.</given-names></name><article-title>Code generation: a strategy for neural network simulators</article-title>. <source>Neuroinformatics</source><volume>8</volume>, <fpage>183</fpage>–<lpage>196</lpage> (<year>2010</year>).<pub-id pub-id-type="pmid">20857234</pub-id></mixed-citation>
+    </ref>
+    <ref id="b19">
+      <mixed-citation publication-type="journal"><name><surname>Marwedel</surname><given-names>P.</given-names></name> &amp; <name><surname>Goossens</surname><given-names>G.</given-names></name> (eds.) <source>Code generation for embedded processors</source>
+<volume>vol. 11</volume> (Kluwer Academic Publishers, Boston, <year>1995</year>).</mixed-citation>
+    </ref>
+    <ref id="b20">
+      <mixed-citation publication-type="journal"><name><surname>Thibeault</surname><given-names>C. M.</given-names></name>, <name><surname>Hoang</surname><given-names>R. V.</given-names></name> &amp; <name><surname>Harris</surname><given-names>F. C.</given-names><suffix>Jr</suffix></name>
+<article-title>A novel multi-GPU neural simulator</article-title>. In <source>BICoB</source>
+<fpage>146</fpage>–<lpage>151</lpage> (<year>2011</year>).</mixed-citation>
+    </ref>
+    <ref id="b21">
+      <mixed-citation publication-type="journal"><name><surname>Ros</surname><given-names>E.</given-names></name>, <name><surname>Carrillo</surname><given-names>R.</given-names></name>, <name><surname>Ortigosa</surname><given-names>E. M.</given-names></name>, <name><surname>Barbour</surname><given-names>B.</given-names></name> &amp; <name><surname>Agís</surname><given-names>R.</given-names></name>
+<article-title>Event-driven simulation scheme for spiking neural networks using lookup tables to characterize neuronal dynamics</article-title>. <source>Neural computation</source>
+<volume>18</volume>, <fpage>2959</fpage>–<lpage>2993</lpage> (<year>2006</year>).<pub-id pub-id-type="pmid">17052155</pub-id></mixed-citation>
+    </ref>
+    <ref id="b22">
+      <mixed-citation publication-type="journal"><name><surname>Rittner</surname><given-names>P.</given-names></name> &amp; <name><surname>Cleland</surname><given-names>T. A.</given-names></name>
+<article-title>Myriad: a transparently parallel GPU-based simulator for densely integrated biophysical models</article-title>. <source>Society for Neuroscience (Abstract)</source> (<year>2014</year>).</mixed-citation>
+    </ref>
+    <ref id="b23">
+      <mixed-citation publication-type="journal"><name><surname>Vitay</surname><given-names>J.</given-names></name>, <name><surname>Dinkelbach</surname><given-names>H. Ü.</given-names></name> &amp; <name><surname>Hamker</surname><given-names>F. H.</given-names></name>
+<article-title>ANNarchy: a code generation approach to neural simulations on parallel hardware</article-title>. <source>Frontiers in neuroinformatics</source>
+<volume>9</volume> (<year>2015</year>).</mixed-citation>
+    </ref>
+    <ref id="b24">
+      <mixed-citation publication-type="journal"><name><surname>Rossant</surname><given-names>C.</given-names></name><italic>et al.</italic><article-title>Fitting neuron models to spike trains</article-title>. <source>Frontiers in neuroscience</source><volume>5</volume>, <fpage>9</fpage> (<year>2011</year>).<pub-id pub-id-type="pmid">21415925</pub-id></mixed-citation>
+    </ref>
+    <ref id="b25">
+      <mixed-citation publication-type="other">The brian simulator. URL <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="http://briansimulator.org/">http://briansimulator.org/</ext-link>. Accessed 08 June 2015.</mixed-citation>
+    </ref>
+    <ref id="b26">
+      <mixed-citation publication-type="other">SpineCreator - a graphical tool. URL <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="http://bimpa.group.shef.ac.uk/SpineML/index.php/SpineCreator_-_A_Graphical_Tool">http://bimpa.group.shef.ac.uk/SpineML/index.php/SpineCreator_-_A_Graphical_Tool</ext-link>. Accessed 08 June 2015.</mixed-citation>
+    </ref>
+    <ref id="b27">
+      <mixed-citation publication-type="journal"><name><surname>Nowotny</surname><given-names>T.</given-names></name><italic>et al.</italic><article-title>SpineML and BRIAN 2.0 interfaces for using GPU enhanced neuronal networks (GeNN)</article-title>. <source>BMC Neuroscience</source><volume>15</volume>, <fpage>P148</fpage> (<year>2014</year>).</mixed-citation>
+    </ref>
+    <ref id="b28">
+      <mixed-citation publication-type="other">brian2genn: Brian 2 frontend to the GeNN simulator. URL <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="http://github.com/brian-team/brian2genn">http://github.com/brian-team/brian2genn</ext-link>. Accessed 04 November 2015.</mixed-citation>
+    </ref>
+    <ref id="b29">
+      <mixed-citation publication-type="journal"><name><surname>Izhikevich</surname><given-names>E. M.</given-names></name><article-title>Simple model of spiking neurons</article-title>. <source>IEEE transactions on neural networks</source><volume>14</volume>, <fpage>1569</fpage>–<lpage>1572</lpage> (<year>2003</year>).<pub-id pub-id-type="pmid">18244602</pub-id></mixed-citation>
+    </ref>
+    <ref id="b30">
+      <mixed-citation publication-type="journal"><name><surname>Nowotny</surname><given-names>T.</given-names></name>, <name><surname>Huerta</surname><given-names>R.</given-names></name>, <name><surname>Abarbanel</surname><given-names>H. D.</given-names></name> &amp; <name><surname>Rabinovich</surname><given-names>M. I.</given-names></name>
+<article-title>Self-organization in the olfactory system: one shot odor recognition in insects</article-title>. <source>Biological cybernetics</source>
+<volume>93</volume>, <fpage>436</fpage>–<lpage>446</lpage> (<year>2005</year>).<pub-id pub-id-type="pmid">16320081</pub-id></mixed-citation>
+    </ref>
+    <ref id="b31">
+      <mixed-citation publication-type="journal"><name><surname>Bell</surname><given-names>N.</given-names></name> &amp; <name><surname>Hoberock</surname><given-names>J.</given-names></name>
+<article-title>Thrust: A 2 6</article-title>. <source>GPU Computing Gems Jade Edition</source>
+<volume>359</volume> (<year>2011</year>).</mixed-citation>
+    </ref>
+    <ref id="b32">
+      <mixed-citation publication-type="journal"><name><surname>Traub</surname><given-names>R. D.</given-names></name> &amp; <name><surname>Miles</surname><given-names>R.</given-names></name>
+<source>Neuronal networks of the hippocampus</source>
+<volume>vol. 777</volume> (Cambridge University Press, <year>1991</year>).</mixed-citation>
+    </ref>
+    <ref id="b33">
+      <mixed-citation publication-type="journal"><name><surname>Rulkov</surname><given-names>N. F.</given-names></name><article-title>Modeling of spiking-bursting neural behavior using two-dimensional map</article-title>. <source>Physical Review E</source><volume>65</volume>, <fpage>041922</fpage> (<year>2002</year>).</mixed-citation>
+    </ref>
+    <ref id="b34">
+      <mixed-citation publication-type="journal"><name><surname>Eisenstat</surname><given-names>S. C.</given-names></name>, <name><surname>Gursky</surname><given-names>M.</given-names></name>, <name><surname>Schultz</surname><given-names>M. H.</given-names></name> &amp; <name><surname>Sherman</surname><given-names>A. H.</given-names></name>
+<article-title>Yale sparse matrix package i: The symmetric codes</article-title>. <source>International Journal for Numerical Methods in Engineering</source>
+<volume>18</volume>, <fpage>1145</fpage>–<lpage>1151</lpage> (<year>1982</year>).</mixed-citation>
+    </ref>
+    <ref id="b35">
+      <mixed-citation publication-type="journal"><name><surname>Izhikevich</surname><given-names>E. M.</given-names></name><article-title>Which model to use for cortical spiking neurons?</article-title><source>IEEE transactions on neural networks</source><volume>15</volume>, <fpage>1063</fpage>–<lpage>1070</lpage> (<year>2004</year>).<pub-id pub-id-type="pmid">15484883</pub-id></mixed-citation>
+    </ref>
+    <ref id="b36">
+      <mixed-citation publication-type="other">Top500 list of the world’s most powerful supercomputers. URL <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="http://www.top500.org/list/2014/11/">http://www.top500.org/list/2014/11/</ext-link>. Accessed 08 June 2015.</mixed-citation>
+    </ref>
+    <ref id="b37">
+      <mixed-citation publication-type="journal"><name><surname>Zenke</surname><given-names>F.</given-names></name> &amp; <name><surname>Gerstner</surname><given-names>W.</given-names></name>
+<article-title>Limits to high-speed simulations of spiking neural networks using general-purpose computers</article-title>. <source>Frontiers in neuroinformatics</source>
+<volume>8</volume> (<year>2014</year>).</mixed-citation>
+    </ref>
+    <ref id="b38">
+      <mixed-citation publication-type="journal">NVIDIA Corporation. <source>CUDA C Programming Guide</source> (<year>2014</year>).</mixed-citation>
+    </ref>
+    <ref id="b39">
+      <mixed-citation publication-type="journal"><name><surname>Dinkelbach</surname><given-names>H. Ü.</given-names></name>, <name><surname>Vitay</surname><given-names>J.</given-names></name>, <name><surname>Beuth</surname><given-names>F.</given-names></name> &amp; <name><surname>Hamker</surname><given-names>F. H.</given-names></name>
+<article-title>Comparison of GPU-and CPU-implementations of mean-firing rate neural networks on parallel hardware</article-title>. <source>Network: Computation in Neural Systems</source>
+<volume>23</volume>, <fpage>212</fpage>–<lpage>236</lpage> (<year>2012</year>).</mixed-citation>
+    </ref>
+    <ref id="b40">
+      <mixed-citation publication-type="journal"><name><surname>Nowotny</surname><given-names>T.</given-names></name>, <name><surname>Muezzinoglu</surname><given-names>M. K.</given-names></name> &amp; <name><surname>Huerta</surname><given-names>R.</given-names></name>
+<article-title>Bio-mimetic classification on modern parallel hardware: Realizations on NVIDIA<sup>®</sup> CUDA and OpenMP</article-title>. <source>International Journal of Innovative Computing, Information and Control</source>
+<volume>7</volume> (<year>2011</year>).</mixed-citation>
+    </ref>
+    <ref id="b41">
+      <mixed-citation publication-type="other">The Green Brain Project. URL <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="http://www.greenbrainproject.co.uk">http://www.greenbrainproject.co.uk</ext-link>. Accessed 08 June 2015.</mixed-citation>
+    </ref>
+    <ref id="b42">
+      <mixed-citation publication-type="other">The Human Brain Project. URL <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="http://www.humanbrainproject.eu">http://www.humanbrainproject.eu</ext-link>. Accessed 08 June 2015.</mixed-citation>
+    </ref>
+    <ref id="b43">
+      <mixed-citation publication-type="other"><name><surname>Diamond</surname><given-names>A.</given-names></name>, <name><surname>Schmuker</surname><given-names>M.</given-names></name>, <name><surname>Berna</surname><given-names>A. Z.</given-names></name>, <name><surname>Trowell</surname><given-names>S.</given-names></name> &amp; <name><surname>Nowotny</surname><given-names>T.</given-names></name> Towards a practical bio-inspired spiking network odour classifier for use in e-nose settings. <italic>IEEE Transactions in Neural Networks and Learning Systems</italic> (in press).</mixed-citation>
+    </ref>
+    <ref id="b44">
+      <mixed-citation publication-type="journal"><name><surname>Cope</surname><given-names>A.</given-names></name><italic>et al.</italic><article-title>The Green Brain Project—developing a neuromimetic robotic honeybee</article-title>. In <source>Biomimetic and Biohybrid Systems</source><fpage>362</fpage>–<lpage>363</lpage> (Springer, <year>2013</year>).</mixed-citation>
+    </ref>
+  </ref-list>
+  <fn-group>
+    <fn>
+      <p><bold>Author Contributions</bold> E.Y. and T.N. drafted the manuscript. All authors participated in design and implementation of the software, which was initially created by T.N. Benchmarking simulations and their analysis are performed by E.Y. All authors reviewed the manuscript, and they have read and approved the final manuscript.</p>
+    </fn>
+  </fn-group>
+</back>
+<floats-group>
+  <fig id="f1">
+    <label>Figure 1</label>
+    <caption>
+      <title>Workflow in GeNN. The “user-side” code is shown in boxes with green titles, and the files that are controlled by GeNN are shown in boxes with red titles.</title>
+      <p>Code in red in the user program indicates the functions that are part of the code generated by GeNN. Simulating a neuronal network in GeNN starts with a modelDefinition() (top) which feeds into both, the meta-compiler generateAll.cc (1, middle left) and the “user-side” simulation code (4, right). The meta-compiler generates a source code library (2, bottom left) which can then be used in “user-side” simulation code (3, bottom right).</p>
+    </caption>
+    <graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep18854-f1"/>
+  </fig>
+  <fig id="f2">
+    <label>Figure 2</label>
+    <caption>
+      <title>Connectivity schemes in GeNN.</title>
+      <p>(<bold>a</bold>) Connectivity in an example network. (<bold>b</bold>) YALE format sparse representation of the network shown in (<bold>a</bold>). For the <inline-formula id="d33e690"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e691" xlink:href="srep18854-m6.jpg"/></inline-formula> pre-synaptic neuron, <inline-formula id="d33e693"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e694" xlink:href="srep18854-m7.jpg"/></inline-formula> gives the index of the starting point in the arrays that store the postsynaptic neuron index <inline-formula id="d33e697"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e698" xlink:href="srep18854-m8.jpg"/></inline-formula>, and other variables, e.g. <inline-formula id="d33e700"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e701" xlink:href="srep18854-m9.jpg"/></inline-formula>. The <inline-formula id="d33e703"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e704" xlink:href="srep18854-m10.jpg"/></inline-formula> pre-synaptic neuron makes <inline-formula id="d33e706"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e707" xlink:href="srep18854-m11.jpg"/></inline-formula> connections with the postsynaptic population. The index of the <inline-formula id="d33e709"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e710" xlink:href="srep18854-m12.jpg"/></inline-formula> postsynaptic neuron that is connected to <inline-formula id="d33e712"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e713" xlink:href="srep18854-m13.jpg"/></inline-formula> pre-synaptic neuron is stored in <inline-formula id="d33e716"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e717" xlink:href="srep18854-m14.jpg"/></inline-formula>, and a synapse variable for the pre-synaptic and post-synaptic neuron pair are stored in <inline-formula id="d33e719"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e720" xlink:href="srep18854-m15.jpg"/></inline-formula>. (<bold>c</bold>) Dense representation for the same network. <italic>n</italic> stands for number of elements, <inline-formula id="d33e728"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e729" xlink:href="srep18854-m16.jpg"/></inline-formula> is number of pre-synaptic neurons, <inline-formula id="d33e731"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e732" xlink:href="srep18854-m17.jpg"/></inline-formula> is number of post-synaptic neurons, <inline-formula id="d33e735"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e736" xlink:href="srep18854-m18.jpg"/></inline-formula> is the total number of connections in the synapse population.</p>
+    </caption>
+    <graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep18854-f2"/>
+  </fig>
+  <fig id="f3">
+    <label>Figure 3</label>
+    <caption>
+      <title>Execution speed of pulse-coupled Izhikevich neuron network simulations in different spiking regimes.</title>
+      <p>(<bold>a–c</bold>) Spiking activity of 800 excitatory (Exc) and 200 inhibitory (Inh) neurons in the quiet (<bold>a</bold>), balanced (<bold>b</bold>), and irregular spiking regimes (<bold>c</bold>). (<bold>d,f,h</bold>) Simulation speed compared to real-time for the networks in <bold>(a</bold>–<bold>c)</bold>, respectively, on different hardware, using single (sp) and double (dp) floating point precision, for 128,000 neurons (red bars) or maximum number of neurons possible (grey bars, corresponding network size indicated below the dp bar). Data is based on 6 trials for GPUs and 2 trials for CPUs. (<bold>e,g,i</bold>) Maximum speedup achieved compared to the CPU, as in (<bold>d,f,h</bold>). (<bold>j</bold>) Detailed graph of wall-clock time for the simulation of 5 simulated seconds in the balanced regime as a function of different network sizes, using single floating point precision. The red vertical line indicates the simulation time for 128,000 neurons that was used in making the red bars in (<bold>f</bold>). Real-time is shown by the dashed horizontal line. (<bold>k</bold>) Throughput (delivered spikes per sec) per neuron for the conditions shown in (<bold>j</bold>). (<bold>l,m,n</bold>) Proportion of time spent on different kernels for simulations of 128,000 neurons in the regimes in (<bold>a–c</bold>) respectively.</p>
+    </caption>
+    <graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep18854-f3"/>
+  </fig>
+  <fig id="f4">
+    <label>Figure 4</label>
+    <caption>
+      <title>Execution speed of the insect olfaction model simulations using sparse and dense connectivity.</title>
+      <p>(<bold>a</bold>) Spiking activity of a network of 100 PN, 20 LHI, 1000 KC and 100 DN. (<bold>b,d</bold>) Simulation speed compared to real-time using dense (<bold>b</bold>) and sparse (<bold>d</bold>) connectivity patterns on different hardware, using single (sp) and double (dp) floating point precision, for 128,000 neurons (red bars) and 1,024,000 neurons (grey bars, N/A for K2000M dp due to memory constraints). Data is based on 7 trials for the GPUs and 1 trial for CPUs. <bold>(c,e)</bold> Maximum speedup achieved compared to the CPU, as in (<bold>b,d</bold>). (<bold>f</bold>) Detailed graph of wall-clock time for simulation of 5 simulated seconds as a function of different network sizes, using single floating point precision. Red vertical line represents simulation time for 128,000 neurons used in making the red bars, and grey line represents 1,024,000 neurons used for making the grey lines in (<bold>b,d</bold>). Real-time is shown by the dashed horizontal line. (<bold>g</bold>) Throughput (delivered spikes per sec) per neuron for the conditions shown in (<bold>f</bold>). (<bold>h,i</bold>) Proportion of time spent on different kernels for simulation of 128,000 neurons using dense (<bold>h</bold>) and sparse (<bold>i</bold>) connectivity.</p>
+    </caption>
+    <graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep18854-f4"/>
+  </fig>
+  <table-wrap position="float" id="t1">
+    <label>Table 1</label>
+    <caption>
+      <title>Function of synapse model code snippets in GeNN.</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="left"/>
+        <col align="left"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th align="left" valign="top" charoff="50">Code snippet</th>
+          <th align="left" valign="top" charoff="50">Function</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="left" valign="top" charoff="50">simCode</td>
+          <td align="left" valign="top" charoff="50">Simulation code that is executed when a pre-synaptic spike occurs (as defined in the model of the pre-synaptic neuron); this code can include learning that is triggered by pre-synaptic spikes.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">simCodeEvnt</td>
+          <td align="left" valign="top" charoff="50">Simulation code that is executed when an event occurs (as defined by the evntThreshold code snippet, typically a condition on the pre-synaptic neuron variables. This can for example be used to define graded synapses.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">simLearnPost</td>
+          <td align="left" valign="top" charoff="50">Simulation code for learning that is triggered by post-synaptic spikes (as defined in the model of the post-synaptic neuron).</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">synapseDynamics</td>
+          <td align="left" valign="top" charoff="50">Simulation code for updates on synaptic variables that need to occur every time step; this should not include simple operations like exponential decay which can be implemented on the summed post-synaptic activation in the post-synaptic model.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">evntThreshold</td>
+          <td align="left" valign="top" charoff="50">The simulation code that defines the condition for an event that shall be used to trigger the code in SimCodeEvnt.</td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+  <table-wrap position="float" id="t2">
+    <label>Table 2</label>
+    <caption>
+      <title>CPU and GPU specifications of the different machines used in benchmarking.</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="left"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th rowspan="2" align="left" valign="top" charoff="50"> </th>
+          <th colspan="2" align="center" valign="top" charoff="50">Desktop computer<hr/></th>
+          <th colspan="2" align="center" valign="top" charoff="50">Laptop computer<hr/></th>
+          <th colspan="2" align="center" valign="top" charoff="50">HPC<hr/></th>
+        </tr>
+        <tr>
+          <th align="center" valign="top" charoff="50">CPU</th>
+          <th align="center" valign="top" charoff="50">GPU</th>
+          <th align="center" valign="top" charoff="50">CPU</th>
+          <th align="center" valign="top" charoff="50">GPU</th>
+          <th align="center" valign="top" charoff="50">CPU</th>
+          <th align="center" valign="top" charoff="50">CPU</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td rowspan="3" align="left" valign="middle" charoff="50">Processor</td>
+          <td align="center" valign="top" charoff="50">Intel<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">NVIDIA<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">Intel<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">NVIDIA<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">Intel<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">NVIDIA<sup>®</sup></td>
+        </tr>
+        <tr>
+          <td align="center" valign="top" charoff="50">Xeon<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">Tesla<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">Core™</td>
+          <td align="center" valign="top" charoff="50">i7-Quadro<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">Xeon<sup>®</sup></td>
+          <td align="center" valign="top" charoff="50">T esla<sup>®</sup></td>
+        </tr>
+        <tr>
+          <td align="center" valign="top" charoff="50">E5-2609</td>
+          <td align="center" valign="top" charoff="50">C2070</td>
+          <td align="center" valign="top" charoff="50">3740QM</td>
+          <td align="center" valign="top" charoff="50">K2000M</td>
+          <td align="center" valign="top" charoff="50">E5-2650 v2</td>
+          <td align="center" valign="top" charoff="50">K40</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">(Global) Memory</td>
+          <td align="center" valign="top" charoff="50">32 GB</td>
+          <td align="center" valign="top" charoff="50">5.25 GB</td>
+          <td align="center" valign="top" charoff="50">16 GB</td>
+          <td align="center" valign="top" charoff="50">2 GB</td>
+          <td align="center" valign="top" charoff="50">66 GB</td>
+          <td align="center" valign="top" charoff="50">12 GB</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">Clock frequency</td>
+          <td align="center" valign="top" charoff="50">2.4 GHz</td>
+          <td align="center" valign="top" charoff="50">575 MHz</td>
+          <td align="center" valign="top" charoff="50">2.7 GHz</td>
+          <td align="center" valign="top" charoff="50">745 MHz</td>
+          <td align="center" valign="top" charoff="50">2.6 GHz</td>
+          <td align="center" valign="top" charoff="50">745 MHz</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">Number of cores</td>
+          <td align="center" valign="top" charoff="50">4</td>
+          <td align="center" valign="top" charoff="50">448</td>
+          <td align="center" valign="top" charoff="50">4</td>
+          <td align="center" valign="top" charoff="50">384</td>
+          <td align="center" valign="top" charoff="50">32</td>
+          <td align="center" valign="top" charoff="50">2880</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">SP GFLOPS</td>
+          <td align="center" valign="top" charoff="50">19.2/core</td>
+          <td align="center" valign="top" charoff="50">1288</td>
+          <td align="center" valign="top" charoff="50">21.6/core</td>
+          <td align="center" valign="top" charoff="50">572.16</td>
+          <td align="center" valign="top" charoff="50">30.8/core</td>
+          <td align="center" valign="top" charoff="50">4290</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" charoff="50">Max. memory bandwidth</td>
+          <td align="center" valign="top" charoff="50">42.6 GB/sec</td>
+          <td align="center" valign="top" charoff="50">144 GB/sec</td>
+          <td align="center" valign="top" charoff="50">25.6 GB/sec</td>
+          <td align="center" valign="top" charoff="50">28.8 GB/sec</td>
+          <td align="center" valign="top" charoff="50">59.7 GB/sec</td>
+          <td align="center" valign="top" charoff="50">288 GB/sec</td>
+        </tr>
+      </tbody>
+    </table>
+    <table-wrap-foot>
+      <fn id="t2-fn1">
+        <p>The values for FLOPS and bandwidth provided are theoretical limits.</p>
+      </fn>
+    </table-wrap-foot>
+  </table-wrap>
+  <table-wrap position="float" id="t3">
+    <label>Table 3</label>
+    <caption>
+      <title>Average time taken on different kernels in the insect olfaction model in dense configuration.</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th rowspan="2" align="center" valign="top" charoff="50"> </th>
+          <th colspan="2" align="center" valign="top" charoff="50">NVIDIA<sup>®</sup> Tesla<sup>®</sup> C2070<hr/></th>
+          <th colspan="2" align="center" valign="top" charoff="50">NVIDIA<sup>®</sup> Quadro<sup>®</sup> K2000M<hr/></th>
+          <th colspan="2" align="center" valign="top" charoff="50">NVIDIA<sup>®</sup> Tesla<sup>®</sup> K40<hr/></th>
+        </tr>
+        <tr>
+          <th align="center" valign="top" charoff="50">single</th>
+          <th align="center" valign="top" charoff="50">double</th>
+          <th align="center" valign="top" charoff="50">single</th>
+          <th align="center" valign="top" charoff="50">double</th>
+          <th align="center" valign="top" charoff="50">single</th>
+          <th align="center" valign="top" charoff="50">double</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="center" valign="top" charoff="50">
+            <bold>Neuron kernel</bold>
+          </td>
+          <td align="center" valign="top" charoff="50">17.29</td>
+          <td align="center" valign="top" char="." charoff="50">30.66</td>
+          <td align="center" valign="top" char="." charoff="50">9.07</td>
+          <td align="center" valign="top" char="." charoff="50">322.06</td>
+          <td align="center" valign="top" char="." charoff="50">4.5</td>
+          <td align="center" valign="top" char="." charoff="50">9.8</td>
+        </tr>
+        <tr>
+          <td align="center" valign="top" charoff="50">
+            <bold>Synapse kernel</bold>
+          </td>
+          <td align="center" valign="top" charoff="50">2.88</td>
+          <td align="center" valign="top" char="." charoff="50">1.93</td>
+          <td align="center" valign="top" char="." charoff="50">4.11</td>
+          <td align="center" valign="top" char="." charoff="50">5.53</td>
+          <td align="center" valign="top" char="." charoff="50">1.11</td>
+          <td align="center" valign="top" char="." charoff="50">1.38</td>
+        </tr>
+        <tr>
+          <td align="center" valign="top" charoff="50">
+            <bold>Learning kernel</bold>
+          </td>
+          <td align="center" valign="top" charoff="50">2.41 ± 0.07</td>
+          <td align="center" valign="top" char="." charoff="50">2.74</td>
+          <td align="center" valign="top" charoff="50">114 ± 0.31</td>
+          <td align="center" valign="top" charoff="50">117.9 ± 0.08</td>
+          <td align="center" valign="top" char="." charoff="50">1.09</td>
+          <td align="center" valign="top" char="." charoff="50">1.13</td>
+        </tr>
+      </tbody>
+    </table>
+    <table-wrap-foot>
+      <fn id="t3-fn1">
+        <p>The model is simulated using 128,000 Kenyon cells, in single and double precision (in seconds, n = 10. Standard deviations that were not mentioned were smaller than 0.01).</p>
+      </fn>
+    </table-wrap-foot>
+  </table-wrap>
+  <table-wrap position="float" id="t4">
+    <label>Table 4</label>
+    <caption>
+      <title>Average time taken on different kernels in the insect olfaction model in sparse configuration.</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th rowspan="2" align="center" valign="top" charoff="50"> </th>
+          <th colspan="2" align="center" valign="top" charoff="50">NVIDIA<sup>®</sup> Tesla<sup>®</sup> C2070<hr/></th>
+          <th colspan="2" align="center" valign="top" charoff="50">NVIDIA<sup>®</sup> Quadro<sup>®</sup> K2000M<hr/></th>
+          <th colspan="2" align="center" valign="top" charoff="50">NVIDIA<sup>®</sup> Tesla<sup>®</sup> K40<hr/></th>
+        </tr>
+        <tr>
+          <th align="center" valign="top" charoff="50">single</th>
+          <th align="center" valign="top" charoff="50">double</th>
+          <th align="center" valign="top" charoff="50">single</th>
+          <th align="center" valign="top" charoff="50">double</th>
+          <th align="center" valign="top" charoff="50">single</th>
+          <th align="center" valign="top" charoff="50">double</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="center" valign="top" charoff="50">
+            <bold>Neuron kernel</bold>
+          </td>
+          <td align="center" valign="top" char="." charoff="50">15.43</td>
+          <td align="center" valign="top" char="." charoff="50">34.03</td>
+          <td align="center" valign="top" charoff="50">9.49</td>
+          <td align="center" valign="top" charoff="50">321.54 ± 0.03</td>
+          <td align="center" valign="top" char="." charoff="50">4.98</td>
+          <td align="center" valign="top" char="." charoff="50">9.78</td>
+        </tr>
+        <tr>
+          <td align="center" valign="top" charoff="50">
+            <bold>Synapse kernel</bold>
+          </td>
+          <td align="center" valign="top" char="." charoff="50">2.81</td>
+          <td align="center" valign="top" char="." charoff="50">2.04</td>
+          <td align="center" valign="top" charoff="50">4.09</td>
+          <td align="center" valign="top" charoff="50">5.07</td>
+          <td align="center" valign="top" char="." charoff="50">1.18</td>
+          <td align="center" valign="top" char="." charoff="50">1.74</td>
+        </tr>
+        <tr>
+          <td align="center" valign="top" charoff="50">
+            <bold>Learning kernel</bold>
+          </td>
+          <td align="center" valign="top" char="." charoff="50">5.004</td>
+          <td align="center" valign="top" char="." charoff="50">5.014</td>
+          <td align="center" valign="top" charoff="50">62.62 ± 8.68</td>
+          <td align="center" valign="top" charoff="50">52.87 ± 3.42</td>
+          <td align="center" valign="top" char="." charoff="50">0.85</td>
+          <td align="center" valign="top" char="." charoff="50">0.89</td>
+        </tr>
+      </tbody>
+    </table>
+    <table-wrap-foot>
+      <fn id="t4-fn1">
+        <p>The model is simulated using 128,000 Kenyon cells, in single and double precision (in seconds, n = 10. Standard deviations that were not mentioned were smaller than 0.01).</p>
+      </fn>
+    </table-wrap-foot>
+  </table-wrap>
+</floats-group>

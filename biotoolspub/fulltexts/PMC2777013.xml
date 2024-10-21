@@ -1,0 +1,1277 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Archiving and Interchange DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName archivearticle.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 1?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Adv Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Adv Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">ABI</journal-id>
+    <journal-title-group>
+      <journal-title>Advances in Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1687-8027</issn>
+    <issn pub-type="epub">1687-8035</issn>
+    <publisher>
+      <publisher-name>Hindawi Publishing Corporation</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2777013</article-id>
+    <article-id pub-id-type="doi">10.1155/2009/193947</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>FlowFP: A Bioconductor Package for Fingerprinting Flow Cytometric Data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Rogers</surname>
+          <given-names>Wade T.</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1"/>
+        <xref ref-type="corresp" rid="cor1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Holyst</surname>
+          <given-names>Herbert A.</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1"/>
+      </contrib>
+    </contrib-group>
+    <aff id="I1">Department of Pathology and Laboratory Medicine, School of Medicine, University of Pennsylvania, 207 John Morgan Bldg., Philadelphia, PA 19104-6082, USA</aff>
+    <author-notes>
+      <corresp id="cor1">*Wade T. Rogers: <email>rogersw@mail.med.upenn.edu</email></corresp>
+      <fn fn-type="other">
+        <p>Recommended by Raphael Gottardo</p>
+      </fn>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <year>2009</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>24</day>
+      <month>9</month>
+      <year>2009</year>
+    </pub-date>
+    <volume>2009</volume>
+    <elocation-id>193947</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>1</day>
+        <month>4</month>
+        <year>2009</year>
+      </date>
+      <date date-type="accepted">
+        <day>18</day>
+        <month>6</month>
+        <year>2009</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2009 W. T. Rogers and H. A. Holyst.</copyright-statement>
+      <copyright-year>2009</copyright-year>
+      <license xlink:href="https://creativecommons.org/licenses/by/3.0/">
+        <license-p>This is an open access article distributed under the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p>A new software package called flowFP for the analysis of flow cytometry data is introduced. The package, which is tightly integrated with other Bioconductor software for analysis of flow cytometry, provides tools to transform raw flow cytometry data into a form suitable for direct input into conventional statistical analysis and empirical modeling software tools. The approach of flowFP is to generate a description of the multivariate probability distribution function of flow cytometry data in the form of a “fingerprint.” As such, it is independent of a presumptive functional form for the distribution, in contrast with model-based methods such as Gaussian Mixture Modeling. FlowFP is computationally efficient and able to handle extremely large flow cytometry data sets of arbitrary dimensionality. Algorithms and software implementation of the package are described. Use of the software is exemplified with applications to data quality control and to the automated classification of Acute Myeloid Leukemia.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec id="sec1">
+    <title>1. Introduction</title>
+    <p>Flow cytometry (FC) produces multidimensional biological information at the level of the cellular compartment, and over very large numbers of cells. As such it is ideally suited to a wide variety of investigations for which cellular context and large sample observations are important. In recent years the technology of FC has undergone appreciable development [<xref rid="B1" ref-type="bibr">1</xref>, <xref rid="B2" ref-type="bibr">2</xref>] with the introduction of digital signal processing electronics [<xref rid="B3" ref-type="bibr">3</xref>], multiple lasers, increasing numbers of fluorescence detectors, and robotic automation, both in sample preparation [<xref rid="B4" ref-type="bibr">4</xref>] and in instrumental data collection [<xref rid="B5" ref-type="bibr">5</xref>]. The recent development of new reagents [<xref rid="B6" ref-type="bibr">6</xref>] that enable increasing assay complexity has also been rapid and accelerating. Given the scope and pace of these developments, the bottleneck in many FC experiments has shifted from the wet laboratory to the computer laboratory; that is to say, data analysis [<xref rid="B1" ref-type="bibr">1</xref>].</p>
+    <p>FC data are typically analyzed using graphically driven approaches. Subsets of cells (events) are delineated usually in one- or two-dimensional histograms or “dotplots” in a procedure termed “gating.” Gates of differing shapes including rectangular, circular, elliptical, or arbitrary polygonal contours may be specified. The gating process is frequently applied in a sequential fashion, with the numbers of events inside successive gates falling monotonically from step to step. Subsets determined via gating are typically then quantified with respect to their expression patterns in the dimensions of multiparameter space not utilized for gating, often by simply counting proportions of the subsets that are positive or negative for each of the markers of interest for that subset. Several commercially available software packages have been extensively optimized to support this kind of visually guided analysis workflow, for example, FlowJo (Treestar Inc, Ashland, OR), WinList (Verity Software House, Topsham, ME), and FCSExpress (De Novo Software, Los Angeles, CA).</p>
+    <p>Manual gating is a highly effective means of analysis of flow cytometry data, especially in cases where the application of expert judgment in the visual design of gating strategies may be able to isolate events of biological interest in the presence of confounding experimental (or biological) variations that will be difficult to account for automatically. Nevertheless, manual gating has three main drawbacks [<xref rid="B7" ref-type="bibr">7</xref>–<xref rid="B9" ref-type="bibr">9</xref>]. First, the choice of gates is often subjective, particularly in the not-unusual situation where the distribution is broad and smooth. This lack of objective criteria is problematic, especially when different samples may show different types of “excursions” from the average/normal case. Second, because gates are specified by manually drawing regions on a graph using a computer mouse, the process is very labor intensive and time consuming. Finally, because gating and regions of interest are determined by the data analyst based on his or her experience, there may be interesting and informative features that exist within the full ungated multivariate distribution of events but that nevertheless escape detection in this analysis paradigm.</p>
+    <p>A number of automated gating procedures have been developed with the aim of reducing tedium as well as increasing objectivity in the gating process. Notwithstanding this, a strong need still remains for computational tools that transform and represent multiparameter flow cytometric data in a form efficiently amenable to machine learning and data mining.</p>
+    <p>We have developed a software package called flowFP to address these limitations in conventional approaches to the analysis of FC data. The broad aim of the package is to directly transform raw FC list-mode data into a representation suitable for direct input to other statistical analysis and empirical modeling tools. Thus, it is useful to think of flowFP as an intermediate step between the acquisition of high-throughput FC data on the one hand, and empirical modeling, machine learning, and knowledge discovery on the other.</p>
+  </sec>
+  <sec id="sec2">
+    <title>2. Materials and Methods</title>
+    <sec sec-type="subsection" id="sec2.1">
+      <title>2.1. Algorithm Description</title>
+      <p>The software package described herein, flowFP, implements and integrates ideas put forth in [<xref rid="B10" ref-type="bibr">10</xref>, <xref rid="B11" ref-type="bibr">11</xref>]. FlowFP utilizes the Probability Binning (PB) algorithm [<xref rid="B10" ref-type="bibr">10</xref>] to subdivide multivariate space into hyper-rectangular regions that contain nearly equal numbers of events. According to the vernacular of flow cytometry, the axes describing a multivariate space are referred to as “parameters.” Here we will use the term “variable” so as to avoid confusion with the nomenclature of “parameter” as used in the statistics literature. Regions (bins) are determined by (a) finding the variable whose variance is highest, (b) dividing the population at the median of this variable which results in two bins, each with half of the events, and (c) repeating this process for each subset in turn. Thus, at the first level of binning the population is divided into two bins. At the second level, each of the two “parent” bins is divided into two “daughter” bins, and so forth. The final number of bins <italic>n</italic> is determined by the number of levels <italic>l</italic> of recursive subdivision, such that <italic>n</italic> = 2<sup><italic>l</italic></sup>. </p>
+      <p>This binning procedure is typically carried out for a collection of samples (instances), called a “training set.” The result of the process models the structure of the multivariate space occupied by the training set by the way it constructs bins of varying size and shape and is thus termed a “model” of the space (not to be confused with modeling approaches that fit data to a parameterized model or set of models). The model is then applied to another set of samples (which may or may not include instances from the training set). This operation results in a feature vector of event counts in each bin of the model for each instance in the set. These feature vectors are, in the context of a specific model, a unique description of the multivariate probability distribution function for each instance in the set of samples, and thus are aptly referred to as “fingerprints.”</p>
+      <p>Although flowFP generates bins using the PB algorithm, the way it utilizes the resulting fingerprints is similar to the methods described in [<xref rid="B11" ref-type="bibr">11</xref>]. Each element of a fingerprint represents the number of events in a particular subregion of the model. Although it may not be known <italic>a priori</italic> which of these regions are informative with respect to an experimental question, it is possible to determine this by using appropriate statistical tests, along with corrections for multiple comparisons, to ascertain which regions (if any) are differentially populated in two or more groups of samples. If we regard the number of events in a bin as one of <italic>n</italic> features describing an instance, then the statistical determination of informative subregions is clearly seen to be a feature selection procedure. </p>
+      <p>Fingerprint features are useful in two distinct modes. First, all or a selected subset of features can be used in clustering or classification approaches to predict the class of an instance based on its similarity to groups of instances. Second, the events within selected, highly informative bins can be visualized within their broader multivariate context in order to interpret the output of the modeling process. This step is crucial in that it provides a means to develop new hypotheses for FC-derived biomarkers within the context of existing reagent panels.</p>
+    </sec>
+    <sec sec-type="subsection" id="sec2.2">
+      <title>2.2. Software Implementation</title>
+      <p>FlowFP is implemented in the open-source R Statistical Computing Environment [<xref rid="B12" ref-type="bibr">12</xref>] and is freely available as part of Bioconductor [<xref rid="B13" ref-type="bibr">13</xref>]. Within Bioconductor a framework has been created for handling FC data known as flowCore [<xref rid="B14" ref-type="bibr">14</xref>, <xref rid="B15" ref-type="bibr">15</xref>]. FlowFP is one of a growing number of Bioconductor packages integrated within this framework and thus able to interoperate with other flowCore-compliant tools as well as with the full range of downstream statistical analysis and machine learning tools available in R. This integration enables flexible creation of powerful high-throughput analysis procedures for large FC data sets.</p>
+      <p>FlowFP uses the S4 object-oriented facility of R. Computationally intensive parts are written in the C programming language for efficiency. FlowFP is built around a set of three S4 classes, each with a constructor of the same name as the class name. In addition there are a number of methods for data accession, manipulation, and visualization.</p>
+      <sec sec-type="subsubsection" id="sec2.2.1">
+        <title>2.2.1. FlowFPModel</title>
+        <p>FlowFPModel is the fundamental class for the flowFP package. The flowFPModel constructor takes a collection of one or more list-mode instances which are represented in the flowCore framework as a flowFrame (for a single instance) or a flowSet (for a collection of instances), respectively (henceforth we will refer to flowFrames and flowSets, the original list-mode data being implied). In addition to the required argument, flowFPModel has optional arguments that allow control over the number of levels of recursive subdivision and the set of variables to be considered in the binning process. By default all variables in the input flowSet are considered, but if this argument is provided, any variables not listed are ignored. The constructor emits an object of type flowFPModel, which encapsulates a complete representation of the binning process that is used later to construct fingerprints.</p>
+      </sec>
+      <sec sec-type="subsubsection" id="sec2.2.2">
+        <title>2.2.2. FlowFP</title>
+        <p>The flowFP constructor takes a flowFrame or a flowSet as its only required argument, and an optional flowFPModel. If no flowFPModel is supplied, flowFP computes a model (by calling flowFPModel internally). Regardless the source of the model, flowFP applies the model to each of the instances in its input. The resulting flowFP object extends the flowFPModel class and contains two additional important slots to store a matrix of counts and a list of tags. The counts matrix has dimensions <italic>m</italic> × <italic>n</italic>, where <italic>m</italic> is the number of instances in the input flowSet (or one if a flowFrame is provided), and <italic>n</italic> is the number of features in the model. The tags slot is a list of <italic>m</italic> vectors, each of which has <italic>e</italic> elements, where <italic>e</italic> is the number of events in the corresponding frame in the input flowSet. The value for each element of the tag vector represents the bin number into which the corresponding event fell during the fingerprinting procedure. This is useful for visualization or gating based on fingerprints as will be illustrated below.</p>
+      </sec>
+      <sec sec-type="subsubsection" id="sec2.2.3">
+        <title>2.2.3. FlowFPPlex</title>
+        <p>The flowFPPlex is a container object which facilitates combining, processing, and visualizing large collections of flowFP objects which are all derived from the same set of instances. The flowFPPlex constructor takes a list of flowFP objects. The flowFPPlex manages the logical association of a set of flowFP descriptions. In particular, it extends the counts matrices of its members “horizontally” so as to create a unified representation of the entire collection of fingerprints. The main utility of the flowFPPlex is its support for creating a merged representation of a set of instances acquired using a multitube panel, with different flowFPModels for each tube in the panel.</p>
+      </sec>
+      <sec sec-type="subsubsection" id="sec2.2.4">
+        <title>2.2.4. Generic Functions</title>
+        <p>A number of other methods have been provided to facilitate interaction with and analysis of fingerprinting results. Chief among these are visualization methods that aid in the understanding and interpretation of fingerprinting results (see Figures S1–S3 in Supplementary Material available online at doi:10.1155/2009/193947). A few other accessor methods deserve special mention.</p>
+        <p><bold>nRecursions(obj)</bold>. This generic function returns the number of levels of recursive subdivision of its argument. FlowFP, flowFPPlex, and flowFPModel all implement the method. Furthermore, the flowFP class implements the “set” method. This enables the user to compute a model at some fairly high resolution, and then to derive fingerprints at that resolution or any lower resolution without recomputing the model. This is possible because fingerprinting is recursive, so that given any high-resolution model, all models of lower resolution can be derived from it.</p>
+        <p><bold>counts(obj)</bold>. This generic function returns a matrix of the number of events per instance and per bin. FlowFP and flowFPPlex classes implement this method, facilitating creation of fingerprint matrices suitable for processing by downstream methods outside of the flowFP package. The method has an optional argument “transformation” that can take on values “raw” (returns the actual event counts for each bin), “normalize” (normalizes by dividing raw counts by the expected number of events), or “log2norm” (like normalize except that it further takes the log<sub>2</sub> of the result). </p>
+        <p><bold>sampleNames(obj) and sampleClasses(obj)</bold>. These generic functions set or get sample identifiers for objects of class flowFP or flowFPPlex. By default, for flowFPs, sample names are derived from the flowSet. However they can be overridden by the set method, providing flexibility to handle cases where the sample names in a flowSet are not appropriate. When adding fingerprints to a flowFPPlex, sample names (and if present, sample classes) are compared, and the join operation is not permitted unless names and classes among all fingerprints in the flowFPPlex are identical.</p>
+        <p><bold>parameters(obj)</bold>. This generic function returns the light scatter and/or fluorescence variables involved in binning, either for a flowFPModel or a flowFP. The function is able to report both the variables that were considered for binning as well as those that actually participating (if the global variance of a variable is small enough it may never be selected for division).</p>
+        <p><bold>tags(fp)</bold>. This generic function returns the tags slot of a flowFP object, described in <xref ref-type="sec" rid="sec2.2.2">Section 2.2.2</xref>. This is useful for visualization and gating operations.</p>
+        <p><bold>binBoundary(obj)</bold>. This generic function reports a list of multivariate rectangles corresponding to the limits of the bins. FlowFP and flowFPModel classes both implement this method. This information is also useful for visualization and gating operations.</p>
+      </sec>
+    </sec>
+    <sec sec-type="subsection" id="sec2.3">
+      <title>2.3. Data and Characteristics</title>
+      <p>Deidentified flow cytometric data from peripheral blood or bone marrow aspirate samples were provided by Clarient, Inc. (Aliso Viejo, CA) along with primary diagnoses by experienced hematopathologists. After application of QC filters including that described in <xref ref-type="sec" rid="sec3.1.1">Section 3.1.1</xref> the data set included 42 cases diagnosed as Acute Myeloid Leukemia (AML) and 309 cases that were determined to be immunophenotypically normal. For the purposes of this study physician diagnosis was regarded as the ground truth.</p>
+      <p>Data were collected over a one-year period, using the panel described in <xref ref-type="table" rid="tab1">Table 1</xref>. Briefly, samples were lysed with ammonium chloride, then washed with PBS, centrifuged and resuspended. Blocking was accomplished by incubating with RPMI-1640 supplemented with 10% rabbit serum for 30 minutes at 37°C. Cells were then pelleted, resuspended in RPMI-1640, and adjusted to between 4–8 × 10<sup>6</sup> cells/mL. Antibody staining was accomplished by incubating in the dark at room temperature for 15 ± 5 minutes 100 <italic>μ</italic>L of the adjusted cell suspension with 40 <italic>μ</italic>L of pretitrated antibody cocktail per tube. For the viability tube, 10 <italic>μ</italic>L of 7AAD was added in place of the antibody cocktail. After staining each tube was washed with 3 mL PBS, vortexed, pelleted, and resuspended in 500 <italic>μ</italic>L of PBS prior to running on the flow cytometer. Five-color immunofluorescence along with forward and side scatter data were collected on two FC-500 cytometers (Beckman Coulter, Miami, FL). Data were collected for 3 × 10<sup>4</sup> events for each tube.</p>
+    </sec>
+  </sec>
+  <sec id="sec3">
+    <title>3. Results</title>
+    <sec sec-type="subsection" id="sec3.1">
+      <title>3.1. Gating Quality Control</title>
+      <sec sec-type="subsubsection" id="sec3.1.1">
+        <title>3.1.1. Tube Data</title>
+        <p>FlowFP was used to assess the consistency of event distributions in variables common to a multiple-tube panel. Using the panel described in <xref ref-type="table" rid="tab1">Table 1</xref>, note that CD45 is common to all tubes except the viability tube. Frequently [<xref rid="B16" ref-type="bibr">16</xref>–<xref rid="B22" ref-type="bibr">22</xref>], the distribution of events in the Side Scatter versus CD45 projection (referenced as parameters 2 and 5 in the code below) from a single tube is used to gate an entire collection of tubes in order to save time. If the CD45 versus SSC distribution differs among the tubes, errors due to incorrect subsetting will occur, but may not be readily apparent without careful study of the gating plots.</p>
+        <p>Using flowFP, in order to rapidly detect consistency of CD45 versus SSC distributions without the need to look at dotplots, we (1) create a flowSet comprising tubes 1–7 of a sample, (2) create a model, using the common variables CD45 and SSC, from the flowSet, (3) create fingerprints of the same samples with respect to this model, and (4) display the result. The R commands to accomplish this using flowFP are as shown in <xref ref-type="fig" rid="alg1">Algorithm 1</xref> (Code Fragment 1).</p>
+        <p><xref ref-type="fig" rid="fig1">Figure 1(a) </xref>shows the resulting plot. Each tube is represented by one of the colored plots, with the CD45 versus SSC fingerprint shown as a line. The standard deviation of the fingerprint values around their mean is shown for each tube to provide a quantitative measure of the degree to which a tube deviates from the norm of all tubes combined. The same value is mapped to colors, shown in the color legend above the plots, to provide a quick visual representation of the consistency of the distributions. For comparison, <xref ref-type="fig" rid="fig1">Figure 1(b) </xref>shows a similar result for a sample that displayed poor CD45 versus SSC consistency. Note that Tube 5 in that sample differed markedly from the other tubes in the panel, as did Tube 4, but to a lesser extent.</p>
+      </sec>
+      <sec sec-type="subsubsection" id="sec3.1.2">
+        <title>3.1.2. 96-Well Plate Data</title>
+        <p>High-throughput FC data are flexibly accommodated in the FlowFP package. For data derived from 96-well plates, a plot method of type “plate” can be used to display a qc-style plot in a layout that reflects the structure of the plate. <xref ref-type="fig" rid="fig2">Figure 2 </xref>shows such a result. Data were obtained [<xref rid="B23" ref-type="bibr">23</xref>, <xref rid="B24" ref-type="bibr">24</xref>] in which SSC, CD3, and CD4 (parameters 2, 5, and 7) were used to gate the entire plate of data. The R commands shown in <xref ref-type="fig" rid="alg2">Algorithm 2</xref> (Code Fragment 2) were used to produce the plot in <xref ref-type="fig" rid="fig2">Figure 2</xref>.</p>
+        <p>Note that in this case we illustrate the use of an implicit model by omitting the model from the flowFP constructor. The utility of such a rapid and straightforward quality assurance tool is most apparent in the case of this sort of high-throughput data.</p>
+      </sec>
+    </sec>
+    <sec sec-type="subsection" id="sec3.2">
+      <title>3.2. Automated Classification of Acute Myeloid Leukemia</title>
+      <p>We now turn to the application of flowFP to support a machine learning workflow. The aim here is to illustrate the utility of fingerprint-based approaches in general, and flowFP in particular, by automatically categorizing samples into one of two <italic>a priori</italic> known classes, AML or Normal. The dataset described in <xref ref-type="sec" rid="sec2.3">Section 2.3</xref> was used. Tube 1 (isotype control) and Tube 8 (viability) were ignored for the purpose of this analysis, leaving 6 tubes, numbered 2–7. </p>
+      <p>We divided the samples randomly into a balanced training set comprising 21 of 42 AML cases and 21 of 309 Normal cases. We elected to balance the training set so as not to bias the classifier towards the more heavily represented Normal case. The remaining 21 AML cases and 288 Normal cases were assigned to the test set. Modeling and fingerprinting were done on a per-tube basis. Models were computed from training data only, in order to avoid biasing the prediction of the test set. We also employed a “differential modeling” procedure by creating two separate models, one for the AML training instances and one for the Normal training instances. Then, fingerprints from each tube and for each model were computed and aggregated into a flowFPPlex for further analysis. Fingerprinting was performed on all variables. The R code fragment implementing this procedure is shown in <xref ref-type="fig" rid="alg3">Algorithm 3</xref> (Code Fragment 3).</p>
+      <p>Models were computed at a resolution level <italic>l</italic> = 11, producing <italic>n</italic> = 2048 bins. This resolution was determined using the default automatic setting of flowFPModel which implements the heuristic that the typical (median) number of events in each instance of the training set is binned such that the number of events per bin is not less than 8. The resulting flowFPPlex therefore had 6 tubes × 2 models × 2048 bins = 24 576 features.</p>
+      <p>We extracted feature values from the flowFPPlex using the accessor function <monospace>counts(plex, transformation=</monospace>“<monospace>log2norm</monospace>”<monospace>)</monospace> which performs a logarithmic transformation on the normalized counts matrix.</p>
+      <p>Using only the instances in the training set, we performed a Mann-Whitney test on each feature independently (there are many methods of feature selection, a discussion of which is beyond the scope of this report). We selected those features which had a 99.9% likelihood of being differentially distributed between the two classes, after performing the Benjamini-Hochberg correction for multiple comparisons [<xref rid="B25" ref-type="bibr">25</xref>, <xref rid="B26" ref-type="bibr">26</xref>]. This led to the selection of 1681 informative features out the original 24 576 features. Using the reduced feature set we trained a Support Vector Machine (SVM) classifier [<xref rid="B27" ref-type="bibr">27</xref>, <xref rid="B28" ref-type="bibr">28</xref>] using a radial basis function kernel. We then blindly predicted the class of the test set using this classifier by assigning the predicted class probabilities into three equal ranges. The results are shown in <xref ref-type="fig" rid="fig3">Figure 3</xref>. Sensitivity and specificity are 90.5% (19/21) and 99.3% (278/288), respectively, with 9.5% (2) of AML instances and 2.8% (8) of Normal instances falling into the Uncertain group. No cross validation was performed here for clarity and brevity of presentation. For a better assessment of model performance this would be required. Interestingly, repeating the analysis without the “differential modeling” method described above (i.e., using AML and Normal combined training instances to compute the models for each tube) resulted in a similar result, but with a slightly poorer sensitivity of 85.7% (data not shown).</p>
+      <p>The time required to compute the fingerprints was 1.8 seconds per sample, requiring 5.2 GB of memory on a machine running the Linux 2.6 SMP 64-bit kernel with a 2.83 GHz processor. Recall that this represents, for each sample, the construction of 2 fingerprints for each of 6 tubes, each of which has 3 × 10<sup>4</sup> events. Compared with mixture modeling approaches that are used for analysis of FC data (e.g., [<xref rid="B8" ref-type="bibr">8</xref>, <xref rid="B29" ref-type="bibr">29</xref>]) flowFP is a computationally inexpensive method of analysis of FC data.</p>
+      <p><xref ref-type="fig" rid="fig4">Figure 4(d) </xref>shows the distribution of informative features selected as described above with respect to tube number. Tubes 7 and 4 appear to be the most informative for distinguishing AML from Normal. Figures <xref ref-type="fig" rid="fig4">4(a)</xref>–<xref ref-type="fig" rid="fig4">4(c) </xref> display the informative subset of features (bins) that fell in Tube 7 and which had higher likelihood, on average, in the AML group compared with the Normal group. Informative features characteristic of AML can be described as low-intermediate SSC, CD45 dim, and negative for CD3, CD19, and CD10. The CD45 versus SSC distribution of the informative bins corresponds to a region containing blasts and monocytes.</p>
+      <p>A more comprehensive although less detailed picture of information distribution in the panel is illustrated in <xref ref-type="fig" rid="fig5">Figure 5</xref>. This parallel coordinate view enables the appreciation of expression patterns across the entire panel of tubes. Notice that the AML pattern in Tube 7 displayed in <xref ref-type="fig" rid="fig5">Figure 5 </xref>indicates the same CD45(dim), CD3(−), CD10(−) blast phenotype shown in <xref ref-type="fig" rid="fig4">Figure 4</xref>. In Tube 4 the phenotype of AML-informative bins is consistent with blasts expressing CD15(dim to −), CD13(dim to +), CD16(−), CD56(−) (see also Figure S4 in Supplementary Material). Separation of the bundles of trajectories corresponding to AML and Normal events is the widest in Tubes 4, 6, and 7, consistent with the distribution of information across the tubes shown in <xref ref-type="fig" rid="fig4">Figure 4(a)</xref>. By contrast, Tube 5 has intertwined bundles, apparently in keeping with the fact that Tube 5 held the fewest informative fingerprinting features.</p>
+    </sec>
+  </sec>
+  <sec id="sec4">
+    <title>4. Discussion</title>
+    <p>With recent technological advances, FC is now capable of operating as a true high-throughput technique. A key enabling requirement however is the need to automate data analysis for speed, much as automation in sample preparation and data acquisition have accelerated the rate of generation of data and thereby enabled high-throughput FC. This requirement inevitably drives movement away from human-drawn, visually-based gating which is the single most significant obstacle preventing a true high-throughput FC workflow.</p>
+    <p>We have shown that fingerprint-based analysis of FC data represents an effective bridge between large amounts of FC data and the world of machine learning and knowledge discovery techniques. It effectively captures informative features of a multivariate probability distribution function and does so in a computationally efficient way. As such it represents one of the tools that may help to bring FC into a new era of application to problems previously not feasible due to limitations in data analysis techniques.</p>
+    <p>It is important to note that fingerprinting of FC data is not without limitations. First, we note that fingerprinting approaches are sensitive to differences in multivariate probability distributions no matter their origin. Thus, instrumental, reagent or other systematic variations may cause spurious signals as large or larger than true biological effects. For this reason it is important to measure and control for these effects [<xref rid="B1" ref-type="bibr">1</xref>]. In fact, fingerprinting itself can be used to assess and to help control for systematic effects, as was illustrated in <xref ref-type="sec" rid="sec3.1">Section 3.1</xref>. </p>
+    <p>Second, because fingerprinting is, in essence, the creation of a multivariate histogram, it responds to factors that might artificially emphasize certain bins in preference to others. In particular, events may pile up on either the zero or full-scale axis for one or more variables. This situation frequently results from values that would be negative due to compensation or background subtraction (causing pileup on the zero axis) or at the other end of the scale, values that exceed the dynamic range of the signal detection apparatus causing pileup at full scale. At either end this results falsely in an apparent high density of events. Fingerprinting bins are thus “attracted” to these locations, causing a distortion in the proper characterization of the true multivariate probability distribution function. One might be tempted to simply remove these values. However this is problematic since they can be very important. For example, values piling up at full scale are the brightest of all. A better solution is to adjust detector gains to minimize or eliminate full-scale pileup, to use high-dynamic-range detectors and electronics and to use modified data transformations such as the biexponential transform to smoothly distribute values at or below zero.</p>
+    <p>Just as scaling and transformation of data are important for visualization of multivariable distributions [<xref rid="B30" ref-type="bibr">30</xref>–<xref rid="B32" ref-type="bibr">32</xref>], so they are also important for fingerprinting. Data acquired using linear amplifiers such as exist in some modern instruments, or data that have been “linearized” from instruments with logarithmic amplifiers, tend to be heavily skewed to the left, since in most cases data distributions are quasi-log-normally distributed. Bins determined from such data thus have extreme variations in size. A good rule of thumb is to use a data transformation that produces the most spread-out distribution, which also is often the transformation most effective for clear visualization of the distribution. For example, Forward Scatter data are almost always displayed on a linear scale, whereas fluorescence data are usually displayed on a logarithmic or biexponential scale. For a good review of scaling and transformation of flow cytometric data, the reader is referred to [<xref rid="B32" ref-type="bibr">32</xref>].</p>
+    <p>A key limitation for fingerprinting approaches, including flowFP, relates to the number of events available for analysis. Since the objective of probability binning is to find bins containing equal numbers of events, it follows that once the number of bins is on the order of the number of events in an instance, the expected number of events per bin will be of order unity. In this case differences in bin counts will not be statistically significant. On the other hand, if the dimensionality of the data set is high, the average number of times any variable will be divided in the binning process will be small. For example, in a dataset with 18 variables, if we demand at least, say, 10 events per bin for statistical accuracy, about 2.6 × 10<sup>6</sup> events would be required in order that each variable is divided on average into at least two bins. Thus, the spatial resolution of binning is limited by the number of events collected, and as the number of variables increases, the number of events needed to maintain resolution increases geometrically.</p>
+    <p>FlowFP has been peer reviewed and accepted for inclusion in the next release of Bioconductor scheduled for October 2009. Prior to that date the development version may be downloaded from <ext-link ext-link-type="uri" xlink:href="http://www.bioconductor.org/">http://www.bioconductor.org/</ext-link>. The package is currently available for all architectures supported by Bioconductor. In addition to the functionality illustrated here, the authors plan to improve some of the visualization methods, specifically to enable better use of color, for example to represent statistical significance of bins. One of the advantages of integration with other flow cytometry Bioconductor packages is the ease of comparing and combining analysis methodologies. For example, it will be of interest to compare the performance of fingerprinting with other methods such as clustering and mixture modeling (flowClust). By the same token, such methods might be used in concert. For example, it is possible that clustering could be used to define major cell categories (e.g., B cells, T cells, granulocytes, etc.), within which fingerprinting may efficiently parse subsets correlated with function.</p>
+    <p>In summary, flowFP provides the flow cytometry community with a new tool that transforms FC data such that a wide range of other data analysis algorithms may be brought to bear. It creates a representation of FC data that preserves information embedded in the multivariate probability distribution function while at the same time presenting the information in a way that can be utilized easily by other software tools. Because it is tightly integrated in Bioconductor with several other FC-related packages and also exists in the broader R statistical computing environment, flowFP can interoperate with a very wide range of open-source analysis techniques. This power and flexibility enables a broad range of new computational analysis approaches that have potential in two distinct areas. First, it will facilitate the retrospective mining of FC data, seeking novel biomarkers that may be lurking in existing data. Second, it breaks the data analysis bottleneck that has up until now limited the full exploitation of FC in clinical applications.</p>
+  </sec>
+  <sec sec-type="supplementary-material" id="supplementary-material-sec">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="f1">
+      <caption>
+        <p>These supplementary figures illustrate some of the additional visualization capabilities of flowFP. Figure S1 shows the visualization of a flowFPModel. Figure S1(B) shows the bins of a 2-dimensional model. Figures S1(C-F) show the use of transparency in the display of bins to reveal the underlying distribution depicted in dot-plot form. Figure S2 shows several methods of illustrating fingperprints in order to facilitate comparisons across instances. Figure S3 links fingerprint index with the spatial location of events in specific fingerprint bins by way of color. Finally, Figure S4 shows the visualization of informative features derived from Tube 4, as described in Section 3.2 of the text.</p>
+      </caption>
+      <media xlink:href="193947.f1.doc">
+        <caption>
+          <p>Click here for additional data file.</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>Acknowledgments</title>
+    <p>The authors wish to express their deep gratitude to Jonni Moore, Hank Pletcher, Andrew Bantly, Rich Schretzenmair, and all of the people of the University of Pennsylvania Flow Cytometry Resource for providing intellectual fuel and many reasons to create flowFP. They thank Florian Hahne, Nolwenn Le Meur, and Ryan Brinkman for advice and assistance in programming in R and integration with flowCore. They thank Bruce Bagwell for stimulating discussions regarding applications of fingerprinting of FC data. They are most especially grateful to Clarient, Inc. for generously making available the data sets used to illustrate the utility of flowFP. Finally, they thank the University of Pennsylvania PathBioresource and the Department of Pathology and Laboratory Medicine for financial support.</p>
+  </ack>
+  <ref-list>
+    <ref id="B1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chattopadhyay</surname>
+            <given-names>PK</given-names>
+          </name>
+          <name>
+            <surname>Hogerkorp</surname>
+            <given-names>C-M</given-names>
+          </name>
+          <name>
+            <surname>Roederer</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>A chromatic explosion: the development and future of multiparameter flow cytometry</article-title>
+        <source>
+          <italic>Immunology</italic>
+        </source>
+        <year>2008</year>
+        <volume>125</volume>
+        <issue>4</issue>
+        <fpage>441</fpage>
+        <lpage>449</lpage>
+        <pub-id pub-id-type="pmid">19137647</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B2">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McCoy</surname>
+            <given-names>JP</given-names>
+            <suffix>Jr.</suffix>
+          </name>
+        </person-group>
+        <article-title>Basic principles of flow cytometry</article-title>
+        <source>
+          <italic>Hematology/Oncology Clinics of North America</italic>
+        </source>
+        <year>2002</year>
+        <volume>16</volume>
+        <issue>2</issue>
+        <fpage>229</fpage>
+        <lpage>243</lpage>
+        <pub-id pub-id-type="pmid">12094472</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Murthi</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Sankaranarayanan</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Xia</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Lambert</surname>
+            <given-names>GM</given-names>
+          </name>
+          <name>
+            <surname>Rodriguez</surname>
+            <given-names>JJ</given-names>
+          </name>
+          <name>
+            <surname>Galbraith</surname>
+            <given-names>DW</given-names>
+          </name>
+        </person-group>
+        <article-title>Performance analysis of a dual-buffer architecture for digital flow cytometry</article-title>
+        <source>
+          <italic>Cytometry Part A</italic>
+        </source>
+        <year>2005</year>
+        <volume>66</volume>
+        <issue>2</issue>
+        <fpage>109</fpage>
+        <lpage>118</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kelliher</surname>
+            <given-names>AS</given-names>
+          </name>
+          <name>
+            <surname>Parent</surname>
+            <given-names>DW</given-names>
+          </name>
+          <name>
+            <surname>Anderson</surname>
+            <given-names>DC</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Novel use of the BD FAGS<sup>TM</sup> SPA to automate custom monoclonal antibody panel preparations for immunophenotyping</article-title>
+        <source>
+          <italic>Cytometry Part B</italic>
+        </source>
+        <year>2005</year>
+        <volume>66</volume>
+        <issue>1</issue>
+        <fpage>40</fpage>
+        <lpage>45</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gates</surname>
+            <given-names>IV</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Shambaugh</surname>
+            <given-names>C</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Quantitative measurement of varicella-zoster virus infection by semiautomated flow cytometry</article-title>
+        <source>
+          <italic>Applied and Environmental Microbiology</italic>
+        </source>
+        <year>2009</year>
+        <volume>75</volume>
+        <issue>7</issue>
+        <fpage>2027</fpage>
+        <lpage>2036</lpage>
+        <pub-id pub-id-type="pmid">19201967</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chattopadhyay</surname>
+            <given-names>PK</given-names>
+          </name>
+          <name>
+            <surname>Price</surname>
+            <given-names>DA</given-names>
+          </name>
+          <name>
+            <surname>Harper</surname>
+            <given-names>TF</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Quantum dot semiconductor nanocrystals for immunophenotyping by polychromatic flow cytometry</article-title>
+        <source>
+          <italic>Nature Medicine</italic>
+        </source>
+        <year>2006</year>
+        <volume>12</volume>
+        <issue>8</issue>
+        <fpage>972</fpage>
+        <lpage>977</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Achuthanandam</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Quinn</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Capocasale</surname>
+            <given-names>RJ</given-names>
+          </name>
+          <name>
+            <surname>Bugelski</surname>
+            <given-names>PJ</given-names>
+          </name>
+          <name>
+            <surname>Hrebien</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Kam</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Sequential univariate gating approach to study the effects of erythropoietin in murine bone marrow</article-title>
+        <source>
+          <italic>Cytometry Part A</italic>
+        </source>
+        <year>2008</year>
+        <volume>73</volume>
+        <issue>8</issue>
+        <fpage>702</fpage>
+        <lpage>714</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B8">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chan</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Feng</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Ottinger</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Foster</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>West</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Kepler</surname>
+            <given-names>TB</given-names>
+          </name>
+        </person-group>
+        <article-title>Statistical mixture modeling for cell subtype identification in flow cytometry</article-title>
+        <source>
+          <italic>Cytometry Part A</italic>
+        </source>
+        <year>2008</year>
+        <volume>73</volume>
+        <issue>8</issue>
+        <fpage>693</fpage>
+        <lpage>701</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lloyd-Evans</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Guest</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Austin</surname>
+            <given-names>EB</given-names>
+          </name>
+          <name>
+            <surname>Scott</surname>
+            <given-names>ML</given-names>
+          </name>
+        </person-group>
+        <article-title>Use of a phycoerythrin-conjugated anti-glycophorin A monoclonal antibody as a double label to improve the accuracy of FMH quantification by flow cytometry</article-title>
+        <source>
+          <italic>Transfusion Medicine</italic>
+        </source>
+        <year>1999</year>
+        <volume>9</volume>
+        <issue>2</issue>
+        <fpage>155</fpage>
+        <lpage>160</lpage>
+        <pub-id pub-id-type="pmid">10354386</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Roederer</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Moore</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Treister</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Hardy</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Herzenberg</surname>
+            <given-names>LA</given-names>
+          </name>
+        </person-group>
+        <article-title>Probability binning comparison: a metric for quantitating multivariate distribution differences</article-title>
+        <source>
+          <italic>Cytometry</italic>
+        </source>
+        <year>2001</year>
+        <volume>45</volume>
+        <issue>1</issue>
+        <fpage>47</fpage>
+        <lpage>55</lpage>
+        <pub-id pub-id-type="pmid">11598946</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rogers</surname>
+            <given-names>WT</given-names>
+          </name>
+          <name>
+            <surname>Moser</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Holyst</surname>
+            <given-names>HA</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Cytometric fingerprinting: quantitative characterization of multivariate distributions</article-title>
+        <source>
+          <italic>Cytometry Part A</italic>
+        </source>
+        <year>2008</year>
+        <volume>73</volume>
+        <issue>5</issue>
+        <fpage>430</fpage>
+        <lpage>441</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B12">
+      <label>12</label>
+      <element-citation publication-type="book">
+        <collab>R Development Core Team</collab>
+        <source>
+          <italic>R: A Language and Environment for Statistical Computing</italic>
+        </source>
+        <year>2008</year>
+        <publisher-loc>Vienna, Austria</publisher-loc>
+        <publisher-name>R Foundation for Statistical Computing</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="B13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gentleman</surname>
+            <given-names>RC</given-names>
+          </name>
+          <name>
+            <surname>Carey</surname>
+            <given-names>VJ</given-names>
+          </name>
+          <name>
+            <surname>Bates</surname>
+            <given-names>DM</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Bioconductor: open software development for computational biology and bioinformatics</article-title>
+        <source>
+          <italic>Genome Biology</italic>
+        </source>
+        <year>2004</year>
+        <volume>5</volume>
+        <issue>10</issue>
+        <fpage>p. R80</fpage>
+      </element-citation>
+    </ref>
+    <ref id="B14">
+      <label>14</label>
+      <element-citation publication-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ellis</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Haaland</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Hahne</surname>
+            <given-names>F</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>flowCore: basic structures for flow cytometry data</article-title>
+        <comment>2009, <ext-link ext-link-type="uri" xlink:href="http://bioconductor.org/packages/2.3/bioc/html/flowCore.html">http://bioconductor.org/packages/2.3/bioc/html/flowCore.html</ext-link>.</comment>
+      </element-citation>
+    </ref>
+    <ref id="B15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hahne</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>LeMeur</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Brinkman</surname>
+            <given-names>RR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>flowCore: a Bioconductor package for high throughput flow cytometry</article-title>
+        <source>
+          <italic>BMC Bioinformatics</italic>
+        </source>
+        <year>2009</year>
+        <volume>10, article 106</volume>
+      </element-citation>
+    </ref>
+    <ref id="B16">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Borowitz</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Guenther</surname>
+            <given-names>KL</given-names>
+          </name>
+          <name>
+            <surname>Shults</surname>
+            <given-names>KE</given-names>
+          </name>
+          <name>
+            <surname>Stelzer</surname>
+            <given-names>GT</given-names>
+          </name>
+        </person-group>
+        <article-title>Immunophenotyping of acute leukemia by flow cytometric analysis: use of CD45 and right-angle light scatter to gate on leukemic blasts in three-color analysis</article-title>
+        <source>
+          <italic>American Journal of Clinical Pathology</italic>
+        </source>
+        <year>1993</year>
+        <volume>100</volume>
+        <issue>5</issue>
+        <fpage>534</fpage>
+        <lpage>540</lpage>
+        <pub-id pub-id-type="pmid">8249893</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nishikawa</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Miyasaki</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Tsukaguchi</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Noma</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Nakagawa</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Narita</surname>
+            <given-names>N</given-names>
+          </name>
+        </person-group>
+        <article-title>CD45 gating of acute leukemia</article-title>
+        <source>
+          <italic>Rinsho Byori</italic>
+        </source>
+        <year>1996</year>
+        <volume>44</volume>
+        <issue>6</issue>
+        <fpage>548</fpage>
+        <lpage>553</lpage>
+        <pub-id pub-id-type="pmid">8752733</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B18">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lacombe</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Durrieu</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Briais</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Flow cytometry CD45 gating for immunophenotyping of acute myeloid leukemia</article-title>
+        <source>
+          <italic>Leukemia</italic>
+        </source>
+        <year>1997</year>
+        <volume>11</volume>
+        <issue>11</issue>
+        <fpage>1878</fpage>
+        <lpage>1886</lpage>
+        <pub-id pub-id-type="pmid">9369421</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B19">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cui</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Ma</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Lin</surname>
+            <given-names>Q</given-names>
+          </name>
+        </person-group>
+        <article-title>CD45-gating for flow cytometric immunophenotyping of leukemia</article-title>
+        <source>
+          <italic>Zhongguo Yi Xue Ke Xue Yuan Xue Bao</italic>
+        </source>
+        <year>2000</year>
+        <volume>22</volume>
+        <issue>2</issue>
+        <fpage>199</fpage>
+        <lpage>203</lpage>
+        <pub-id pub-id-type="pmid">12903529</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B20">
+      <label>20</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gelman</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Wilkening</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Analyses of quality assessment studies using CD45 for gating lymphocytes for CD3<sup>+</sup>4<sup>+</sup>%</article-title>
+        <source>
+          <italic>Cytometry Part B</italic>
+        </source>
+        <year>2000</year>
+        <volume>42</volume>
+        <issue>1</issue>
+        <fpage>1</fpage>
+        <lpage>4</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B21">
+      <label>21</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lock</surname>
+            <given-names>RJ</given-names>
+          </name>
+          <name>
+            <surname>Virgo</surname>
+            <given-names>PF</given-names>
+          </name>
+          <name>
+            <surname>Evely</surname>
+            <given-names>RS</given-names>
+          </name>
+        </person-group>
+        <article-title>Pitfalls of CD45 gating strategies in leukaemia immunophenotyping</article-title>
+        <source>
+          <italic>Clinical and Laboratory Haematology</italic>
+        </source>
+        <year>2003</year>
+        <volume>25</volume>
+        <issue>1</issue>
+        <fpage>p. 67</fpage>
+      </element-citation>
+    </ref>
+    <ref id="B22">
+      <label>22</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Maljaei</surname>
+            <given-names>SH</given-names>
+          </name>
+          <name>
+            <surname>Asvadi-E-Kermani</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Eivazi-E-Ziaei</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Nikanfar</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Vaez</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Usefulness of CD45 density in the diagnosis of B-cell chronic lymphoproliferative disorders</article-title>
+        <source>
+          <italic>Indian Journal of Medical Sciences</italic>
+        </source>
+        <year>2005</year>
+        <volume>59</volume>
+        <issue>5</issue>
+        <fpage>187</fpage>
+        <lpage>194</lpage>
+        <pub-id pub-id-type="pmid">15985726</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B23">
+      <label>23</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Inokuma</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>dela Rosa</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Schmitt</surname>
+            <given-names>C</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Functional T cell responses to tumor antigens in breast cancer patients have a distinct phenotype and cytokine signature</article-title>
+        <source>
+          <italic>Journal of Immunology</italic>
+        </source>
+        <year>2007</year>
+        <volume>179</volume>
+        <issue>4</issue>
+        <fpage>2627</fpage>
+        <lpage>2633</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B24">
+      <label>24</label>
+      <element-citation publication-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Inokuma</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>dela Rosa</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Schmitt</surname>
+            <given-names>C</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <comment>96-well plate data deposited with Flow Informatics and Computational Cytometry Society website, 2008, <ext-link ext-link-type="uri" xlink:href="http://www.ficcs.org/software.html#Data_Files">
+http://www.ficcs.org/software.html#Data_Files</ext-link>.</comment>
+      </element-citation>
+    </ref>
+    <ref id="B25">
+      <label>25</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Benjamini</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Hochberg</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>Controlling the false discovery rate-a practical and powerful approach to multiple testing</article-title>
+        <source>
+          <italic>Journal of the Royal Statistical Society Series B</italic>
+        </source>
+        <year>1995</year>
+        <volume>57</volume>
+        <issue>1</issue>
+        <fpage>289</fpage>
+        <lpage>300</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B26">
+      <label>26</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>KI</given-names>
+          </name>
+          <name>
+            <surname>van de Wiel</surname>
+            <given-names>MA</given-names>
+          </name>
+        </person-group>
+        <article-title>Effects of dependence in high-dimensional multiple testing problems</article-title>
+        <source>
+          <italic>BMC Bioinformatics</italic>
+        </source>
+        <year>2008</year>
+        <volume>9, article 114</volume>
+      </element-citation>
+    </ref>
+    <ref id="B27">
+      <label>27</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cortes</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Vapnik</surname>
+            <given-names>V</given-names>
+          </name>
+        </person-group>
+        <article-title>Support-vector networks</article-title>
+        <source>
+          <italic>Machine Learning</italic>
+        </source>
+        <year>1995</year>
+        <volume>20</volume>
+        <issue>3</issue>
+        <fpage>273</fpage>
+        <lpage>297</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B28">
+      <label>28</label>
+      <element-citation publication-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dimitriadou</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Hornik</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Leisch</surname>
+            <given-names>F</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>e1071: Misc Functions of the Department of Statistics</article-title>
+        <comment>2008, <ext-link ext-link-type="uri" xlink:href="http://cran.r-project.org/src/contrib/e1071_1.5-19.tar.gz">http://cran.r-project.org/src/contrib/e1071_1.5-19.tar.gz</ext-link>.</comment>
+      </element-citation>
+    </ref>
+    <ref id="B29">
+      <label>29</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lo</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Brinkman</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Gottardo</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Automated gating of flow cytometry data via robust model-based clustering</article-title>
+        <source>
+          <italic>Cytometry Part A</italic>
+        </source>
+        <year>2008</year>
+        <volume>73</volume>
+        <issue>4</issue>
+        <fpage>321</fpage>
+        <lpage>332</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B30">
+      <label>30</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Parks</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Roederer</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Moore</surname>
+            <given-names>WA</given-names>
+          </name>
+        </person-group>
+        <article-title>A new “logicle” display method avoids deceptive effects of logarithmic scaling for low signals and compensated data</article-title>
+        <source>
+          <italic>Cytometry Part A</italic>
+        </source>
+        <year>2006</year>
+        <volume>69</volume>
+        <issue>6</issue>
+        <fpage>541</fpage>
+        <lpage>551</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B31">
+      <label>31</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tung</surname>
+            <given-names>JW</given-names>
+          </name>
+          <name>
+            <surname>Parks</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Moore</surname>
+            <given-names>WA</given-names>
+          </name>
+          <name>
+            <surname>Herzenberg</surname>
+            <given-names>LA</given-names>
+          </name>
+          <name>
+            <surname>Herzenberg</surname>
+            <given-names>LA</given-names>
+          </name>
+        </person-group>
+        <article-title>New approaches to fluorescence compensation and visualization of FACS data</article-title>
+        <source>
+          <italic>Clinical Immunology</italic>
+        </source>
+        <year>2004</year>
+        <volume>110</volume>
+        <issue>3</issue>
+        <fpage>277</fpage>
+        <lpage>283</lpage>
+        <pub-id pub-id-type="pmid">15047205</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B32">
+      <label>32</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Novo</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Wood</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Flow cytometry histograms: transformations, resolution, and display</article-title>
+        <source>
+          <italic>Cytometry Part A</italic>
+        </source>
+        <year>2008</year>
+        <volume>73</volume>
+        <issue>8</issue>
+        <fpage>685</fpage>
+        <lpage>692</lpage>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<floats-group>
+  <fig id="fig1" position="float">
+    <label>Figure 1</label>
+    <caption>
+      <p>FlowFP plot method to display gating data consistency. Fingerprints were computed using CD45 and SSC which are common variables in all tubes. Fingerprint similarity is indicated by color and in the similarity metric shown in each panel. The color wedge shows mapping of colors to values of the similarity metric (values above the maximum indicated on the wedge all map to red). The <italic>x</italic>-axis for each subplot is fingerprint index, and the <italic>y</italic>-axis is the log<sub>2</sub> transformed fingerprint value plotted with zero at the center and scaled to ± “vertical scale factor” (in this case 3.0). (a) Sample FI05_000942, an example of a sample with good gating consistency. (b) Sample FI05_000599, an example of a sample with poor gating consistency. (c) and (d) as in (a) and (b), except that models were computed from Tube 1 only, rather than the aggregate of Tubes 1–7 for each sample. Note that the fingerprint for Tube 1 in both cases has zero deviation, as expected. Note also the qualitative similarity between (a) and (c) and between (b) and (d).</p>
+    </caption>
+    <graphic xlink:href="ABI2009-193947.001"/>
+  </fig>
+  <fig id="fig2" position="float">
+    <label>Figure 2</label>
+    <caption>
+      <p>QC plot method for high-throughput data. Data were fingerprinted on variables common to all wells in a 96-well plate. The display maps into colors the degree to which gating data conform to the plate-wide norm.</p>
+    </caption>
+    <graphic xlink:href="ABI2009-193947.002"/>
+  </fig>
+  <fig id="fig3" position="float">
+    <label>Figure 3</label>
+    <caption>
+      <p>Support Vector Machine classification of AML versus Normal. The classifier was trained with 21 AML and 21 Normal Instances (left-most two regions). The classifier was then used to blindly predict class probabilities for the test set of 21 AML and 288 Normal instances (the right-most region). Ground-truth class assignments are indicated by color, red for AML and blue for Normal. The probability range 0-1 was divided into three equal regions. Instances falling into the lower third were classified as AML, in the upper third as Normal, and in the middle as Uncertain “?”.</p>
+    </caption>
+    <graphic xlink:href="ABI2009-193947.003"/>
+  </fig>
+  <fig id="fig4" position="float">
+    <label>Figure 4</label>
+    <caption>
+      <p>Visualization of informative features. (a)–(c) dotplots for Tube 7. Black dots are aggregated data from 5 AML and 5 Normal instances. Colored dots indicate events in informative bins with higher probability density in AML compared with Normal. (a) Side Scatter versus Forward Scatter. (b) CD45 versus Side Scatter. (c) Pairwise dotplots of fluorescence's CD5, CD19, CD3, and CD10. (d) Histogram of the frequency with which informative features occur in Tubes 2–7.</p>
+    </caption>
+    <graphic xlink:href="ABI2009-193947.004"/>
+  </fig>
+  <fig id="fig5" position="float">
+    <label>Figure 5</label>
+    <caption>
+      <p>Parallel coordinate view of informative fingerprint features. The expression pattern of an individual event is shown as a vertical trajectory. Events are chosen from informative bins selected as described in the text. Events in bins with excess median probability among AML (Normal) instances are shown in red (blue). The numbers of AML and Normal trajectories are balanced to avoid visual bias.</p>
+    </caption>
+    <graphic xlink:href="ABI2009-193947.005"/>
+  </fig>
+  <fig id="alg1" position="float">
+    <label>Algorithm 1</label>
+    <caption>
+      <p> (Code Fragment 1).</p>
+    </caption>
+    <graphic xlink:href="ABI2009-193947.alg1"/>
+  </fig>
+  <fig id="alg2" position="float">
+    <label>Algorithm 2</label>
+    <caption>
+      <p> (Code Fragment 2).</p>
+    </caption>
+    <graphic xlink:href="ABI2009-193947.alg2"/>
+  </fig>
+  <fig id="alg3" position="float">
+    <label>Algorithm 3</label>
+    <caption>
+      <p> (Code Fragment 3).</p>
+    </caption>
+    <graphic xlink:href="ABI2009-193947.alg3"/>
+  </fig>
+  <table-wrap id="tab1" position="float">
+    <label>Table 1</label>
+    <caption>
+      <p>Reagent panel used for immunophenotyping of leukemia/lymphoma samples.</p>
+    </caption>
+    <table frame="hsides" rules="groups">
+      <thead>
+        <tr>
+          <th align="left" rowspan="2" colspan="1">Tube</th>
+          <th align="center" rowspan="1" colspan="1">FL1</th>
+          <th align="center" rowspan="1" colspan="1">FL2</th>
+          <th align="center" rowspan="1" colspan="1">FL3</th>
+          <th align="center" rowspan="1" colspan="1">FL4</th>
+          <th align="center" rowspan="1" colspan="1">FL5</th>
+        </tr>
+        <tr>
+          <th align="center" rowspan="1" colspan="1">P3S</th>
+          <th align="center" rowspan="1" colspan="1">P4S</th>
+          <th align="center" rowspan="1" colspan="1">P5S</th>
+          <th align="center" rowspan="1" colspan="1">P6S</th>
+          <th align="center" rowspan="1" colspan="1">P7S</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td align="left" rowspan="1" colspan="1">1</td>
+          <td align="center" rowspan="1" colspan="1">IgG1-FITC</td>
+          <td align="center" rowspan="1" colspan="1">IgG1-PE</td>
+          <td align="center" rowspan="1" colspan="1">CD45-ECD</td>
+          <td align="center" rowspan="1" colspan="1">IgG1-PC5</td>
+          <td align="center" rowspan="1" colspan="1">IgG1-PC7</td>
+        </tr>
+        <tr>
+          <td align="left" rowspan="1" colspan="1">2</td>
+          <td align="center" rowspan="1" colspan="1">(s)Kappa-FITC</td>
+          <td align="center" rowspan="1" colspan="1">(s)Lambda-PE</td>
+          <td align="center" rowspan="1" colspan="1">CD45-ECD</td>
+          <td align="center" rowspan="1" colspan="1">CD19-PC5</td>
+          <td align="center" rowspan="1" colspan="1">CD20-PC7</td>
+        </tr>
+        <tr>
+          <td align="left" rowspan="1" colspan="1">3</td>
+          <td align="center" rowspan="1" colspan="1">CD7-FITC</td>
+          <td align="center" rowspan="1" colspan="1">CD4-PE</td>
+          <td align="center" rowspan="1" colspan="1">CD45-ECD</td>
+          <td align="center" rowspan="1" colspan="1">CD8-PC5</td>
+          <td align="center" rowspan="1" colspan="1">CD2-PC7</td>
+        </tr>
+        <tr>
+          <td align="left" rowspan="1" colspan="1">4</td>
+          <td align="center" rowspan="1" colspan="1">CD15-FITC</td>
+          <td align="center" rowspan="1" colspan="1">CD13-PE</td>
+          <td align="center" rowspan="1" colspan="1">CD45-ECD</td>
+          <td align="center" rowspan="1" colspan="1">CD16-PC5</td>
+          <td align="center" rowspan="1" colspan="1">CD56-PC7</td>
+        </tr>
+        <tr>
+          <td align="left" rowspan="1" colspan="1">5</td>
+          <td align="center" rowspan="1" colspan="1">CD14-FITC</td>
+          <td align="center" rowspan="1" colspan="1">CD11c-PE</td>
+          <td align="center" rowspan="1" colspan="1">CD45-ECD</td>
+          <td align="center" rowspan="1" colspan="1">CD64-PC5</td>
+          <td align="center" rowspan="1" colspan="1">CD33-PC7</td>
+        </tr>
+        <tr>
+          <td align="left" rowspan="1" colspan="1">6</td>
+          <td align="center" rowspan="1" colspan="1">HLA DR-FITC</td>
+          <td align="center" rowspan="1" colspan="1">CD117-PE</td>
+          <td align="center" rowspan="1" colspan="1">CD45-ECD</td>
+          <td align="center" rowspan="1" colspan="1">CD34-PC5</td>
+          <td align="center" rowspan="1" colspan="1">CD38-PC7</td>
+        </tr>
+        <tr>
+          <td align="left" rowspan="1" colspan="1">7</td>
+          <td align="center" rowspan="1" colspan="1">CD5-FITC</td>
+          <td align="center" rowspan="1" colspan="1">CD19-PE</td>
+          <td align="center" rowspan="1" colspan="1">CD45-ECD</td>
+          <td align="center" rowspan="1" colspan="1">CD3-PC5</td>
+          <td align="center" rowspan="1" colspan="1">CD10-PC7</td>
+        </tr>
+        <tr>
+          <td align="left" rowspan="1" colspan="1">8</td>
+          <td align="center" rowspan="1" colspan="1">FL1-Log</td>
+          <td align="center" rowspan="1" colspan="1">FL2-Log</td>
+          <td align="center" rowspan="1" colspan="1">FL3-Log</td>
+          <td align="center" rowspan="1" colspan="1">FL4-Log</td>
+          <td align="center" rowspan="1" colspan="1">FL5 Log</td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+</floats-group>

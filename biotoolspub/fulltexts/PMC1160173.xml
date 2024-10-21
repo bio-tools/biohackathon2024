@@ -1,0 +1,613 @@
+<?open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">Nucleic Acids Research</journal-id>
+    <journal-title>Nucleic Acids Research</journal-title>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">1160173</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gki412</article-id>
+    <article-id pub-id-type="pmid">15980459</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>DiANNA: a web server for disulfide connectivity prediction</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Ferrè</surname>
+          <given-names>F.</given-names>
+        </name>
+        <xref ref-type="aff" rid="au1">1</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Clote</surname>
+          <given-names>P.</given-names>
+        </name>
+        <xref ref-type="aff" rid="au1">1</xref>
+        <xref ref-type="aff" rid="au2">2</xref>
+        <xref ref-type="corresp" rid="cor1">*</xref>
+      </contrib>
+      <aff id="au1">
+        <sup>1</sup>
+        <institution>Department of Biology, Boston College</institution>
+        <addr-line>Chestnut Hill, MA 02467, USA</addr-line>
+      </aff>
+      <aff id="au2">
+        <sup>2</sup>
+        <institution>Department of Computer Science (courtesy appointment), Boston College</institution>
+        <addr-line>Chestnut Hill, MA 02467, USA</addr-line>
+      </aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="cor1"><sup>*</sup>To whom correspondence should be addressed. Tel: +1 617 552 1332; Fax: +1 617 552 2011; Email: <email>clote@bc.edu</email></corresp>
+    </author-notes>
+    <!--For NAR: both ppub and collection dates generated for PMC processing 1/27/05 beck-->
+    <pub-date pub-type="collection">
+      <day>01</day>
+      <month>7</month>
+      <year>2005</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <day>01</day>
+      <month>7</month>
+      <year>2005</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>27</day>
+      <month>6</month>
+      <year>2005</year>
+    </pub-date>
+    <volume>33</volume>
+    <issue>Web Server issue</issue>
+    <fpage>W230</fpage>
+    <lpage>W232</lpage>
+    <history>
+      <date date-type="received">
+        <day>13</day>
+        <month>2</month>
+        <year>2005</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>21</day>
+        <month>3</month>
+        <year>2005</year>
+      </date>
+      <date date-type="accepted">
+        <day>21</day>
+        <month>3</month>
+        <year>2005</year>
+      </date>
+    </history>
+    <copyright-statement>© The Author 2005. Published by Oxford University Press. All rights reserved</copyright-statement>
+    <copyright-year>2005</copyright-year>
+    <license license-type="openaccess">
+      <p>The online version of this article has been published under an open access model. Users are entitled to use, reproduce, disseminate, or display the open access version of this article for non-commercial purposes provided that: the original authorship is properly and fully attributed; the Journal and Oxford University Press are attributed as the original place of publication with the correct citation details given; if an article is subsequently reproduced or disseminated not in its entirety but only in part or as a derivative work this must be clearly indicated. For commercial re-use, please contact <email>journals.permissions@oupjournals.org</email></p>
+    </license>
+    <abstract>
+      <p>Correctly predicting the disulfide bond topology in a protein is of crucial importance for the understanding of protein function and can be of great help for tertiary prediction methods. The web server <ext-link ext-link-type="uri" xlink:href="http://clavius.bc.edu/~clotelab/DiANNA/"/> outputs the disulfide connectivity prediction given input of a protein sequence. The following procedure is performed. First, PSIPRED is run to predict the protein's secondary structure, then PSIBLAST is run against the non-redundant SwissProt to obtain a multiple alignment of the input sequence. The predicted secondary structure and the profile arising from this alignment are used in the training phase of our neural network. Next, cysteine oxidation state is predicted, then each pair of cysteines in the protein sequence is assigned a likelihood of forming a disulfide bond—this is performed by means of a novel architecture (diresidue neural network). Finally, Rothberg's implementation of Gabow's maximum weighted matching algorithm is applied to diresidue neural network scores in order to produce the final connectivity prediction. Our novel neural network-based approach achieves results that are comparable and in some cases better than the current state-of-the-art methods.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>Disulfide bonds are covalently bonded sulfur atoms from nonadjacent cysteine residues, which stabilize the protein structure and are often found in extracytoplasmatic proteins. The knowledge of cysteine connectivity (i.e. which, if any, pairs of cysteines form a bond in a given protein sequence) can reduce greatly the conformational space for protein structure prediction algorithms. Moreover, as shown by Chuang and co-workers (<xref ref-type="bibr" rid="b1">1</xref>), a similar disulfide connectivity pattern frequently implies a structural similarity even when the sequence similarity is undetectable. Notwithstanding, only a few attempts have been made to solve this problem. In contrast, many methods have been developed for the related, but simpler problem of cysteine oxidation state prediction, i.e. to determine the cysteines that are involved in a disulfide bond, without predicting the connectivity pattern. Recent methods based on machine learning techniques have reached an outstanding accuracy of 90% on certain test data (<xref ref-type="bibr" rid="b2">2</xref>–<xref ref-type="bibr" rid="b5">5</xref>). In spite of this, accuracy for the disulfide connectivity problem remains measured. The reason for this is simple—amino acids that flank half-cystines (disulfide-bonded cysteines) are quite different from those that flank free cysteines (non-bonded cysteines) (<xref ref-type="bibr" rid="b6">6</xref>,<xref ref-type="bibr" rid="b7">7</xref>). In contrast, the residues that flank two incorrectly paired half-cystines are quite similar to those that flank the half-cystines in a disulfide bond. Two recent and remarkable papers based on different approaches (<xref ref-type="bibr" rid="b8">8</xref>,<xref ref-type="bibr" rid="b9">9</xref>) outperform early attempts by Fariselli and co-workers (<xref ref-type="bibr" rid="b10">10</xref>,<xref ref-type="bibr" rid="b11">11</xref>). The Vullo and Frasconi method (<xref ref-type="bibr" rid="b9">9</xref>) uses recursive neural networks (<xref ref-type="bibr" rid="b12">12</xref>) to score undirected graphs that represent cysteine connectivity. The method of Zhao and co-workers (<xref ref-type="bibr" rid="b8">8</xref>) is based on recurrent patterns of sequence separation between bonded half-cystines. Web servers that allow online disulfide connectivity prediction are available for Vullo/Frasconi (<ext-link ext-link-type="uri" xlink:href="http://cassandra.dsi.unifi.it/cysteines"/>) and, as a prototype, for Fariselli/Casadio (<ext-link ext-link-type="uri" xlink:href="http://gpcr.biocomp.unibo.it/cgi/predictors/cys-cys/pred_dconcgi.cgi"/>). Here, we describe a web server for disulfide connectivity prediction that implements our novel approach, which results in comparable and sometimes better than the state-of-the-art methods (<xref ref-type="bibr" rid="b8">8</xref>,<xref ref-type="bibr" rid="b9">9</xref>). Algorithm details and performance of the method are described previously by Ferrè and Clote (<xref ref-type="bibr" rid="b13">13</xref>).</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>METHODS</title>
+    <p>The stand-alone program for disulfide connectivity prediction, implemented in our web server D<sc>i</sc>ANNA (for DiAminoacid Neural Network Application), uses a three-step procedure. First, a neural network is trained to recognize cysteines in an oxidized state (sulfur covalently bonded) as distinct from cysteines in a reduced state (sulfur occurring in reactive sulfhydryl group SH), based on the previous work by Fariselli <italic>et al</italic>. (<xref ref-type="bibr" rid="b14">14</xref>) only those monomers that have at least two predicted half-cysteines are submitted to the second step. The neural network input is a window of size <italic>w</italic> centered at each cysteine in the sequence. This first filtering step is called Module A. Then, a second neural network (Module B) is used to score each pair of symmetric windows of size <italic>w</italic>, each one centered at a cysteine in the input sequence. The network input contains evolutionary information, i.e. each residue is encoded by 20 input units corresponding to the PSIBLAST-computed profile row (obtained from the multiple alignment of the input sequence against the non-redundant SwissProt), and secondary structure information, computed using PSIPRED (<xref ref-type="bibr" rid="b15">15</xref>) and encoded in unary format by the addition of three input units, e.g. helix is encoded 1 0 0, coil is 0 1 0 and sheet is 0 0 1). Using secondary structure information leads to a marked improvement and is justified by the bias in the secondary structure preference of free cysteines and half-cystines (<xref ref-type="bibr" rid="b16">16</xref>). The architecture of the Module B neural network is as follows. Given an encoded input containing secondary structure information, thus having <italic>w</italic> × 23 input units, we designed a first hidden layer containing <inline-formula><mml:math id="M1"><mml:mrow><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mtable><mml:mtr><mml:mtd><mml:mi>w</mml:mi></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mn>2</mml:mn></mml:mtd></mml:mtr></mml:mtable></mml:mrow><mml:mo>)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:mrow><mml:mi>w</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mi>w</mml:mi><mml:mo>−</mml:mo><mml:mn>1</mml:mn><mml:mo>)</mml:mo></mml:mrow><mml:mo>/</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:mrow></mml:math></inline-formula> units, one for each pair 1 ≤ <italic>i</italic> &lt; <italic>j</italic> ≤ <italic>w</italic> of positions, with connections to input units representing the profile for residues at position <italic>i</italic>, <italic>j</italic> and secondary structures at those positions. Thus, each of the <italic>w</italic> (<italic>w</italic> − 1)/2 hidden units in the first hidden layer (the diresidue layer) is connected to 2 (20 + 3) = 46 input units (<xref ref-type="fig" rid="fig1">Figure 1</xref>). A second hidden layer, containing five units, all fully connected with those of the first hidden layer, is then fully connected to the single output unit. We designed this unusual neural network architecture, with the aim of emphasizing the signal that arises when using diresidue position-specific scoring matrices (<xref ref-type="bibr" rid="b13">13</xref>), i.e. for all windows of length <italic>w</italic>, for positions 1 ≤ <italic>i</italic> &lt; <italic>j</italic> ≤ <italic>w</italic> and amino acids <italic>a</italic>, <italic>b</italic>, we consider the frequency of occurrence of amino acid <italic>a</italic> in position <italic>i</italic> when amino acid <italic>b</italic> is found in position <italic>j</italic>; moreover, though there are many hidden units, the training phase is still reasonably fast since the diresidue layer is not fully connected with the input layer.</p>
+    <p>Finally, following Fariselli and Casadio (<xref ref-type="bibr" rid="b10">10</xref>), our algorithm applies the Edmonds–Gabow maximum weight matching algorithm (<xref ref-type="bibr" rid="b17">17</xref>,<xref ref-type="bibr" rid="b18">18</xref>), using Ed Rothberg's implementation wmatch (<ext-link ext-link-type="uri" xlink:href="http://elib.zib.de/pub/Packages/mathprog/matching/weighted"/>), to the weighted complete graph, whose nodes are half-cystines and whose weights are values output from the neural network of Module B. This last step is called Module C.</p>
+  </sec>
+  <sec>
+    <title>SERVER DESCRIPTION</title>
+    <p>The web server takes as input a protein sequence in FASTA format and can output the following: (i) oxidation state prediction for all the cysteines in the input sequence, using our implementation of the neural network described in (<xref ref-type="bibr" rid="b14">14</xref>) (Module A); (ii) a score for each pair of cysteines in the input, obtained by our diresidue neural network (Module B); (iii) the disulfide connectivity prediction obtained using the maximum weighted matching algorithm (Module C) applied to the scores of Module B. The user is warned if Module A predicts less than two half-cystines in the input sequence. A statistical evaluation of the connectivity prediction is not attempted. A sample output is shown in <xref ref-type="fig" rid="fig2">Figure 2</xref>.</p>
+  </sec>
+  <sec>
+    <title>DISCUSSION</title>
+    <p>Trained and tested on a list of proteins having at most five and at lest two bonds, equivalent to those used in (<xref ref-type="bibr" rid="b9">9</xref>,<xref ref-type="bibr" rid="b11">11</xref>), the software achieves a rate <italic>Q</italic><sub>p</sub> of 49% for perfect predictions (i.e. the fraction of proteins for which there are no false-positive or false-negative predictions made), 86% accuracy and 51% Matthews' correlation coefficient (<xref ref-type="bibr" rid="b13">13</xref>). For proteins having two and four bonds, the fraction of perfect predictions improves to 62 and 55%, respectively. Although future improvement for disulfide connectivity is still desired, our approach is nonetheless reliable when used on proteins having a relatively small number of disulfide bonds.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>Funding to pay the Open Access publication charges for this article was provided by Boston College.</p>
+    <p><italic>Conflict of interest statement</italic>. None declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="b1">
+      <label>1</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chuang</surname>
+            <given-names>C.C.</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>C.Y.</given-names>
+          </name>
+          <name>
+            <surname>Yang</surname>
+            <given-names>J.M.</given-names>
+          </name>
+          <name>
+            <surname>Lyu</surname>
+            <given-names>P.C.</given-names>
+          </name>
+          <name>
+            <surname>Hwang</surname>
+            <given-names>J.K.</given-names>
+          </name>
+        </person-group>
+        <article-title>Relationship between protein structures and disulfide-bonding patterns</article-title>
+        <source>Proteins</source>
+        <year>2003</year>
+        <volume>53</volume>
+        <fpage>1</fpage>
+        <lpage>5</lpage>
+        <pub-id pub-id-type="pmid">12945044</pub-id>
+      </citation>
+    </ref>
+    <ref id="b2">
+      <label>2</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Martelli</surname>
+            <given-names>P.L.</given-names>
+          </name>
+          <name>
+            <surname>Fariselli</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Casadio</surname>
+            <given-names>R.</given-names>
+          </name>
+        </person-group>
+        <article-title>Prediction of disulfide-bonded cysteines in proteomes with a hidden neural network</article-title>
+        <source>Proteomics</source>
+        <year>2004</year>
+        <volume>4</volume>
+        <fpage>1665</fpage>
+        <lpage>1671</lpage>
+        <pub-id pub-id-type="pmid">15174135</pub-id>
+      </citation>
+    </ref>
+    <ref id="b3">
+      <label>3</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Martelli</surname>
+            <given-names>P.L.</given-names>
+          </name>
+          <name>
+            <surname>Fariselli</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Malaguti</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Casadio</surname>
+            <given-names>R.</given-names>
+          </name>
+        </person-group>
+        <article-title>Prediction of the disulfide bonding state of cysteines in proteins with hidden neural networks</article-title>
+        <source>Protein Eng.</source>
+        <year>2002</year>
+        <volume>15</volume>
+        <fpage>951</fpage>
+        <lpage>953</lpage>
+        <pub-id pub-id-type="pmid">12601133</pub-id>
+      </citation>
+    </ref>
+    <ref id="b4">
+      <label>4</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mucchielli-Giorgi</surname>
+            <given-names>M.H.</given-names>
+          </name>
+          <name>
+            <surname>Hazout</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Tuffery</surname>
+            <given-names>P.</given-names>
+          </name>
+        </person-group>
+        <article-title>Predicting the disulfide bonding state of cysteines using protein descriptors</article-title>
+        <source>Proteins</source>
+        <year>2002</year>
+        <volume>46</volume>
+        <fpage>243</fpage>
+        <lpage>249</lpage>
+        <pub-id pub-id-type="pmid">11835499</pub-id>
+      </citation>
+    </ref>
+    <ref id="b5">
+      <label>5</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chen</surname>
+            <given-names>Y.C.</given-names>
+          </name>
+          <name>
+            <surname>Lin</surname>
+            <given-names>Y.S.</given-names>
+          </name>
+          <name>
+            <surname>Lin</surname>
+            <given-names>C.J.</given-names>
+          </name>
+          <name>
+            <surname>Hwang</surname>
+            <given-names>J.K.</given-names>
+          </name>
+        </person-group>
+        <article-title>Prediction of the bonding states of cysteines using the support vector machines based on multiple feature vectors and cysteine state sequences</article-title>
+        <source>Proteins</source>
+        <year>2004</year>
+        <volume>55</volume>
+        <fpage>1036</fpage>
+        <lpage>1042</lpage>
+        <pub-id pub-id-type="pmid">15146500</pub-id>
+      </citation>
+    </ref>
+    <ref id="b6">
+      <label>6</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Muskal</surname>
+            <given-names>S.M.</given-names>
+          </name>
+          <name>
+            <surname>Holbrook</surname>
+            <given-names>S.R.</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>S.H.</given-names>
+          </name>
+        </person-group>
+        <article-title>Prediction of the disulfide-bonding state of cysteine in proteins</article-title>
+        <source>Protein Eng.</source>
+        <year>1990</year>
+        <volume>3</volume>
+        <fpage>667</fpage>
+        <lpage>672</lpage>
+        <pub-id pub-id-type="pmid">2217140</pub-id>
+      </citation>
+    </ref>
+    <ref id="b7">
+      <label>7</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fiser</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Cserzo</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Tudos</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Simon</surname>
+            <given-names>I.</given-names>
+          </name>
+        </person-group>
+        <article-title>Different sequence environments of cysteines and half cystines in proteins. Application to predict disulfide forming residues</article-title>
+        <source>FEBS Lett.</source>
+        <year>1992</year>
+        <volume>302</volume>
+        <fpage>117</fpage>
+        <lpage>120</lpage>
+        <pub-id pub-id-type="pmid">1633841</pub-id>
+      </citation>
+    </ref>
+    <ref id="b8">
+      <label>8</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhao</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>H.L.</given-names>
+          </name>
+          <name>
+            <surname>Tsai</surname>
+            <given-names>C.H.</given-names>
+          </name>
+          <name>
+            <surname>Tsai</surname>
+            <given-names>H.K.</given-names>
+          </name>
+          <name>
+            <surname>Chan</surname>
+            <given-names>C.H.</given-names>
+          </name>
+          <name>
+            <surname>Kao</surname>
+            <given-names>C.Y.</given-names>
+          </name>
+        </person-group>
+        <article-title>Cysteine separations profiles (CSP) on protein sequences infer disulfide connectivity</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>653</fpage>
+        <lpage>659</lpage>
+        <pub-id pub-id-type="pmid">15033872</pub-id>
+      </citation>
+    </ref>
+    <ref id="b9">
+      <label>9</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Vullo</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Frasconi</surname>
+            <given-names>P.</given-names>
+          </name>
+        </person-group>
+        <article-title>Disulfide connectivity prediction using recursive neural networks and evolutionary information</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>653</fpage>
+        <lpage>659</lpage>
+        <pub-id pub-id-type="pmid">15033872</pub-id>
+      </citation>
+    </ref>
+    <ref id="b10">
+      <label>10</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fariselli</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Casadio</surname>
+            <given-names>R.</given-names>
+          </name>
+        </person-group>
+        <article-title>Prediction of disulfide connectivity in proteins</article-title>
+        <source>Bioinformatics</source>
+        <year>2001</year>
+        <volume>17</volume>
+        <fpage>957</fpage>
+        <lpage>964</lpage>
+        <pub-id pub-id-type="pmid">11673241</pub-id>
+      </citation>
+    </ref>
+    <ref id="b11">
+      <label>11</label>
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fariselli</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Martelli</surname>
+            <given-names>P.L.</given-names>
+          </name>
+          <name>
+            <surname>Casadio</surname>
+            <given-names>R.</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Damiani</surname>
+            <given-names>E.</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A neural network based method for predicting the disulfide connectivity in proteins</article-title>
+        <source>Knowledge Based Intelligent Information Engineering Systems and Allied Technologies (KES)</source>
+        <year>2002</year>
+        <publisher-loc>Amsterdam</publisher-loc>
+        <publisher-name>IOS Press</publisher-name>
+        <fpage>464</fpage>
+        <lpage>468</lpage>
+      </citation>
+    </ref>
+    <ref id="b12">
+      <label>12</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Frasconi</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Gori</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Sperduti</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>A general framework for adaptive processing of data structures</article-title>
+        <source>IEEE Trans. Neural Netw.</source>
+        <year>1998</year>
+        <volume>9</volume>
+        <fpage>768</fpage>
+        <lpage>786</lpage>
+      </citation>
+    </ref>
+    <ref id="b13">
+      <label>13</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ferrè</surname>
+            <given-names>F.</given-names>
+          </name>
+          <name>
+            <surname>Clote</surname>
+            <given-names>P.</given-names>
+          </name>
+        </person-group>
+        <article-title>Disulfide connectivity prediction using secondary structure information and diresidue frequencies</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <comment>in press</comment>
+      </citation>
+    </ref>
+    <ref id="b14">
+      <label>14</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fariselli</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Riccobelli</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Casadio</surname>
+            <given-names>R.</given-names>
+          </name>
+        </person-group>
+        <article-title>Role of evolutionary information in predicting the disulfide-bonding state of cysteine in proteins</article-title>
+        <source>Proteins</source>
+        <year>1999</year>
+        <volume>36</volume>
+        <fpage>340</fpage>
+        <lpage>346</lpage>
+        <pub-id pub-id-type="pmid">10409827</pub-id>
+      </citation>
+    </ref>
+    <ref id="b15">
+      <label>15</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jones</surname>
+            <given-names>D.T.</given-names>
+          </name>
+        </person-group>
+        <article-title>Protein secondary structure prediction based on position-specific scoring matrices</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>1999</year>
+        <volume>292</volume>
+        <fpage>195</fpage>
+        <lpage>202</lpage>
+        <pub-id pub-id-type="pmid">10493868</pub-id>
+      </citation>
+    </ref>
+    <ref id="b16">
+      <label>16</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Petersen</surname>
+            <given-names>M.T.</given-names>
+          </name>
+          <name>
+            <surname>Jonson</surname>
+            <given-names>P.H.</given-names>
+          </name>
+          <name>
+            <surname>Petersen</surname>
+            <given-names>S.B.</given-names>
+          </name>
+        </person-group>
+        <article-title>Amino acid neighbours and detailed conformational analysis of cysteines in proteins</article-title>
+        <source>Protein Eng.</source>
+        <year>1999</year>
+        <volume>12</volume>
+        <fpage>535</fpage>
+        <lpage>548</lpage>
+        <pub-id pub-id-type="pmid">10436079</pub-id>
+      </citation>
+    </ref>
+    <ref id="b17">
+      <label>17</label>
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gabow</surname>
+            <given-names>H.</given-names>
+          </name>
+        </person-group>
+        <source>Implementation of Algorithms for Maximum Matching on Nonbipartite Graphs</source>
+        <year>1973</year>
+        <publisher-loc>CA</publisher-loc>
+        <publisher-name>Stanford University</publisher-name>
+        <comment>PhD Thesis</comment>
+      </citation>
+    </ref>
+    <ref id="b18">
+      <label>18</label>
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lovasz</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Plummer</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <source>Matching Theory. B.V. North Holland Mathematical Studies</source>
+        <year>1985</year>
+        <volume>Vol. 121</volume>
+        <publisher-name>Elsevier Science Publishers</publisher-name>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig id="fig1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p>A toy example of the diresidue neural network architecture. Six input units (named 1, …, 6) are connected to the <inline-formula><mml:math id="M2"><mml:mrow><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mtable><mml:mtr><mml:mtd><mml:mi>w</mml:mi></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mn>2</mml:mn></mml:mtd></mml:mtr></mml:mtable></mml:mrow><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula> units of the first hidden layer (7, …, 21), called the diresidue layer. Each pair of input units is connected to a distinct unit in the diresidue layer. The units of the diresidue layer are then fully connected to the five units (22, …, 26) of the second hidden layer, which are fully connected to the single output unit. Using the second hidden layer provided a better performance than connecting the diresidue layer units directly to the output unit. In the D<sc>i</sc>ANNA application, each residue is encoded by 23 input units (20 encoding the evolutionary information and 3 for the secondary structure information); therefore, each unit in the diresidue layer is connected to 23 + 23 = 46 input units that code a pair of residues.</p>
+      </caption>
+      <graphic xlink:href="gki412f1"/>
+    </fig>
+    <fig id="fig2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p>Output from D<sc>i</sc>ANNA when given as input the sequence for human growth hormone receptor (SwissProt ID GHR_HUMAN, PDB code 1kf9 chain F). This protein has 6 cysteines that form 3 disulfide bonds, with connectivity pattern 1–2, 3–4, 5–6 (between cysteines 6 and 16, 33 and 44, 58 and 72). The upper portion of the output page reports the Module B score (see text) for each pair of cysteines, ranging from 0 to 1 (scores &gt;0.9 are highlighted). In the lower portion, the proposed connectivity (i.e. the Module C output) is shown.</p>
+      </caption>
+      <graphic xlink:href="gki412f2"/>
+    </fig>
+  </sec>
+</back>

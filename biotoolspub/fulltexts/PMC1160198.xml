@@ -1,0 +1,661 @@
+<?open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">Nucleic Acids Research</journal-id>
+    <journal-title>Nucleic Acids Research</journal-title>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">1160198</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gki437</article-id>
+    <article-id pub-id-type="pmid">15980483</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Metabolic PathFinding: inferring relevant pathways in biochemical networks</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Croes</surname>
+          <given-names>Didier</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Couche</surname>
+          <given-names>Fabian</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Wodak</surname>
+          <given-names>Shoshana J.</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>van Helden</surname>
+          <given-names>Jacques</given-names>
+        </name>
+        <xref ref-type="corresp" rid="cor1">*</xref>
+      </contrib>
+      <aff>
+        <institution>SCMBB, Université Libre de Bruxelles</institution>
+        <addr-line>Campus Plaine, CP 263, Boulevard du Triomphe, B-1050 Bruxelles, Belgium</addr-line>
+      </aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="cor1"><sup>*</sup>To whom correspondence should be addressed. Tel: +32 2 650 5466; Fax: +32 2 650 5425; Email: <email>jvanheld@scmbb.ulb.ac.be</email></corresp>
+    </author-notes>
+    <!--For NAR: both ppub and collection dates generated for PMC processing 1/27/05 beck-->
+    <pub-date pub-type="collection">
+      <day>01</day>
+      <month>7</month>
+      <year>2005</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <day>01</day>
+      <month>7</month>
+      <year>2005</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>27</day>
+      <month>6</month>
+      <year>2005</year>
+    </pub-date>
+    <volume>33</volume>
+    <issue>Web Server issue</issue>
+    <fpage>W326</fpage>
+    <lpage>W330</lpage>
+    <history>
+      <date date-type="received">
+        <day>14</day>
+        <month>2</month>
+        <year>2005</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>25</day>
+        <month>3</month>
+        <year>2005</year>
+      </date>
+      <date date-type="accepted">
+        <day>25</day>
+        <month>3</month>
+        <year>2005</year>
+      </date>
+    </history>
+    <copyright-statement>© The Author 2005. Published by Oxford University Press. All rights reserved</copyright-statement>
+    <copyright-year>2005</copyright-year>
+    <license license-type="openaccess">
+      <p>The online version of this article has been published under an open access model. Users are entitled to use, reproduce, disseminate, or display the open access version of this article for non-commercial purposes provided that: the original authorship is properly and fully attributed; the Journal and Oxford University Press are attributed as the original place of publication with the correct citation details given; if an article is subsequently reproduced or disseminated not in its entirety but only in part or as a derivative work this must be clearly indicated. For commercial re-use, please contact <email>journals.permissions@oupjournals.org</email></p>
+    </license>
+    <abstract>
+      <p>Our knowledge of metabolism can be represented as a network comprising several thousands of nodes (compounds and reactions). Several groups applied graph theory to analyse the topological properties of this network and to infer metabolic pathways by path finding. This is, however, not straightforward, with a major problem caused by traversing irrelevant shortcuts through highly connected nodes, which correspond to pool metabolites and co-factors (e.g. H<sub>2</sub>O, NADP and H<sup>+</sup>). In this study, we present a web server implementing two simple approaches, which circumvent this problem, thereby improving the relevance of the inferred pathways. In the simplest approach, the shortest path is computed, while filtering out the selection of highly connected compounds. In the second approach, the shortest path is computed on the weighted metabolic graph where each compound is assigned a weight equal to its connectivity in the network. This approach significantly increases the accuracy of the inferred pathways, enabling the correct inference of relatively long pathways (e.g. with as many as eight intermediate reactions). Available options include the calculation of the <italic>k</italic>-shortest paths between two specified seed nodes (either compounds or reactions). Multiple requests can be submitted in a queue. Results are returned by email, in textual as well as graphical formats (available in <ext-link ext-link-type="uri" xlink:href="http://www.scmbb.ulb.ac.be/pathfinding/"/>).</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>Biochemical databases contain information about thousands of metabolites and chemical reactions involved in small molecule metabolism (SMM). These data can be represented as a graph, representing all the possible ways in which molecules are converted into one another in the SMM network. We define hereafter as ‘raw graph’ the graph built by connecting all the annotated reactions to their substrates and products. Several attempts have been made to use path finding algorithms in this graph in order to infer putative metabolic pathways. This, however, yielded disappointing results, for understandable reasons. For example, Kuffner <italic>et al</italic>. (<xref ref-type="bibr" rid="b1">1</xref>) found that more than 500 000 paths could be found between glucose and pyruvate. Most of these paths have clearly nothing to do with the known glycolysis pathway, and they most probably reflect artifacts rather than the existence of half-a-million alternative pathways for glucose utilization. Additional information can be used to select the most relevant among these candidate pathways, for instance the stoichiometry of the reactions (<xref ref-type="bibr" rid="b2">2</xref>,<xref ref-type="bibr" rid="b3">3</xref>), the chemistry of the compounds (<xref ref-type="bibr" rid="b4">4</xref>,<xref ref-type="bibr" rid="b5">5</xref>) or transcriptome data (<xref ref-type="bibr" rid="b6">6</xref>–<xref ref-type="bibr" rid="b8">8</xref>).</p>
+    <p>A recurrent problem is that computed paths in the SMM network tend to traverse shortcuts through highly connected molecules, such as H<sub>2</sub>O, ATP and NADP. These molecules are involved as substrate or product in hundreds of reactions, but they generally appear as side metabolites or co-factors, and cannot be considered as valid intermediates between two reactions. One way to circumvent this problem has been to ‘filter’ the raw graph, by excluding a selection of highly connected compounds (<xref ref-type="bibr" rid="b7">7</xref>–<xref ref-type="bibr" rid="b12">12</xref>). However, the choice of the compounds to exclude is not obvious, as even the most connected compounds are occasionally used as intermediate metabolites in pathways. For instance, ATP commonly acts as side substrate in reactions where it serves as an energy carrier, but it is also used as a main intermediate between reactions involved in nucleotide metabolism. Recently, we developed an alternative approach based on a weighted graph representation, in which all the compounds are included in the graph, but a weight (cost) is associated with each compound equaling its connectivity in the entire metabolic network (i.e. the number of reactions in which it participates as substrate or product). When searching for the shortest path (the path of minimum weight) the algorithm tends to avoid highly connected compounds whenever possible. An extensive validation performed against 56 annotated pathways showed that this approach allows inferring relevant metabolic pathways when the first and last reactions of the annotated pathway were provided as seeds. The tool is available for academic use through a web interface (<ext-link ext-link-type="uri" xlink:href="http://www.scmbb.ulb.ac.be/pathfinding/"/>).</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>METHODS</title>
+    <sec>
+      <title>Metabolic graphs</title>
+      <p>A graph representing SMM network was built with the 5985 reactions and 5082 compounds from the LIGAND database (<ext-link ext-link-type="uri" xlink:href="http://www.genome.jp/kegg/ligand.html"/>). This graph is bipartite: two separate types of nodes are used to represent reactions and compound, respectively, and arcs always connect nodes of different types. Directed arcs are used to represent substrate (compounds → reaction) and product (reaction → compound) relationships. All reactions are considered as potentially reversible. Indeed, even though chemically, some reactions have a strong directionality, under physiological conditions they can be forced in the reverse direction by mass action. We, thus, instantiate two separate nodes per reaction: one for the forward and one for the reverse direction, respectively.</p>
+      <p>Three types of graphs are derived from the SMM data. The graph containing all the compounds and reactions, hereafter referred to as raw graph. A filtered graph is obtained by excluding a selection of 36 compounds among the most connected ones (list available on the website). The weighted graph is derived from the raw graph by assigning a weight to each compound. By default, the weight of a compound is its connectivity, i.e. the number of reactions in which it participates either as a substrate or as a product. The algorithm allows to assign weights to reactions as well, but this option has so far not been exploited.</p>
+    </sec>
+    <sec>
+      <title>Path finding algorithm</title>
+      <p>A backtracking algorithm finds the <italic>k</italic>-lightest paths, i.e. the paths with the lowest weight. The path weight <italic>W</italic> is defined as the sum of the weights of its nodes. When a reaction is traversed during path elongation, the passage through the reverse reaction is disabled (<xref ref-type="bibr" rid="b9">9</xref>).</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>WEB INTERFACE</title>
+    <sec>
+      <title>Input</title>
+      <p>The user has to specify two seed nodes (a source and a target), between which the <italic>k</italic>-shortest paths have to be computed, as well as other parameters (maximum weight, maximum path length, <italic>k</italic>). Alternatively, a file with a list of seed pairs can be uploaded in order to automate multiple searches. Seed nodes can be compounds, reactions or Enzyme Commission (EC) numbers. The EC nomenclature defines a systematic identifier (the EC number) for each catalytic activity. The same EC number can therefore be associated with several reactions. When specifying EC numbers as seed nodes, paths are computed between all the different reaction pairs associated with the specified EC numbers, and the shortest paths among all these are returned.</p>
+    </sec>
+    <sec>
+      <title>Processing</title>
+      <p>Submitted tasks are placed in a queue for further processing by a computer cluster of 36 nodes. The results are sent by email. Multiple tasks can be handled without overloading the server. A typical task takes a few seconds on one node of the cluster. Elapsed time thus primarily depends on the cluster job load.</p>
+    </sec>
+    <sec>
+      <title>Output</title>
+      <p>The output is sent by email. It contains a description of the input parameters (seed nodes, maximal weight, etc.) and a textual description of the paths found (molecule names and IDs). A graphical representation is automatically generated, and can be exported in different formats (png, postscript, dot and svg). The png format can be displayed by most web browsers, but its resolution is limited. Postscript and svg are vectorial formats appropriate for high-quality printing. The dot format allows to visualizing the result with the Graphviz software (<ext-link ext-link-type="uri" xlink:href="http://www.research.att.com/sw/tools/graphviz/"/>).</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>APPLICATION EXAMPLE</title>
+    <p>To illustrate the use of our tool, we apply it to search for the five shortest paths between the first and the last reactions of the tryptophan biosynthesis pathway. The graphical output is shown in <xref ref-type="fig" rid="fig1">Figure 1</xref> (weighted graph) and in Figures 3 and 4 of the Supplementary Material. The seed nodes are highlighted with shadowed boxes. Green arrows highlight the lightest path, i.e. the path with the lowest weight (<italic>W</italic><sub>min</sub>). Paths with a weight <italic>W</italic> ≤ <italic>W</italic><sub>min</sub> + 10 are boxed in green and larger paths in red.</p>
+    <p>The search in the raw graph (Figure 3 in Supplementary Material) produces a trivial and irrelevant result: the target reaction is reached in two steps, using pyruvate and H<sub>2</sub>O as intermediates.</p>
+    <p>The search in the filtered graph (Figure 4 in Supplementary Material) yields a better result than the raw graph. First, the inferred pathways are more biochemically plausible, as highly connected compounds cannot be used as intermediates anymore. The two shortest inferred paths (green arrows) do not match a single reaction of the annotated pathway (except for the seed nodes), but the third path corresponds perfectly to the annotated pathway (<xref ref-type="fig" rid="fig2">Figure 2</xref>).</p>
+    <p>When the search is performed in the weighted graph (<xref ref-type="fig" rid="fig1">Figure 1</xref>), the lightest inferred path matches the annotated pathway perfectly (<xref ref-type="fig" rid="fig2">Figure 2</xref>).</p>
+  </sec>
+  <sec>
+    <title>VALIDATION OF THE METHOD</title>
+    <p>The example presented here is clearly not sufficient to draw general conclusions. The same analysis as above was applied to 56 annotated pathways from the bacteria <italic>Escherichia coli</italic> and the yeast <italic>Saccharomyces cerevisiae</italic>, stored in the aMAZE database (<xref ref-type="bibr" rid="b13">13</xref>). These pathways cover a large fraction of the annotated pathways having at least three reactions. The results of this validation will be detailed elsewhere (D. Croes, F. Couche, S. Wodak and J. van Helden, submitted for publication). In short, they show that the case illustrated here for the tryptophan biosynthesis pathway is quite representative of the general accuracy. The correspondence between the shortest (lightest) inferred paths and the annotated pathways (computed as the mean of sensitivity and specificity), is very low (28.4%) using the raw graph, increases to 65.5% for the filtered graph and reaches 85.9% for the weighted graph. In addition, even when the annotated path did not correspond to the lightest path, it was often found among the top raking paths: the correspondence between the annotated pathways and the best matching path among the five shortest (lightest) ones was on average as high as 90.1%.</p>
+  </sec>
+  <sec>
+    <title>POTENTIAL APPLICATIONS</title>
+    <p>The basic functionality provided by our Metabolic PathFinding tool is to find one or several pathways between two seed nodes (reactions or compounds). When this search is performed in the weighted graph, the inferred paths generally correspond to biochemically valid pathways. The inference of metabolic pathways between enzymes can be useful for probing the functional relationships between pairs of enzyme coding genes believed to be associated in various ways (e.g. genes whose homologs are involved in fusion events, synteny pairs, genes belonging to the same operon, genes having correlated expression profiles and so on), or between pairs of interacting enzymes characterized by two-hybrid screens or part of the same protein complexes identified by pull-down experiments).</p>
+    <p>An alternative approach would be to map such pairs of related enzymes directly onto known pathways stored in a database such as the Kyoto Encyclopaedia of Gene and Genomes (KEGG) (<xref ref-type="bibr" rid="b14">14</xref>,<xref ref-type="bibr" rid="b15">15</xref>). One drawback to this approach is that pathways represent a somewhat arbitrary segmentation of metabolism (as witnessed by the differences in the definition of pathways used in the different databases, such as EcoCyc, KEGG and WIT). The path finding procedure described here ignores such segmentation, enabling links between reactions annotated in distinct pathways.</p>
+    <p>A second limitation of pathway mapping resides in the fact that it limits us to the current state of pathway annotation, which usually lags behind that of individual reactions and enzymes. Indeed, our current knowledge of metabolism is mainly based on a very few model organisms (<italic>Escherichia</italic>, <italic>Salmonella</italic>, <italic>Saccharomyces</italic> and a few mammals). Moreover, the level of annotation is uneven, ranging between some very well-characterized pathways involved in primary metabolism, and secondary pathways involved, for example, in detoxification. In addition, even in the central metabolism, alternative pathways can be used by different organisms, or as a result of gene knockouts. Some of these have been characterized experimentally, but many of them remain to be discovered. With the availability of hundreds of sequenced genomes (<xref ref-type="bibr" rid="b16">16</xref>), the Metabolic PathFinding presented here should be a valuable tool for analyzing the evolution of metabolic pathways.</p>
+  </sec>
+  <sec>
+    <title>SUPPLEMENTARY MATERIAL</title>
+    <p>Supplementary Material is available at NAR Online.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material id="PMC_1" content-type="local-data">
+      <caption>
+        <title>[Supplementary Material]</title>
+      </caption>
+      <media mimetype="text" mime-subtype="html" xlink:href="nar_33_suppl-2_W326__index.html"/>
+      <media xlink:role="associated-file" mimetype="application" mime-subtype="pdf" xlink:href="nar_33_suppl-2_W326__1.pdf"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>KEGG is gratefully acknowledged for free use of the data curated in the LIGAND database. This work was partially supported by funds from the Government of the Brussels Region, and the BioSapiens Network of Excellence funded under the 6th Framework programme of the European Union (LSHG-CT-2003-503265). Funding to pay the Open Access publication charges for this article was provided by the 6th Framework programme of the European Union (LSHG-CT-2003-503265.</p>
+    <p><italic>Conflict of interest statement</italic>. None declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="b1">
+      <label>1</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kuffner</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Zimmer</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Lengauer</surname>
+            <given-names>T.</given-names>
+          </name>
+        </person-group>
+        <article-title>Pathway analysis in metabolic databases via differential metabolic display (DMD)</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>825</fpage>
+        <lpage>836</lpage>
+        <pub-id pub-id-type="pmid">11108705</pub-id>
+      </citation>
+    </ref>
+    <ref id="b2">
+      <label>2</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schuster</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Hilgetag</surname>
+            <given-names>C.</given-names>
+          </name>
+        </person-group>
+        <article-title>On elementary flux modes in biochemical reaction systems at steady state</article-title>
+        <source>J. Biol. Syst.</source>
+        <year>1994</year>
+        <volume>2</volume>
+        <fpage>165</fpage>
+        <lpage>182</lpage>
+      </citation>
+    </ref>
+    <ref id="b3">
+      <label>3</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schuster</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Dandekar</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Fell</surname>
+            <given-names>D.A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Detection of elementary flux modes in biochemical networks: a promising tool for pathway analysis and metabolic engineering</article-title>
+        <source>Trends Biotechnol.</source>
+        <year>1999</year>
+        <volume>17</volume>
+        <fpage>53</fpage>
+        <lpage>60</lpage>
+        <pub-id pub-id-type="pmid">10087604</pub-id>
+      </citation>
+    </ref>
+    <ref id="b4">
+      <label>4</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Arita</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Metabolic reconstruction using shortest paths</article-title>
+        <source>Simulat. Pract. Theory</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>109</fpage>
+        <lpage>125</lpage>
+      </citation>
+    </ref>
+    <ref id="b5">
+      <label>5</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Arita</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>The metabolic world of <italic>Escherichia coli</italic> is not small</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>2004</year>
+        <volume>101</volume>
+        <fpage>1543</fpage>
+        <lpage>1547</lpage>
+        <pub-id pub-id-type="pmid">14757824</pub-id>
+      </citation>
+    </ref>
+    <ref id="b6">
+      <label>6</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zien</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Kuffner</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Zimmer</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Lengauer</surname>
+            <given-names>T.</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis of gene expression data with pathway scores</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>407</fpage>
+        <lpage>417</lpage>
+        <pub-id pub-id-type="pmid">10977101</pub-id>
+      </citation>
+    </ref>
+    <ref id="b7">
+      <label>7</label>
+      <citation citation-type="confproc">
+        <person-group person-group-type="author">
+          <name>
+            <surname>van Helden</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Gilbert</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Wernisch</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Schroeder</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Wodak</surname>
+            <given-names>S.</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Gascuel</surname>
+            <given-names>O.</given-names>
+          </name>
+          <name>
+            <surname>Sagot</surname>
+            <given-names>M.F.</given-names>
+          </name>
+        </person-group>
+        <article-title>Applications of regulatory sequence analysis and metabolic network analysis to the interpretation of gene expression data.</article-title>
+        <year>2001</year>
+        <conf-name>Computational Biology: First International Conference on Biology, Informatics, and Mathematics, JOBIM 2000</conf-name>
+        <publisher-name>Springer</publisher-name>
+        <fpage>155</fpage>
+        <lpage>172</lpage>
+        <comment>volume LNCS 2066</comment>
+      </citation>
+    </ref>
+    <ref id="b8">
+      <label>8</label>
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>van Helden</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Wernisch</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Gilbert</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Wodak</surname>
+            <given-names>S.J.</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Mewes</surname>
+            <given-names>H.W.</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Graph-based analysis of metabolic networks</article-title>
+        <year>2002</year>
+        <publisher-name>Springer-Verlag</publisher-name>
+        <fpage>245</fpage>
+        <lpage>274</lpage>
+        <comment>Bioinformatics and Genome Analysis</comment>
+      </citation>
+    </ref>
+    <ref id="b9">
+      <label>9</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fell</surname>
+            <given-names>D.A.</given-names>
+          </name>
+          <name>
+            <surname>Wagner</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>The small world of metabolism</article-title>
+        <source>Nat. Biotechnol.</source>
+        <year>2000</year>
+        <volume>18</volume>
+        <fpage>1121</fpage>
+        <lpage>1122</lpage>
+        <pub-id pub-id-type="pmid">11062388</pub-id>
+      </citation>
+    </ref>
+    <ref id="b10">
+      <label>10</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wagner</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Fell</surname>
+            <given-names>D.A.</given-names>
+          </name>
+        </person-group>
+        <article-title>The small world inside large metabolic networks</article-title>
+        <source>Proc. R. Soc. Lond. B Biol. Sci.</source>
+        <year>2001</year>
+        <volume>268</volume>
+        <fpage>1803</fpage>
+        <lpage>1810</lpage>
+      </citation>
+    </ref>
+    <ref id="b11">
+      <label>11</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rison</surname>
+            <given-names>S.C.</given-names>
+          </name>
+          <name>
+            <surname>Teichmann</surname>
+            <given-names>S.A.</given-names>
+          </name>
+          <name>
+            <surname>Thornton</surname>
+            <given-names>J.M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Homology, pathway distance and chromosomal localization of the small molecule metabolism enzymes in <italic>Escherichia coli</italic></article-title>
+        <source>J. Mol. Biol.</source>
+        <year>2002</year>
+        <volume>318</volume>
+        <fpage>911</fpage>
+        <lpage>932</lpage>
+        <pub-id pub-id-type="pmid">12054833</pub-id>
+      </citation>
+    </ref>
+    <ref id="b12">
+      <label>12</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Simeonidis</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Rison</surname>
+            <given-names>S.C.</given-names>
+          </name>
+          <name>
+            <surname>Thornton</surname>
+            <given-names>J.M.</given-names>
+          </name>
+          <name>
+            <surname>Bogle</surname>
+            <given-names>I.D.</given-names>
+          </name>
+          <name>
+            <surname>Papageorgiou</surname>
+            <given-names>L.G.</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis of metabolic networks using a pathway distance metric through linear programming</article-title>
+        <source>Metab. Eng.</source>
+        <year>2003</year>
+        <volume>5</volume>
+        <fpage>211</fpage>
+        <lpage>219</lpage>
+        <pub-id pub-id-type="pmid">12948755</pub-id>
+      </citation>
+    </ref>
+    <ref id="b13">
+      <label>13</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lemer</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Antezana</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Couche</surname>
+            <given-names>F.</given-names>
+          </name>
+          <name>
+            <surname>Fays</surname>
+            <given-names>F.</given-names>
+          </name>
+          <name>
+            <surname>Santolaria</surname>
+            <given-names>X.</given-names>
+          </name>
+          <name>
+            <surname>Janky</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Deville</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>Richelle</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Wodak</surname>
+            <given-names>S.J.</given-names>
+          </name>
+        </person-group>
+        <article-title>The aMAZE LightBench: a web interface to a relational database of cellular processes</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2004</year>
+        <volume>32</volume>
+        <fpage>D443</fpage>
+        <lpage>D448</lpage>
+        <pub-id pub-id-type="pmid">14681453</pub-id>
+      </citation>
+    </ref>
+    <ref id="b14">
+      <label>14</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ogata</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Goto</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Sato</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Fujibuchi</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Bono</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Kanehisa</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>KEGG: Kyoto Encyclopedia of Genes and Genomes</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <fpage>29</fpage>
+        <lpage>34</lpage>
+        <pub-id pub-id-type="pmid">9847135</pub-id>
+      </citation>
+    </ref>
+    <ref id="b15">
+      <label>15</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kanehisa</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Goto</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Kawashima</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Nakaya</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>The KEGG databases at GenomeNet</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>42</fpage>
+        <lpage>46</lpage>
+        <pub-id pub-id-type="pmid">11752249</pub-id>
+      </citation>
+    </ref>
+    <ref id="b16">
+      <label>16</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pruitt</surname>
+            <given-names>K.D.</given-names>
+          </name>
+          <name>
+            <surname>Tatusova</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Maglott</surname>
+            <given-names>D.R.</given-names>
+          </name>
+        </person-group>
+        <article-title>NCBI Reference Sequence (RefSeq): a curated non-redundant sequence database of genomes, transcripts and proteins</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <fpage>D501</fpage>
+        <lpage>D504</lpage>
+        <pub-id pub-id-type="pmid">15608248</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig id="fig1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p>Path finding result: the five lightest pathways found in the weighted graph, when the first and last reactions of the tryptophan biosynthesis are input seeds. Reactions are displayed as rectangles and compounds as ellipses. Seed nodes are highlighted in blue. Green arcs denote the lightest path (or paths in case of ex-aequos). The green box surrounds the path having a weight <italic>W</italic> ≤ <italic>W</italic><sub>min</sub> + 10, where <italic>W</italic><sub>min</sub> is the weight of the lightest path. Nodes that are only found in paths heavier than <italic>W</italic><sub>min</sub> + 10 are surrounded by using red box. Dashed lines indicate the substrates and products of the seed reactions that are not in the paths.</p>
+      </caption>
+      <graphic xlink:href="gki437f1"/>
+    </fig>
+    <fig id="fig2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p>Pathway annotated in aMAZE (source: <ext-link ext-link-type="uri" xlink:href="http://www.amaze.ulb.ac.be/"/>) for the tryptophan biosynthesis in yeast.</p>
+      </caption>
+      <graphic xlink:href="gki437f2"/>
+    </fig>
+  </sec>
+</back>

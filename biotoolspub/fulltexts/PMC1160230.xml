@@ -1,0 +1,843 @@
+<?open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">Nucleic Acids Research</journal-id>
+    <journal-title>Nucleic Acids Research</journal-title>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">1160230</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gki469</article-id>
+    <article-id pub-id-type="pmid">15980544</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>GEMS: a web server for biclustering analysis of expression data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Wu</surname>
+          <given-names>Chang-Jiun</given-names>
+        </name>
+        <xref ref-type="aff" rid="au1">1</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Kasif</surname>
+          <given-names>Simon</given-names>
+        </name>
+        <xref ref-type="aff" rid="au1">1</xref>
+        <xref ref-type="aff" rid="au2">2</xref>
+        <xref ref-type="corresp" rid="cor1">*</xref>
+      </contrib>
+      <aff id="au1">
+        <sup>1</sup>
+        <institution>Program in Bioinformatics, Boston University</institution>
+        <addr-line>Boston, MA 02215, USA</addr-line>
+      </aff>
+      <aff id="au2">
+        <sup>2</sup>
+        <institution>Department of Biomedical Engineering, Boston University</institution>
+        <addr-line>Boston, MA 02215, USA</addr-line>
+      </aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="cor1"><sup>*</sup>To whom correspondence should be addressed. Tel: +1 617 358 1845; Fax: +1 617 353 6766; Email: <email>kasif@bu.edu</email></corresp>
+    </author-notes>
+    <!--For NAR: both ppub and collection dates generated for PMC processing 1/27/05 beck-->
+    <pub-date pub-type="collection">
+      <day>01</day>
+      <month>7</month>
+      <year>2005</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <day>01</day>
+      <month>7</month>
+      <year>2005</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>27</day>
+      <month>6</month>
+      <year>2005</year>
+    </pub-date>
+    <volume>33</volume>
+    <issue>Web Server issue</issue>
+    <fpage>W596</fpage>
+    <lpage>W599</lpage>
+    <history>
+      <date date-type="received">
+        <day>14</day>
+        <month>2</month>
+        <year>2005</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>30</day>
+        <month>3</month>
+        <year>2005</year>
+      </date>
+      <date date-type="accepted">
+        <day>13</day>
+        <month>4</month>
+        <year>2005</year>
+      </date>
+    </history>
+    <copyright-statement>© The Author 2005. Published by Oxford University Press. All rights reserved</copyright-statement>
+    <copyright-year>2005</copyright-year>
+    <license license-type="openaccess">
+      <p>The online version of this article has been published under an open access model. Users are entitled to use, reproduce, disseminate, or display the open access version of this article for non-commercial purposes provided that: the original authorship is properly and fully attributed; the Journal and Oxford University Press are attributed as the original place of publication with the correct citation details given; if an article is subsequently reproduced or disseminated not in its entirety but only in part or as a derivative work this must be clearly indicated. For commercial re-use, please contact <email>journals.permissions@oupjournals.org</email></p>
+    </license>
+    <abstract>
+      <p>The advent of microarray technology has revolutionized the search for genes that are differentially expressed across a range of cell types or experimental conditions. Traditional clustering methods, such as hierarchical clustering, are often difficult to deploy effectively since genes rarely exhibit similar expression pattern across a wide range of conditions. Biclustering of gene expression data (also called co-clustering or two-way clustering) is a non-trivial but promising methodology for the identification of gene groups that show a coherent expression profile across a subset of conditions. Thus, biclustering is a natural methodology as a screen for genes that are functionally related, participate in the same pathways, affected by the same drug or pathological condition, or genes that form modules that are potentially co-regulated by a small group of transcription factors. We have developed a web-enabled service called GEMS (Gene Expression Mining Server) for biclustering microarray data. Users may upload expression data and specify a set of criteria. GEMS then performs bicluster mining based on a Gibbs sampling paradigm. The web server provides a flexible and an useful platform for the discovery of co-expressed and potentially co-regulated gene modules. GEMS is an open source software and is available at <ext-link ext-link-type="uri" xlink:href="http://genomics10.bu.edu/terrence/gems/"/>.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>Advances in high-throughput microarray technology facilitate the profiling of the transcriptional level of genes on a genome-wide scale (<xref ref-type="bibr" rid="b1">1</xref>,<xref ref-type="bibr" rid="b2">2</xref>). Transcriptome data can be gathered efficiently from a large number of samples in different conditions. A major challenge in functional genomics is the elucidation of genes that are differentially expressed across a variety of cell types in a range of experimental conditions (<xref ref-type="bibr" rid="b3">3</xref>). Clustering analysis is a first step to understanding the functional roles of genes since genes with similar expression profiles are potentially functionally related and are often co-regulated. Traditional clustering methods, such as hierarchical (<xref ref-type="bibr" rid="b4">4</xref>) and <italic>K</italic>-means (<xref ref-type="bibr" rid="b5">5</xref>) approaches, consider the similarity of genes over all conditions. However, genes rarely exhibit similar expression patterns across a wide range of conditions. It is not uncommon that a group of genes is co-expressed only in particular conditions, but exhibits independent expression levels in others. In particular, genes that are involved in the same pathway (e.g. early immediate response genes in signaling pathways) are often activated in response to specific stimuli that are present only in certain conditions (<xref ref-type="bibr" rid="b6">6</xref>).</p>
+    <p>Heuristic biclustering algorithms have been reported (<xref ref-type="bibr" rid="b7">7</xref>), such as Cheng and Church (<xref ref-type="bibr" rid="b8">8</xref>), coupled two-way clustering (<xref ref-type="bibr" rid="b9">9</xref>), plaid model (<xref ref-type="bibr" rid="b10">10</xref>), SPLASH (<xref ref-type="bibr" rid="b11">11</xref>), SAMBA (<xref ref-type="bibr" rid="b12">12</xref>), xMotif (<xref ref-type="bibr" rid="b13">13</xref>) and Gibbs sampling (<xref ref-type="bibr" rid="b14">14</xref>). Although some of them provide software resources for a download, there are only few online biclustering servers so far (<xref ref-type="bibr" rid="b9">9</xref>). In this paper, we present a web server GEMS (Gene Expression Mining Server) (<xref ref-type="bibr" rid="b15">15</xref>) that is based on a biclustering heuristic algorithm motivated by a Gibbs sampling paradigm. This server aims to provide a valuable resource in the field of microarray and functional genomics research, with all its relative simplicity, flexibility and functionality.</p>
+    <p>One of the main advantages of GEMS as compared with other tools for clustering and biclustering is the fact that GEMS identifies clusters of genes whose mRNA abundance is constrained to be in a certain range. The majority of clustering algorithms, such as <italic>K</italic>-means, identify a set of samples whose expression profile is sufficiently similar. Consequently, the clusters of samples produced by these algorithms have an ellipsoid or arbitrary ‘shape’. An example is shown in <xref ref-type="fig" rid="fig1">Figure 1a</xref>. In particular, the similarity is defined by an additive function integrated over all dimensions, but for one or more genes the range (or variance) of expression can be substantial. GEMS aims to identify sets of samples that are restricted to a particular range for each gene, forming axis-parallel hyper-rectangles (ap-bicluster) in the space defined by the selected genes (<xref ref-type="fig" rid="fig1">Figure 1b</xref>). An important aspect of the biclusters identified by GEMS is that by thresholding the expression values for each gene, a simple Boolean rule describing the cluster may be obtained. The rule is a conjunction of conditions. An example of such a conjunctive bicluster is a set of samples where gene A is upregulated, gene B is downregulated and gene C is upregulated. Traditional clustering techniques do not necessarily provide such a natural qualitative description.</p>
+  </sec>
+  <sec>
+    <title>OVERVIEW OF THE SERVICE</title>
+    <p>Given a microarray dataset collected from a set of patients, different tissue types or a set of conditions, a researcher may want to glean one or more biclusters from this dataset, estimate the statistical significance of each bicluster and save the extracted submatrices into array files with the same format. After the GEMS server receives an array file uploaded by the user, the first step is to preprocess the data. Expression values of mRNAs below some threshold may be considered as random noise rather than a signal. Users can set a threshold value to filter out the genes that have low-expression values in most of the samples. Different genes typically have a wide range of expression levels and variances; therefore, it is frequently desirable to normalize the expression values into a fixed range or equal variance. The GEMS server includes an elementary preprocessing facility to normalize the data at the request of the user.</p>
+    <p>The second step in the pipeline is the deployment of a sampling algorithm to find a subset of samples corresponding to a maximal subset of genes. We provide a statistical motivation for this approach and a workflow chart describing the methods in Supplementary Material. Two parameters, the size constraint α and width constraint <italic>W</italic>, are applied to define an acceptable bicluster. The α parameter sets a lower bound for the fraction of samples included in a bicluster. In particular, we insist that each bicluster contains at least α<italic>S</italic> samples where <italic>S</italic> is the total number of samples in the microarray study. The typical value of α is problem-dependent, e.g. corresponds to the size of the known pathways implicated in a particular disease or process. The <italic>W</italic> parameter constrains the expression range of each gene included in the bicluster. Recall that our biclusters are axis parallel thus <italic>W</italic> = 0.1 means that maximal length of the side of any side of the hyper-rectangle is 0.1. Biologically, this constraint implies that for any gene included in a bicluster: the difference between the maximum and the minimum values of the samples included in the bicluster is at most <italic>W</italic> = 0.1.</p>
+    <p>The Gibbs sampling is a stochastic simulation process (<xref ref-type="bibr" rid="b16">16</xref>), which repeatedly samples from a distribution defined over biclusters aiming to identify an optimal bicluster, i.e. a bicluster that satisfies the user-defined parameters and has the maximum number of genes. The longer the sampling process, the higher is the probability that the result will approximate the global optimum. The GEMS users can choose either faster execution with a shorter lag period or seek to obtain a ‘better’ result sacrificing response time. The program can also detect multiple biclusters, and users have an option to ask the server for unique biclusters. Earlier extracted biclusters can be masked to avoid overlapping between biclusters and to speed up the searching process. Three different masking methods can be selected: (i) masking early extracted gene clusters, (ii) masking previously detected sample subsets and (iii) masking selected genes on selected samples in earlier biclusters.</p>
+    <p>The final computational step performed by GEMS uses a local search step to refine the bicluster. More details about the algorithms and the user-defined parameters can be found in Supplementary Material. After completion of the above three steps, the GEMS server sends an email to notify the user and provides a website address where the results can be downloaded.</p>
+  </sec>
+  <sec>
+    <title>IMPLEMENTATION</title>
+    <p>The GEMS web service was developed using dynamic CGI scripts in Perl language, and is available at <ext-link ext-link-type="uri" xlink:href="http://genomics10.bu.edu/terrence/gems/"/>. The core GEMS program is implemented in C++. The server is currently running on a machine with dual Intel Pentium III 900 MHz, 2 GB of RAM, Redhat Linux version 2.4.20 and an Apache web server. The core program of GEMS can be downloaded as a standalone application on a local machine, which works successfully in both Linux/Unix and Windows platforms.</p>
+  </sec>
+  <sec>
+    <title>INPUT</title>
+    <p>The GEMS web interface requires users to input their email address and upload microarray expression data in a tab-delimited plain text file. The format of the expression data file is similar to the commonly used formats in many gene expression datasets. The first column contains a unique identifier name for each gene and the second column contains the descriptive text about each gene. The following columns contain gene expression data, where one column is allocated for each microarray sample. The first row starting with the third column contains names of samples. The following rows contain the expression data with one row per gene. The current version of the web server accepts up to 50 000 genes and 512 samples. Users have to specify the width constraint and size constraint used to search for the biclusters. The GEMS server generates one bicluster for every query by default, but users can choose to request multiple biclusters and select a method to mask earlier results.</p>
+  </sec>
+  <sec>
+    <title>OUTPUT</title>
+    <p>The biclustering results can be queried by users on the GEMS website. For each submitted task, GEMS will generate a report containing the parameter setting, the number of biclusters extracted, the number of samples and genes as well as the permutation <italic>P</italic>-value for every bicluster. For each bicluster extracted, four files will be generated and packed in a zip file, including one expression matrix file, one heatmap image file and two index files indicating which samples and which genes are selected in the biclusters. The matrix and the index output files are tab-delimited plain text files, which can easily be imported into other software, such as the statistical package R (<xref ref-type="bibr" rid="b17">17</xref>), for further analysis.</p>
+    <p>An example query result is illustrated in <xref ref-type="fig" rid="fig2">Figure 2</xref>. The array file comes from the T-matrix cDNA microarray data of the NCI 60 Cancer Cell Lines (<xref ref-type="bibr" rid="b18">18</xref>) containing the expression profiles of 1375 genes. GEMS projects all expression values to a range from 0 to 1 and detects biclusters with at least 10 samples and 10 genes. We use a width constraint <italic>W</italic> = 0.1 to limit the expression range of genes, and three biclusters are detected.</p>
+  </sec>
+  <sec>
+    <title>DISCUSSION</title>
+    <p>The web service of GEMS is a user-friendly interface for biclustering analysis of microarray expression data that aims to identify locally conserved biclusters. Each bicluster can be considered as a ‘hypothesis generator’ for future follow-up by the researchers using the system. In particular, the typical follow-up steps might include a literature search to see if pairs of genes included in the biclusters have been previously found to be associated with each other (e.g. as co-factors or part of the same protein–protein interaction network). In addition, the information produced by GEMS can be integrated with other sources of information. For instance, we can integrate the gene sets produced by GEMS with information on protein–protein networks to produce more reliable functional gene annotation (<xref ref-type="bibr" rid="b19">19</xref>).</p>
+    <p>Using a function-oriented labeling scheme, it is also possible to classify the selected genes and samples into functional categories of interest. We are adding this ability to the server that in particular will provide an enrichment score of the genes in a particular functional category among the genes selected for the bicluster (<xref ref-type="bibr" rid="b20">20</xref>,<xref ref-type="bibr" rid="b21">21</xref>). In the future studies, the interface will be updated and enhanced with a number of other features that include a functional enrichment test, a semi-supervised learning schema and a probabilistic version of biclustering that are currently in development. Each update will be highlighted and reported on the web page.</p>
+  </sec>
+  <sec>
+    <title>SUPPLEMENTARY MATERIAL</title>
+    <p>Supplementary Material is available at NAR Online.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material id="PMC_1" content-type="local-data">
+      <caption>
+        <title>[Supplementary Material]</title>
+      </caption>
+      <media mimetype="text" mime-subtype="html" xlink:href="nar_33_suppl-2_W596__index.html"/>
+      <media xlink:role="associated-file" mimetype="application" mime-subtype="pdf" xlink:href="nar_33_suppl-2_W596__1.pdf"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>We thank Yutao Fu and T. M. Murali for their help in developing the GEMS algorithm. We also thank Megon J. Walker and Mike Schaffer for their valuable suggestions. This work is supported in part by NSF grants DBI-0239435 and ITR-048715, NHGRI grant #1R33HG002850-01A1 and NIH grant U54 LM008748. Funding to pay the Open Access publication charges for this article was provided by NSF grant ITR-048715.</p>
+    <p><italic>Conflict of interest statement</italic>. None declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="b1">
+      <label>1</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mootha</surname>
+            <given-names>V.K.</given-names>
+          </name>
+          <name>
+            <surname>Lindgren</surname>
+            <given-names>C.M.</given-names>
+          </name>
+          <name>
+            <surname>Eriksson</surname>
+            <given-names>K.F.</given-names>
+          </name>
+          <name>
+            <surname>Subramanian</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Sihag</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Lehar</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Puigserver</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Carlsson</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Ridderstrale</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Laurila</surname>
+            <given-names>E.</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>PGC-1alpha-responsive genes involved in oxidative phosphorylation are coordinately downregulated in human diabetes</article-title>
+        <source>Nature Genet.</source>
+        <year>2003</year>
+        <volume>34</volume>
+        <fpage>267</fpage>
+        <lpage>273</lpage>
+        <pub-id pub-id-type="pmid">12808457</pub-id>
+      </citation>
+    </ref>
+    <ref id="b2">
+      <label>2</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Golub</surname>
+            <given-names>T.R.</given-names>
+          </name>
+          <name>
+            <surname>Slonim</surname>
+            <given-names>D.K.</given-names>
+          </name>
+          <name>
+            <surname>Tamayo</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Huard</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Gaasenbeek</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Mesirov</surname>
+            <given-names>J.P.</given-names>
+          </name>
+          <name>
+            <surname>Coller</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Loh</surname>
+            <given-names>M.L.</given-names>
+          </name>
+          <name>
+            <surname>Downing</surname>
+            <given-names>J.R.</given-names>
+          </name>
+          <name>
+            <surname>Caligiuri</surname>
+            <given-names>M.A.</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Molecular classification of cancer: class discovery and class prediction by gene expression monitoring</article-title>
+        <source>Science</source>
+        <year>1999</year>
+        <volume>286</volume>
+        <fpage>531</fpage>
+        <lpage>537</lpage>
+        <pub-id pub-id-type="pmid">10521349</pub-id>
+      </citation>
+    </ref>
+    <ref id="b3">
+      <label>3</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Su</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>Murali</surname>
+            <given-names>T.M.</given-names>
+          </name>
+          <name>
+            <surname>Pavlovic</surname>
+            <given-names>V.</given-names>
+          </name>
+          <name>
+            <surname>Schaffer</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Kasif</surname>
+            <given-names>S.</given-names>
+          </name>
+        </person-group>
+        <article-title>RankGene: identification of diagnostic genes based on expression data</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <fpage>1578</fpage>
+        <lpage>1579</lpage>
+        <pub-id pub-id-type="pmid">12912841</pub-id>
+      </citation>
+    </ref>
+    <ref id="b4">
+      <label>4</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eisen</surname>
+            <given-names>M.B.</given-names>
+          </name>
+          <name>
+            <surname>Spellman</surname>
+            <given-names>P.T.</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>P.O.</given-names>
+          </name>
+          <name>
+            <surname>Botstein</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>Cluster analysis and display of genome-wide expression patterns</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>1998</year>
+        <volume>95</volume>
+        <fpage>14863</fpage>
+        <lpage>14868</lpage>
+        <pub-id pub-id-type="pmid">9843981</pub-id>
+      </citation>
+    </ref>
+    <ref id="b5">
+      <label>5</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Herwig</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Poustka</surname>
+            <given-names>A.J.</given-names>
+          </name>
+          <name>
+            <surname>Muller</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Bull</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Lehrach</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>O'Brien</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>Large-scale clustering of cDNA-fingerprinting data</article-title>
+        <source>Genome Res.</source>
+        <year>1999</year>
+        <volume>9</volume>
+        <fpage>1093</fpage>
+        <lpage>1105</lpage>
+        <pub-id pub-id-type="pmid">10568749</pub-id>
+      </citation>
+    </ref>
+    <ref id="b6">
+      <label>6</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tullai</surname>
+            <given-names>J.W.</given-names>
+          </name>
+          <name>
+            <surname>Schaffer</surname>
+            <given-names>M.E.</given-names>
+          </name>
+          <name>
+            <surname>Mullenbrock</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Kasif</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Cooper</surname>
+            <given-names>G.M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Identification of transcription factor binding sites upstream of human genes regulated by the phosphatidylinositol 3-kinase and MEK/ERK signaling pathways</article-title>
+        <source>J. Biol. Chem.</source>
+        <year>2004</year>
+        <volume>279</volume>
+        <fpage>20167</fpage>
+        <lpage>20177</lpage>
+        <pub-id pub-id-type="pmid">14769801</pub-id>
+      </citation>
+    </ref>
+    <ref id="b7">
+      <label>7</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Madeira</surname>
+            <given-names>S.C.</given-names>
+          </name>
+          <name>
+            <surname>Oliveira</surname>
+            <given-names>A.L.</given-names>
+          </name>
+        </person-group>
+        <article-title>Biclustering algorithms for biological data analysis: a survey</article-title>
+        <source>IEEE/ACM TCBB</source>
+        <year>2004</year>
+        <volume>1</volume>
+        <fpage>24</fpage>
+        <lpage>45</lpage>
+      </citation>
+    </ref>
+    <ref id="b8">
+      <label>8</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cheng</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>Church</surname>
+            <given-names>G.M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Biclustering of expression data</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>93</fpage>
+        <lpage>103</lpage>
+        <pub-id pub-id-type="pmid">10977070</pub-id>
+      </citation>
+    </ref>
+    <ref id="b9">
+      <label>9</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Getz</surname>
+            <given-names>G.</given-names>
+          </name>
+          <name>
+            <surname>Levine</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Domany</surname>
+            <given-names>E.</given-names>
+          </name>
+        </person-group>
+        <article-title>Coupled two-way clustering analysis of gene microarray data</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>2000</year>
+        <volume>97</volume>
+        <fpage>12079</fpage>
+        <lpage>12084</lpage>
+        <pub-id pub-id-type="pmid">11035779</pub-id>
+      </citation>
+    </ref>
+    <ref id="b10">
+      <label>10</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lazzeroni</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Owen</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Plaid models for gene expression data</article-title>
+        <source>Stat. Sin.</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>61</fpage>
+        <lpage>86</lpage>
+      </citation>
+    </ref>
+    <ref id="b11">
+      <label>11</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Califano</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Stolovitzky</surname>
+            <given-names>G.</given-names>
+          </name>
+          <name>
+            <surname>Tu</surname>
+            <given-names>Y.</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis of gene expression microarrays for phenotype classification</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>75</fpage>
+        <lpage>85</lpage>
+        <pub-id pub-id-type="pmid">10977068</pub-id>
+      </citation>
+    </ref>
+    <ref id="b12">
+      <label>12</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tanay</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Sharan</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Shamir</surname>
+            <given-names>R.</given-names>
+          </name>
+        </person-group>
+        <article-title>Discovering statistically significant biclusters in gene expression data</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>136</fpage>
+        <lpage>144</lpage>
+      </citation>
+    </ref>
+    <ref id="b13">
+      <label>13</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Murali</surname>
+            <given-names>T.M.</given-names>
+          </name>
+          <name>
+            <surname>Kasif</surname>
+            <given-names>S.</given-names>
+          </name>
+        </person-group>
+        <article-title>Extracting conserved gene expression motifs from gene expression data</article-title>
+        <source>Pac. Symp. Biocomput.</source>
+        <year>2003</year>
+        <volume>2003</volume>
+        <fpage>77</fpage>
+        <lpage>88</lpage>
+      </citation>
+    </ref>
+    <ref id="b14">
+      <label>14</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sheng</surname>
+            <given-names>Q.</given-names>
+          </name>
+          <name>
+            <surname>Moreau</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>De Moor</surname>
+            <given-names>B.</given-names>
+          </name>
+        </person-group>
+        <article-title>Biclustering microarray data by Gibbs sampling</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>Suppl. 2</issue>
+        <fpage>II196</fpage>
+        <lpage>II205</lpage>
+        <pub-id pub-id-type="pmid">14534190</pub-id>
+      </citation>
+    </ref>
+    <ref id="b15">
+      <label>15</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wu</surname>
+            <given-names>C.J.</given-names>
+          </name>
+          <name>
+            <surname>Fu</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>Murali</surname>
+            <given-names>T.M.</given-names>
+          </name>
+          <name>
+            <surname>Kasif</surname>
+            <given-names>S.</given-names>
+          </name>
+        </person-group>
+        <article-title>Gene expression module discovery using Gibbs sampling</article-title>
+        <source>Genome Inform. Ser. Workshop Genome Inform.</source>
+        <year>2004</year>
+        <volume>15</volume>
+        <fpage>239</fpage>
+        <lpage>248</lpage>
+      </citation>
+    </ref>
+    <ref id="b16">
+      <label>16</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lawrence</surname>
+            <given-names>C.E.</given-names>
+          </name>
+          <name>
+            <surname>Altschul</surname>
+            <given-names>S.F.</given-names>
+          </name>
+          <name>
+            <surname>Boguski</surname>
+            <given-names>M.S.</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>J.S.</given-names>
+          </name>
+          <name>
+            <surname>Neuwald</surname>
+            <given-names>A.F.</given-names>
+          </name>
+          <name>
+            <surname>Wootton</surname>
+            <given-names>J.C.</given-names>
+          </name>
+        </person-group>
+        <article-title>Detecting subtle sequence signals: a Gibbs sampling strategy for multiple alignment</article-title>
+        <source>Science</source>
+        <year>1993</year>
+        <volume>262</volume>
+        <fpage>208</fpage>
+        <lpage>214</lpage>
+        <pub-id pub-id-type="pmid">8211139</pub-id>
+      </citation>
+    </ref>
+    <ref id="b17">
+      <label>17</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ihaka</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Gentleman</surname>
+            <given-names>R.</given-names>
+          </name>
+        </person-group>
+        <article-title>R: a language for data analysis and graphics</article-title>
+        <source>J. Comput. Graph. Stat.</source>
+        <year>1996</year>
+        <volume>5</volume>
+        <fpage>299</fpage>
+        <lpage>314</lpage>
+      </citation>
+    </ref>
+    <ref id="b18">
+      <label>18</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Scherf</surname>
+            <given-names>U.</given-names>
+          </name>
+          <name>
+            <surname>Ross</surname>
+            <given-names>D.T.</given-names>
+          </name>
+          <name>
+            <surname>Waltham</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Smith</surname>
+            <given-names>L.H.</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>J.K.</given-names>
+          </name>
+          <name>
+            <surname>Tanabe</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Kohn</surname>
+            <given-names>K.W.</given-names>
+          </name>
+          <name>
+            <surname>Reinhold</surname>
+            <given-names>W.C.</given-names>
+          </name>
+          <name>
+            <surname>Myers</surname>
+            <given-names>T.G.</given-names>
+          </name>
+          <name>
+            <surname>Andrews</surname>
+            <given-names>D.T.</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A gene expression database for the molecular pharmacology of cancer</article-title>
+        <source>Nature Genet.</source>
+        <year>2000</year>
+        <volume>24</volume>
+        <fpage>236</fpage>
+        <lpage>244</lpage>
+        <pub-id pub-id-type="pmid">10700175</pub-id>
+      </citation>
+    </ref>
+    <ref id="b19">
+      <label>19</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Karaoz</surname>
+            <given-names>U.</given-names>
+          </name>
+          <name>
+            <surname>Murali</surname>
+            <given-names>T.M.</given-names>
+          </name>
+          <name>
+            <surname>Letovsky</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Zheng</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>Ding</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Cantor</surname>
+            <given-names>C.R.</given-names>
+          </name>
+          <name>
+            <surname>Kasif</surname>
+            <given-names>S.</given-names>
+          </name>
+        </person-group>
+        <article-title>Whole-genome annotation by using evidence integration in functional-linkage networks</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>2004</year>
+        <volume>101</volume>
+        <fpage>2888</fpage>
+        <lpage>2893</lpage>
+        <pub-id pub-id-type="pmid">14981259</pub-id>
+      </citation>
+    </ref>
+    <ref id="b20">
+      <label>20</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Beissbarth</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>T.P.</given-names>
+          </name>
+        </person-group>
+        <article-title>GOstat: find statistically overrepresented Gene Ontologies within a group of genes</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>1464</fpage>
+        <lpage>1465</lpage>
+        <pub-id pub-id-type="pmid">14962934</pub-id>
+      </citation>
+    </ref>
+    <ref id="b21">
+      <label>21</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Al-Shahrour</surname>
+            <given-names>F.</given-names>
+          </name>
+          <name>
+            <surname>Diaz-Uriarte</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Dopazo</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>FatiGO: a web tool for finding significant associations of Gene Ontology terms with groups of genes</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>578</fpage>
+        <lpage>580</lpage>
+        <pub-id pub-id-type="pmid">14990455</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig id="fig1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p>Examples of the shape of clusters or biclusters. (<bold>a</bold>) Algorithms based on similarity in overall gene expression produce ellipsoid or arbitrary shape clusters. (<bold>b</bold>) GEMS sets a width constraint on a subset of genes and produces axis-parallel hyper-rectangular biclusters.</p>
+      </caption>
+      <graphic xlink:href="gki469f1"/>
+    </fig>
+    <fig id="fig2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p>Illustration of GEMS output using NCI60 cDNA expression data as an example. (<bold>a</bold>) Three biclusters are detected: the numbers of genes in the biclusters are 10, 11 and 10, respectively. (<bold>b</bold>) The heatmaps of original T-matrix cDNA expression dataset (truncated) and three extracted biclusters. The expression values of every gene in the biclusters are consistent across the subset of samples.</p>
+      </caption>
+      <graphic xlink:href="gki469f2"/>
+    </fig>
+  </sec>
+</back>

@@ -1,0 +1,1884 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//Springer-Verlag//DTD A++ V2.4//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName A++V2.4.dtd?>
+<?SourceDTD.Version 2.4?>
+<?ConverterInfo.XSLTName springer2nlmx2.xsl?>
+<?ConverterInfo.Version 1?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">8082839</article-id>
+    <article-id pub-id-type="publisher-id">4133</article-id>
+    <article-id pub-id-type="doi">10.1186/s12859-021-04133-4</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>GPrimer: a fast GPU-based pipeline for primer design for qPCR experiments</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Bae</surname>
+          <given-names>Jeongmin</given-names>
+        </name>
+        <address>
+          <email>jm_bae@kaist.ac.kr</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1">1</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Jeon</surname>
+          <given-names>Hajin</given-names>
+        </name>
+        <address>
+          <email>summerj@dgist.ac.kr</email>
+        </address>
+        <xref ref-type="aff" rid="Aff2">2</xref>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes">
+        <contrib-id contrib-id-type="orcid">http://orcid.org/0000-0002-7852-0853</contrib-id>
+        <name>
+          <surname>Kim</surname>
+          <given-names>Min-Soo</given-names>
+        </name>
+        <address>
+          <email>minsoo.k@kaist.ac.kr</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1">1</xref>
+      </contrib>
+      <aff id="Aff1"><label>1</label><institution-wrap><institution-id institution-id-type="GRID">grid.37172.30</institution-id><institution-id institution-id-type="ISNI">0000 0001 2292 0500</institution-id><institution>Korea Advanced Institute of Science and Technology, KAIST, </institution></institution-wrap>291, Daehak-ro, Yuseong-gu, 34141 Daejeon, South Korea </aff>
+      <aff id="Aff2"><label>2</label><institution-wrap><institution-id institution-id-type="GRID">grid.417736.0</institution-id><institution-id institution-id-type="ISNI">0000 0004 0438 6721</institution-id><institution>Department of Information and Communication Engineering, DGIST, </institution></institution-wrap>333, Techno jungang-daero, Hyeonpung-eup, Dalseong-gun, 42988 Daegu, South Korea </aff>
+    </contrib-group>
+    <pub-date pub-type="epub">
+      <day>29</day>
+      <month>4</month>
+      <year>2021</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>29</day>
+      <month>4</month>
+      <year>2021</year>
+    </pub-date>
+    <pub-date pub-type="collection">
+      <year>2021</year>
+    </pub-date>
+    <volume>22</volume>
+    <elocation-id>220</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>17</day>
+        <month>8</month>
+        <year>2020</year>
+      </date>
+      <date date-type="accepted">
+        <day>14</day>
+        <month>4</month>
+        <year>2021</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author(s) 2021</copyright-statement>
+      <license>
+        <ali:license_ref specific-use="textmining" content-type="ccbylicense">https://creativecommons.org/licenses/by/4.0/</ali:license_ref>
+        <license-p><bold>Open Access</bold>This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit <ext-link ext-link-type="uri" xlink:href="https://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</ext-link>. The Creative Commons Public Domain Dedication waiver (<ext-link ext-link-type="uri" xlink:href="https://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</ext-link>) applies to the data made available in this article, unless otherwise stated in a credit line to the data.</license-p>
+      </license>
+    </permissions>
+    <abstract id="Abs1">
+      <sec>
+        <title>Background</title>
+        <p id="Par1">Design of valid high-quality primers is essential for qPCR experiments. MRPrimer is a powerful pipeline based on MapReduce that combines both primer design for target sequences and homology tests on off-target sequences. It takes an entire sequence DB as input and returns all feasible and valid primer pairs existing in the DB. Due to the effectiveness of primers designed by MRPrimer in qPCR analysis, it has been widely used for developing many online design tools and building primer databases. However, the computational speed of MRPrimer is too slow to deal with the sizes of sequence DBs growing exponentially and thus must be improved.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p id="Par2">We develop a fast GPU-based pipeline for primer design (GPrimer) that takes the same input and returns the same output with MRPrimer. MRPrimer consists of a total of seven MapReduce steps, among which two steps are very time-consuming. GPrimer significantly improves the speed of those two steps by exploiting the computational power of GPUs. In particular, it designs data structures for coalesced memory access in GPU and workload balancing among GPU threads and copies the data structures between main memory and GPU memory in a streaming fashion. For human RefSeq DB, GPrimer achieves a speedup of 57 times for the entire steps and a speedup of 557 times for the most time-consuming step using a single machine of 4 GPUs, compared with MRPrimer running on a cluster of six machines.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p id="Par3">We propose a GPU-based pipeline for primer design that takes an entire sequence DB as input and returns all feasible and valid primer pairs existing in the DB at once without an additional step using BLAST-like tools. The software is available at <ext-link ext-link-type="uri" xlink:href="https://github.com/qhtjrmin/GPrimer.git">https://github.com/qhtjrmin/GPrimer.git</ext-link>.</p>
+      </sec>
+    </abstract>
+    <kwd-group xml:lang="en">
+      <title>Keywords</title>
+      <kwd>Primer design</kwd>
+      <kwd>GPU computing</kwd>
+      <kwd>Sequence analysis</kwd>
+    </kwd-group>
+    <funding-group>
+      <award-group>
+        <funding-source>
+          <institution-wrap>
+            <institution-id institution-id-type="FundRef">http://dx.doi.org/10.13039/501100003621</institution-id>
+            <institution>Ministry of Science, ICT and Future Planning</institution>
+          </institution-wrap>
+        </funding-source>
+        <award-id>2017R1E1A1A01077630</award-id>
+        <principal-award-recipient>
+          <name>
+            <surname>Kim</surname>
+            <given-names>Min-Soo</given-names>
+          </name>
+        </principal-award-recipient>
+      </award-group>
+    </funding-group>
+    <funding-group>
+      <award-group>
+        <funding-source>
+          <institution>Ministry of Science and ICT (KR)</institution>
+        </funding-source>
+        <award-id>No. 2018R1A5A1060031</award-id>
+        <principal-award-recipient>
+          <name>
+            <surname>Kim</surname>
+            <given-names>Min-Soo</given-names>
+          </name>
+        </principal-award-recipient>
+      </award-group>
+    </funding-group>
+    <funding-group>
+      <award-group>
+        <funding-source>
+          <institution>Institute for Information and Communications Technology Planning and Evaluation</institution>
+        </funding-source>
+        <award-id>No. 2019-0-01267</award-id>
+        <principal-award-recipient>
+          <name>
+            <surname>Kim</surname>
+            <given-names>Min-Soo</given-names>
+          </name>
+        </principal-award-recipient>
+      </award-group>
+    </funding-group>
+    <custom-meta-group>
+      <custom-meta>
+        <meta-name>issue-copyright-statement</meta-name>
+        <meta-value>© The Author(s) 2021</meta-value>
+      </custom-meta>
+    </custom-meta-group>
+  </article-meta>
+</front>
+<body>
+  <sec id="Sec1">
+    <title>Background</title>
+    <p id="Par9">Quantitative polymerase chain reaction (qPCR) (also known as real-time PCR) is a standard technique widely used for detecting the mass amplification of specific DNA molecule in real-time. Its applications include virus detection [<xref ref-type="bibr" rid="CR1">1</xref>], genetically modified organism (GMO) detection [<xref ref-type="bibr" rid="CR2">2</xref>], pathogen discovery [<xref ref-type="bibr" rid="CR3">3</xref>], and validation of changes in expression of interested genes [<xref ref-type="bibr" rid="CR4">4</xref>]. For best results in qPCR experiments, design of high quality primers is more important than anything. MRPrimer [<xref ref-type="bibr" rid="CR5">5</xref>] is a MapReduce-based powerful pipeline that combines both primer design for target sequences and homology tests on off-target sequences. In general, high quality primers should not only satisfy single and pair filtering constraints (e.g., primer length, melting temperature, GC content) to amplify target sequence(s) properly, but also pass homology tests not to amplify off-target sequences. Different from the conventional methods that do homology tests as an additional step using BLAST-like tools, MRPrimer takes an entire sequence DB and the filtering constraints as input and returns all feasible and valid primer pairs existing in the DB without an additional step using BLAST-like tools. In terms of finding all feasible and valid primer pairs existing in the DB at once, MRPrimer is quite different from the conventional primer design tools such as Primer3Plus [<xref ref-type="bibr" rid="CR6">6</xref>] and PrimerBlast [<xref ref-type="bibr" rid="CR7">7</xref>], which find only primer pairs existing in a single sequence. Due to the effectiveness of primers designed by MRPrimer in qPCR analysis, many tools including MRPrimerW [<xref ref-type="bibr" rid="CR8">8</xref>], MRPrimerV [<xref ref-type="bibr" rid="CR1">1</xref>] and MRPrimerW2 [<xref ref-type="bibr" rid="CR9">9</xref>] have been developed based on MRPrimer and widely used. MRPrimerW is a web-based design tool that allows user to easily obtain the best set of primer pairs and TaqMan probes for batch qPCR experiments that should satisfy the set of stringent and uniform constraints as well as pass homology tests. MRPrimerV is a pipeline that can build a database of primers for detection of 1818 RNA viruses by taking both virus sequence DB and host (e.g., human, camel) sequence DB as input. MRPrimerW2 is an enhanced web-based design tool that supports exon spanning design, avoiding SNP sites, input FASTA sequences, and multi-target designing.</p>
+    <p id="Par10">Although the MRPrimer pipeline is used as a core engine for the above primer design tools, it has a major drawback that its computational speed is too slow to deal with large-scale sequence DBs. MRPrimer is a MapReduce-based pipeline, and there are also many other MapReduce-based pipelines for sequence data analysis including CloudBurst [<xref ref-type="bibr" rid="CR10">10</xref>], GATK [<xref ref-type="bibr" rid="CR11">11</xref>], DistMap [<xref ref-type="bibr" rid="CR12">12</xref>], MegaSeq [<xref ref-type="bibr" rid="CR13">13</xref>], Halvade [<xref ref-type="bibr" rid="CR14">14</xref>], Halvade-RNA [<xref ref-type="bibr" rid="CR15">15</xref>], Rail-RNA [<xref ref-type="bibr" rid="CR16">16</xref>], MarDRe [<xref ref-type="bibr" rid="CR17">17</xref>], MEC [<xref ref-type="bibr" rid="CR18">18</xref>] and KCH [<xref ref-type="bibr" rid="CR19">19</xref>]. Originally, MRPrimer has been proposed to be based on the MapReduce framework running on a cluster of machines for fast and scalable data processing. Nevertheless, as the sizes of sequence DBs are growing exponentially due to the advancement of the sequencing techniques, MRPrimer may take too long time to design all primer pairs from the sequence DBs. For instance, in the study of MRPrimerV [<xref ref-type="bibr" rid="CR1">1</xref>], MRPrimer takes more than two weeks for 101,684 human gene sequences even using 40 nodes of a supercomputer (Rank #454 in TOP500 Supercomputer, June 2016).</p>
+    <p id="Par11">To alleviate the problem of slow computational speed of MRPrimer, we propose a GPU-based pipeline running on a single machine for primer design, called <italic>GPrimer</italic>, that takes the same input and returns the same output with MRPrimer.</p>
+    <p id="Par12">MRPrimer consists of a total of seven MapReduce steps, among which two steps are very time-consuming due to a large amount of computation. GPrimer significantly improves the speed of those two steps by exploiting the computational power of GPUs. Processing the remaining steps using GPUs may rather degrade the performance due to data communication overhead between main memory and GPUs, and thus, GPrimer processes those steps only using CPUs. For exploiting GPUs, GPrimer designs data structures for both (1) coalesced memory access in GPU and (2) workload balancing among GPU threads and (3) copies the data structures between main memory and GPU memory in a streaming fashion for hiding data communication overhead. For human RefSeq DB, GPrimer achieves a speedup of 57 times for the entire steps and a speedup of 557 times for the most time-consuming step using a single machine of 4 GPUs, compared with MRPrimer running on a cluster of six machines. There are many GPU-based methods for sequence data analysis including GPU-BLAST [<xref ref-type="bibr" rid="CR20">20</xref>], G-BLASTN [<xref ref-type="bibr" rid="CR21">21</xref>], H-BLAST [<xref ref-type="bibr" rid="CR22">22</xref>], SOAP3-dp [<xref ref-type="bibr" rid="CR23">23</xref>], sBWT [<xref ref-type="bibr" rid="CR24">24</xref>], gCUP [<xref ref-type="bibr" rid="CR25">25</xref>], Arioc [<xref ref-type="bibr" rid="CR26">26</xref>], YAMDA [<xref ref-type="bibr" rid="CR27">27</xref>], and NVIDIA Parabricks [<xref ref-type="bibr" rid="CR28">28</xref>]. But, to the best of our knowledge, there is no GPU-based pipeline (or method) for primer design, and GPrimer is the first one.</p>
+    <p id="Par13">In this paper, we briefly review MRPrimer and present the overview of our GPrimer about how it can improve MRPrimer. Then, we present the details about algorithms and data structures to exploit the computational power of GPUs for the two time-consuming steps. We evaluate the performance of GPrimer compared with MRPrimer and conduct a few experiments for the breakdown analysis of GPrimer. Finally, we draw conclusions.</p>
+    <sec id="Sec2">
+      <title>Review of MRPrimer</title>
+      <p id="Par14">MRPrimer [<xref ref-type="bibr" rid="CR5">5</xref>] is a MapReduce-based [<xref ref-type="bibr" rid="CR29">29</xref>] pipeline that consists of seven steps (Fig. <xref rid="Fig1" ref-type="fig">1</xref>a). It takes a sequence DB and a set of filtering constraints as input, and then, after seven steps, returns all feasible and valid primer pairs that exist in the DB.<fig id="Fig1"><label>Fig. 1</label><caption><p>The pipelines of MRPrimer and GPrimer</p></caption><graphic xlink:href="12859_2021_4133_Fig1_HTML" id="MO1"/></fig></p>
+      <p id="Par15">Step 1 (candidate primer generation) extracts all possible subsequences of the lengths between the minimum length and the maximum length from each sequence, as candidate primers. The lengths are specified by users (e.g., 19–23 bp) as inputs. This step also extracts their reverse complementary primers while tagging them with a symbol ‘*’. The candidate primers generated in this step are used not only for Step 2 (i.e., other single filtering) but also for Steps 3 and 4 (i.e., approximate string matching). Thus, this step just generates all possible subsequences without other single filtering. Step 2 (single filtering) applies the single-filtering constraints to each primer passed from Step 1 and filters out the primers that violate any filtering constraint. The constraints include melting temperature, GC content, self-complementarity, 3’ end self-complementarity, contiguous residue, and Gibbs free energy, which are specified by users as inputs. Step 3 (5’ cross-hybridization filtering) eliminates a candidate primer that is the same as any subsequence of an off-target sequence at the 3’ end and has only a few mismatches (up to four mismatches) at the 5’ end, and so, might cross-hybridize with the off-target sequence due to the high similarity between them, especially at the 3’ end.</p>
+      <p id="Par16">Step 4 (general cross-hybridization filtering) eliminates a candidate primer that is similar with any subsequence of an off-target sequence. This step takes two primer sets, <italic>C1</italic> (output of Step 1) and <italic>C3</italic> (output of Step 3). We denote the number of mismatched residues between two primers as <italic>k</italic>. For more efficient computation, this step splits each primer into a set of smaller disjoint pieces (called <italic>seeds</italic>). According to the theorem in [<xref ref-type="bibr" rid="CR30">30</xref>, <xref ref-type="bibr" rid="CR31">31</xref>], and [<xref ref-type="bibr" rid="CR32">32</xref>], a primer of length <inline-formula id="IEq1"><alternatives><tex-math id="M1">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$|\textit{P}|$$\end{document}</tex-math><mml:math id="M2"><mml:mrow><mml:mo stretchy="false">|</mml:mo><mml:mi mathvariant="italic">P</mml:mi><mml:mo stretchy="false">|</mml:mo></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq1.gif"/></alternatives></inline-formula> with at most <italic>k</italic> mismatches must contain a seed exactly matched of at least <inline-formula id="IEq2"><alternatives><tex-math id="M3">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lfloor |P| / (k+1) \rfloor$$\end{document}</tex-math><mml:math id="M4"><mml:mrow><mml:mo>⌊</mml:mo><mml:mo stretchy="false">|</mml:mo><mml:mi>P</mml:mi><mml:mo stretchy="false">|</mml:mo><mml:mo stretchy="false">/</mml:mo><mml:mo stretchy="false">(</mml:mo><mml:mi>k</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">)</mml:mo><mml:mo>⌋</mml:mo></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq2.gif"/></alternatives></inline-formula> residues [<xref ref-type="bibr" rid="CR1">1</xref>, <xref ref-type="bibr" rid="CR5">5</xref>, <xref ref-type="bibr" rid="CR8">8</xref>]. All pairs of primers from <italic>C1</italic> and <italic>C3</italic> having a common seed are collected through the shuffle step of MapReduce and checked whether a pair of primers is identical except for <italic>k</italic> residues in the reduce step of MapReduce. After Step 4, there still might be false-positive primers violating the general cross-hybridization filtering constraint. This inherently occurs due to the distributed computation of MapReduce. In order to filter out such primers completely, Step 5 (duplicate removing) rearranges the result of Step 4 in terms of primer and eliminates the primers that do not pass Step 4 in terms of any seeds. The series of Steps 4 and 5 is performed repeatedly while increasing <italic>k</italic> from 1 to the maximum number of mismatch residues (i.e., <italic>#maxMismatch</italic>), which is usually set to 2 [<xref ref-type="bibr" rid="CR1">1</xref>, <xref ref-type="bibr" rid="CR5">5</xref>, <xref ref-type="bibr" rid="CR8">8</xref>].</p>
+      <p id="Par17">Step 6 (pair filtering) rearranges the result of Step 5 to a set of groups of primers, where each group consists of the primers extracted from the same set of input sequences. Then, it splits the primers of each group into two sets, forward primers and reverse primers, using tags addressed in Step 1, and performs a self-join between them, which applies the pair-filtering constraints to each primer pair. The constraints include length difference, melting temperature difference, product size, pair-complementarity, and 3’-end pair-complementarity, which are specified by users as inputs. The primer pairs passed from Step 6 might not be equally effective even if they satisfy all the given constraints and pass homology tests. Thus, Step 7 (ranking) determines their ranking by calculating a penalty score for each primer pair. The calculation of penalty scores follows the method of Primer3Plus [<xref ref-type="bibr" rid="CR6">6</xref>].</p>
+    </sec>
+  </sec>
+  <sec id="Sec3">
+    <title>Implementation</title>
+    <sec id="Sec4">
+      <title>Overview of GPrimer</title>
+      <p id="Par18">GPrimer is designed to perform the same task with MRPrimer and so return the same result with MRPrimer. But, different from MRPrimer relying on distributed computation, GPrimer exploits GPU computation to handle a large-scale computation required for primer design. Basically, MRPrimer groups a set of values having the same key through the map and shuffle steps of MapReduce and performs a certain function against the set of values in the reduce step of MapReduce, which are done by a lot of parallel processes having their own main memory spaces (i.e., heaps). In contrast, GPrimer groups the set of values using hash maps and performs the function using a lot of CPU or GPU threads within the same main memory space.</p>
+      <p id="Par19">GPrimer performs a total of five steps as in Fig. <xref rid="Fig1" ref-type="fig">1</xref>b, where Step 4 of GPrimer corresponds to Steps 4 and 5 of MRPrimer, and Step 5 of GPrimer corresponds to Steps 6 and 7 of MRPrimer. Since GPrimer runs in the same memory space, Step 5 of MRPrimer for removing duplicates is not necessary, and also, Step 7 of MRPrimer (i.e., scoring and output formatting) can be performed together with Step 6 of MRPrimer (i.e., pair filtering) as a single step (i.e., Step 5) in GPrimer. Since the general cross-hybridization filtering and pair filtering are the most time-consuming steps, GPrimer performs the Steps 4 and 5 using GPU threads and the remaining Steps 1, 2 and 3 using CPU threads. Performing the Steps 1, 2 and 3 using GPU threads does not improve the performance much due to the overhead of copying data back and forth between main memory and GPU memory.</p>
+    </sec>
+    <sec id="Sec5">
+      <title>Steps 1–3: building hash maps and processing using CPU threads</title>
+      <p id="Par20">Step 1 extracts all possible subsequences from a sequence DB for candidate primers as MRPrimer does. We denote the output of Step 1 as <italic>C1</italic>, the output of Step 2 as <italic>C2</italic>, and so on. Figure <xref rid="Fig2" ref-type="fig">2</xref>a shows an example of <italic>C1</italic>, where <italic>P</italic> is a primer, <italic>sid</italic> is the ID of the sequence where <italic>P</italic> occurs, and <italic>pos</italic> is the position where <italic>P</italic> occurs in the sequence <italic>sid</italic>. Each row in <italic>C1</italic> is just a concatenation of <italic>P</italic>, <italic>sid</italic>, and <italic>pos</italic>. The symbol ‘+’ is a concatenation operation, and we just use a character ‘+’ for the operation in this paper. Figure <xref rid="Fig2" ref-type="fig">2</xref>a also shows an example of <italic>C1’</italic>, which <italic>P</italic> is a primer, and <italic>sidset</italic> is the set of IDs of the sequences where <italic>P</italic> occurs. The set of IDs are concatenated using another character ‘-’. <italic>C1’</italic> is generated together with <italic>C1</italic> as the outputs of Step 1 by grouping a set of rows of <italic>C1</italic> having the same <italic>P</italic> and removing <italic>pos</italic>. <italic>C1</italic> is used for the input of Step 2, while <italic>C1’</italic> is used for the inputs of Steps 3 and 4 for cross-hybridization filtering.<fig id="Fig2"><label>Fig. 2</label><caption><p>Examples of output of Step 1 and hash maps. <bold>a</bold> Example output of Step 1. <bold>b</bold> Example hash maps used in GPrimer</p></caption><graphic xlink:href="12859_2021_4133_Fig2_HTML" id="MO2"/></fig></p>
+      <p id="Par21">Step 2 applies six filtering constraints to each candidate primer in <italic>C1</italic>. For the candidate primers satisfying the filtering constraints, we build two hash maps, <italic>primerH</italic> and <italic>suffixH</italic>. Figure <xref rid="Fig2" ref-type="fig">2</xref>b shows the examples of both hash maps. The former hash map, <italic>primerH</italic> has a primer <italic>P</italic> as a key and a pair of <italic>sidset</italic> where <italic>P</italic> occurs and <italic>valid</italic> as a value, where <italic>valid</italic> indicates whether <italic>P</italic> is valid or not, and all <italic>valid</italic> values in <italic>primerH</italic> are initialized as 1 (i.e., <italic>true</italic>). This hash map is used in Steps 3 and 4. At each step, the <italic>valid</italic> of the primer that does not pass becomes 0. The latter hash map, <italic>suffixH</italic> has a suffix of a primer (i.e., <italic>suffix</italic>) as a key and a set of primers (i.e., <italic>Pset</italic>), where <italic>suffix</italic> occurs, as a value. This hash map is only used in Steps 3. In addition two hash maps, the set of rows of <italic>C1</italic> passing Step 2 is stored as <italic>C2</italic>, which is used in Step 4.</p>
+      <p id="Par22">Step 3 filters out the candidate primers which have a common suffix, but different <italic>sidset</italic> with any other primers. It can be done by performing a binary join between <italic>C1’</italic> and <italic>primerH</italic>, where <italic>C1’</italic> contains all possible subsequences in the DB. In detail, we perform the binary join by looking up the hash maps <italic>suffixH</italic> and <italic>primerH</italic> while reading each row of <italic>C1’</italic>. For instance, we assume that we have read a row GCT+3 from <italic>C1’</italic> in Fig. <xref rid="Fig2" ref-type="fig">2</xref>. We also assume that there is no primer GCT in <italic>primerH</italic> and <italic>suffixH</italic> since it has been filtered out in Step 2. The primer has a suffix CT, and so, we look up the suffix in <italic>suffixH</italic> and find a set of primers {*TCT}. By looking up the primer *TCT in <italic>primerH</italic>, we find the primer has 4-5 as <italic>sidset</italic>, which is different from the <italic>sidset</italic> of GCT, i.e., 3. That means the primer *TCT may amplify not only the sequences <inline-formula id="IEq3"><alternatives><tex-math id="M5">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\{4,5\}$$\end{document}</tex-math><mml:math id="M6"><mml:mrow><mml:mo stretchy="false">{</mml:mo><mml:mn>4</mml:mn><mml:mo>,</mml:mo><mml:mn>5</mml:mn><mml:mo stretchy="false">}</mml:mo></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq3.gif"/></alternatives></inline-formula> but also the sequence 3 in wet experiments. Thus, we set <italic>valid</italic> of *TCT to 0 (false) in <italic>primerH</italic>. When we read the next row *TCT+4-5 from <italic>C1’</italic>, we know that the primer *TCT is not valid by looking up <italic>primerH</italic> and so skip looking up <italic>suffixH</italic>. In terms of implementation, the table <italic>C1’</italic> is divided into multiple subtables, and multiple CPU threads read their own subtable and update <italic>primerH</italic>, where there is no race condition since we use atomic operations for looking up and setting <italic>valid</italic> of <italic>primerH</italic>.</p>
+    </sec>
+    <sec id="Sec6">
+      <title>Step 4: building arrays and general cross-hybridization filtering</title>
+      <p id="Par23">Step 4 consists of the following two phases: preparing data structures and performing general cross-hybridization filtering. In the first phase, it builds (1) a hash map called <italic>seedH</italic>, (2) a set of arrays built from the result of Step 3 (shortly, <italic>arraysC3</italic>), and (3) a set of arrays built from the result of Step 1 (shortly, <italic>arraysC1</italic>). In the second phase, it performs general cross-hybridization filtering using <italic>seedH</italic>, <italic>arraysC3</italic>, and <italic>arraysC1</italic>, while increasing <italic>k</italic> from 1 to <italic>#maxMismatch</italic>.</p>
+      <p id="Par24">The hash map <italic>seedH</italic> is built from the set of valid rows (i.e., <italic>valid</italic>=1) in <italic>primerH</italic> by extracting all possible seeds from <italic>P</italic>. In Fig. <xref rid="Fig2" ref-type="fig">2</xref>b, <italic>seedH</italic> shows an example of the hash map when <inline-formula id="IEq4"><alternatives><tex-math id="M7">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M8"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq4.gif"/></alternatives></inline-formula>, and so, the length of seed is <inline-formula id="IEq5"><alternatives><tex-math id="M9">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lfloor 3 / 2 \rfloor = 1$$\end{document}</tex-math><mml:math id="M10"><mml:mrow><mml:mo>⌊</mml:mo><mml:mn>3</mml:mn><mml:mo stretchy="false">/</mml:mo><mml:mn>2</mml:mn><mml:mo>⌋</mml:mo><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq5.gif"/></alternatives></inline-formula>. The key of <italic>seedH</italic> is a concatenation of <italic>seed</italic>, <italic>index</italic> (position where <italic>seed</italic> occurs in <italic>P</italic>), and |<italic>P</italic>| (length of <italic>P</italic>). The value of <italic>seedH</italic>, i.e., <italic>Pset</italic> contains a set of primers of length |<italic>P</italic>| where <italic>seed</italic> occurs at <italic>index</italic>. For example, in the first row of <italic>seedH</italic> means that the set of primers of length 3 where a seed <italic>A</italic> occurs at the position 0 is {AAC, ATG}. Each set of primers having the same key is grouped in this way. For instance, for human RefSeq DB, a total of 3,309,154 groups are formed when <inline-formula id="IEq6"><alternatives><tex-math id="M11">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M12"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq6.gif"/></alternatives></inline-formula>, and a total of 77,418 groups are formed when <inline-formula id="IEq7"><alternatives><tex-math id="M13">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M14"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq7.gif"/></alternatives></inline-formula>. <italic>seedH</italic> is mainly used for building <italic>arraysC3</italic> and <italic>arraysC1</italic>.</p>
+      <p id="Par25">The set of arrays, <italic>arraysC3</italic>, is composed of four arrays, <italic>P3offset</italic>, <italic>P3</italic>, <italic>sidset3offset</italic>, and <italic>sidset3</italic> as shown in Fig. <xref rid="Fig3" ref-type="fig">3</xref>a. To build <italic>arraysC3</italic>, we first sort the keys of <italic>seedH</italic> in the ascending order of the length of <italic>Pset</italic>, i.e., the number of primers. The order of the keys is used for handling workload balancing of GPU computation, and we call the order as the <italic>workload order</italic>. Then, we build the arrays <italic>P3</italic> and <italic>sidset3</italic> according to the workload order. For example, if we assume that T+1+3 has the shortest <italic>Pset</italic>, and A+0+3 has the second shortest <italic>Pset</italic> in the hash map <italic>seedH</italic>, then <italic>P3</italic> starts with <italic>Pset</italic> of T+1+3 and next <italic>Pset</italic> of A+0+3. Likewise, <italic>sidset3</italic> starts with <italic>sidset</italic> of T+1+3 in <italic>primerH</italic> (i.e., 1-2) and next <italic>sidset</italic> of A+0+3 in <italic>primerH</italic> (i.e., 2-3-4). Both <italic>P3offset</italic> and <italic>sidset3offset</italic> are just pointer arrays for <italic>P3</italic> and <italic>sidset3</italic>, respectively, which is used for coalesced memory access in GPU computation.<fig id="Fig3"><label>Fig. 3</label><caption><p>Example of the arrays used in Step 4. <bold>a</bold>
+<italic>arraysC3</italic>: the set of arrays built from the result of Step 3. <bold>b</bold>
+<italic>arraysC1</italic>: the set of arrays built from the result of Step 1</p></caption><graphic xlink:href="12859_2021_4133_Fig3_HTML" id="MO3"/></fig></p>
+      <p id="Par26">The array <italic>output</italic> is for storing the result of general cross-hybridization filtering, whose length is the same with <italic>P3</italic> since the target of filtering is each primer. It is initialized as 1 which means valid and updated during general cross-hybridization filtering. In general, there are multiple elements in <italic>output</italic> for the same primer (e.g., at least three elements for <italic>ATG</italic>).</p>
+      <p id="Par27">The set of arrays, <italic>arraysC1</italic>, is composed of four arrays, <italic>P1offset</italic>, <italic>P1</italic>, <italic>sidset1offset</italic>, and <italic>sidset1</italic> as shown in Fig. <xref rid="Fig3" ref-type="fig">3</xref>b. Both <italic>P1</italic> and <italic>sidset1</italic> arrays are also built in the same workload order mentioned above. Following the same order is for performing a binary join between <italic>arraysC3</italic> and <italic>arraysC1</italic> quickly and massively using GPU computation. <italic>P1</italic> and <italic>sidset1</italic> are built using <italic>P</italic> and <italic>sidset</italic> in <italic>C1’</italic> (output of Step 1), respectively, while <italic>P3</italic> and <italic>sidset3</italic> are built using <italic>Pset</italic> in <italic>seedH</italic> and <italic>sidset</italic> in <italic>primerH</italic>, respectively. In detail, we extract a set of pairs of key (i.e., <italic>seed+index+</italic>|<italic>P</italic>|) and value (i.e., <italic>Pset</italic>) from each row in <italic>C1’</italic>, if the corresponding key exists in <italic>seedH</italic>, and build <italic>P1</italic> and <italic>sidset1</italic> so as to follow the workload order (e.g., the first T+1+3 and the second A+0+3). The information in <italic>arraysC1</italic> becomes to include that in <italic>arraysC3</italic> since the former is built using the result of Step 1, while the latter is built using the result of Step 3.</p>
+      <p id="Par28">All the data structures, <italic>seedH</italic>, <italic>arraysC3</italic> and <italic>arraysC1</italic> need to be constructed for each <italic>k</italic> in Fig. <xref rid="Fig1" ref-type="fig">1</xref>b. That is, GPrimer performs the first general cross-hybridization filtering using the data structures constructed for <inline-formula id="IEq8"><alternatives><tex-math id="M15">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M16"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq8.gif"/></alternatives></inline-formula> and then the second filtering using the data structures constructed for <inline-formula id="IEq9"><alternatives><tex-math id="M17">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M18"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq9.gif"/></alternatives></inline-formula>. After the first filtering using <inline-formula id="IEq10"><alternatives><tex-math id="M19">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M20"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq10.gif"/></alternatives></inline-formula>, <italic>primerH</italic> is updated based on <italic>output</italic> such that, if an element in <italic>output</italic> for a primer is 0, <italic>valid</italic> of the corresponding primer in <italic>primerH</italic> is also set to 0 (false). A new <italic>seedH</italic> should be constructed for <inline-formula id="IEq11"><alternatives><tex-math id="M21">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M22"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq11.gif"/></alternatives></inline-formula> since the length of a seed in <italic>seedH</italic> becomes shorter as <italic>k</italic> increases. Accordingly, <italic>arraysC3</italic> and <italic>arraysC1</italic> should be newly constructed based on the new <italic>seedH</italic> and the updated <italic>primerH</italic>. The <italic>output</italic> array also should be initialized.</p>
+      <p id="Par29">If the size of input sequence DB is small enough to be processed only with a single GPU, the procedure of Step 4 is relatively simple: preparing data structures in main memory, copying both <italic>arraysC3</italic> and <italic>arraysC1</italic> to GPU memory, and executing a GPU kernel function for general cross-hybridization filtering. However, if the size of DB is too large to be processed even with multiple GPUs at a time, the procedure needs to be more complicated. GPrimer exploits the streaming processing functionality of GPU to make Step 4 scalable in terms of the size of DB and the number of GPUs.</p>
+      <p id="Par30">Figure <xref rid="Fig4" ref-type="fig">4</xref>a shows the flow of data structures of GPrimer among disk, main memory, and GPUs. Basically, GPrimer splits the whole <italic>arraysC3</italic> into multiple disjoint chunks and copies each chunk to each GPU (called chunk-copy). We assume that the number of chunks is equal to the number of GPUs (denoted as <italic>Q</italic>). We denote the chunk assigned to the <italic>y</italic>-th GPU (simply GPU<inline-formula id="IEq12"><alternatives><tex-math id="M23">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M24"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq12.gif"/></alternatives></inline-formula>) as <italic>arraysC3</italic><inline-formula id="IEq13"><alternatives><tex-math id="M25">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M26"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq13.gif"/></alternatives></inline-formula>. In Fig. <xref rid="Fig3" ref-type="fig">3</xref>a, each key (i.e., <italic>seed+index+</italic>|<italic>P</italic>|) and its corresponding subarrays in <italic>P3offset</italic>, <italic>P3</italic>, <italic>sidset3offset</italic>, and <italic>sidset3</italic> is the smallest unit of independent workload. Thus, <italic>arraysC3</italic> is split at the boundary between keys into multiple chunks which are almost equal in size. GPrimer splits <italic>output</italic> into chunks and copies each chunk to each GPU in a similar way.<fig id="Fig4"><label>Fig. 4</label><caption><p>Data flow and tileline in Step 4. <bold>a</bold> Data flow among disk, main memory, and GPUs. <bold>b</bold> Timeline of multiple GPU streams in terms of threee types of GPU operations: H2D(Host to Device) copy, kernel execution, and D2H(Device to Host) copy</p></caption><graphic xlink:href="12859_2021_4133_Fig4_HTML" id="MO4"/></fig></p>
+      <p id="Par31">In case of <italic>arraysC1</italic>, the table <italic>C1’</italic> is divided into multiple subtables <italic>C1’</italic><inline-formula id="IEq14"><alternatives><tex-math id="M27">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_x$$\end{document}</tex-math><mml:math id="M28"><mml:msub><mml:mrow/><mml:mi>x</mml:mi></mml:msub></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq14.gif"/></alternatives></inline-formula>, and we denote the part of <italic>arraysC1</italic> built from <italic>C1’</italic><inline-formula id="IEq15"><alternatives><tex-math id="M29">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_x$$\end{document}</tex-math><mml:math id="M30"><mml:msub><mml:mrow/><mml:mi>x</mml:mi></mml:msub></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq15.gif"/></alternatives></inline-formula> so as to follow the workload order as <italic>arraysC1</italic><inline-formula id="IEq16"><alternatives><tex-math id="M31">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{x}$$\end{document}</tex-math><mml:math id="M32"><mml:msub><mml:mrow/><mml:mi>x</mml:mi></mml:msub></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq16.gif"/></alternatives></inline-formula>. We can again split each <italic>arraysC1</italic><inline-formula id="IEq17"><alternatives><tex-math id="M33">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{x}$$\end{document}</tex-math><mml:math id="M34"><mml:msub><mml:mrow/><mml:mi>x</mml:mi></mml:msub></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq17.gif"/></alternatives></inline-formula> into multiple disjoint chunks <italic>arraysC1</italic><inline-formula id="IEq18"><alternatives><tex-math id="M35">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{x}^{(y)}$$\end{document}</tex-math><mml:math id="M36"><mml:msubsup><mml:mrow/><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq18.gif"/></alternatives></inline-formula> such that the range of keys of <italic>arraysC1</italic><inline-formula id="IEq19"><alternatives><tex-math id="M37">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{x}^{(y)}$$\end{document}</tex-math><mml:math id="M38"><mml:msubsup><mml:mrow/><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq19.gif"/></alternatives></inline-formula> is the same to that of <italic>arraysC3</italic><inline-formula id="IEq20"><alternatives><tex-math id="M39">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M40"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq20.gif"/></alternatives></inline-formula>. GPrimer copies <italic>arraysC1</italic><inline-formula id="IEq21"><alternatives><tex-math id="M41">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{0}^{(y)}$$\end{document}</tex-math><mml:math id="M42"><mml:msubsup><mml:mrow/><mml:mrow><mml:mn>0</mml:mn></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq21.gif"/></alternatives></inline-formula> to GPU<inline-formula id="IEq22"><alternatives><tex-math id="M43">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M44"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq22.gif"/></alternatives></inline-formula> (<inline-formula id="IEq23"><alternatives><tex-math id="M45">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$0 \le y &lt; Q$$\end{document}</tex-math><mml:math id="M46"><mml:mrow><mml:mn>0</mml:mn><mml:mo>≤</mml:mo><mml:mi>y</mml:mi><mml:mo>&lt;</mml:mo><mml:mi>Q</mml:mi></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq23.gif"/></alternatives></inline-formula>), copies <italic>arraysC1</italic><inline-formula id="IEq24"><alternatives><tex-math id="M47">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{1}^{(y)}$$\end{document}</tex-math><mml:math id="M48"><mml:msubsup><mml:mrow/><mml:mrow><mml:mn>1</mml:mn></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq24.gif"/></alternatives></inline-formula> to GPU<inline-formula id="IEq25"><alternatives><tex-math id="M49">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M50"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq25.gif"/></alternatives></inline-formula> (<inline-formula id="IEq26"><alternatives><tex-math id="M51">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$0 \le y &lt; Q$$\end{document}</tex-math><mml:math id="M52"><mml:mrow><mml:mn>0</mml:mn><mml:mo>≤</mml:mo><mml:mi>y</mml:mi><mml:mo>&lt;</mml:mo><mml:mi>Q</mml:mi></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq26.gif"/></alternatives></inline-formula>) and so on (called streaming-copy).</p>
+      <p id="Par32">Here, streaming-copy means that the GPU kernel function for a pair of <italic>arraysC3</italic><inline-formula id="IEq27"><alternatives><tex-math id="M53">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M54"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq27.gif"/></alternatives></inline-formula> and <italic>arraysC1</italic><inline-formula id="IEq28"><alternatives><tex-math id="M55">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{x}^{(y)}$$\end{document}</tex-math><mml:math id="M56"><mml:msubsup><mml:mrow/><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq28.gif"/></alternatives></inline-formula> is executed in a GPU simultaneously during <italic>arraysC1</italic><inline-formula id="IEq29"><alternatives><tex-math id="M57">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{z}^{(y)}$$\end{document}</tex-math><mml:math id="M58"><mml:msubsup><mml:mrow/><mml:mrow><mml:mi>z</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq29.gif"/></alternatives></inline-formula> is prepared and copied to the GPU (<inline-formula id="IEq30"><alternatives><tex-math id="M59">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$x &lt; z$$\end{document}</tex-math><mml:math id="M60"><mml:mrow><mml:mi>x</mml:mi><mml:mo>&lt;</mml:mo><mml:mi>z</mml:mi></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq30.gif"/></alternatives></inline-formula>). For streaming-copy, we need to use multiple GPU streams, where a GPU stream means an ordered sequence of the following three types of operations: H2D copy, kernel execution, and D2H copy [<xref ref-type="bibr" rid="CR33">33</xref>]. Figure <xref rid="Fig4" ref-type="fig">4</xref>b shows the timeline of multiple GPU streams in GPU<inline-formula id="IEq31"><alternatives><tex-math id="M61">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M62"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq31.gif"/></alternatives></inline-formula>. The green H2D boxes correspond to streaming-copying <italic>arraysC1</italic><inline-formula id="IEq32"><alternatives><tex-math id="M63">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{x}^{(y)}$$\end{document}</tex-math><mml:math id="M64"><mml:msubsup><mml:mrow/><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq32.gif"/></alternatives></inline-formula> to GPU and the purple boxes executing the GPU kernel function. Once the kernel function has processed <italic>arraysC1</italic><inline-formula id="IEq33"><alternatives><tex-math id="M65">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{x}^{(y)}$$\end{document}</tex-math><mml:math id="M66"><mml:msubsup><mml:mrow/><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq33.gif"/></alternatives></inline-formula>, its result (i.e., validity of primers) is in <italic>output</italic><inline-formula id="IEq34"><alternatives><tex-math id="M67">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M68"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq34.gif"/></alternatives></inline-formula> in GPU memory. Thus, we need to synchronize <italic>output</italic> by copying <italic>output</italic><inline-formula id="IEq35"><alternatives><tex-math id="M69">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M70"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq35.gif"/></alternatives></inline-formula> from GPU<inline-formula id="IEq36"><alternatives><tex-math id="M71">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M72"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq36.gif"/></alternatives></inline-formula> to main memory while merging them (orange D2H box). After completing Step 4 for a specific <italic>k</italic>, <italic>primerH</italic> is updated based on <italic>output</italic> in main memory. We have assumed so far that the whole <italic>arraysC3</italic> can fit in the memory of multiple GPUs, and it actually is for all input DBs we have tested. If it does not fit in, GPrimer divides <italic>arraysC3</italic> into multiple parts such that each part can fit in and repeats the above procedure like a nested loop method.</p>
+      <p id="Par33">Algorithm 1 presents the pseudo code of the GPU kernel function for Step 4, which may seem complicated, but actually is simple. The function mainly relies on coalesced memory access in GPU memory for efficiency, and so, most of its lines are about identifying memory addresses to be accessed. In the function, the basic processing unit is a GPU thread, and the basic data unit to be processed is a key (i.e., <italic>seed+index+</italic>|<italic>P</italic>|). For simplicity, we denote <italic>arraysC3</italic><inline-formula id="IEq37"><alternatives><tex-math id="M73">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M74"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq37.gif"/></alternatives></inline-formula>, <italic>arraysC1</italic><inline-formula id="IEq38"><alternatives><tex-math id="M75">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$_{x}^{(y)}$$\end{document}</tex-math><mml:math id="M76"><mml:msubsup><mml:mrow/><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq38.gif"/></alternatives></inline-formula>, and <italic>output</italic><inline-formula id="IEq39"><alternatives><tex-math id="M77">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$^{(y)}$$\end{document}</tex-math><mml:math id="M78"><mml:msup><mml:mrow/><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>y</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq39.gif"/></alternatives></inline-formula>, as <italic>arraysC3</italic>, <italic>arraysC1</italic>, and <italic>output</italic>, respectively. Both arrays, <italic>arraysC3</italic> and <italic>arraysC1</italic>, can be divided by each key. For example, in Fig. <xref rid="Fig2" ref-type="fig">2</xref>a, the blue part corresponds to the key <inline-formula id="IEq40"><alternatives><tex-math id="M79">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$T+1+3$$\end{document}</tex-math><mml:math id="M80"><mml:mrow><mml:mi>T</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn><mml:mo>+</mml:mo><mml:mn>3</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq40.gif"/></alternatives></inline-formula>, and the red part to the key <inline-formula id="IEq41"><alternatives><tex-math id="M81">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$A+0+3$$\end{document}</tex-math><mml:math id="M82"><mml:mrow><mml:mi>A</mml:mi><mml:mo>+</mml:mo><mml:mn>0</mml:mn><mml:mo>+</mml:mo><mml:mn>3</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq41.gif"/></alternatives></inline-formula>. The function takes <italic>workloadThreshold</italic> and <italic>k</italic> as inputs and updates and returns the <italic>output</italic> array as output. The parameter <italic>workloadThreshold</italic> is the boundary that determines whether each thread processes a single key (<italic>each-thread</italic> mode), or all threads of a thread block process a single key (<italic>block-threads</italic> mode). The set of keys having smaller index than <italic>workloadThreshold</italic> (e.g., the index of <inline-formula id="IEq42"><alternatives><tex-math id="M83">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$A+0+3$$\end{document}</tex-math><mml:math id="M84"><mml:mrow><mml:mi>A</mml:mi><mml:mo>+</mml:mo><mml:mn>0</mml:mn><mml:mo>+</mml:mo><mml:mn>3</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq42.gif"/></alternatives></inline-formula> is 1 in Fig. <xref rid="Fig2" ref-type="fig">2</xref>a) is processed in the each-thread mode using Algorithm 1. We will explain how to determine <italic>workloadThreshold</italic> later in more detail. <graphic position="anchor" xlink:href="12859_2021_4133_Figa_HTML" id="MO10"/></p>
+      <p id="Par34">Since it is a GPU kernel function, all GPU threads execute the same entire function (Line 1). At Line 2, each thread gets the index of a key that it processes based on its own index (i.e., threadIdx), the size of a thread block (i.e., blockDim) and the index of the block (i.e., blockIdx). After a thread processes its own key (Lines 4–23), it gets the index of the next key (Line 24) and repeats processing the key. The thread gets the start and end indices in <italic>P3</italic> (Lines 4–5) and the start and end indices of in <italic>P1</italic> (Lines 6–7). Then, it checks every pairs of primers between <italic>P</italic>3[<italic>P</italic>3<italic>start</italic> : <italic>P</italic>3<italic>end</italic>] and <italic>P</italic>1[<italic>P</italic>1<italic>start</italic> : <italic>P</italic>1<italic>end</italic>] (Lines 8–11). For a specific pair of <italic>primer3</italic> and <italic>primer1</italic>, it gets the start and end indices in <italic>sidset3offset</italic> (Lines 12–13) and the start and end indices of in <italic>sidset1offset</italic> (Lines 14–15). Then, it sets <italic>output</italic>[<italic>i</italic>] for <italic>primer3</italic> to 0, i.e., invalid, (Line 18), if <italic>primer3</italic> is similar to <italic>primer1</italic> with up to <italic>k</italic> mismatch residues (Line 17), and at the same time, <italic>primer1</italic> amplifies any target sequences that <italic>primer3</italic> does not amplify (Line 16). The logic in Lines 16–19 has been presented in the previous studies [<xref ref-type="bibr" rid="CR1">1</xref>, <xref ref-type="bibr" rid="CR5">5</xref>, <xref ref-type="bibr" rid="CR8">8</xref>].</p>
+      <p id="Par35">Table <xref rid="Tab1" ref-type="table">1</xref> shows the amount of computation of Step 4 in terms of the number of pairs of <italic>primer3</italic> and <italic>primer1</italic> to be processed, i.e., the number of executions of Line 12–21 in Algorithm 1. It exceeds 1.4 trillions for human and mouse, which indicates Step 4 is indeed compute-intensive.<table-wrap id="Tab1"><label>Table 1</label><caption><p>The amount of computation of Step 4 for six species.</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left">k=1</th><th align="left">k=2</th><th align="left">Sum</th></tr></thead><tbody><tr><td align="left">Pig</td><td char="." align="char">310,393,843</td><td char="." align="char">21,607,890,291</td><td char="." align="char">21,918,284,134</td></tr><tr><td align="left">Cow</td><td char="." align="char">4,457,131,080</td><td char="." align="char">313,019,951,055</td><td char="." align="char">317,477,082,135</td></tr><tr><td align="left">Zebrafish</td><td char="." align="char">6,835,870,424</td><td char="." align="char">435,727,302,462</td><td char="." align="char">442,563,172,886</td></tr><tr><td align="left">Rat</td><td char="." align="char">9,058,344,862</td><td char="." align="char">625,330,936,147</td><td char="." align="char">634,389,281,009</td></tr><tr><td align="left">Mouse</td><td char="." align="char">21,172,185,165</td><td char="." align="char">1,458,103,349,355</td><td char="." align="char">1,479,275,534,520</td></tr><tr><td align="left">Human</td><td char="." align="char">19,851,609,914</td><td char="." align="char">1,392,486,084,329</td><td char="." align="char">1,412,337,694,243</td></tr></tbody></table></table-wrap></p>
+      <p id="Par36">Now, we explain about the parameter <italic>workloadThreshold</italic>, which is the boundary that determines whether each thread processes a single key (<italic>each-thread</italic> mode), or all threads of a thread block process a single key (<italic>block-threads</italic> mode). The set of keys having smaller index than <italic>workloadThreshold</italic> (e.g., the index of <inline-formula id="IEq43"><alternatives><tex-math id="M85">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$A+0+3$$\end{document}</tex-math><mml:math id="M86"><mml:mrow><mml:mi>A</mml:mi><mml:mo>+</mml:mo><mml:mn>0</mml:mn><mml:mo>+</mml:mo><mml:mn>3</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq43.gif"/></alternatives></inline-formula> is 1 in Fig. <xref rid="Fig3" ref-type="fig">3</xref>a) is processed in the each-thread mode. The distribution of the numbers of primers per key in the array <italic>P3</italic> (or <italic>P1</italic>) is highly skewed. For instance, the minimum number of primers per key is 1, while the maximum number is 8786 for human RefSeq DB (<inline-formula id="IEq44"><alternatives><tex-math id="M87">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2)$$\end{document}</tex-math><mml:math id="M88"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq44.gif"/></alternatives></inline-formula>. That means some GPU threads process a few keys, while some other GPU threads process thousands keys. The former threads do nothing until the latter threads complete the execution of the function, which may severely reduce the utilization of GPU computation and so degrade the performance of Step 4. The hybrid approach that uses either the each-thread mode or the block-threads mode depending on the workload (i.e., the number of primers per key) can alleviate this problem. Since <italic>P3</italic> is already sorted by workload, and <italic>P1</italic> is also almost sorted by workload, we can just perform the each-thread mode for the keys having smaller indices than <italic>workloadThreshold</italic> and the block-threads mode for the other keys. In the block-threads mode, we usually set the number of blocks to 1024 and the size of a block to 1024 threads. That is, up to 1024 keys are processed in parallel using 1024 threads per key.</p>
+      <p id="Par37">The number of primers per key tends to be increased as <italic>k</italic> increases since the number of unique seeds is decreased as <italic>k</italic> increases. Thus, we set <italic>workloadThreshold</italic> to a smaller percentile when <inline-formula id="IEq45"><alternatives><tex-math id="M89">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M90"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq45.gif"/></alternatives></inline-formula> compared to when <inline-formula id="IEq46"><alternatives><tex-math id="M91">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M92"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq46.gif"/></alternatives></inline-formula>. We heuristically set <italic>workloadThreshold</italic> to the 85th percentile for <inline-formula id="IEq47"><alternatives><tex-math id="M93">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M94"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq47.gif"/></alternatives></inline-formula>, while setting it to the 20th percentile for <inline-formula id="IEq48"><alternatives><tex-math id="M95">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M96"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq48.gif"/></alternatives></inline-formula>. That is, if there are a total 100 keys, <italic>workloadThreshold</italic> becomes 85 for <inline-formula id="IEq49"><alternatives><tex-math id="M97">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M98"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq49.gif"/></alternatives></inline-formula>. For human RefSeq DB, the number of primers of the key of the 85th percentile is 22 (<inline-formula id="IEq50"><alternatives><tex-math id="M99">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M100"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq50.gif"/></alternatives></inline-formula>), and that of the 20th percentile is 164 (<inline-formula id="IEq51"><alternatives><tex-math id="M101">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M102"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq51.gif"/></alternatives></inline-formula>). That means the keys having up to 22 and 164 primers are processed using a single thread when <inline-formula id="IEq52"><alternatives><tex-math id="M103">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M104"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq52.gif"/></alternatives></inline-formula> and <inline-formula id="IEq53"><alternatives><tex-math id="M105">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M106"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq53.gif"/></alternatives></inline-formula>, respectively.</p>
+    </sec>
+    <sec id="Sec7">
+      <title>Step 5: pair filtering and ranking</title>
+      <p id="Par38">GPrimer processes Step 5 as well as Step 4 by exploiting coalesced memory access using arrays, hiding PCI-E communication overhead using multiple asynchronous GPU streams, and load balancing using <italic>workloadThreshold</italic>. At the end of Step 4, GPrimer simply reads each row of <italic>C2</italic> and writes the row into <italic>C4</italic> if its <italic>valid</italic> is 1 in <italic>primerH</italic>. Step 5 takes the result of Step 4, i.e., <italic>C4</italic>, as input, and groups it by <italic>sid</italic>. For constructing arrays, GPrimer counts the number of forward (or reverse) primers for each <italic>sid</italic> group in <italic>C4</italic> and sorts the groups in <italic>C4</italic> in the ascending order of the number of primers per group (i.e., workload order). Figure <xref rid="Fig5" ref-type="fig">5</xref>a shows an example of <italic>C4</italic> sorted by the workload order.<fig id="Fig5"><label>Fig. 5</label><caption><p>Example of data structures used in Step 5. <bold>a</bold> Sorted <italic>C4</italic>. <bold>b</bold> Arrays for forward primers. <bold>c</bold> Arrays for reverse primers. <bold>d</bold> Arrays for the scores of pairs of primers</p></caption><graphic xlink:href="12859_2021_4133_Fig5_HTML" id="MO5"/></fig></p>
+      <p id="Par39">GPrimer constructs two kinds of arrays, one for forward primers and the other for reverse primers, using <italic>C4</italic> and applies five pair filtering constraints to all possible pairs between forward primers (FPs) and reverse primers (RPs). Then, for all valid pairs of FP and RP satisfying the constraints, GPrimer calculates their scores, sorts the pairs by their scores, and stores the formatted result of the pairs as output. In detail, it constructs three arrays, <italic>FPoffset</italic>, <italic>FP</italic> and <italic>Fpos</italic>, for forward primers, and three arrays, <italic>RPoffset</italic>, <italic>RP</italic> and <italic>Rpos</italic>, for reverse primers, according to the workload order. For example, <italic>FP</italic> starts with CGT for the group sid:7 and next {ATG, AAC} for the group sid:2 in Fig. <xref rid="Fig5" ref-type="fig">5</xref>b. Likewise, <italic>RP</italic> starts with {CAA, GAC} for sid:7 and next {TCA, TCG} for sid:2 in Fig. <xref rid="Fig5" ref-type="fig">5</xref>c. GPrimer also prepares the array called <italic>score</italic> for storing the scores of all possible pairs between FPs and RPs (Fig. <xref rid="Fig5" ref-type="fig">5</xref>d). By scanning both <italic>FPoffset</italic> and <italic>RPoffset</italic> once, we can construct <italic>scoreoffset</italic>, i.e., the pointer array for <italic>score</italic>. It is initialized with <inline-formula id="IEq54"><alternatives><tex-math id="M107">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$-1.0$$\end{document}</tex-math><mml:math id="M108"><mml:mrow><mml:mo>-</mml:mo><mml:mn>1.0</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq54.gif"/></alternatives></inline-formula>, which means the corresponding pair is invalid. If a pair of primers is valid, i.e., satisfies the pair filtering constraints, its score is calculated and assigned to the corresponding element in the array <italic>score</italic>.</p>
+      <p id="Par40">The GPU kernel function for Step 5 processes pairs of primers between FP and RP. For instance, in Fig. <xref rid="Fig5" ref-type="fig">5</xref>b–d, the first GPU thread (<italic>keyIdx</italic>=0) processes two pairs of primers in blue, and the second GPU thread (<italic>keyIdx=1</italic>) processes four pairs of primers in red. The exact workload should be the number of primer pairs, but we regard the number of forward primers as the amount of workload for simplicity. The distribution of the workload in Step 5 is more highly skewed than that in Step 4. Figure <xref rid="Fig6" ref-type="fig">6</xref>a, b show the distributions of workload per group for human and mouse, where <italic>x</italic>-axis is <italic>keyIdx</italic> (i.e., group), and <italic>y</italic>-axis is the number of forward primers per group (i.e., workload). The figures indicate that a lot of sequences (groups) have relatively small workload, while a few sequences have very large workload. Figure <xref rid="Fig6" ref-type="fig">6</xref>c, d show the detailed distributions for human and mouse, where <italic>x</italic>-axis is workload, and <italic>y</italic>-axis is the number of sequences per workload. Based on this observation, we use two workload thresholds,<italic>smallThreshold</italic> and <italic>largeThreshold</italic> for Step 5, instead of a single threshold used in Step 4. We perform the each-thread mode for the groups having smaller indices than <italic>smallThreshold</italic> and the block-threads mode for the groups having the indices between <italic>smallThreshold</italic> and <italic>largeThreshold</italic>. For the groups having larger indices than <italic>largeThreshold</italic>, we make all the threads of a GPU process a single group (<italic>all-threads</italic> mode). We usually set the number of blocks to 1024 and the size of a block to 512 threads for both the block-threads and all-threads modes. For human, the groups of <italic>keyIdx</italic>[0:114] are processed in the each-thread mode, the groups of <italic>keyIdx</italic>[114:51925] in the block-threads mode, and the groups of <italic>keyIdx</italic>[51925:] in the all-threads mode. The last group contains 17767 forward primers and 17713 reverse primers, and a total of more than 300 million pairs of the primers are processed using 512 thousand threads in the all-threads mode.<fig id="Fig6"><label>Fig. 6</label><caption><p>Distribution for workload in Step 5. <bold>a</bold> and <bold>b</bold> represent the distributions of workload per group for human and mouse RefSeq DBs, respectively. <bold>c</bold> and <bold>d</bold> represent the distributions of the number of sequences per workload for human and mouse RefSeq DBs</p></caption><graphic xlink:href="12859_2021_4133_Fig6_HTML" id="MO6"/></fig></p>
+      <p id="Par41">In Step 4, GPrimer streaming-copies <italic>arraysC1</italic> to GPUs if it does not fit in GPU memory. Likewise, in Step 5, GPrimer streaming-copies six arrays for FPs and RPs and two arrays for scores to GPUs if they do not fit in GPU memory. Since each group is an independent workload in Step 5, GPrimer streaming-copies the arrays for disjoint sets of groups to different GPUs. The resultant <italic>score</italic> array in each GPU is copied back to main memory for synchronization. Ranking (i.e., sorting) of the pairs by their scores is done by CPU threads.</p>
+    </sec>
+  </sec>
+  <sec id="Sec8">
+    <title>Result</title>
+    <sec id="Sec9">
+      <title>Experimental setup and data sets</title>
+      <p id="Par42">MRPrimer [<xref ref-type="bibr" rid="CR5">5</xref>] was evaluated using MapReduce on a cluster of six server machines: one master and five slaves. Each machine is equipped with two Intel Xeon 10-core CPUs, 512 GB main memory, and 6 TB disk. We used 40 Map processes and 40 Reduce processes per machine (i.e., a total of 200 Map and 200 Reduce processes). GPrimer was evaluated using a single machine equipped with the same CPUs, the same main memory, but eight NVIDIA GTX 1080 ti GPUs having 11 GB device memory.<table-wrap id="Tab2"><label>Table 2</label><caption><p>The size of data in each step (input: the number of sequences, <italic>C1</italic>–<italic>C4</italic>: the number of rows, output: the number of pairs of primers)</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left">Pig</th><th align="left">Cow</th><th align="left">Zebrafish</th><th align="left">Rat</th><th align="left">Mouse</th><th align="left">Human</th></tr></thead><tbody><tr><td align="left">Input</td><td align="left">4,180</td><td align="left">13,382</td><td align="left">15,876</td><td align="left">17,639</td><td align="left">35,349</td><td align="left">51,979</td></tr><tr><td align="left">C1</td><td align="left">77M</td><td align="left">308M</td><td align="left">344M</td><td align="left">414M</td><td align="left">1119M</td><td align="left">1831M</td></tr><tr><td align="left">C2</td><td align="left">3.1M</td><td align="left">11.7M</td><td align="left">16.8M</td><td align="left">18.9M</td><td align="left">48.5M</td><td align="left">65.9M</td></tr><tr><td align="left">C4</td><td align="left">2.8M</td><td align="left">9.6M</td><td align="left">13.3M</td><td align="left">14.7M</td><td align="left">35.1M</td><td align="left">47.5M</td></tr><tr><td align="left">Output</td><td align="left">21M</td><td align="left">64M</td><td align="left">111M</td><td align="left">107M</td><td align="left">234M</td><td align="left">278M</td></tr></tbody></table></table-wrap></p>
+      <p id="Par43">For data sets, we used the mRNA sequence DBs for six species—human, mouse, rat, zebrafish, cow, and pig—from the NCBI Reference Sequence (RefSeq) database (<ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/refseq/">http://www.ncbi.nlm.nih.gov/refseq/</ext-link>). The RefSeq DBs used contain a total of 138,375 mRNA sequences that have NM as the prefix of GenBank accession number (the version that updated at 21 November 2018 for human, and 7 November 2018 for others). Table <xref rid="Tab2" ref-type="table">2</xref> summarizes the size of data in each step. The number of rows in output becomes much larger than that in <italic>C4</italic> since each row is not a single primer, but a pair of primers.</p>
+    </sec>
+    <sec id="Sec10">
+      <title>Performance comparison with MRPrimer</title>
+      <p id="Par44">We evaluated the elapsed times of GPrimer and MRPrimer. Figure <xref rid="Fig7" ref-type="fig">7</xref>a shows the speedup of GPrimer compared to MRPrimer for all steps for all species. In the figure, the speedup using eight GPUs is higher than that using four GPUs, but the difference is not much, which will be explained in the next section. The speedup also becomes larger as the size of an input sequence DB increases, for example, from pig to human. We can say that it is a desirable property that the speedup is more improved for a larger sequence DB. Figure <xref rid="Fig7" ref-type="fig">7</xref>b shows the speedup for Steps 1–3, where GPrimer only uses CPU threads as MRPrimer does. GPrimer improves the performance about twice compared to MRPrimer, even though GPrimer exploits 20 CPU cores, while MRPrimer exploits a total of 100 CPU cores. The performance improvement is mainly due to that the threads in GPrimer compute in the same memory space, while those in MRPrimer compute in different memory spaces with some overhead of network communication. Figure <xref rid="Fig7" ref-type="fig">7</xref>c shows the speedup for Step 4, i.e., general cross-hybridization (GCH) filtering step. We performed GCH filtering twice, i.e., for <inline-formula id="IEq55"><alternatives><tex-math id="M109">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k = 1$$\end{document}</tex-math><mml:math id="M110"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq55.gif"/></alternatives></inline-formula> and <inline-formula id="IEq56"><alternatives><tex-math id="M111">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k = 2$$\end{document}</tex-math><mml:math id="M112"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq56.gif"/></alternatives></inline-formula>, and summed both elapsed times for evaluation. The speedup is quite large, in particular, up to 607 times for human. In terms of elapsed times, for human, GPrimer took about only 11 minutes using four GPUs, while MRPrimer took about 100 h. This indicates that our method for Step 4 described in Implementation is quite effective to exploit the computational power of GPU. Figure <xref rid="Fig7" ref-type="fig">7</xref>d shows the speedup for Step 5, i.e., pair filtering and ranking step, where the speedup is about 10. Thus, Step 5 is more compute-intensive compared to Steps 1–3, but much less compute-intensive compared to Step 4.<fig id="Fig7"><label>Fig. 7</label><caption><p>Speedup of GPrimer compared to MRPrimer. <bold>a</bold> speedup for all steps; <bold>b</bold> speedup for Steps 1–3 (not utilizing GPUs); <bold>c</bold> speedup for Step 4; <bold>d</bold> speedup for Step 5</p></caption><graphic xlink:href="12859_2021_4133_Fig7_HTML" id="MO7"/></fig></p>
+    </sec>
+    <sec id="Sec11">
+      <title>Performance of GPrimer varying the number of GPUs</title>
+      <p id="Par45">Figure <xref rid="Fig8" ref-type="fig">8</xref>a shows the elapsed times of Step 4 of GPrimer for human while varying the number of used GPUs. Step 4 is carried out in the order of five substeps: building <italic>seedH</italic>, preparing <italic>arraysC3</italic>, probing <italic>arraysC1</italic> against <italic>arraysC3</italic>, updating <italic>primerH</italic>, and writing <italic>C4</italic>. In the figure, the substep of probing <italic>arraysC1</italic> includes not only the time of executing the GPU kernel function, but also the time of building each chunk of <italic>arraysC1</italic> in main memory using CPUs and streaming it to GPU memory. In fact, three different types of operations, i.e., building, streaming, and executing, for <italic>arraysC1</italic> overlap much in the timeline. The time of probing <italic>arraysC1</italic> decreases as the number of GPUs increases, since the substep is executed in GPUs. But, the time is not much decreased for four or eight GPUs, since the overhead of building and streaming <italic>arraysC1</italic> gets larger. The time of only executing the GPU kernel function decreases in inverse proportion to the number of GPUs, as in Table <xref rid="Tab3" ref-type="table">3</xref>. Here, the reason why the time decreases by more than twice sometimes when the number of GPUs becomes twice is that the memory usage for <italic>arraysC3</italic> in each GPU is reduced as the number of GPUs increases, and so we can reduce the number of executions of the GPU kernel function by increasing the size of a chunk of <italic>arraysC1</italic>. The substep of preparing <italic>arraysC3</italic> means building <italic>arraysC3</italic> in main memory and chuck-copying it GPU memory. As the number of GPUs increases, the size of the chunk of <italic>arraysC3</italic> assigned to each GPU decreases, and so, the time of this substep also decreases. The times of other three substeps are almost the same regardless of the number of GPUs.<fig id="Fig8"><label>Fig. 8</label><caption><p>Elapsed times of the substeps in Steps 4 and 5 of GPrimer while varying the number of GPUs for human RefSeq DB. Each bar in graphs indicates the total elapsed time. The probing C1 phase in <bold>a</bold> and filtering and scoring phase in <bold>b</bold> are the phases that perform GPU operations</p></caption><graphic xlink:href="12859_2021_4133_Fig8_HTML" id="MO8"/></fig></p>
+      <p id="Par46">Figure <xref rid="Fig8" ref-type="fig">8</xref>b shows the elapsed times of Step 5 of GPrimer. Step 5 is carried out in the order of three substeps: building arrays, filtering &amp; scoring, and writing &amp; ranking. In the figure, the substep of filtering &amp; scoring is processed by GPUs, and so its time decreases approximately in inverse proportion to the number of GPUs. On the contrary, the elapsed times of the other two substeps are almost the same regardless of the number of GPUs, since they are not related to GPU computation.<table-wrap id="Tab3"><label>Table 3</label><caption><p>Elapsed times of executing the GPU kernel function for human RefSeq</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left">1 GPU</th><th align="left">2 GPUs</th><th align="left">4 GPUs</th><th align="left">8 GPUs</th></tr></thead><tbody><tr><td align="left">Step 4 (k=1)</td><td align="left">69 s</td><td align="left">26 s</td><td align="left">19 s</td><td align="left">9 s</td></tr><tr><td align="left">Step 4 (k=2)</td><td align="left">836 s</td><td align="left">452 s</td><td align="left">250 s</td><td align="left">118 s</td></tr><tr><td align="left">Step 5</td><td align="left">828 s</td><td align="left">415 s</td><td align="left">204 s</td><td align="left">103 s</td></tr></tbody></table></table-wrap></p>
+    </sec>
+    <sec id="Sec12">
+      <title>Effectiveness of workload balancing and streaming-copying</title>
+      <p id="Par47">To fully exploit GPUs, GPrimer relies on coalesced memory access within GPU, workload balancing among GPU threads, and streaming-copying data between main memory and GPU memory. Among three techniques, we check the effectiveness of workload balancing and streaming-copying in this section. It is hard to turn on and off coalesced memory access, and so we skip checking its effectiveness. Figure <xref rid="Fig9" ref-type="fig">9</xref> shows the breakdown of performance of GPrimer, in particular, the substeps using GPUs, i.e., probing <italic>arraysC1</italic> in Step 4 and filtering &amp; scoring in Step 5. We evaluated the elapsed times of the following four versions of GPrimer: only using streaming-copying (S), only using workload balancing (B), using neither workload balancing nor streaming-copying (nothing), and using both (S+B). Not using streaming-copying means synchronous copying after completing the execution of the GPU kernel function. Not using workload balancing means processing keys or groups only in a single mode, in particular, only the each-thread mode for Step 4 and only the block-threads mode for Step 5, without considering thresholds. We could not use only the each-thread mode for Step 5 due to lack of GPU memory. In Fig. <xref rid="Fig9" ref-type="fig">9</xref>a, we can see workload balancing is more important than streaming-copying for performance. In Fig. <xref rid="Fig9" ref-type="fig">9</xref>b, workload balancing and streaming-copying in Step 5 are less effective than those in Step 4. In detail, streaming-copying is less effective since the size of streaming-copied data is smaller, and the data flow of streaming-copying is simpler. Workload balancing is also less effective since the block-threads mode is overall the best single mode among three modes, each-thread mode, block-threads mode, and all-threads mode, in terms of handling the skewness of workload.<fig id="Fig9"><label>Fig. 9</label><caption><p>Elapsed times of four different versions of GPrimer while turning on and off two techniques, workload balancing (B) and streaming-copying (S). The experiments are performed for human and mouse RefSeq DBs (indicated in x-axis)</p></caption><graphic xlink:href="12859_2021_4133_Fig9_HTML" id="MO9"/></fig></p>
+    </sec>
+    <sec id="Sec13">
+      <title>Memory usage</title>
+      <p id="Par48">Table <xref rid="Tab4" ref-type="table">4</xref> shows the memory usage for major data structures in GPrimer (in MByte). The hash maps, <italic>primerH</italic>, <italic>suffixH</italic>, and <italic>seedH</italic>, are in main memory. The remaining data structures all are in GPU memory. As you can see, the size of <italic>arraysC3</italic>+<italic>output</italic> is small enough to fit in GPU memory even for human and mouse, and so streaming <italic>arraysC1</italic> to GPUs needs to be done only once. The biggest data structure is a pair of <italic>score</italic> and <italic>scoreoffset</italic>, but no memory problem occurs since they are allocated, calculated, and copied back to main memory in a small size enough to fit in GPU memory.<table-wrap id="Tab4"><label>Table 4</label><caption><p>Memory usage for major data structures (MB)</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left" colspan="2">Mouse</th><th align="left" colspan="2">Human</th></tr><tr><th align="left"/><th align="left"><inline-formula id="IEq57"><alternatives><tex-math id="M113">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M114"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq57.gif"/></alternatives></inline-formula></th><th align="left"><inline-formula id="IEq58"><alternatives><tex-math id="M115">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M116"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq58.gif"/></alternatives></inline-formula></th><th align="left"><inline-formula id="IEq59"><alternatives><tex-math id="M117">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}</tex-math><mml:math id="M118"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq59.gif"/></alternatives></inline-formula></th><th align="left"><inline-formula id="IEq60"><alternatives><tex-math id="M119">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}</tex-math><mml:math id="M120"><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href="12859_2021_4133_Article_IEq60.gif"/></alternatives></inline-formula></th></tr></thead><tbody><tr><td align="left">primerH</td><td char="." align="char">9808</td><td char="." align="char"/><td char="." align="char">11,664</td><td char="." align="char"/></tr><tr><td align="left">suffixH</td><td char="." align="char">5530</td><td char="." align="char"/><td char="." align="char">5125</td><td char="." align="char"/></tr><tr><td align="left">seedH</td><td char="." align="char">3649</td><td char="." align="char">1812</td><td char="." align="char">3390</td><td char="." align="char">1721</td></tr><tr><td align="left">arraysC1</td><td char="." align="char">34,308</td><td char="." align="char">64,412</td><td char="." align="char">40,191</td><td char="." align="char">77,200</td></tr><tr><td align="left">arraysC3+output</td><td char="." align="char">1979</td><td char="." align="char">3921</td><td char="." align="char">1967</td><td char="." align="char">2848</td></tr><tr><td align="left">FPoffset+FP+Fpos</td><td char="." align="char">1431</td><td char="." align="char"/><td char="." align="char">1936</td><td char="." align="char"/></tr><tr><td align="left">RPoffset+RP+Rpos</td><td char="." align="char">1430</td><td char="." align="char"/><td char="." align="char">1937</td><td char="." align="char"/></tr><tr><td align="left">score+scoreoffset</td><td char="." align="char">112,026</td><td char="." align="char"/><td char="." align="char">143,407</td><td char="." align="char"/></tr></tbody></table></table-wrap></p>
+      <p id="Par49">Table <xref rid="Tab5" ref-type="table">5</xref> shows the memory overhead of MRPrimer and GPrimer for mouse RefSeq DB. Since MRPrimer does not maintain separate major data structures, we have measured the peak main memory usage of both in each step. For MRPrimer, we sum the memory usage of six machines used. We note that the peak memory of GPrimer in Steps 6 and 7 (i.e., about 85 GB) is smaller than the size of the data structures of <italic>score</italic> and <italic>scoreoffset</italic> (i.e., 112 GB) in Table <xref rid="Tab4" ref-type="table">4</xref>. This is because GPrimer does not generate <italic>score</italic> and <italic>scoreoffset</italic> at once, but rather generate them step by step in a smaller size that can fit into GPU memory.<table-wrap id="Tab5"><label>Table 5</label><caption><p>Peak memory usage of MRPrimer and GPrimer in each step for mouse RefSeq DB (in MB)</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left">Step 1</th><th align="left">Step 2</th><th align="left">Step 3</th><th align="left">Step 4</th><th align="left">Step 5</th><th align="left">Step 6</th><th align="left">Step 7</th></tr></thead><tbody><tr><td align="left">MRPrimer</td><td char="." align="char">44,527</td><td char="." align="char">239,306</td><td char="." align="char">214,869</td><td align="left">310,615</td><td align="left">43,664</td><td align="left">35,404</td><td align="left">312,558</td></tr><tr><td align="left">GPrimer</td><td char="." align="char">266</td><td char="." align="char">16,240</td><td char="." align="char">16,342</td><td align="left" colspan="2">77,978</td><td align="left" colspan="2">84,972</td></tr></tbody></table></table-wrap></p>
+    </sec>
+  </sec>
+  <sec id="Sec14">
+    <title>Conclusions</title>
+    <p id="Par50">In this paper, we have proposed a fast GPU-based pipeline for primer design called GPrimer that can significantly improve the performance of the existing MRPrimer pipeline based on MapReduce. GPrimer takes the same input data and returns the exactly same output with MRPrimer. That is, GPrimer has the exactly same specificity of primer design with MRPrimer. The only difference between GPrimer and MRPrimer is the speed of primer design. MRPrimer is a MapReduce-based pipeline, but GPrimer is a GPU-based pipeline. Due to the proposed data structures and algorithms in this paper, for human RefSeq DB, GPrimer achieved a speedup of 57 times for the entire steps and a speedup of 557 times for the most time-consuming step, i.e., homology test step, using a single machine of 4 GPUs, compared with MRPrimer running on a cluster of six machines. GPrimer not only significantly outperforms MRPrimer, but also its improvement is more marked as the size of sequence DB increases. Since GPrimer has the exactly same specificity of primer design with MRPrimer, GPrimer also outperforms other primer design software that MRPrimer has outperformed, in terms of specificity. Therefore, we believe GPrimer can be significantly used for web-based primer design tools and primer databases for detecting RNA viruses to deal with the sizes of sequence DBs growing exponentially.</p>
+  </sec>
+  <sec id="Sec15">
+    <title>Availability and requirements</title>
+    <p id="Par51">
+      <list list-type="bullet">
+        <list-item>
+          <p id="Par52">Project name: GPrimer.</p>
+        </list-item>
+        <list-item>
+          <p id="Par53">Project home page: <ext-link ext-link-type="uri" xlink:href="http://github.com/qhtjrmin/GPrimer">http://github.com/qhtjrmin/GPrimer</ext-link>.</p>
+        </list-item>
+        <list-item>
+          <p id="Par54">Operating system: Linux Ubuntu 16.04 LTS or higher.</p>
+        </list-item>
+        <list-item>
+          <p id="Par55">Programming language: C++11, CUDA.</p>
+        </list-item>
+        <list-item>
+          <p id="Par56">Other requirements: CUDA toolkit version 8 or higher. Nvidia driver (v384 or higher), GCC/G++ 4.8.x or later.</p>
+        </list-item>
+        <list-item>
+          <p id="Par57">License: BSD-3-Clause.</p>
+        </list-item>
+        <list-item>
+          <p id="Par58">Restrictions to use by non-academics: Not applicable.</p>
+        </list-item>
+      </list>
+    </p>
+  </sec>
+</body>
+<back>
+  <glossary>
+    <title>Abbreviations</title>
+    <def-list>
+      <def-item>
+        <term>PCR</term>
+        <def>
+          <p id="Par4">Polymerase chain reaction</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>DB</term>
+        <def>
+          <p id="Par5">Database</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>CPU</term>
+        <def>
+          <p id="Par6">Central processing unit</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>GPU</term>
+        <def>
+          <p id="Par7">Graphical processing unit</p>
+        </def>
+      </def-item>
+      <def-item>
+        <term>CUDA</term>
+        <def>
+          <p id="Par8">Compute unified device architecture</p>
+        </def>
+      </def-item>
+    </def-list>
+  </glossary>
+  <fn-group>
+    <fn>
+      <p>
+        <bold>Publisher's Note</bold>
+      </p>
+      <p>Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.</p>
+    </fn>
+  </fn-group>
+  <ack>
+    <title>Acknowledgements</title>
+    <p>This work was supported by the National Research Foundation of Korea (NRF) Grant funded by the Korea government (MSIT) (No. 2018R1A5A1060031), Basic Science Research Program through the National Research Foundation of Korea(NRF) funded by the Ministry of Science, ICT and Future Planning (No. 2017R1E1A1A01077630), and Institute of Information &amp; communications Technology Planning &amp; Evaluation (IITP) Grant funded by the Korea government (MSIT) (No. 2019-0-01267, GPU-based Ultrafast Multi-type Graph Database Engine SW).</p>
+  </ack>
+  <notes notes-type="author-contribution">
+    <title>Authors’ contributions</title>
+    <p>JB implemented the software tool, carried out writing of the manuscript, and the performance evaluation. HJ prepared datasets and helped in the validation of the tool. Ongoing feedback and advice was given by MSK, and MSK revised the manuscript critically. All authors declare that they read and approved the final manuscript.</p>
+  </notes>
+  <notes notes-type="funding-information">
+    <title>Funding</title>
+    <p>This work was supported by the National Research Foundation of Korea (NRF) Grant funded by the Korea government (MSIT) (No. 2018R1A5A1060031), Basic Science Research Program through the National Research Foundation of Korea (NRF) funded by the Ministry of Science, ICT and Future Planning (No. 2017R1E1A1A01077630), and Institute of Information &amp; communications Technology Planning &amp; Evaluation (IITP) Grant funded by the Korea government (MSIT) (No. 2019-0-01267, GPU-based Ultrafast Multi-type Graph Database Engine SW). The funding bodies were not involved in the design of the study; collection, analysis and interpretation of data; and writing the manuscript.</p>
+  </notes>
+  <notes notes-type="data-availability">
+    <title>Availability of data and materials</title>
+    <p>The used input datasets are from the NCBI Reference Sequence (RefSeq) database (<ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/refseq/">http://www.ncbi.nlm.nih.gov/refseq/</ext-link>), and the datasets used in the current study are available in the Github repository, <ext-link ext-link-type="uri" xlink:href="http://github.com/qhtjrmin/GPrimer">http://github.com/qhtjrmin/GPrimer</ext-link>. The source code for the proposed tool GPrimer is available from the same Github repository under BSD-3-Clause license.</p>
+  </notes>
+  <notes>
+    <title>Declarations</title>
+    <notes id="FPar2">
+      <title>Ethics approval and consent to participate</title>
+      <p id="Par59">Not applicable.</p>
+    </notes>
+    <notes id="FPar3">
+      <title>Consent for publication</title>
+      <p id="Par60">Not applicable.</p>
+    </notes>
+    <notes id="FPar4" notes-type="COI-statement">
+      <title>Competing interests</title>
+      <p id="Par61">The authors declare that they have no competing interests.</p>
+    </notes>
+  </notes>
+  <ref-list id="Bib1">
+    <title>References</title>
+    <ref id="CR1">
+      <label>1.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Kang</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>An</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Koo</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>MS</given-names>
+          </name>
+        </person-group>
+        <article-title>MRPrimerV: a database of PCR primers for RNA virus detection</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2017</year>
+        <volume>45</volume>
+        <fpage>475</fpage>
+        <lpage>81</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkw1095</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR2">
+      <label>2.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Holst-Jensen</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Rønning</surname>
+            <given-names>BS</given-names>
+          </name>
+          <name>
+            <surname>Berdal</surname>
+            <given-names>KG</given-names>
+          </name>
+          <name>
+            <surname>Løvseth</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>PCR technology for screening and quantification of genetically modified organisms (GMOs)</article-title>
+        <source>Anal Bioanal Chem</source>
+        <year>2003</year>
+        <volume>375</volume>
+        <fpage>985</fpage>
+        <lpage>93</lpage>
+        <pub-id pub-id-type="doi">10.1007/s00216-003-1767-7</pub-id>
+        <pub-id pub-id-type="pmid">12733008</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR3">
+      <label>3.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Klein</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Quantification using real-time PCR technology: applications and limitations</article-title>
+        <source>Trends Mol Med</source>
+        <year>2002</year>
+        <volume>8</volume>
+        <fpage>257</fpage>
+        <lpage>60</lpage>
+        <pub-id pub-id-type="doi">10.1016/S1471-4914(02)02355-9</pub-id>
+        <pub-id pub-id-type="pmid">12067606</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR4">
+      <label>4.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wang</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Spandidos</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Seed</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>Primerbank: a PCR primer database for quantitative gene expression analysis, 2012 update</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2014</year>
+        <volume>40</volume>
+        <fpage>1144</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkr1013</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR5">
+      <label>5.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Kang</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Chon</surname>
+            <given-names>KW</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Koo</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>MS</given-names>
+          </name>
+        </person-group>
+        <article-title>Mrprimer: a mapreduce-based method for the thorough design of valid and ranked primers for PCR</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2015</year>
+        <volume>99</volume>
+        <fpage>33</fpage>
+        <lpage>54</lpage>
+      </element-citation>
+    </ref>
+    <ref id="CR6">
+      <label>6.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Untergasser</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Nijveen</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Rao</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Bisseling</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Geurts</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Leunissen</surname>
+            <given-names>JA</given-names>
+          </name>
+        </person-group>
+        <article-title>Primer3plus, an enhanced web interface to primer3</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2007</year>
+        <volume>35</volume>
+        <fpage>71</fpage>
+        <lpage>4</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkm306</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR7">
+      <label>7.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ye</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Coulouris</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Zaretskaya</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Cutcutache</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Rozen</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Madden</surname>
+            <given-names>TL</given-names>
+          </name>
+        </person-group>
+        <article-title>Primer-blast: a tool to design target-specific primers for polymerase chain reaction</article-title>
+        <source>BMC Bioinf</source>
+        <year>2012</year>
+        <volume>13</volume>
+        <fpage>134</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-13-134</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR8">
+      <label>8.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Kang</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>An</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Koo</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>MS</given-names>
+          </name>
+        </person-group>
+        <article-title>MRPrimerW: a tool for rapid design of valid high-quality primers for multiple target QPCR experiments</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2016</year>
+        <volume>44</volume>
+        <fpage>259</fpage>
+        <lpage>66</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkw380</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR9">
+      <label>9.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jeon</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Bae</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Hwang</surname>
+            <given-names>SH</given-names>
+          </name>
+          <name>
+            <surname>Whang</surname>
+            <given-names>KY</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>HS</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>MS</given-names>
+          </name>
+        </person-group>
+        <article-title>MRPrimerW2: an enhanced tool for rapid design of valid high-quality primers with multiple search modes for QPCR experiments</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2019</year>
+        <volume>47</volume>
+        <fpage>614</fpage>
+        <lpage>22</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkz323</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR10">
+      <label>10.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schatz</surname>
+            <given-names>MC</given-names>
+          </name>
+        </person-group>
+        <article-title>Cloudburst: highly sensitive read mapping with mapreduce</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1363</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp236</pub-id>
+        <pub-id pub-id-type="pmid">19357099</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR11">
+      <label>11.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McKenna</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Hanna</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Banks</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Sivachenko</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Cibulskis</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Kernytsky</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The genome analysis toolkit: a mapreduce framework for analyzing next-generation DNA sequencing data</article-title>
+        <source>Genome Res</source>
+        <year>2010</year>
+        <volume>20</volume>
+        <fpage>1297</fpage>
+        <lpage>1303</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.107524.110</pub-id>
+        <pub-id pub-id-type="pmid">20644199</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR12">
+      <label>12.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pandey</surname>
+            <given-names>RV</given-names>
+          </name>
+          <name>
+            <surname>Schlötterer</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Distmap: a toolkit for distributed short read mapping on a hadoop cluster</article-title>
+        <source>PLoS ONE</source>
+        <year>2013</year>
+        <volume>8</volume>
+        <fpage>72614</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0072614</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR13">
+      <label>13.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Puckelwartz</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Pesce</surname>
+            <given-names>LL</given-names>
+          </name>
+          <name>
+            <surname>Nelakuditi</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Dellefave-Castillo</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Golbus</surname>
+            <given-names>JR</given-names>
+          </name>
+          <name>
+            <surname>Day</surname>
+            <given-names>SM</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Supercomputing for the parallelization of whole genome analysis</article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <fpage>1508</fpage>
+        <lpage>1513</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu071</pub-id>
+        <pub-id pub-id-type="pmid">24526712</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR14">
+      <label>14.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Decap</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Reumers</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Herzeel</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Costanza</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Fostier</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Halvade: scalable sequence analysis with mapreduce</article-title>
+        <source>Bioinformatics</source>
+        <year>2015</year>
+        <volume>31</volume>
+        <fpage>2482</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btv179</pub-id>
+        <pub-id pub-id-type="pmid">25819078</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR15">
+      <label>15.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Decap</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Reumers</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Herzeel</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Costanza</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Fostier</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Halvade-RNA: Parallel variant calling from transcriptomic data using mapreduce</article-title>
+        <source>CPLoS One</source>
+        <year>2017</year>
+        <volume>12</volume>
+        <fpage>0174575</fpage>
+      </element-citation>
+    </ref>
+    <ref id="CR16">
+      <label>16.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nellore</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Collado-Torres</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Jaffe</surname>
+            <given-names>AE</given-names>
+          </name>
+          <name>
+            <surname>Alquicira-Hernández</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wilks</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Pritt</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rail-RNA: scalable analysis of RNA-seq splicing and coverage</article-title>
+        <source>Bioinformatics</source>
+        <year>2017</year>
+        <volume>33</volume>
+        <fpage>4033</fpage>
+        <lpage>4040</lpage>
+        <?supplied-pmid 27592709?>
+        <pub-id pub-id-type="pmid">27592709</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR17">
+      <label>17.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Expósito</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Veiga</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>González-Domínguez</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Touriño</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Mardre: efficient mapreduce-based removal of duplicate DNA reads in the cloud</article-title>
+        <source>Bioinformatics</source>
+        <year>2017</year>
+        <volume>33</volume>
+        <fpage>2762</fpage>
+        <lpage>4</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btx307</pub-id>
+        <pub-id pub-id-type="pmid">28475668</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR18">
+      <label>18.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhao</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Q</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Jiang</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Wong</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Mapreduce for accurate error correction of next-generation sequencing data</article-title>
+        <source>Bioinformatics</source>
+        <year>2017</year>
+        <volume>33</volume>
+        <fpage>3844</fpage>
+        <lpage>51</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btx089</pub-id>
+        <pub-id pub-id-type="pmid">28205674</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR19">
+      <label>19.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ferraro Petrillo</surname>
+            <given-names>U</given-names>
+          </name>
+          <name>
+            <surname>Roscigno</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Cattaneo</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Giancarlo</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Informational and linguistic analysis of large genomic sequence collections via efficient hadoop cluster algorithms</article-title>
+        <source>Bioinformatics</source>
+        <year>2018</year>
+        <volume>34</volume>
+        <fpage>1826</fpage>
+        <lpage>33</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bty018</pub-id>
+        <pub-id pub-id-type="pmid">29342232</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR20">
+      <label>20.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Vouzis</surname>
+            <given-names>PD</given-names>
+          </name>
+        </person-group>
+        <article-title>V SN Gpu-blast: using graphics processors to accelerate protein sequence alignment</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <fpage>182</fpage>
+        <lpage>188</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq644</pub-id>
+        <pub-id pub-id-type="pmid">21088027</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR21">
+      <label>21.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhao</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Chu</surname>
+            <given-names>X</given-names>
+          </name>
+        </person-group>
+        <article-title>G-blastn: accelerating nucleotide alignment by graphics processors</article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <fpage>1384</fpage>
+        <lpage>91</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu047</pub-id>
+        <pub-id pub-id-type="pmid">24463183</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR22">
+      <label>22.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ye</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Xu</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>H-BLAST: a fast protein sequence alignment toolkit on heterogeneous computers with GPUs</article-title>
+        <source>Bioinformatics</source>
+        <year>2017</year>
+        <volume>33</volume>
+        <fpage>1130</fpage>
+        <lpage>8</lpage>
+        <?supplied-pmid 28087515?>
+        <pub-id pub-id-type="pmid">28087515</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR23">
+      <label>23.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sluo</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Wong</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Zhu</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>CM</given-names>
+          </name>
+          <name>
+            <surname>Zhu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Ting</surname>
+            <given-names>HF</given-names>
+          </name>
+        </person-group>
+        <article-title>Soap3-dp: fast, accurate and sensitive GPU-based short read aligner</article-title>
+        <source>Bioinformatics</source>
+        <year>2013</year>
+        <volume>8</volume>
+        <fpage>65632</fpage>
+      </element-citation>
+    </ref>
+    <ref id="CR24">
+      <label>24.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chang</surname>
+            <given-names>CH</given-names>
+          </name>
+          <name>
+            <surname>Chou</surname>
+            <given-names>MT</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>YC</given-names>
+          </name>
+          <name>
+            <surname>Hong</surname>
+            <given-names>TW</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>YL</given-names>
+          </name>
+          <name>
+            <surname>Yang</surname>
+            <given-names>CH</given-names>
+          </name>
+          <name>
+            <surname>Hung</surname>
+            <given-names>JH</given-names>
+          </name>
+        </person-group>
+        <article-title>SBWT: memory efficient implementation of the hardware-acceleration-friendly Schindler transform for the fast biological sequence mapping</article-title>
+        <source>Bioinformatics</source>
+        <year>2016</year>
+        <volume>32</volume>
+        <fpage>3498</fpage>
+        <lpage>500</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btw349</pub-id>
+        <pub-id pub-id-type="pmid">27412087</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR25">
+      <label>25.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Olejnik</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Steuwer</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Gorlatch</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Heider</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>GCUP: rapid GPU-based hiv-1 co-receptor usage prediction for next-generation sequencing</article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <fpage>3272</fpage>
+        <lpage>3</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu535</pub-id>
+        <pub-id pub-id-type="pmid">25123901</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR26">
+      <label>26.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wilton</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Feinberg</surname>
+            <given-names>AP</given-names>
+          </name>
+          <name>
+            <surname>Szalay</surname>
+            <given-names>AS</given-names>
+          </name>
+        </person-group>
+        <article-title>Arioc: GPU-accelerated alignment of short bisulfite-treated reads</article-title>
+        <source>Bioinformatics</source>
+        <year>2018</year>
+        <volume>34</volume>
+        <fpage>2673</fpage>
+        <lpage>5</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bty167</pub-id>
+        <pub-id pub-id-type="pmid">29554207</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR27">
+      <label>27.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Quang</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Guan</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Parker</surname>
+            <given-names>SC</given-names>
+          </name>
+        </person-group>
+        <article-title>Yamda: thousandfold speedup of em-based motif discovery using deep learning libraries and gpu</article-title>
+        <source>Bioinformatics</source>
+        <year>2018</year>
+        <volume>34</volume>
+        <fpage>3578</fpage>
+        <lpage>80</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bty396</pub-id>
+        <pub-id pub-id-type="pmid">29790915</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR28">
+      <label>28.</label>
+      <mixed-citation publication-type="other">Tongsima S, Ngamphiw C, Sethia A Accelerating genomics discoveries for precision medicine [white paper]. NVIDIA; 2019</mixed-citation>
+    </ref>
+    <ref id="CR29">
+      <label>29.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dean</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>S G Mapreduce: simplified data processing on large clusters</article-title>
+        <source>Commun ACM</source>
+        <year>2008</year>
+        <volume>51</volume>
+        <fpage>107</fpage>
+        <lpage>113</lpage>
+        <pub-id pub-id-type="doi">10.1145/1327452.1327492</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR30">
+      <label>30.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Baeza-Yates</surname>
+            <given-names>RA</given-names>
+          </name>
+          <name>
+            <surname>Perleberg</surname>
+            <given-names>CH</given-names>
+          </name>
+        </person-group>
+        <article-title>Fast and practical approximate string matching</article-title>
+        <source>Inf Process Lett</source>
+        <year>1996</year>
+        <volume>59</volume>
+        <fpage>21</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="doi">10.1016/0020-0190(96)00083-X</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR31">
+      <label>31.</label>
+      <mixed-citation publication-type="other">Kim MS, Whang KY, Lee JG, Lee MJ n-gram/2l: a space and time efficient two-level n-gram inverted index structure. In: Proceedings of the 31st international conference on very large data bases, 2005;325–336</mixed-citation>
+    </ref>
+    <ref id="CR32">
+      <label>32.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Whang</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>n-gram/2l-approximation: a two-level n-gram inverted index structure for approximate string matching</article-title>
+        <source>Comput Syst Sci Eng.</source>
+        <year>2007</year>
+        <volume>22</volume>
+        <fpage>365</fpage>
+      </element-citation>
+    </ref>
+    <ref id="CR33">
+      <label>33.</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kirk</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Hwu</surname>
+            <given-names>WM</given-names>
+          </name>
+        </person-group>
+        <source>Programming massively parallel processors</source>
+        <year>2016</year>
+        <edition>3</edition>
+        <publisher-loc>San Francisco</publisher-loc>
+        <publisher-name>Morgan Kaufmann Publications Inc.</publisher-name>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

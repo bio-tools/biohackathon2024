@@ -1,0 +1,1298 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3446322</article-id>
+    <article-id pub-id-type="publisher-id">gb-2012-13-6-r56</article-id>
+    <article-id pub-id-type="pmid">22731987</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2012-13-6-r56</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Toward almost closed genomes with GapFiller</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Boetzer</surname>
+          <given-names>Marten</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>marten.boetzer@baseclear.com</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A2">
+        <name>
+          <surname>Pirovano</surname>
+          <given-names>Walter</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>walter.pirovano@baseclear.com</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>BaseClear BV, Einsteinweg 5, 2333 CC, Leiden, The Netherlands</aff>
+    <pub-date pub-type="ppub">
+      <year>2012</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>25</day>
+      <month>6</month>
+      <year>2012</year>
+    </pub-date>
+    <volume>13</volume>
+    <issue>6</issue>
+    <fpage>R56</fpage>
+    <lpage>R56</lpage>
+    <history>
+      <date date-type="received">
+        <day>10</day>
+        <month>4</month>
+        <year>2012</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>11</day>
+        <month>5</month>
+        <year>2012</year>
+      </date>
+      <date date-type="accepted">
+        <day>25</day>
+        <month>6</month>
+        <year>2012</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2012 Boetzer and Pirovano; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2012</copyright-year>
+      <copyright-holder>Boetzer and Pirovano; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an open access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/2012/13/6/R56"/>
+    <abstract>
+      <p><italic>De novo </italic>assembly is a commonly used application of next-generation sequencing experiments. The ultimate goal is to puzzle millions of reads into one complete genome, although draft assemblies usually result in a number of gapped scaffold sequences. In this paper we propose an automated strategy, called GapFiller, to reliably close gaps within scaffolds using paired reads. The method shows good results on both bacterial and eukaryotic datasets, allowing only few errors. As a consequence, the amount of additional wetlab work needed to close a genome is drastically reduced. The software is available at <ext-link ext-link-type="uri" xlink:href="http://www.baseclear.com/bioinformatics-tools/">http://www.baseclear.com/bioinformatics-tools/</ext-link>.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p><italic>De novo </italic>sequencing of unknown species and variants has become a major application of next-generation sequencing (NGS) technologies. As a consequence, there is a high demand for <italic>de novo </italic>assembly tools that can reconstruct the genomic sequence from millions of short reads. At present a vast number of tools is available to create a draft assembly that represents the genome in a number of contiguous sequences (contigs), such as Velvet [<xref ref-type="bibr" rid="B1">1</xref>], ABySS [<xref ref-type="bibr" rid="B2">2</xref>], and SOAPdenovo [<xref ref-type="bibr" rid="B3">3</xref>]. Nonetheless, the full closure of a complete genome remains a challenging and often expensive task. Generally, problems reside in the assembly of low-coverage areas and repetitive elements. Even though the distance information of paired-read sequences can help to bridge these difficult areas by linking the contigs into larger scaffolds [<xref ref-type="bibr" rid="B4">4</xref>,<xref ref-type="bibr" rid="B5">5</xref>], scaffolding does not solve the inherent problem of low-coverage and repetitive elements: it does not add novel sequence information to the draft assembly. At present, two strategies have been proposed to automatically close draft assemblies: Li <italic>et al</italic>. [<xref ref-type="bibr" rid="B3">3</xref>] included a gap closure routine to their SOAPdenovo assembly software, whereas more recently Tsai <italic>et al</italic>. [<xref ref-type="bibr" rid="B6">6</xref>] introduced the IMAGE algorithm. Both methods use De Bruijn graphs to create a local assembly and seek to fill the gaps with the resulting contigs. A drawback of these strategies is that no prior knowledge of the estimated gap size is taken into account. Therefore, the local assembly might not reflect the true genomic situation. Also, the practical usability of these methods by a broad audience requires additional development. As a consequence, at present, most genome assemblies are still incomplete after scaffolding and would ideally require accurate gap closure. Given that manual closure of incomplete regions with Sanger sequencing is expensive, genome assemblies submitted to sequence databases often lack a significant number of nucleotides, especially in the case of larger eukaryotes. Importantly, the missing repetitive or low-coverage regions may contain essential functions for the organism studied.</p>
+    <p>In this study we aim to reduce the number of undefined nucleotides by automatically filling in the gapped regions within scaffolds. For this purpose, paired reads are (re)used. In brief, our GapFiller method seeks to find read pairs of which one member matches within a sequence region and the second member falls (partially) within the gap. The latter reads are then used to close the gap through sequence (<italic>k-mer</italic>) overlap. Gaps are entirely closed only if the size of the sequence insertion corresponds closely to the estimated gap size after scaffolding, which is based on the alignment of paired reads to the contigs. The process is iteratively repeated until no further gaps can be closed. We demonstrate that GapFiller gives promising results both on bacterial and eukaryotic datasets and accurately closes most of the gaps. From a comparative analysis with IMAGE and SOAPdenovo we show that our algorithm provides the most reliable outcomes. Finally, we investigate the nature of the closed regions in the human genome and show that these contain important coding and non-coding information. The software is designed to be accessible to a broad audience given its user-friendly design and limited memory usage. GapFiller can be downloaded from [<xref ref-type="bibr" rid="B7">7</xref>].</p>
+  </sec>
+  <sec sec-type="results">
+    <title>Results</title>
+    <sec>
+      <title>Findings on the bacterial datasets</title>
+      <p>GapFiller was evaluated on four distinct bacterial datasets that are characterized by different genome sizes, levels of complexity and short-read sequence input. Also, the assembly strategy underlying the construction of the scaffolds varies and provides some good practical examples of draft assemblies (see Materials and methods for more information). Quality assessment was performed through comparison with the known (closed) reference genome and error types were classified into three categories - SNPs, indels and misjunctions - according to [<xref ref-type="bibr" rid="B8">8</xref>]. A first observation on these datasets is that automated gap closure can indeed be an important step in finishing (bacterial) genomes. In Table <xref ref-type="table" rid="T1">1</xref> we show that all methods can effectively close a significant amount of gaps and also that the total gap length is drastically reduced. However, from the <italic>Escherichia coli </italic>and <italic>Streptomyces coelicolor </italic>datasets it is apparent that the IMAGE strategy clearly underperforms the other two strategies on most quality measurements: the total gap length is reduced at most by 60% even though the number of errors increases significantly. This is partly due to the fact that IMAGE can not handle multiple libraries (nor mate pair libraries), and therefore the analysis was performed using only the library with the shortest insert size. In contrast, SOAPdenovo and GapFiller show more promising results: in <italic>E. coli </italic>the number of gaps (gap count) can be reduced by 97% and 98%, respectively; in <italic>S. coelicolor </italic>these numbers are 62% and 85%, respectively. Overall, the results indicate GapFiller closes a larger amount of gaps while making significantly less errors than the other methods. Arguably, the total gap length is shorter after gap closure with SOAPdenovo, but apparently at the cost of an increased number of misassemblies. The latter two tendencies are more pronounced in the <italic>Staphylococcus aureus </italic>and <italic>Rhodobacter sphaeroides </italic>datasets. A likely explanation resides in the fact that the raw input FASTQ reads are heavily filtered with Quake [<xref ref-type="bibr" rid="B9">9</xref>], leading to a relatively low genome coverage. For comparison purposes we reran our GapFiller algorithm with less stringent settings (GapFiller-LC: min coverage <italic>o </italic>= 1, ratio <italic>r </italic>= 0.5) to yield a more similar gap length to SOAPdenovo. We observe that applying less conservative settings leads (obviously) to more errors, but that these are still significantly less than those made with SOAPdenovo (regardless of the error type).</p>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Gap closure results obtained on the bacterial datasets</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Method</th>
+              <th align="center">Original</th>
+              <th align="center">IMAGE</th>
+              <th align="center">SOAPdenovo</th>
+              <th align="center">GapFiller</th>
+              <th align="center">GapFiller-LC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">
+                <italic>Escherichia coli</italic>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Genome size (bp)</td>
+              <td align="center">4,478,287</td>
+              <td align="center">4,530,961</td>
+              <td align="center">4,490,973</td>
+              <td align="center">4,490,638</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Scaffolds</td>
+              <td align="center">179</td>
+              <td align="center">179</td>
+              <td align="center">179</td>
+              <td align="center">179</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Gap count</td>
+              <td align="center">544</td>
+              <td align="center">291</td>
+              <td align="center">16</td>
+              <td align="center">11</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Total gap length (bp)</td>
+              <td align="center">12,516</td>
+              <td align="center">2,861</td>
+              <td align="center">16</td>
+              <td align="center">130</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Errors (SNPs)</td>
+              <td align="center">12</td>
+              <td align="center">40</td>
+              <td align="center">33</td>
+              <td align="center">22</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Errors (indels)</td>
+              <td align="center">4</td>
+              <td align="center">17</td>
+              <td align="center">25</td>
+              <td align="center">9</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Errors (misjoins)</td>
+              <td align="center">1</td>
+              <td align="center">1</td>
+              <td align="center">1</td>
+              <td align="center">1</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> N50</td>
+              <td align="center">50,557</td>
+              <td align="center">50,558</td>
+              <td align="center">50,558</td>
+              <td align="center">50,558</td>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>Streptomyces coelicolor</italic>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Genome size (bp)</td>
+              <td align="center">8,558,275</td>
+              <td align="center">8,576,331</td>
+              <td align="center">8,557,720</td>
+              <td align="center">8,558,333</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Scaffolds</td>
+              <td align="center">115</td>
+              <td align="center">115</td>
+              <td align="center">115</td>
+              <td align="center">115</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Gap count</td>
+              <td align="center">158</td>
+              <td align="center">63</td>
+              <td align="center">60</td>
+              <td align="center">23</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Total gap length (bp)</td>
+              <td align="center">9,221</td>
+              <td align="center">4,009</td>
+              <td align="center">1,288</td>
+              <td align="center">806</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Errors (SNPs)</td>
+              <td align="center">299</td>
+              <td align="center">423</td>
+              <td align="center">406</td>
+              <td align="center">280</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Errors (indels)</td>
+              <td align="center">664</td>
+              <td align="center">677</td>
+              <td align="center">769</td>
+              <td align="center">686</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Errors (misjoins)</td>
+              <td align="center">12</td>
+              <td align="center">17</td>
+              <td align="center">18</td>
+              <td align="center">18</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> N50</td>
+              <td align="center">173,822</td>
+              <td align="center">173,822</td>
+              <td align="center">173,822</td>
+              <td align="center">173,822</td>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>Staphylococcus aureus</italic>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Genome size (bp)</td>
+              <td align="center">2,880,676</td>
+              <td/>
+              <td align="center">2,880,926</td>
+              <td align="center">2,881,756</td>
+              <td align="center">2,883,448</td>
+            </tr>
+            <tr>
+              <td align="left"> Scaffolds</td>
+              <td align="center">19</td>
+              <td/>
+              <td align="center">19</td>
+              <td align="center">19</td>
+              <td align="center">19</td>
+            </tr>
+            <tr>
+              <td align="left"> Gap count</td>
+              <td align="center">48</td>
+              <td/>
+              <td align="center">27</td>
+              <td align="center">27</td>
+              <td align="center">22</td>
+            </tr>
+            <tr>
+              <td align="left"> Total gap length (bp)</td>
+              <td align="center">9,900</td>
+              <td/>
+              <td align="center">1,547</td>
+              <td align="center">5,508</td>
+              <td align="center">1,861</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (SNPs)</td>
+              <td align="center">79</td>
+              <td/>
+              <td align="center">260</td>
+              <td align="center">98</td>
+              <td align="center">173</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (indels)</td>
+              <td align="center">16</td>
+              <td/>
+              <td align="center">53</td>
+              <td align="center">26</td>
+              <td align="center">37</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (misjoins)</td>
+              <td align="center">4</td>
+              <td/>
+              <td align="center">13</td>
+              <td align="center">7</td>
+              <td align="center">5</td>
+            </tr>
+            <tr>
+              <td align="left"> N50</td>
+              <td align="center">1,091,731</td>
+              <td/>
+              <td align="center">1,091,333</td>
+              <td align="center">1,092,281</td>
+              <td align="center">1,092,421</td>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>Rhodobacter sphaeroides</italic>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Genome size (bp)</td>
+              <td align="center">4,609,785</td>
+              <td/>
+              <td align="center">4,609,466</td>
+              <td align="center">4,609,596</td>
+              <td align="center">4,610,796</td>
+            </tr>
+            <tr>
+              <td align="left"> Scaffolds</td>
+              <td align="center">38</td>
+              <td/>
+              <td align="center">38</td>
+              <td align="center">38</td>
+              <td align="center">38</td>
+            </tr>
+            <tr>
+              <td align="left"> Gap count</td>
+              <td align="center">170</td>
+              <td/>
+              <td align="center">163</td>
+              <td align="center">161</td>
+              <td align="center">139</td>
+            </tr>
+            <tr>
+              <td align="left"> Total gap length (bp)</td>
+              <td align="center">21,409</td>
+              <td/>
+              <td align="center">14,166</td>
+              <td align="center">20,667</td>
+              <td align="center">17,625</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (SNPs)</td>
+              <td align="center">218</td>
+              <td/>
+              <td align="center">410</td>
+              <td align="center">230</td>
+              <td align="center">300</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (indels)</td>
+              <td align="center">187</td>
+              <td/>
+              <td align="center">294</td>
+              <td align="center">190</td>
+              <td align="center">199</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (misjoins)</td>
+              <td align="center">6</td>
+              <td/>
+              <td align="center">10</td>
+              <td align="center">6</td>
+              <td align="center">7</td>
+            </tr>
+            <tr>
+              <td align="left"> N50</td>
+              <td align="center">3,192,334</td>
+              <td/>
+              <td align="center">3,192,075</td>
+              <td align="center">3,192,215</td>
+              <td align="center">3,192,974</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Gap closure results obtained on four bacterial datasets show that the GapFiller strategy yields the most accurate finished genomes. Also, the gap count is lower compared to the other methods. The IMAGE method significantly underperforms on all quality measures and would therefore not be the preferred method to use. Differences are smaller between GapFiller and SOAPdenovo. Interestingly, whereas the gap count after closure is generally less for GapFiller, SOAPdenovo yields in three cases a shorter total gap length. This suggests the latter method is able to close larger gaps. Strikingly, however, the amount of errors is significantly higher for SOAPdenovo regardless of the source (SNPs, indels and misjoins). Even when applying less strict settings for GapFiller (GapFiller-LC: minimum coverage <italic>o </italic>= 1, ratio <italic>r </italic>= 0.5) to shorten the total gap length, our method still yields significantly less errors.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Another interesting observation concerns the computational resources needed to run the software. Figure <xref ref-type="fig" rid="F1">1</xref> shows a comparative analysis between the runtimes and memory usage of SOAPdenovo and GapFiller based on one iterative cycle. Apparently SOAPdenovo can complete the process faster if the number of input reads is very low or high, but for intermediate data sizes (10 to 20 million reads) GapFiller needs somewhat less time. Differences are more pronounced when comparing the memory usage of both methods: SOAPdenovo requires an increasing amount of memory to analyze larger input datasets (up to 3.8 GB for <italic>S. coelicolor </italic>and 6.0 GB for human) whereas GapFiller shows stable memory usage of approximately 0.1 GB. This is because GapFiller seeks to store the intermediate output temporarily rather than maintaining it in the memory. As a consequence the method is well suited for computing systems with smaller amounts of memory.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Time and memory consumption of gap closure software</bold>. Comparative analysis of the runtime and memory usage per dataset based on a single iteration. SOAPdenovo needs a shorter time to complete the analysis if the amount of data is very small or large, whereas GapFiller is faster for intermediate data sizes (10 to 20 million reads). With regard to memory usage, GapFiller outperforms SOAPdenovo since intermediate output is temporarily stored (and not kept in the memory). For all datasets analyzed, GapFiller requires only 0.1 GB of memory, which is mostly consumed by the Burrows-Wheeler Aligner (BWA). Note that no results are displayed for IMAGE since the method can not handle multiple libraries and requires very large computation times to complete the process. M, million.</p>
+        </caption>
+        <graphic xlink:href="gb-2012-13-6-r56-1"/>
+      </fig>
+      <p>Summarizing, we provide strong evidence that bacterial draft assemblies can be accurately closed using an automated strategy. The few gaps that are left open by GapFiller mainly concern more difficult repeated areas. Here the extension method finds multiple alternatives with an equal ratio. These regions can eventually be closed through additional Sanger sequencing using only a limited number of reactions.</p>
+    </sec>
+    <sec>
+      <title>Gap closure in a small and large eukaryote: analysis of the yeast model organism <italic>Saccharomyces cerevisiae </italic>and the human chromosome 14</title>
+      <p><italic>Saccharomyces cerevisiae </italic>is perhaps the most commonly used yeast and plays an important role in fermentation of beer and bread. We used the 288c reference genome to simulate two paired-end libraries, which were subsequently used for assembly (see Materials and methods for more specifications). In Table <xref ref-type="table" rid="T2">2</xref> we show that GapFiller can also be of value in closing genomes of smaller eukaryotes such as yeast: the number of gaps can be reduced with 84% (against 76% for SOAPdenovo) at a relatively low error rate. Nonetheless, as observed also for the bacterial datasets, SOAPdenovo more effectively reduces the total gap length (95% against 85% for GapFiller). The IMAGE method was not evaluated on eukaryotic datasets due to the very large computation time needed.</p>
+      <table-wrap id="T2" position="float">
+        <label>Table 2</label>
+        <caption>
+          <p>Gap closure results obtained on the eukaryotic datasets</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th align="center" colspan="3">Method</th>
+            </tr>
+            <tr>
+              <th/>
+              <th colspan="3">
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th/>
+              <th align="center">Original</th>
+              <th align="center">SOAPdenovo</th>
+              <th align="center">GapFiller</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">
+                <italic>Saccharomyces cerevisiae</italic>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Genome size (bp)</td>
+              <td align="center">11,388,647</td>
+              <td align="center">11,388,600</td>
+              <td align="center">11,388,609</td>
+            </tr>
+            <tr>
+              <td align="left"> Scaffolds</td>
+              <td align="center">334</td>
+              <td align="center">334</td>
+              <td align="center">334</td>
+            </tr>
+            <tr>
+              <td align="left"> Gap count</td>
+              <td align="center">283</td>
+              <td align="center">67</td>
+              <td align="center">45</td>
+            </tr>
+            <tr>
+              <td align="left"> Total gap length (bp)</td>
+              <td align="center">19,358</td>
+              <td align="center">994</td>
+              <td align="center">2,873</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (SNPs)</td>
+              <td align="center">890</td>
+              <td align="center">1,033</td>
+              <td align="center">931</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (indels)</td>
+              <td align="center">565</td>
+              <td align="center">754</td>
+              <td align="center">648</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (misjoins)</td>
+              <td align="center">23</td>
+              <td align="center">42</td>
+              <td align="center">31</td>
+            </tr>
+            <tr>
+              <td align="left"> N50</td>
+              <td align="center">84,640</td>
+              <td align="center">84,640</td>
+              <td align="center">84,649</td>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"><italic>Homo sapiens </italic>(chromosome 14)</td>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Genome size (bp)</td>
+              <td align="center">95,081,274</td>
+              <td align="center">95,059,687</td>
+              <td align="center">95,072,801</td>
+            </tr>
+            <tr>
+              <td align="left"> Scaffolds</td>
+              <td align="center">19,249</td>
+              <td align="center">19,249</td>
+              <td align="center">19,249</td>
+            </tr>
+            <tr>
+              <td align="left"> Gap count</td>
+              <td align="center">2,820</td>
+              <td align="center">1,986</td>
+              <td align="center">1,682</td>
+            </tr>
+            <tr>
+              <td align="left"> Total gap length (bp)</td>
+              <td align="center">949,137</td>
+              <td align="center">423,107</td>
+              <td align="center">699,550</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (SNPs)</td>
+              <td align="center">76,653</td>
+              <td align="center">79,266</td>
+              <td align="center">76,928</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (indels)</td>
+              <td align="center">21,261</td>
+              <td align="center">23,144</td>
+              <td align="center">22,338</td>
+            </tr>
+            <tr>
+              <td align="left"> Errors (misjoins)</td>
+              <td align="center">179</td>
+              <td align="center">224</td>
+              <td align="center">187</td>
+            </tr>
+            <tr>
+              <td align="left"> N50</td>
+              <td align="center">7,748</td>
+              <td align="center">8,262</td>
+              <td align="center">8,469</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Results of SOAPdenovo and GapFiller obtained for the <italic>S. cerevisiae </italic>and human genome show the suitability of both methods to close gaps also in eukaryotic genomes. Patterns are similar to the observations made for bacteria: overall, GapFiller yields the most reliable results and the lowest gap count whereas SOAPdenovo yields a significantly shorter total gap length (though at the cost of a fairly increased error rate). In human the shortened genome size and total gap length obtained by SOAPdenovo (together with the increased indel and misjoin error rate) might indicate that some gaps are eventually closed by collapsing of (repeated) elements.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Similar tendencies are observed for human chromosome 14 (see Materials and methods for information about the datasets used), even though the amount of data and chromosome size differ largely in comparison to the yeast dataset. As expected, the number of scaffolds is higher for human, but notably the average scaffold length is relatively short (which is likely due to the use of ABySS for creation of the draft assembly). Consequently, the outcomes are less impressive, but still there seems to be an inverse relationship between the gap count (-29% after running SOAPdenovo, -40% with GapFiller) and the total gap length (-55% with SOAPdenovo, -26% with GapFiller). Given the observation that, after gap closure with SOAPdenovo, the total genome size is significantly reduced whereas the number of errors due to indels and misjoins has increased, it might be argued that a portion of these closures can be attributed to collapsing of (repeated) elements.</p>
+      <p>From a practical point of view it should be observed that both methods can run well on small scale systems: SOAPdenovo appears to be faster on larger input sets whereas GapFiller uses significantly less memory (Figure <xref ref-type="fig" rid="F1">1</xref>).</p>
+    </sec>
+    <sec>
+      <title>Functional analysis of the human chromosome 14</title>
+      <p>To further analyze the nature of the closed region, we extracted all annotations from the human GRCh37 chromosome 14 [GenBank:<ext-link ext-link-type="gen" xlink:href="NC000014">NC000014</ext-link>] and then aligned the corresponding sequences to the scaffolds (before and after closure with GapFiller). For each annotation type we counted the number of gapped nucleotides that were closed with GapFiller. Results are provided in Table <xref ref-type="table" rid="T3">3</xref> and show that novel nucleotides are incorporated in a wide range of functional regions, showing that gap closure adds mostly functional residues to the assembly. The largest relative increase of nucleotides is seen in coding regions (38.67% for genes, 30.53% for mRNA and 26.89% for coding sequences). Overall, the method is applicable on the relatively large genomic spectrum and does not just solve regions that are bound to specific functional characteristics.</p>
+      <table-wrap id="T3" position="float">
+        <label>Table 3</label>
+        <caption>
+          <p>Functional properties of gap closed regions</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Annotation type</th>
+              <th align="center">Total size in NC_000014 (bp)</th>
+              <th align="center">Nucleotides closed with GapFiller (bp)</th>
+              <th align="center">Portion of total nucleotides closed (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">Gene</td>
+              <td align="center">38,883,890</td>
+              <td align="center">33,969</td>
+              <td align="center">38.67%</td>
+            </tr>
+            <tr>
+              <td align="left">mRNA</td>
+              <td align="center">34,180,962</td>
+              <td align="center">26,818</td>
+              <td align="center">30.53%</td>
+            </tr>
+            <tr>
+              <td align="left">CDS</td>
+              <td align="center">29,380,348</td>
+              <td align="center">23,617</td>
+              <td align="center">26.89%</td>
+            </tr>
+            <tr>
+              <td align="left">Other RNA</td>
+              <td align="center">3,245,865</td>
+              <td align="center">2,755</td>
+              <td align="center">3.14%</td>
+            </tr>
+            <tr>
+              <td align="left">V-segment</td>
+              <td align="center">78,961</td>
+              <td align="center">655</td>
+              <td align="center">0.75%</td>
+            </tr>
+            <tr>
+              <td align="left">C-region</td>
+              <td align="center">36,984</td>
+              <td align="center">23</td>
+              <td align="center">0.03%</td>
+            </tr>
+            <tr>
+              <td align="left">ncRNA</td>
+              <td align="center">11,447</td>
+              <td align="center">0</td>
+              <td align="center">0%</td>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">Total</td>
+              <td align="center">105,818,457</td>
+              <td align="center">87,837</td>
+              <td align="center">100.00%</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Functionalities associated with the nucleotides incorporated with GapFiller based on the annotation of human chromosome 14. Clearly the method can add valuable sequence information to a number of functionalities present in GenBank:<ext-link ext-link-type="gen" xlink:href="NC_000014">NC_000014</ext-link>. Most nucleotides are incorporated in coding sequence (CDS) and mRNA regions. ncRNA, non-coding RNA.</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+  </sec>
+  <sec sec-type="discussion">
+    <title>Discussion</title>
+    <p>Dramatic advances in sequencing technologies have opened new possibilities for whole genome analysis. The increasing read length of next-generation sequencing platforms, as well as the promising perspectives of third generation sequencing platforms, will inevitably lead to better assemblies and represent genomes in large stretches of DNA. Also, third generation technologies (such as the PacBio and IonTorrent systems) will be capable of outputting sequencing reads with large undefined inserts, thus providing valuable paired read information for the assembly and scaffolding process. Concurrently, the development of genome closure software should also receive attention to overcome difficult genomic regions that cannot be covered by draft assemblies.</p>
+    <p>Our results with GapFiller indicate that gapped genomics regions can be reliably closed through an automatic protocol that uses only short sequencing reads. Costly Sanger sequencing can therefore be limited to a few difficult repeat areas. Also, we show that the method is suited for both bacterial and (large) eukaryotic datasets in terms of accuracy, time and memory usage. In the human dataset we underscore that gapped regions may contain diverse but crucial functional information, which is missed in the draft assembly.</p>
+    <p>From in-depth investigation of closed regions with GapFiller and SOAPdenovo, we argue that our GapFiller method has three main advantages. First, it takes into account the estimated gap size prior to closure, thus discarding erroneous closures that are shorter or larger than expected. Second, it does not try to fill a gap through local assembly of reads into contigs, but rather seeks to extend the contigs from each end through <italic>k</italic>-mer overlap. The latter point is especially important to overcome short tandem repeats. And third, it takes into account the contig edges, often a source of misassemblies, and re-evaluates these during gap closure. Importantly, GapFiller requires only limited computational resources and thus is also suited for (larger) eukaryotic genomes. Also, SOAPdenovo shows a good performance in terms of speed and memory usage and appears a valuable alternative to our strategy. From the results obtained on both bacterial and eukaryotic datasets, it appears SOAPdenovo is better able to close larger gaps. The explanation might reside in the fact that GapFiller implements a more conservative strategy than SOAPdenovo. Given that larger gaps usually represent more complex regions than smaller gaps, GapFiller may be simply more careful in avoiding dubious closures. This is also in line with the observation that GapFiller yields generally more accurate results than SOAPdenovo. Alternatively, a different explanation for GapFiller being less effective in closing larger gaps could be provided by the first advantage mentioned above. If the estimated gapsize in the scaffold does not meet the size of the closed fragment, such closure will be rejected. However, from a practical point of view it is still relatively difficult to estimate the exact gap size based on next-generation sequencing paired-read libraries. In particular, mate pair libraries can show a relatively large insert distribution, thus making it hard to define the correct distance between the pairs. Also paired-end background noise in mate pair data is commonly observed and leads to incorrect scaffolds. Consequently, there is a possibility that a correct closure is rejected because of the erroneous gap size estimation after scaffolding. Future research will hopefully lead to better insight into these issues.</p>
+    <p>The IMAGE method instead has several limitations in terms of quality, speed and ease of use (the method can handle only one library per analysis). Notably, the strategy produces relatively large genomes, and this is most likely a consequence of sequence extension of the left and right scaffold edges.</p>
+    <p>The findings in this paper have been derived using different short-read Illumina libraries. The length of the gapped regions is limited to the insert distance of paired reads. Nonetheless, the promising outcomes strongly indicate that long-range gaps can also be effectively closed with high quality 454 and/or single molecule paired sequence reads. Also, we have put emphasis on creating a user-friendly and fast tool so that it can be of wide use for the community. We feel GapFiller can make a significant contribution to (almost) closing genome assemblies in a reliable manner.</p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec>
+      <title>GapFiller algorithm</title>
+      <p>The GapFiller method works as follows (see Figure <xref ref-type="fig" rid="F2">2</xref> for a schematic overview). The input consists of a set of scaffold sequences (in FASTA format) with gapped nucleotides represented as Ns and one or multiple sets of paired reads (in FASTQ or FASTA format). The data handling and analysis are setup in a multithreaded manner, thus allowing multiple datasets (libraries) to be processed simultaneously (by default one thread is used, but for this study we set this to eight). In a pre-filtering step the nucleotides at the edges of each gap are trimmed off (parameter <italic>t</italic>, default = 10 nucleotides) since these often contain misassemblies. Then all pairs are aligned to the trimmed input scaffolds with Bowtie [<xref ref-type="bibr" rid="B10">10</xref>] or the Burrows-Wheeler Aligner (BWA) [<xref ref-type="bibr" rid="B11">11</xref>]. The alignment method can be selected by the user, but we recommend using BWA in case of long reads. Bowtie instead is more suited for shorter reads, also because of the decreased runtime. For this study we used BWA on all datasets. Pairs are only kept if a) one read can be aligned and b) the second read (partially) falls within a gapped region. The latter is calculated based on the expected distance between the read pairs: the maximum allowed deviation used for this study was 25% of the pre-defined distance between the pairs. The final set of reads, which is expected to be (partially) in a gapped region, is then split into shorter <italic>k</italic>-mers that are used to gradually close the gap from each edge. The <italic>k</italic>-mer size is set by default to 30 nucleotides (1 <italic>+ m</italic>, where m corresponds to a default sequence overlap of 29 nucleotides). Gaps are iteratively filled from the left and right edge by incorporating one overhang nucleotide at a time, provided the position is sufficiently covered (parameter <italic>o</italic>, default = 2). In case of ambiguous overhang nucleotides (that is, in a situation of allelic differences), a majority voting ratio is applied (parameter <italic>r</italic>, default = 0.7). If a nucleotide is incorporated, the <italic>k</italic>-mer(s) used for extension are removed and the algorithm checks if the gap can be closed. Gaps are only considered to be closed if a) an overlap can be found between the two extensions (parameter <italic>n</italic>, default = at least 10 nucleotides) and b) the sequence insertion corresponds to a pre-estimated gap length in the scaffold (parameter <italic>d</italic>, default = maximally 50 nucleotides difference). Otherwise, the next iteration is started. If no overhang nucleotides can be incorporated anymore, the whole process is repeated a second time by re-using all <italic>k</italic>-mers. Finally, the user can decide to repeat the complete analysis (alignment and gap closure) on the novel assembly. The number of such 'global' iterations can be specified using the (parameter <italic>i</italic>, default = 10).</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Schematic overview of the GapFiller algorithm</bold>. <bold>(a) </bold>The input data consist of a set of scaffold sequences containing gapped nucleotides and one or more sets of paired-end and/or mate-pair reads. <bold>(b) </bold>As a pre-processing step low quality nucleotides are removed from the sequence edges, thus enlarging the gap of ten nucleotides from each side. It should be stressed that the contig ends resulting from a draft assembly often contain misassemblies. <bold>(c) </bold>Paired-reads are aligned to the scaffolds and retained if one pair aligns to a scaffold sequence (dark grey) and one pair to a gapped region (black). <bold>(d) </bold>All pairs that are estimated to fall in the gapped regions are split into <italic>k</italic>-mers and used for gap filling. <bold>(e) </bold>The gap is closed from each edge by using <italic>k</italic>-mers that present a sequence overlap of size (<italic>k</italic>-mer - 1) and one nucleotide overhang. Gaps are closed if the right and left extensions can be merged and correspond to the estimated sequence gap.</p>
+        </caption>
+        <graphic xlink:href="gb-2012-13-6-r56-2"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Short-read datasets</title>
+      <p>To evaluate the results of our algorithm, we used short-read Illumina data from <italic>E. coli, S. coelicolor, S. aureus, R. sphaeroides, S. cerevisiae </italic>and <italic>Homo sapiens</italic>. Our aim was to create a divergent benchmark using a variety of organisms, dataset types and assembly strategies. For <italic>E. coli </italic>the dataset consists of a paired-end library taken from the NCBI Short Read Archive [SRA:SRR001665] (insert size of 200 bp, 36 cycles, 10.4 million reads). The dataset of <italic>S. coelicolor </italic>and <italic>S. cerevisiae </italic>consist of simulated paired-end libraries constructed from reference genomes deposited in GenBank. Random paired-end reads were created using wgsim (at default settings), which is part of the SAM tools package [<xref ref-type="bibr" rid="B12">12</xref>]. For <italic>S. coelicolor </italic>we used the A3(2) reference genome [GenBank:<ext-link ext-link-type="gen" xlink:href="AL645882">AL645882</ext-link>] to construct two paired-end libraries (insert sizes of 200 and 500 bp, 70 cycles, 10 million reads per library, whereas for <italic>S. cerevisiae </italic>we used all chromosomes of the S288c genome [GenBank:<ext-link ext-link-type="gen" xlink:href="NC001133">NC001133</ext-link> to <ext-link ext-link-type="gen" xlink:href="NC_001148">NC_001148</ext-link>] to construct two paired-end libraries (insert sizes of 200 and 500 bp, 70 cycles, 20 million reads per library). For <italic>S. aureus, R. sphaeroides </italic>and <italic>H. sapiens </italic>(chromosome 14) quakeCor-filtered [<xref ref-type="bibr" rid="B9">9</xref>] short-read datasets were taken from the Genome assembly Gold-standard Evaluations website [<xref ref-type="bibr" rid="B13">13</xref>]. For <italic>S. aureus </italic>this included a paired-end (insert size of 180 bp, 88 cycles, 0.8 million reads) and a mate-pair library (insert size of 3,500 bp, 37 cycles, 1.6 million reads). Similarly, for <italic>R. sphaeroides </italic>this also included a paired-end (insert size of 180 bp, 76 cycles, 1.5 millino reads) and a mate-pair library (insert size of 3,500 bp, 72 cycles, 1.5 million reads). For <italic>H. sapiens </italic>(chromosome 14) the dataset included one paired-end library (insert of 155 bp, 93 cycles, 32.6 million reads) and two mate-pair libraries (shortjump library: insert size of 2,283 to 2,803 bp, 82 cycles, 14.5 million reads; longjump library: insert size of 35,295 to 35,318 bp, 79 cycles, 2.0 million reads).</p>
+    </sec>
+    <sec>
+      <title>Assembly and scaffold construction</title>
+      <p>For three organisms a draft assembly was made using the paired-end libraries. For <italic>E. coli </italic>we used SOAPdenovo v1.3 [<xref ref-type="bibr" rid="B3">3</xref>] whereas for <italic>S. coelicolor </italic>and <italic>S. cerevisiae </italic>we used the CLCbio <italic>de novo </italic>assembler v4.9. Scaffolds were produced using the same libraries as follows. For <italic>E. coli </italic>the 1,111 contigs of the draft assembly were linked into 179 scaffolds using SSPACE Premium v1.0 [<xref ref-type="bibr" rid="B4">4</xref>]. For the <italic>S. coelicolor </italic>and <italic>S. cerevisiae </italic>genomes a similar strategy was adopted resulting in 115 scaffolds (430 contigs) and 334 scaffolds (733 contigs), respectively. For the remaining three species, <italic>S. aureus, R. sphaeroides </italic>and <italic>Homo sapiens</italic>, assemblies were retrieved from the GAGE website [<xref ref-type="bibr" rid="B13">13</xref>]. Based on the outcomes of the comparative analysis, we decided for the bacterial species to use the scaffolds produced with ALLPATHS-LG strategy [<xref ref-type="bibr" rid="B14">14</xref>] and for human the scaffolds (≥ 200 bp) produced with ABySS [<xref ref-type="bibr" rid="B2">2</xref>].</p>
+    </sec>
+    <sec>
+      <title>IMAGE and SOAPdenovo gap closure software</title>
+      <p>Comparative analysis with IMAGE [<xref ref-type="bibr" rid="B6">6</xref>] was performed using version 2.3, which was downloaded from [<xref ref-type="bibr" rid="B15">15</xref>]. The program was run at default settings using a <italic>k</italic>-mer size of 31 and with 10 iterations. The insert size of the paired-end libraries was specified accordingly. SOAPdenovo gap closer software version 1.10 was downloaded from [<xref ref-type="bibr" rid="B16">16</xref>]. The program was run at default settings using a <italic>k</italic>-mer size of 30 and in total 8 threads.</p>
+    </sec>
+    <sec>
+      <title>Quality assessment of assemblies</title>
+      <p>In order to assess the quality of the assemblies, we followed the criteria set by [<xref ref-type="bibr" rid="B8">8</xref>]. Errors were classified into three categories: SNPs, indels (including indels ≤ 5 bp and indels &gt; 5 bp) and misjoins (including inversions, relocations and translocations).</p>
+    </sec>
+    <sec>
+      <title>Compute server specifications</title>
+      <p>All analyses were performed on a 32 GB Linux machine (Intel Xeon X7350, 2.93 GHz).</p>
+    </sec>
+    <sec>
+      <title>Availability of software</title>
+      <p>The software can be downloaded from [<xref ref-type="bibr" rid="B7">7</xref>]and is free of charge for academic users.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>bp: base pair; BWA: Burrows-Wheeler Aligner; LC: low coverage; SNP: single nucleotide polymorphism.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>MB conceived of the study and wrote the program, WP participated in its design and coordination and wrote the manuscript. All authors read and approved the final manuscript.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>This research was partially funded by the WBSO (BaseClear grants SO201101 and SO201209).</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zerbino</surname>
+          <given-names>DR</given-names>
+        </name>
+        <name>
+          <surname>Birney</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Velvet: algorithms for <italic>de novo </italic>short read assembly using de Bruijn graphs.</article-title>
+        <source>Genome Res</source>
+        <year>2011</year>
+        <volume>18</volume>
+        <fpage>821</fpage>
+        <lpage>829</lpage>
+        <pub-id pub-id-type="pmid">18349386</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Simpson</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Jackman</surname>
+          <given-names>SD</given-names>
+        </name>
+        <name>
+          <surname>Schein</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Birol</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>ABySS: A parallel assembler for short read sequence data.</article-title>
+        <source>Genome Res</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1117</fpage>
+        <lpage>1123</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.089532.108</pub-id>
+        <pub-id pub-id-type="pmid">19251739</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Fan</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Tian</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Zhu</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>He</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Cai</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Huang</surname>
+          <given-names>Q</given-names>
+        </name>
+        <name>
+          <surname>Cai</surname>
+          <given-names>Q</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Bai</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Wei</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Jian</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Nielsen</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Gu</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Xuan</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Ryder</surname>
+          <given-names>OA</given-names>
+        </name>
+        <name>
+          <surname>Leung</surname>
+          <given-names>FC</given-names>
+        </name>
+        <name>
+          <surname>Zhou</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Cao</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Sun</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Fu</surname>
+          <given-names>Y</given-names>
+        </name>
+        <etal/>
+        <article-title>The sequence and <italic>de novo </italic>assembly of the giant panda genome.</article-title>
+        <source>Nature</source>
+        <year>2010</year>
+        <volume>463</volume>
+        <fpage>311</fpage>
+        <lpage>317</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature08696</pub-id>
+        <pub-id pub-id-type="pmid">20010809</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Boetzer</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Henkel</surname>
+          <given-names>CV</given-names>
+        </name>
+        <name>
+          <surname>Jansen</surname>
+          <given-names>HJ</given-names>
+        </name>
+        <name>
+          <surname>Butler</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Pirovano</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Scaffolding pre-assembled contigs using SSPACE.</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <fpage>578</fpage>
+        <lpage>579</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq683</pub-id>
+        <pub-id pub-id-type="pmid">21149342</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Dayarian</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Michael</surname>
+          <given-names>TP</given-names>
+        </name>
+        <name>
+          <surname>Sengupta</surname>
+          <given-names>AM</given-names>
+        </name>
+        <article-title>SOPRA: Scaffolding algorithm for paired reads via statistical optimization.</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>345</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-11-345</pub-id>
+        <pub-id pub-id-type="pmid">20576136</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tsai</surname>
+          <given-names>IJ</given-names>
+        </name>
+        <name>
+          <surname>Otto</surname>
+          <given-names>TD</given-names>
+        </name>
+        <name>
+          <surname>Berriman</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Improving draft assemblies by iterative mapping and assembly of short reads to eliminate gaps.</article-title>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>R41</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2010-11-4-r41</pub-id>
+        <pub-id pub-id-type="pmid">20388197</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="other">
+        <article-title>GapFiller.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.baseclear.com/bioinformatics-tools/">http://www.baseclear.com/bioinformatics-tools/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome.</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-3-r25</pub-id>
+        <pub-id pub-id-type="pmid">19261174</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Fast and accurate short read alignment with Burrows-Wheeler transform.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1754</fpage>
+        <lpage>1760</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp324</pub-id>
+        <pub-id pub-id-type="pmid">19451168</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Handsaker</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Wysoker</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Fennell</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Homer</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Marth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <collab>1000 Genome Project Data Processing Subgroup</collab>
+        <article-title>The Sequence alignment/map (SAM) format and SAMtools.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2078</fpage>
+        <lpage>2079</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp352</pub-id>
+        <pub-id pub-id-type="pmid">19505943</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kelley</surname>
+          <given-names>DR</given-names>
+        </name>
+        <name>
+          <surname>Schatz</surname>
+          <given-names>MC</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Quake: quality-aware detection and correction of sequencing errors.</article-title>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>R116</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2010-11-11-r116</pub-id>
+        <pub-id pub-id-type="pmid">21114842</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <name>
+          <surname>Phillippy</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Zimin</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Puiu1</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Magoc</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Koren</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Treangen</surname>
+          <given-names>TJ</given-names>
+        </name>
+        <name>
+          <surname>Schatz</surname>
+          <given-names>MC</given-names>
+        </name>
+        <name>
+          <surname>Delcher</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Roberts</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Marçais</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Yorke</surname>
+          <given-names>JA</given-names>
+        </name>
+        <article-title>GAGE: a critical evaluation of genome assemblies and assembly algorithms.</article-title>
+        <source>Genome Res</source>
+        <year>2012</year>
+        <volume>22</volume>
+        <fpage>557</fpage>
+        <lpage>567</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.131383.111</pub-id>
+        <pub-id pub-id-type="pmid">22147368</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="other">
+        <article-title>GAGE.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://gage.cbcb.umd.edu/results/index.html">http://gage.cbcb.umd.edu/results/index.html</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>MacCallum</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Przybylski</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Gnerre</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Burton</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Shlyakhter</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Gnirke</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Malek</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>McKernan</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Ranade</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Shea</surname>
+          <given-names>TP</given-names>
+        </name>
+        <name>
+          <surname>Williams</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Young</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Nusbaum</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Jaffe</surname>
+          <given-names>DB</given-names>
+        </name>
+        <article-title>ALLPATHS 2: small genomes assembled accurately and with high continuity from short paired reads.</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R103</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-10-r103</pub-id>
+        <pub-id pub-id-type="pmid">19796385</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="other">
+        <article-title>IMAGE.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://sourceforge.net/projects/image2/">http://sourceforge.net/projects/image2/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="other">
+        <article-title>SOAPdenovo.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://soap.genomics.org.cn/soapdenovo.html">http://soap.genomics.org.cn/soapdenovo.html</ext-link>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

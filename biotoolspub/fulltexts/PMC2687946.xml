@@ -1,0 +1,770 @@
+<?properties open_access?>
+<?properties no_embargo?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title>Bioinformatics</journal-title>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1460-2059</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2687946</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btp192</article-id>
+    <article-id pub-id-type="publisher-id">btp192</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Ismb/Eccb 2009 Conference Proceedings June 27 to July 2, 2009, Stockholm, Sweden</subject>
+        <subj-group>
+          <subject>Original Papers</subject>
+          <subj-group>
+            <subject>Gene Regulation and Transcriptomics</subject>
+          </subj-group>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>KELLER: estimating time-varying interactions between genes</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Song</surname>
+          <given-names>Le</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Kolar</surname>
+          <given-names>Mladen</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Xing</surname>
+          <given-names>Eric P.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="COR1">*</xref>
+      </contrib>
+    </contrib-group>
+    <aff>School of Computer Science, Lane Center for Computational Biology, Carnegie Mellon University, Pittsburgh, PA 15213, USA</aff>
+    <author-notes>
+      <corresp id="COR1">*To whom correspondence should be addressed.</corresp>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>15</day>
+      <month>6</month>
+      <year>2009</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>27</day>
+      <month>5</month>
+      <year>2009</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>27</day>
+      <month>5</month>
+      <year>2009</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+			<pub-date pub-type="epub"/>. -->
+    <volume>25</volume>
+    <issue>12</issue>
+    <fpage>i128</fpage>
+    <lpage>i136</lpage>
+    <permissions>
+      <copyright-statement>© 2009 The Author(s)</copyright-statement>
+      <copyright-year>2009</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">
+        <p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">http://creativecommons.org/licenses/by-nc/2.0/uk/</ext-link>) which permits unrestricted non-commercial use, distribution, and reproduction in any medium, provided the original work is properly cited.</p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Motivation:</bold> Gene regulatory networks underlying temporal processes, such as the cell cycle or the life cycle of an organism, can exhibit significant topological changes to facilitate the underlying dynamic regulatory functions. Thus, it is essential to develop methods that capture the temporal evolution of the regulatory networks. These methods will be an enabling first step for studying the driving forces underlying the dynamic gene regulation circuitry and predicting the future network structures in response to internal and external stimuli.</p>
+      <p><bold>Results:</bold> We introduce a kernel-reweighted logistic regression method (KELLER) for reverse engineering the dynamic interactions between genes based on their time series of expression values. We apply the proposed method to estimate the latent sequence of temporal rewiring networks of 588 genes involved in the developmental process during the life cycle of <italic>Drosophila melanogaster</italic>. Our results offer the first glimpse into the temporal evolution of gene networks in a living organism during its full developmental course. Our results also show that many genes exhibit distinctive functions at different stages along the developmental cycle.</p>
+      <p><bold>Availability:</bold> Source codes and relevant data will be made available at <ext-link ext-link-type="uri" xlink:href="http://www.sailing.cs.cmu.edu/keller">http://www.sailing.cs.cmu.edu/keller</ext-link></p>
+      <p>
+        <bold>Contact:</bold>
+        <email>epxing@cs.cmu.edu</email>
+      </p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec sec-type="intro" id="SEC1">
+    <title>1 INTRODUCTION</title>
+    <p>Many biological networks bear remarkable similarities in terms of global topological characteristics, such as scale-free and small-world properties, to various other networks in nature, such as social networks, albeit with different characteristic coefficients (Barabasi and Albert, <xref ref-type="bibr" rid="B5">1999</xref>). Furthermore, it was observed that the average clustering factor of real biological networks is significantly larger than that of random networks of equivalent size and degree distribution (Barabasi and Oltvai, <xref ref-type="bibr" rid="B6">2004</xref>); and biological networks are characterized by their intrinsic modularities (Vászquez <italic>et al.</italic>, <xref ref-type="bibr" rid="B29">2004</xref>), which reflect presence of physically and/or functionally linked molecules that work synergistically to achieve a relatively autonomous functionality. These studies have led to numerous advances towards uncovering the organizational principles and functional properties of biological networks, and even identification of new regulatory events (Basso <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2005</xref>).</p>
+    <p>However, most such results are based on analyses of <italic>static networks</italic>, i.e. networks with invariant topology over a given set of molecules. One example is a protein–protein interaction (PPI) network over all proteins of an organism, regardless of the conditions under which individual interactions may take place. Another example is a single-gene network inferred from microarray data even though the samples may be collected over a time course or multiple conditions. A major challenge in systems biology is to understand and model, quantitatively, the dynamic topological and functional properties of cellular networks, such as the rewiring of transcriptional regulatory circuitry and signal transduction pathways that control behaviors of a cell.</p>
+    <p>Over the course of a cellular process, such as a cell cycle or an immune response, there may exist multiple underlying ‘themes’ that determine the functionalities of each molecule and their relationships to each other, and such themes are dynamical and stochastic. As a result, the molecular networks at each time point are context-dependent and can undergo systematic rewiring rather than being invariant over time, as assumed in most current biological network studies. Indeed, in a seminal study by Luscombe <italic>et al.</italic> (<xref ref-type="bibr" rid="B23">2004</xref>), it was shown that the ‘active regulatory paths’ in a gene-regulatory network of <italic>Saccharomyces cerevisiae</italic> exhibit dramatic topological changes and hub transience during a temporal cellular process, or in response to diverse stimuli. However, the exact mechanisms underlying this phenomena remain poorly understood. We refer to this time- or condition-specific ‘active parts’ of the biological circuitry as the <italic>active time-evolving network</italic>, or simply, <italic>time-varying network</italic>. Our goal is to recover the latent time-evolving network of gene interactions from microarray time course.</p>
+    <p>What prevents us from an in-depth investigation of the mechanisms that drive the temporal rewiring of biological networks during various cellular and physiological processes? A key technical hurdle we face is the unavailability of <italic>serial snapshots</italic> of the time-evolving rewiring network during a biological process. Current technology does not allow for experimentally determining a series of time-specific networks, for a realistic dynamic biological system, based on techniques such as yeast two-hybrid or ChIP-chip systems; on the other hand, use of computational methods, such as structural learning algorithms for Bayesian networks, is also difficult because we can only obtain a few observations of gene expressions at each time point which leads to serious statistical issues in the recovered networks.</p>
+    <p>How can one derive a temporal sequence of time-varying networks for each time point based on only one or at most a few measurements of node-states at each time point? If we follow the naive assumption that each temporal snapshot of gene expressions is from a completely different network, this task would be statistically impossible because our estimator (from only the observations at the time point in question) would suffer from extremely high variance due to sample scarcity. Previous methods would instead pool observations from all time points together and infer a single ‘average’ network (Basso <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2005</xref>; Friedman <italic>et al.</italic>, <xref ref-type="bibr" rid="B14">2000</xref>; Ong, <xref ref-type="bibr" rid="B25">2002</xref>), which means they choose to ignore network rewiring and simply assume that the observations are independently and identically distributed. To our knowledge, no method is currently available for genome-wide reverse engineering of time-varying networks underlying biological processes, with temporal resolution up to every single time point based on measurements of gene expressions.</p>
+    <p>In this article, we propose kernel-reweighted logistic regression (<italic>KELLER</italic>), a new machine learning algorithm for recovering time-varying networks on a <italic>fixed</italic> set of genes from time series of expression values. KELLER stems from the acronym KERWLLOR, which stands for <italic>KErnel ReWeighed l</italic><sub>1</sub>-<italic>regularized LOgistic Regression</italic>. Our key assumption is that the time-evolving networks underlying biology processes vary smoothly across time, therefore temporally adjacent networks are likely to share more common edges than temporally distal networks. This assumption allows us to aggregate observations from adjacent time points by reweighting them, and to decompose the problem of estimating time-evolving networks into one of estimating a sequence of separate and static networks. Extending the highly scalable optimization algorithms of ℓ<sub>1</sub>-regularized logistic regression, we are able to apply our method to reverse engineer a genome-wide interactions with a temporal resolution up to every single time point.</p>
+    <p>It is worth emphasizing that earlier algorithms, such as the structure learning algorithms for dynamic Bayesian network (DBN) (Ong, <xref ref-type="bibr" rid="B25">2002</xref>), learns a time-homogeneous dynamic system with fixed node dependencies, which is entirely different from our approach, which aims at snapshots of rewiring network. Our approach is also very different from earlier approaches which start from a priori static networks and then trace time-dependent activities. For example, the <italic>trace-back</italic> algorithm (Luscombe <italic>et al.</italic>, <xref ref-type="bibr" rid="B23">2004</xref>) that enables the revelation of network changes over time in yeast is based on assigning time labels to the edges in a priori static summary network. The Achilles' heel of this approach is that edges that are transient over a short period of time may be missed by the summary static network in the first place. The DREM program (Ernst <italic>et al.</italic>, <xref ref-type="bibr" rid="B13">2007</xref>) reconstructs dynamic regulatory maps by tracking bifurcation points of a regulatory cascade according to the ChIP-chip data over short time course. This is also different from our method, because KELLER aims at recovering the entire time-varying networks, not only the interactions due to protein–DNA binding, from long time series with arbitrary temporal resolution. One related approach is the Tesla algorithm by Ahmed <italic>et al.</italic> (<xref ref-type="bibr" rid="B1">2008</xref>). However, Tesla aims at recovering bursty rather than smoothly varying networks.</p>
+    <p>We apply our method to reverse engineer the time-evolving network between 588 genes involved in the developmental process during the life cycle of <italic>Drosophila melanogaster</italic>. These genes are a subset of the 4028 genes whose expression values are measured in a 66-step time series documented in Arbeitman <italic>et al.</italic> (<xref ref-type="bibr" rid="B2">2002</xref>). We validate the biological plausibility of the estimated time-evolving network from various aspects, ranging from the activity of functionally coherent gene sets, to previous experimentally verified interactions between genes, to regulatory cascade involved in nervous system development, and to gene functional enrichment. More importantly, the availability of time-evolving networks gives us the opportunity to further study the rich temporal phenomena underlying the biological processes that is not attainable using the traditional static network. For instance, such a downstream analysis can be a latent functional analysis of the genes in the time-evolving network appeared in Fu <italic>et al.</italic> (<xref ref-type="bibr" rid="B15">2008</xref>).</p>
+    <p>The remainder of the article is structured as follows. In <xref ref-type="sec" rid="SEC2">Section 2</xref>, we will introduce our kernel reweighted method. In <xref ref-type="sec" rid="SEC3">Section 3</xref>, we will use synthetic data and a time series of gene expression data collected during the life cycle of <italic>D.melanogaster</italic> to show the advantage as well as biological plausibility of estimating a dynamic network. We conclude the article with a discussion and outlook on future work in <xref ref-type="sec" rid="SEC4">Section 4</xref>.</p>
+  </sec>
+  <sec sec-type="methods" id="SEC2">
+    <title>2 METHODS</title>
+    <p>First, we introduce our time-evolving network model for gene expression data, then explain our algorithm for estimating the time-evolving network and finally discuss the statistical property and parameter tuning for our algorithm.</p>
+    <sec id="SEC2.1">
+      <title>2.1 Modeling time series of gene expression</title>
+      <p>Microarray profiling can simultaneously measure the abundance of transcripts from tens of thousands of genes. This technology provides a snapshot into the cell at a particular time point in a genome-wide fashion. However, microarray measurements are far from the exact values of the expression levels. First, the samples prepared for microarray experiments are usually a mixture of cells from different tissues and, possibly, at different points of a cell cycle or developmental stage. This means that microarray measurements are only rough estimates of the average expression levels of the mixture. Other sources of noise can also be introduced into the microarray measurements, e.g. during the stage of hybridization, digitization and normalization. Therefore, it is more robust if we only consider the qualitative level of gene expression rather than its actual value. That is we model gene expression as either being upregulated or downregulated. For this reason, we binarize the gene expression levels into 𝒳≔{−1, 1}(−1 for downregulated and 1 for upregulated). For instance, for cDNA microarray, we can simply threshold at 0 the log ratio of the expression levels to those of the reference, above which a gene is declared to be upregulated and otherwise downregulated.</p>
+      <p>At a particular time point <italic>t</italic>, we denote the microarray measurements for <italic>p</italic> genes as a vector of random variables <italic>X</italic><sup>(<italic>t</italic>)</sup>≔(<italic>X</italic><sub>1</sub><sup>(<italic>t</italic>)</sup>,…, <italic>X</italic><sub><italic>p</italic></sub><sup>(<italic>t</italic>)</sup>)<sup>⊤</sup>∈𝒳<sup><italic>p</italic></sup>, where we have adopted the convention that the subscripts index the genes and the bracketed superscripts index the time point. We model the distribution of the expression values for these <italic>p</italic> genes at any given time point <italic>t</italic> as a binary pair-wise Markov Random Field (MRF):
+<disp-formula id="M1"><label>(1)</label><graphic xlink:href="btp192m1.jpg" position="float"/></disp-formula>
+where θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup>=θ<sub><italic>vu</italic></sub><sup>(<italic>t</italic>)</sup>∈ℝ is the parameter indicating the strength of undirected interaction between genes <italic>u</italic> and <italic>v</italic>; and a θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup>=0 means that the expression values for genes <italic>u</italic> and <italic>v</italic> are conditionally independent given the values of all other genes. Therefore, a MRF is also associated to a network 𝒢<sup>(<italic>t</italic>)</sup> with a set of nodes 𝒱 and a set of edges ℰ<sup>(<italic>t</italic>)</sup>: 𝒱 corresponds to the invariant set of genes and hence without the superscript for time; each edge in ℰ<sup>(<italic>t</italic>)</sup> corresponds to an undirected interaction between two genes (and a non-zero θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup>). The difference between ℰ<sup>(<italic>t</italic>)</sup> and θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup> can be viewed as follows: ℰ<sup>(<italic>t</italic>)</sup> only codes the structure of the model while θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup> contains all information about the model. Finally, the partition function <italic>Z</italic>(θ<sup>(<italic>t</italic>)</sup>) in a MRF normalizes the model to a distribution.</p>
+      <p>The dynamic interactions between genes underlying temporal biological processes are reflected in the change of the magnitude of parameter θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup> across time. In particular, increased values of θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup> indicate strengthened or emerging interaction between gene <italic>u</italic> and <italic>v</italic>, and decreased values indicate weakened or disappearing interaction. Furthermore, we assume that the dynamic interactions between genes vary smoothly across time. Mathematically, this means that the change of θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup> is small across time, i.e. the difference |θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup>−θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>+1)</sup>| is upper bounded by a small constant <italic>C</italic><sub>θ</sub>. In other words, the networks at adjacent time points, 𝒢<sup>(<italic>t</italic>)</sup> and 𝒢<sup>(<italic>t</italic>+1)</sup> are very similar, i.e. |ℰ<sup>(<italic>t</italic>)</sup>∩ℰ<sup>(<italic>t</italic>+1)</sup>|/|ℰ<sup>(<italic>t</italic>)</sup>| is lower bounded by a large constant <italic>C</italic><sub>ℰ</sub> (here, we used |·| to denote the cardinality of a set).</p>
+      <p>Given time series of gene expression data measured at <italic>n</italic> time points, <italic>D</italic>≔{<italic>x</italic><sup>(<italic>t</italic><sub>1</sub>)</sup>,…, <italic>x</italic><sup>(<italic>t</italic><sub><italic>n</italic></sub>)</sup>}, our goal is to estimate a temporal sequence of networks <italic>G</italic>≔{𝒢<sup>(<italic>t</italic><sub>1</sub>)</sup>,…, 𝒢<sup>(<italic>t</italic><sub><italic>n</italic></sub>)</sup>} with each network for 1 time point. Note that, we will focus on estimating the structures of the interactions between genes (𝒢<sup>(<italic>t</italic>)</sup>) rather than the detailed strength of these interactions (θ<sup>(<italic>t</italic>)</sup>). We hope by restricting our attention to estimating the structure, we can obtain better guarantees in terms of the ability of our algorithm to recover the true underlying interactions between genes. In <xref ref-type="sec" rid="SEC2.2">Sections 2.2</xref> and <xref ref-type="sec" rid="SEC2.4">2.4</xref>, we will provide further explanation on the advantage of focusing on 𝒢<sup>(<italic>t</italic>)</sup>.</p>
+      <p>Another important point of clarification is that the interactions between genes we are modeling are the statistical dependencies between their expression levels. This is a common choice for many existing methods, such as the methods by Friedman <italic>et al.</italic> (<xref ref-type="bibr" rid="B14">2000</xref>) and Ong (<xref ref-type="bibr" rid="B25">2002</xref>). Note that statistical dependency is different from causality, which focuses on directed statistical relations between random variables. In other words, it is more appropriate to view networks from our model as the co-regulation relations between genes. That is, if there is an edge between two genes in the dynamic network at time point <italic>t</italic>, then the changes of the expression levels of these two genes are likely to be regulated by the same biological process.</p>
+    </sec>
+    <sec id="SEC2.2">
+      <title>2.2 Estimating time-varying network</title>
+      <p>Two questions need to be addressed when we estimate a time-evolving network. First, what is the objective to optimize and second, what is the algorithmic procedure for the estimation? The first question is addressed in this section and it concerns both the consistency and efficiency of our method while the second question only concerns the efficiency of the algorithm, which we will discuss more in <xref ref-type="sec" rid="SEC2.3">Section 2.3</xref>.</p>
+      <p>First, estimating the parameter vector θ<sup>(<italic>t</italic>)</sup> by maximizing log-likelihood is not practically feasible since the evaluation of the partition function <italic>Z</italic>(θ<sup>(<italic>t</italic>)</sup>) involves a summation of exponential number of terms. Another approach to address this problem is to use a surrogate likelihood function, which can be tractably optimized. However, there is no statistical guarantee on how close an estimate obtained through maximization of a surrogate likelihood is to the true parameter (Banerjee <italic>et al.</italic>, <xref ref-type="bibr" rid="B3">2008</xref>). Therefore, we adapt the neighborhood selection procedure of Wainwright <italic>et al.</italic> (<xref ref-type="bibr" rid="B30">2006</xref>) to estimate the time-evolving network 𝒢<sup>(<italic>t</italic>)</sup> instead.</p>
+      <p>Overall, we have designed a method that decomposes the problem of estimating the time-evolving network along two orthogonal axes. The first axis is along the time, where we estimate the network for each time point separately by reweighting the observations accordingly; and the second axis is along the set of genes, where we estimate the neighborhood for each gene separately and then joining these neighborhoods to form the overall network. The additional benefit of such decomposition is that the estimation problem is reduced to a set of identical atomic optimization tasks in Equation (<xref ref-type="disp-formula" rid="M3">3</xref>). In the next section, we will discuss our procedure to solve this atomic optimization task efficiently.</p>
+      <p>In this new approach, estimating the network 𝒢<sup>(<italic>t</italic>)</sup> is equivalent to recovering, for each gene <italic>u</italic>∈𝒱, its neighborhood of genes that <italic>u</italic> is interacting with, i.e. 𝒩<sup>(<italic>t</italic>)</sup>(<italic>u</italic>)≔{<italic>v</italic>∈𝒱|(<italic>u</italic>, <italic>v</italic>)∈ℰ<sup>(<italic>t</italic>)</sup>}. It is intuitive that if we can correctly estimate the neighborhood for all genes <italic>u</italic> in 𝒱, we can recover the network 𝒢<sup>(<italic>t</italic><sub><italic>i</italic></sub>)</sup> by joining these neighborhoods. In this alternative view, we can decompose the joint distribution in Equation (<xref ref-type="disp-formula" rid="M1">1</xref>) into a product of conditional distributions, ℙ<sub>θ<sup>(<italic>t</italic>)</sup></sub>(<italic>X</italic><sup>(<italic>t</italic>)</sup><sub><italic>u</italic></sub>|<italic>X</italic><sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub>), each of which is the distribution of the expression value of gene <italic>u</italic> conditioned on the expression values of all other genes (we use \<italic>u</italic> to denote the set of genes except gene <italic>u</italic>, i.e. \<italic>u</italic>≔𝒱−{<italic>u</italic>}). In particular, ℙ<sub>θ<sup>(<italic>t</italic>)</sup></sub>(<italic>X</italic><sup>(<italic>t</italic>)</sup><sub><italic>u</italic></sub>|<italic>X</italic><sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub>) takes the form of a logistic regression:
+<disp-formula id="M2"><label>(2)</label><graphic xlink:href="btp192m2.jpg" position="float"/></disp-formula>
+where 〈<italic>a</italic>, <italic>b</italic>〉=<italic>a</italic><sup>⊤</sup><italic>b</italic> denotes inner product and θ<sub>\<italic>u</italic></sub><sup>(<italic>t</italic>)</sup>≔{θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup>|<italic>v</italic>∈\<italic>u</italic>} is the (<italic>p</italic>−1)-dimensional sub-vector of parameters associated with gene <italic>u</italic>. The neighborhood 𝒩<sup>(<italic>t</italic>)</sup>(<italic>u</italic>) can be estimated from the sparsity pattern of the sub-vector θ<sub>\<italic>u</italic></sub><sup>(<italic>t</italic>)</sup>. Therefore, estimating the network 𝒢<sup>(<italic>t</italic>)</sup> at time point <italic>t</italic> can be decomposed into <italic>p</italic> tasks, each for the sub-vector θ<sub>\<italic>u</italic></sub><sup>(<italic>t</italic>)</sup> corresponding to a gene. For later exposition, we denote the log-likelihood of an observation <italic>x</italic> under Equation (<xref ref-type="disp-formula" rid="M2">2</xref>) as γ(θ<sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub>; <italic>x</italic>)=logℙ<sub>θ<sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub></sub>(<italic>x</italic><sub><italic>u</italic></sub>|<italic>x</italic><sub>\<italic>u</italic></sub>).</p>
+      <p>Recall that we assume that the time-evolving network varies smoothly across time. This assumption allows us to borrow information across time by reweighting the observations from different time points and then treating them as if they were <italic>i.i.d</italic>. observations. Intuitively, the weighting should place more emphasis on observations at or near time point <italic>t</italic> with weights becoming smaller as the observations move further away from time point <italic>t</italic>. Such reweighting technique has been employed in other tools for time series analyses, such as the short-time Fourier transformation where observations are reweighted before applying the Fourier transformation to capture transient frequency components (Nawab and Quatieri, <xref ref-type="bibr" rid="B24">1987</xref>). In our case, at a given time point <italic>t</italic>, the weighing is defined as <italic>w</italic><sup>(<italic>t</italic>)</sup>(<italic>t</italic><sub><italic>i</italic></sub>)≔<italic>K</italic><sub><italic>h</italic><sub><italic>n</italic></sub></sub>(<italic>t</italic>−<italic>t</italic><sub><italic>i</italic></sub>)/∑<sub><italic>i</italic>=1</sub><sup><italic>n</italic></sup><italic>K</italic><sub><italic>h</italic><sub><italic>n</italic></sub></sub>(<italic>t</italic>−<italic>t</italic><sub><italic>i</italic></sub>), where <italic>K</italic><sub><italic>h</italic><sub><italic>n</italic></sub></sub>(·)≔<italic>K</italic>(·/<italic>h</italic><sub><italic>n</italic></sub>) is a symmetric non-negative kernel and <italic>h</italic><sub><italic>n</italic></sub> is the kernel bandwidth. We used the Gaussian RBF kernel, <italic>K</italic><sub><italic>h</italic><sub><italic>n</italic></sub></sub>(<italic>t</italic>)=exp(−<italic>t</italic><sup>2</sup>/<italic>h</italic><sub><italic>n</italic></sub>), in our later experiments. Note that multiple measurements at one time point can be trivially handled by assigning them the same weight. We consider multiple measurements to be <italic>i.i.d</italic>. observations.</p>
+      <p>Additionally, we will assume that the true network is sparse, or that the interactions between genes can be approximated with a sparse model. This sparsity assumption holds well in most cases. For example, a transcription factor only controls a small fraction of target genes under a specific condition (Davidson, <xref ref-type="bibr" rid="B11">2001</xref>). Then, given a time series of gene expression data measured at <italic>n</italic> time points, <italic>D</italic>={<italic>x</italic><sup>(<italic>t</italic><sub>1</sub>)</sup>,…, <italic>x</italic><sup>(<italic>t</italic><sub><italic>n</italic></sub>)</sup>}, we can estimate θ<sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub> or the neighborhood of 𝒩<sup>(<italic>t</italic>)</sup>(<italic>u</italic>) of gene <italic>u</italic> at time point <italic>t</italic> using an ℓ<sub>1</sub> penalized log-likelihood maximization. Equivalently the estimator <inline-formula><inline-graphic xlink:href="btp192i1.jpg"/></inline-formula> is the solution of the following minimization problem:
+<disp-formula id="M3"><label>(3)</label><graphic xlink:href="btp192m3.jpg" position="float"/></disp-formula>
+where λ≥0 is a regularization parameter specified by user that controls the size of the estimated neighborhood, and hence the sparsity of the network. Then, the neighborhood for gene <italic>u</italic> can be estimated as <inline-formula><inline-graphic xlink:href="btp192i2.jpg"/></inline-formula>, and the network can be estimated by joining these neighborhoods:
+<disp-formula id="M4"><label>(4)</label><graphic xlink:href="btp192m4.jpg" position="float"/></disp-formula>
+</p>
+    </sec>
+    <sec id="SEC2.3">
+      <title>2.3 Efficient optimization</title>
+      <p>Estimating time-evolving networks using the decomposition scheme described in previous section requires solving a collection of optimization problems given in Equation (<xref ref-type="disp-formula" rid="M3">3</xref>). In a genome-wide reverse engineering task, there are tens of thousands of genes and hundreds of time points, so one can easily have a million optimization problems. Therefore, it is essential to develop an efficient algorithm for solving the atomic optimization problem in Equation (<xref ref-type="disp-formula" rid="M3">3</xref>), which can then be trivially parallelized across different genes and different time points.</p>
+      <p>The optimization problem in Equation (<xref ref-type="disp-formula" rid="M3">3</xref>) is an ℓ<sub>1</sub> penalized logistic regression with observation reweighting. This optimization problem has been an active research area in the machine learning community and various methods have been developed, including interior point methods (Koh <italic>et al.</italic>, <xref ref-type="bibr" rid="B20">2007</xref>), trust region newton methods (Lin <italic>et al.</italic>, <xref ref-type="bibr" rid="B22">2008</xref>) and projected gradient methods (Duchi <italic>et al.</italic>, <xref ref-type="bibr" rid="B12">2008</xref>). In this article, we employed a projected gradient method due to its simplicity and efficiency.</p>
+      <p>The optimization problem in (<xref ref-type="disp-formula" rid="M3">3</xref>) can be equivalently written in a constrained form:
+<disp-formula id="M5"><label>(5)</label><graphic xlink:href="btp192m5.jpg" position="float"/></disp-formula>
+where <italic>C</italic><sub>λ</sub> is an upper bound for the ℓ<sub>1</sub> norm of θ<sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub> and defines a region Ω in which the parameter lies. There is an one-to-one correspondence between <italic>C</italic><sub>λ</sub> in Equation (<xref ref-type="disp-formula" rid="M5">5</xref>) and λ in Equation (<xref ref-type="disp-formula" rid="M3">3</xref>). In this formulation, the objective ℒ(θ<sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub>) is a smooth and convex function, and its gradient with respect to θ<sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub> can be computed simply as ∇<sup>(<italic>t</italic>)</sup>≔∂ℒ(θ<sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub>)=−∑<sub><italic>i</italic>=1</sub><sup><italic>n</italic></sup><italic>w</italic><sup>(<italic>t</italic>)</sup>(<italic>t</italic><sub><italic>i</italic></sub>)∂γ(θ<sup>(<italic>t</italic>)</sup><sub>\<italic>u</italic></sub>).</p>
+      <p>The key idea of a projected gradient method is to update the parameter along the negative gradient direction. After the update, if the parameter lies outside the region Ω, it is projected back into the region Ω, otherwise, we move to the next iteration. The essential step in the algorithm is the efficiency with which we can project the parameter into the region Ω:
+<disp-formula id="M6"><label>(6)</label><graphic xlink:href="btp192m6.jpg" position="float"/></disp-formula>
+where Π<sub>Ω</sub>(<italic>a</italic>)≔argmin<sub><italic>b</italic></sub>{‖<italic>a</italic>−<italic>b</italic>‖|<italic>b</italic>∈Ω} is the Euclidean projection of a vector <italic>a</italic> onto a region Ω. We employed an approach by (Duchi <italic>et al.</italic>, <xref ref-type="bibr" rid="B12">2008</xref>) which involves only simple operations such as sorting and thresholding for this projection step.</p>
+      <p>Algorithm 1 gives a summary of the projected gradient method for the optimization problem in Equation (<xref ref-type="disp-formula" rid="M3">3</xref>). Note that the projected gradient algorithm has several internal parameters α, ε and σ, which, in our experiments, we set to typical values given in the literature (Bertsekas, <xref ref-type="bibr" rid="B8">1999</xref>).</p>
+      <p>
+        <inline-graphic xlink:href="btp192if1.jpg"/>
+      </p>
+    </sec>
+    <sec id="SEC2.4">
+      <title>2.4 Statistical property</title>
+      <p>The main topic we discuss here is whether the algorithm described in <xref ref-type="sec" rid="SEC2.2">Section 2.2</xref> can estimate the true underlying time-evolving network correctly. In order to study the statistical guarantees of our algorithm, we need to take three aspects into account. First, a genome-wide reverse engineering task can involve tens of thousands of genes while the number of observations in time series can be quite limited (hundreds at most). Therefore, it is important to study the case in which the dimension <italic>p</italic> scales with respect to the sample size <italic>n</italic>, but still allows for recovery of networks. Second, the time-evolving nature of networks adds extra complication to the estimation problem, so, we have to take the amount of change between adjacent networks, <italic>C</italic><sub>θ</sub>≔max<sub><italic>uv</italic></sub>‖θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>)</sup>−θ<sub><italic>uv</italic></sub><sup>(<italic>t</italic>+1)</sup>‖, into account. Third, the intrinsic properties of the interactions between genes will also affect the correct recovery of the networks. Intuitively, the more complicated interactions the more difficult it is to recover networks, e.g. each gene interacts with a large fraction of other genes. In other words, the maximum size of the neighborhood for a gene <italic>C</italic><sub>𝒩</sub>≔max<sub><italic>u</italic>∈𝒱</sub>𝒩(<italic>u</italic>) is also a deciding factor. To our knowledge, none of the earlier methods (Basso <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2005</xref>; Friedman <italic>et al.</italic>, <xref ref-type="bibr" rid="B14">2000</xref>; Ong, <xref ref-type="bibr" rid="B25">2002</xref>) provide a statistical guarantee for recovered networks or are amenable to such analysis.</p>
+      <p>In contrast, the method we presented in <xref ref-type="sec" rid="SEC2.2">Section 2.2</xref> is highly amenable to a rigorous statistical analysis. Statistical guarantees have been provided for estimating static networks under the model in Equation (<xref ref-type="disp-formula" rid="M1">1</xref>) (Wainwright <italic>et al.</italic>, <xref ref-type="bibr" rid="B30">2006</xref>) and we can extend them to the time-varying case. A detailed proof of a similar result for our approach is beyond the scope of this article and deserves a full treatment in a separate paper. At a high level, we can show that under a set of suitable conditions over the model, <italic>C</italic><sub>θ</sub>, <italic>C</italic><sub>𝒩</sub>, <italic>h</italic><sub><italic>n</italic></sub> and λ, with high probability, we can recover the true underlying time-evolving network even when the number of genes <italic>p</italic> is exponential in size of the number of observations <italic>n</italic> [for details of the proof, see M.Kolar and E.Xing (submitted for publication)]. A different analysis have been provided for time-varying Gaussian graphical models (Zhou <italic>et al.</italic>, <xref ref-type="bibr" rid="B32">2008</xref>), in which the consistency of the interaction strengths is addressed, but not the consistency of the network topology.</p>
+    </sec>
+    <sec id="SEC2.5">
+      <title>2.5 Parameter tuning</title>
+      <p>The regularization parameter λ controls the sparsity of the estimated networks. Large values of λ result in sparse networks, while small values result in a dense networks that have higher log−likelihood, but more degrees of freedom. We employ the Bayesian Information Criterion (BIC) for choosing λ that trades off between the fit to the data and the model complexity. More specifically, we use an average of the BIC score defined below for each time point <italic>t</italic> and for each gene <italic>u</italic>:
+<disp-formula id="M7"><label>(7)</label><graphic xlink:href="btp192m7.jpg" position="float"/></disp-formula>
+where Nz(·) counts the number of non-zero entries in <inline-formula><inline-graphic xlink:href="btp192i3.jpg"/></inline-formula>. Then the final score is BIC≔1/<italic>n</italic>|𝒱|∑<sub><italic>u</italic>∈𝒱</sub>∑<sub><italic>j</italic>=1</sub><sup><italic>n</italic></sup>BIC(<italic>t</italic><sub><italic>j</italic></sub>, <italic>u</italic>). A larger BIC score implies a better model.</p>
+      <p>The bandwidth parameter <italic>h</italic><sub><italic>n</italic></sub> controls the smoothness of the change in the time-evolving networks. Using wide bandwidths effectively incorporate more observations for estimating each network snapshot, but it also risks missing sharp changes in the network; using narrow bandwidths makes the estimate more sensitive to sharp changes, but this also makes the estimation subject to larger variance due to the reduced effective sample size. In this article, we use a heuristic for tuning the initial scale of the bandwidth parameter <italic>h</italic><sub><italic>n</italic></sub>: we first form a matrix (<italic>d</italic><sub><italic>ij</italic></sub>) with its entries <italic>d</italic><sub><italic>ij</italic></sub>≔(<italic>t</italic><sub><italic>i</italic></sub>−<italic>t</italic><sub><italic>j</italic></sub>)<sup>2</sup> (<italic>i</italic>={1,…, <italic>n</italic>}). Then the scale of the bandwidth parameter is set to the median of the entries in (<italic>d</italic><sub><italic>ij</italic></sub>). Intuitively, the bandwidth parameter reflects the characteristic interval between time points. In our simulation experiments, we find that this heuristic provides a good initial guess for <italic>h</italic><sub><italic>n</italic></sub>, and it is quite close to the value obtained via more exhaustive search.</p>
+    </sec>
+  </sec>
+  <sec id="SEC3">
+    <title>3 EXPERIMENTS</title>
+    <p>In this section, we use synthetic data to demonstrate the advantage of estimating a time-evolving network, and we used data collected from <italic>Drosophila</italic> to show that our method, KELLER, can estimate a biologically plausible time-evolving network and reveal some interesting properties of the dynamic interactions between genes.</p>
+    <sec id="SEC3.1">
+      <title>3.1 Recovering synthetic networks</title>
+      <p>In this section, we compare KELLER with structural learning of DBN (Friedman <italic>et al.</italic>, <xref ref-type="bibr" rid="B14">2000</xref>) and ℓ<sub>1</sub>-regularization logistic regression for static network estimation using synthetic networks. Note that ℓ<sub>1</sub>-regularization logistic regression can be obtained from KELLER: we only need to apply a uniform weight <italic>w</italic>(<italic>t</italic><sub><italic>i</italic></sub>)=1/<italic>n</italic> to all observations and estimate a single network using the same objective as Equation (<xref ref-type="disp-formula" rid="M5">5</xref>).</p>
+      <p>Starting at time <italic>t</italic><sub>1</sub>, we generate an Erdös–Rényi random graph 𝒢<sup>(<italic>t</italic><sub>1</sub>)</sup> of <italic>p</italic>=50 nodes with an average degree of 2. The parameter θ<sup>(<italic>t</italic><sub>1</sub>)</sup><sub><italic>uv</italic></sub> for the non-zero edges is chosen uniformly random from the range [1, 2]. Then, we randomly select 15 edges and gradually decrease their weights to zero in 200 time points. Starting from <italic>t</italic><sub>1</sub>, we also chose 15 new edges and gradually increase their weights to a random target value between [1, 2] in 200 time points. Therefore, in the first 200 discrete time steps, 15 existing edges are deleted, 15 new edges are added and the final network maintains an overall size of 50 edges. We call these 30 time-evolving edges as dynamic edges and the remaining 35 edges as static edges. Then from time point 200, we start the second cycle of deleting 15 edges and adding 15 edges. This cycle is repeated five times, which results in a smooth time-evolving network with <italic>n</italic>=1000 time point. Furthermore, we draw 10 <italic>i.i.d</italic>. observations from the network at each time point and study how the performance of different methods scales with the number of <italic>i.i.d</italic>. observations at each time point.</p>
+      <p>We evaluate the estimation procedures using an <monospace>F1</monospace> score, which is the harmonic mean of precision (<monospace>Pre</monospace>) and recall (<monospace>Rec</monospace>), i.e. <monospace>F1</monospace>≔2*<monospace>Pre</monospace>*<monospace>Rec</monospace>/<monospace>Pre</monospace>+<monospace>Rec</monospace>. Precision is calculated as <inline-formula><inline-graphic xlink:href="btp192i4.jpg"/></inline-formula>, and recall as <inline-formula><inline-graphic xlink:href="btp192i5.jpg"/></inline-formula>. The <monospace>F1</monospace> score is a natural choice of the performance measure as it tries to balance between precision and recall; only when both precision and recall are high can <monospace>F1</monospace> be high. Furthermore, we use an initial bandwidth parameter <italic>h</italic><sub><italic>n</italic></sub> as explained in <xref ref-type="sec" rid="SEC2.5">Section 2.5</xref>, then searched over a grid of parameters (10<sup>[−0.5:0.1:0.5]</sup> for λ and <italic>h</italic><sub><italic>n</italic></sub>×[0.5, 1, 2, 5, 10, 50] for the bandwidth), and finally chose one that optimizes the BIC criterion defined in <xref ref-type="sec" rid="SEC2.5">Section 2.5</xref>. When estimating the static network, we use the same range to search for λ.</p>
+      <p>The recovery results for the overall time-evolving network, the dynamic and static edges, are presented, respectively, in <xref ref-type="fig" rid="F1">Figure 1</xref>. From the plots, we can see that estimating a static network does not benefit from increasing number of <italic>i.i.d</italic>. observations at all. In contrast, estimating a time-varying network always obtains a better performance and the performance also increases as more observations are available. Note that these results are not surprising since our time-varying network model fits better the data generating process. As time-evolving networks occur very often in biological systems, we expect our method will also have significant advantages in practice.
+<fig id="F1" position="float"><label>Fig. 1.</label><caption><p>As we increase the number of <italic>i.i.d</italic>. samples at each time point, KELLER estimating a time-evolving network clearly outperforms DBN and ℓ<sub>1</sub>-regularized logistic regression for estimating a static network. Subplot (<bold>a</bold>) displays the performances for the overall networks, while (<bold>b</bold>) and (<bold>c</bold>) display the performance for the static edges and dynamic edges, respectively.</p></caption><graphic xlink:href="btp192f1"/></fig>
+</p>
+    </sec>
+    <sec id="SEC3.2">
+      <title>3.2 Recovering time-evolving interactions between genes in <italic>D.melanogaster</italic></title>
+      <p>Over the developmental course of <italic>D.melanogaster</italic>, there exist multiple underlying ‘themes’ that determine the functionalities of each gene and their relationships to each other, and such themes are dynamical and stochastic. As a result, the gene-regulatory networks at each time point are context-dependent and can undergo systematic rewiring, rather than being invariant over time. In this section, we use KELLER to reverse engineer the dynamic interactions between genes from <italic>D.melanogaster</italic> based on a time series of expression data measured during its full life cycle.</p>
+      <p>We use microarray gene expression measurements collected by Arbeitman <italic>et al.</italic> (<xref ref-type="bibr" rid="B2">2002</xref>) as our input data. In such an experiment, the expression levels of 4028 genes are simultaneously measured at various developmental stages. Particularly, 66 time points are chosen during the full developmental cycle of <italic>D.melanogaster</italic>, spanning across four different stages, i.e. embryonic (1–30 time point), larval (31–40 time point), pupal (41–58 time points) and adult stages (59–66 time points). In this study, we focused on 588 genes that are known to be related to developmental process based on their gene ontologies. We use a regularization parameter of 10<sup>−2</sup>, and a bandwidth parameter of 0.5 × <italic>h</italic><sub><italic>n</italic></sub> in this experiment (<italic>h</italic><sub><italic>n</italic></sub> is the median distance as explained in <xref ref-type="sec" rid="SEC2.5">Section 2.5</xref>).</p>
+      <p>In <xref ref-type="fig" rid="F3">Figure 3</xref>a, we plot two different statistics of the reversed engineered gene-regulatory networks as a function of the developmental time point (1–66). The first statistic is the network size as measured by the number of edges; the second is the average local clustering coefficient as defined by Watts and Strogatz (<xref ref-type="bibr" rid="B31">1998</xref>). The first statistic measures the overall connectedness of the networks, while the latter measures the average connectedness of the neighborhood local to each gene. For comparison, we normalize both statistics to the range between [0, 1]. It can be seen that the network size and its local clustering coefficient follow very different trajectories during the developmental cycle. The network size exhibits a wave structure featuring two peaks at mid-embryonic stage and the beginning of pupal stage. Similar pattern of gene activity has also been observed by Arbeitman <italic>et al.</italic> (<xref ref-type="bibr" rid="B2">2002</xref>). In contrast, the clustering coefficients of the time-evolving networks drop sharply after the mid-embryonic stage, and they stay low until the start of the adult stage. One explanation is that at the beginning of the developmental process, genes have a more fixed and localized function, and they mainly interact with other genes with similar functions; however, after mid-embryonic stage, genes become more versatile and involved in more diverse roles to serve the need of rapid development; as the organism turns into an adult, its growth slows down and each gene may be restored to its more specialized role.</p>
+      <p>To illustrate how the network properties change over time, we visualize two networks from mid-embryonic stage (time point 15) and mid-pupal stage (time point 45) in <xref ref-type="fig" rid="F3">Figure 3</xref>b and <xref ref-type="fig" rid="F3">3</xref>c respectively. Although the size of the two networks are comparable, we can see that there are much clearer local clusters of interacting genes during mid-embryonic stage. To provide a better view of the evolving nature of these clusters, we cluster genes based on the network at time point 1 using spectral clustering, and visualize the gradual disappearance of these clusters in <xref ref-type="fig" rid="F2">Figure 2</xref>. Note that our visualization does not indicate that genes do not form clusters in later developmental stage. Genes may cluster under different groupings, but these clusters cannot be revealed by the visualization since the positions of the genes have been fixed in the visualization.
+<fig id="F2" position="float"><label>Fig. 2.</label><caption><p>(<bold>a–g</bold>) Circular plots of the networks (left or top part of each table cell) and dot plots of the adjacency matrices of the networks (right or bottom part of each table cell) at 7 time points. Note that we have clustered the genes according to the network connections at time point 1 and used this clustering result to fix the order of the genes in all plots. In the circular plots, genes are arranged along the outer rim and the colors indicates the boundaries between different clusters (20 clusters in total). Furthermore, we have added curvature to the edges such that connections within and between clusters can be seen more clearly.</p></caption><graphic xlink:href="btp192f2"/></fig>
+<fig id="F3" position="float"><label>Fig. 3.</label><caption><p>Characteristic of the time-evolving networks estimated for the genes related to developmental process. (<bold>a</bold>) Plot of two network statistics as functions of development time line (NS, network size; CC, clustering coefficient). (<bold>b</bold> and <bold>c</bold>) visualization of two example of networks from different time point. We can see that network size can evolve in a very different way from the local clustering coefficient.</p></caption><graphic xlink:href="btp192f3"/></fig>
+</p>
+      <p>To judge whether the learned networks make sense biologically, we zoom into three groups of genes functionally related to different stages of development process. In particular, the first group (30 genes) is related to embryonic development; the second group (27 genes) is related to post-embryonic development; and the third group (25 genes) is related to muscle development. (The genes are assigned to their respective groups according to their ontology labels.) We used interactivity, which is the total number of edges a group of genes is connected to, to describe the activity of each group genes. In <xref ref-type="fig" rid="F4">Figure 4</xref>, we plotted the time courses of interactivity for the three groups, respectively. For comparison, we normalize all scores to the range of [0, 1]. We see that the time courses have a nice correspondence with their supposed roles. For instance, embryonic development genes have the highest interactivity during embryonic stage, and post-embryonic genes increase their interactivity during larval and pupal stage. The muscle development genes are less specific to certain developmental stages, since they are needed across the developmental cycle. However, we see its increased activity when the organism approaches its adult stage where muscle development becomes increasingly important.
+<fig id="F4" position="float"><label>Fig. 4.</label><caption><p>Interactivity of three groups of genes related to (<bold>a</bold>) embryonic development; (<bold>b</bold>) post-embryonic development; and (<bold>c</bold>) muscle development. The higher the interactivity, the more active the group of genes. We see that the interactivity of the three groups is very consistent with their functional annotation.</p></caption><graphic xlink:href="btp192f4"/></fig>
+</p>
+      <p>The estimated networks also recover many known interactions between genes. In recovering these known interactions, the time-evolving networks also provide additional information as to when interactions occur during development. In <xref ref-type="table" rid="T1">Table 1</xref>, we listed these recovered known interactions and the precise time when they occur. This also provides a way to check whether the learned networks are biologically plausible given the prior knowledge of the actual occurrence of gene interactions. For instance, the interaction between genes msn and dock is related to the regulation of embryonic cell shape and correct targeting of photoreceptor axons. This is consistent with the timeline provided by the time-evolving networks. A second example is the interaction between genes sno and Dl which is related to the development of compound eyes of <italic>Drosophila</italic>. A third example is between genes caps and Chi which are related to wing development during pupal stage. What is most interesting is that the time-evolving networks provide timelines for many other gene interactions that have not yet been verified experimentally. This information will be a useful guide for future experiments.
+<table-wrap id="T1" position="float"><label>Table 1.</label><caption><p>Timeline of 45 known gene interactions</p></caption><table frame="hsides" rules="groups"><tbody align="left"><tr><td rowspan="1" colspan="1"><inline-graphic xlink:href="btp192if2.jpg"/></td></tr></tbody></table><table-wrap-foot><fn><p>Each cell in the plot corresponds to one gene pair of gene interaction at one specific time point. The cells in each row are ordered according to their time point, ranging from embryonic stage (E) to larval stage (L), to pupal stage (P) and to adult stage (A). Cells colored blue indicate the corresponding interaction listed in the right column is present in the estimated network; blank color indicates the interaction is absent.</p></fn></table-wrap-foot></table-wrap>
+</p>
+      <p>We further study the relations between 130 transcriptional factors (TFs). The network contains several clusters of transcriptional cascades, and we will present in detail the largest TF cascade involving 36 TFs (<xref ref-type="fig" rid="F5">Fig. 5</xref>). This cascade of TFs is functionally very coherent, and many TFs in this network play important roles in the nervous system and eye development. For example, Zn finger homeodomain 1 (zhf1), brinker (brk), charlatan (chn), decapentaplegic (dpp), invected (inv), forkhead box, subgroup 0 (foxo), Optix, eagle (eg), prospero (pros), pointed (pnt), thickveins (tkv), extra macrochaetae (emc), lilliputian (lilli), doublesex (dsx) are all involved in nervous and eye development. Besides functional coherence, the networks also reveal the dynamic nature of gene regulation: some relations are persistent across the full developmental cycle while many others are transient and specific to certain stages of development. For instance, five TFs, brk–pnt–zfh1–pros–dpp, form a long cascade of regulatory relations which are active across the full developmental cycle. Another example is gene Optix which is active across the full developmental cycle and serves as a hub for many other regulatory relations. As for transience of the regulatory relations, TFs to the right of Optix hub reduce their activity as development proceeds to later stages. Furthermore, Optix connects two disjoint cascades of gene regulations to its left and right side after embryonic stage.
+<fig id="F5" position="float"><label>Fig. 5.</label><caption><p>The largest TFs cascade involving 36 TFs. (<bold>a</bold>) The summary network is obtained by summing the networks from all time points. Each node in the network represents a TF, and each edge represents an interaction between them. The width of an edge is proportional to the number of the times the edge is present during the development; the size of a node is proportional to the sum of its edge weights. During different stages of the development, the networks are different, (<bold>b</bold>–<bold>e</bold>) shows representative networks for the embryonic (<italic>t</italic>=15), larval (<italic>t</italic>=35), pupal (<italic>t</italic>=49) and adult stage of the development, respectively (<italic>t</italic>=62).</p></caption><graphic xlink:href="btp192f5"/></fig>
+</p>
+      <p>The time-evolving networks also provide an overview of the interactions between genes from different functional groups. In <xref ref-type="fig" rid="F6">Figure 6</xref>, we grouped genes according to 58 ontologies and visualized the connectivity between groups. We can see that large topological changes and network rewiring occur between functional groups. Besides expected interactions, the figure also reveals many seemingly unexpected interactions. For instance, during the transition from pupa stage to adult stage, <italic>Drosophila</italic> is undergoing a huge metamorphosis. One major feature of this metamorphosis is the development of the wing. As can be seen from <xref ref-type="fig" rid="F6">Figure 6</xref>r and s, genes related to metamorphosis, wing margin morphogenesis, wing vein morphogenesis and apposition of wing surfaces are among the most active groups of genes, and they carry their activity into adult stage. Actually, many of these genes are also very active during early embryonic stage (for example, <xref ref-type="fig" rid="F6">Fig. 6</xref>b and c); though the difference is that they interact with different groups of genes. On one hand, the abundance of transcripts from these genes at embryonic stage is likely due to maternal deposit (Arbeitman <italic>et al.</italic>, <xref ref-type="bibr" rid="B2">2002</xref>); on the other hand, this can also be due to the diverse functionalities of these genes. For instance, two genes related to wing development, held out wings (how) and tolloid (td), also play roles in embryonic development.
+<fig id="F6" position="float"><label>Fig. 6.</label><caption><p>Interactions between gene ontological groups related to developmental process undergo dynamic rewiring. The weight of an edge between two ontological groups is the total number of connection between genes in the two groups. In the visualization, the width of an edge is proportional to its edge weight. We thresholded the edge weight at 30 in (<bold>b</bold>)–(<bold>u</bold>) so that only those interactions exceeding this number are displayed. The average network in (<bold>a</bold>) is produced by averaging the networks underlying (<bold>b</bold>)–(<bold>u</bold>). In this case, the threshold is set to 20 instead.</p></caption><graphic xlink:href="btp192f6"/></fig>
+</p>
+    </sec>
+  </sec>
+  <sec sec-type="conclusions" id="SEC4">
+    <title>4 CONCLUSION</title>
+    <p>Numerous algorithms have been developed for inferring biological networks from high-throughput experimental data, such as microarray profiles (Ong, <xref ref-type="bibr" rid="B25">2002</xref>; Segal <italic>et al.</italic>, <xref ref-type="bibr" rid="B26">2003</xref>), ChIP-chip genome localization data (Bar-Joseph <italic>et al.</italic>, <xref ref-type="bibr" rid="B4">2003</xref>; Harbison <italic>et al.</italic>, <xref ref-type="bibr" rid="B17">2004</xref>; Lee <italic>et al.</italic>, <xref ref-type="bibr" rid="B21">2002</xref>) and PPI data (Causier, <xref ref-type="bibr" rid="B9">2004</xref>; Giot <italic>et al.</italic>, <xref ref-type="bibr" rid="B16">2003</xref>; Kelley <italic>et al.</italic>, <xref ref-type="bibr" rid="B19">2004</xref>; Uetz <italic>et al.</italic>, <xref ref-type="bibr" rid="B28">2000</xref>), based on formalisms such as graph mining (Tanay <italic>et al.</italic>, <xref ref-type="bibr" rid="B27">2004</xref>), Bayesian networks (Cowell <italic>et al.</italic>, <xref ref-type="bibr" rid="B10">1999</xref>) and DBN (Friedman <italic>et al.</italic>, <xref ref-type="bibr" rid="B14">2000</xref>; Kanazawa <italic>et al.</italic>, <xref ref-type="bibr" rid="B18">1995</xref>). However, most of this vast literature focused on modeling static network or time-invariant networks, and much less has been done towards modeling the dynamic processes underlying networks that are topologically rewiring and semantically evolving over time. The method presented in this article represents a successful and practical tool for genome-wide reverse engineering dynamic interactions between genes based on their expression data.</p>
+    <p>Given the rapid expansion of categorization and characterization of biological samples and improved data collection technologies, we expect collections of complex, high-dimensional and feature-rich data from complex dynamic biological processes, such as cancer progression, immune response and developmental processes, to continue to grow. Thus, we believe our new method, KELLER, is a timely contribution that can narrow the gap between imminent methodological needs and the available data and offer deeper understanding of the mechanisms and processes underlying biological networks.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>Acknowledgements</title>
+    <p>We thank Thomas Gulish for proofreading the manuscript.</p>
+    <p><italic>Funding</italic>: National Science Foundation CAREER Award (grant DBI-0546594 and NSF IIS-0713379 to E.P.X.); Alfred P. Sloan Research Fellowship (to E.P.X.); Ray and Stephenie Lane Research Fellowship (to L.S.).</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ahmed</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Time-varying networks: Recovering temporally rewiring genetic networks during the life cycle of drosophila melanogaster.</source>
+        <year>2008</year>
+        <comment>arXiv:0901.0138</comment>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Arbeitman</surname>
+            <given-names>M</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Gene expression during the life cycle of <italic>Drosophila melanogaster</italic></article-title>
+        <source>Science</source>
+        <year>2002</year>
+        <volume>297</volume>
+        <fpage>2270</fpage>
+        <lpage>2275</lpage>
+        <pub-id pub-id-type="pmid">12351791</pub-id>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Banerjee</surname>
+            <given-names>O</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Model selection through sparse maximum likelihood estimation</article-title>
+        <source>J. Mach. Learn. Res.</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>485</fpage>
+        <lpage>516</lpage>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bar-Joseph</surname>
+            <given-names>Z</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Computational discovery of gene module and regulatory networks</article-title>
+        <source>Nat. Biotechnol.</source>
+        <year>2003</year>
+        <volume>21</volume>
+        <fpage>1337</fpage>
+        <lpage>1342</lpage>
+        <pub-id pub-id-type="pmid">14555958</pub-id>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Barabasi</surname>
+            <given-names>AL</given-names>
+          </name>
+          <name>
+            <surname>Albert</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Emergence of scaling in random networks</article-title>
+        <source>Science</source>
+        <year>1999</year>
+        <volume>286</volume>
+        <fpage>509</fpage>
+        <lpage>512</lpage>
+        <pub-id pub-id-type="pmid">10521342</pub-id>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Barabasi</surname>
+            <given-names>AL</given-names>
+          </name>
+          <name>
+            <surname>Oltvai</surname>
+            <given-names>ZN</given-names>
+          </name>
+        </person-group>
+        <article-title>Network biology: Understanding the cell's functional organization</article-title>
+        <source>Nat. Rev. Genet.</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>101</fpage>
+        <lpage>113</lpage>
+        <pub-id pub-id-type="pmid">14735121</pub-id>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Basso</surname>
+            <given-names>K</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Reverse engineering of regulatory networks in human b cells</article-title>
+        <source>Nat. Genet.</source>
+        <year>2005</year>
+        <volume>4</volume>
+        <fpage>382</fpage>
+        <lpage>390</lpage>
+        <pub-id pub-id-type="pmid">15778709</pub-id>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bertsekas</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <source>Nonlinear Programming.</source>
+        <year>1999</year>
+        <publisher-loc>Nashua, New Hampshire, USA</publisher-loc>
+        <publisher-name>Athena Scientific</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Causier</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>Studying the interactome with the yeast two-hybrid system and mass spectrometry</article-title>
+        <source>Mass. Spectrom. Rev.</source>
+        <year>2004</year>
+        <volume>23</volume>
+        <fpage>350</fpage>
+        <lpage>367</lpage>
+        <pub-id pub-id-type="pmid">15264234</pub-id>
+      </citation>
+    </ref>
+    <ref id="B10">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cowell</surname>
+            <given-names>RG</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Probabilistic Networks and Expert Systems.</source>
+        <year>1999</year>
+        <publisher-loc>New York, USA</publisher-loc>
+        <publisher-name>Springer</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B11">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Davidson</surname>
+            <given-names>EH</given-names>
+          </name>
+        </person-group>
+        <source>Genomic Regulatory Systems.</source>
+        <year>2001</year>
+        <publisher-loc>New York, USA</publisher-loc>
+        <publisher-name>Academic Press</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B12">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Duchi</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Efficient projections onto the l1-ball for learning in high dimensions</article-title>
+        <source>Proceedings of the International Conference on Machine Learning.</source>
+        <year>2008</year>
+        <publisher-loc>Helsinki, Finland</publisher-loc>
+        <fpage>272</fpage>
+        <lpage>279</lpage>
+      </citation>
+    </ref>
+    <ref id="B13">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ernst</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Reconstructing dynamic regulatory maps</article-title>
+        <source>Mol. Syst. Biol.</source>
+        <year>2007</year>
+        <volume>3</volume>
+      </citation>
+    </ref>
+    <ref id="B14">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Friedman</surname>
+            <given-names>N</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Using bayesian networks to analyze expression data</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>2000</year>
+        <volume>7</volume>
+        <fpage>601</fpage>
+        <lpage>620</lpage>
+        <pub-id pub-id-type="pmid">11108481</pub-id>
+      </citation>
+    </ref>
+    <ref id="B15">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fu</surname>
+            <given-names>W</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>A State-Space Mixed Membership Blockmodel for Dynamic Network Tomography.</source>
+        <year>2008</year>
+        <comment>arXiv:0901.0135</comment>
+      </citation>
+    </ref>
+    <ref id="B16">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Giot</surname>
+            <given-names>L</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A protein interaction map of drosophila melanogaster</article-title>
+        <source>Science</source>
+        <year>2003</year>
+        <volume>302</volume>
+        <fpage>1727</fpage>
+        <lpage>1736</lpage>
+        <pub-id pub-id-type="pmid">14605208</pub-id>
+      </citation>
+    </ref>
+    <ref id="B17">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Harbison</surname>
+            <given-names>CT</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Transcriptional regulatory code of a eukaryotic genome</article-title>
+        <source>Nature</source>
+        <year>2004</year>
+        <volume>431</volume>
+        <fpage>99</fpage>
+        <lpage>104</lpage>
+        <pub-id pub-id-type="pmid">15343339</pub-id>
+      </citation>
+    </ref>
+    <ref id="B18">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kanazawa</surname>
+            <given-names>K</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Stochastic simulation algorithms for dynamic probabilistic networks</article-title>
+        <source>Proceedings of the 11th Annual Conference on Uncertainty in Artificial Intelligence.</source>
+        <year>1995</year>
+        <publisher-loc>San Francisco, USA</publisher-loc>
+        <fpage>346</fpage>
+        <lpage>350</lpage>
+      </citation>
+    </ref>
+    <ref id="B19">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kelley</surname>
+            <given-names>BP</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Pathblast: a tool for alignment of protein interaction networks</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2004</year>
+        <volume>23</volume>
+        <fpage>83</fpage>
+        <lpage>88</lpage>
+      </citation>
+    </ref>
+    <ref id="B20">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Koh</surname>
+            <given-names>K</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>An interior-point method for large-scale l1-regularized logistic regression</article-title>
+        <source>J. Mach. Learn. Res.</source>
+        <year>2007</year>
+        <volume>8</volume>
+        <fpage>1519</fpage>
+        <lpage>1555</lpage>
+      </citation>
+    </ref>
+    <ref id="B21">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lee</surname>
+            <given-names>TI</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Transcriptional regulatory networks in saccharomyces cerevisiae</article-title>
+        <source>Science</source>
+        <year>2002</year>
+        <volume>298</volume>
+        <fpage>799</fpage>
+        <lpage>804</lpage>
+        <pub-id pub-id-type="pmid">12399584</pub-id>
+      </citation>
+    </ref>
+    <ref id="B22">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lin</surname>
+            <given-names>C</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Trust region newton method for large-scale logistic regression</article-title>
+        <source>J. Mach. Learn. Res.</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>627</fpage>
+        <lpage>650</lpage>
+      </citation>
+    </ref>
+    <ref id="B23">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Luscombe</surname>
+            <given-names>N</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genomic analysis of regulatory network dynamics reveals large topological changes</article-title>
+        <source>Nature</source>
+        <year>2004</year>
+        <volume>431</volume>
+        <fpage>308</fpage>
+        <lpage>312</lpage>
+        <pub-id pub-id-type="pmid">15372033</pub-id>
+      </citation>
+    </ref>
+    <ref id="B24">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawab</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Quatieri</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <source>Short-time Fourier Transform.</source>
+        <year>1987</year>
+        <publisher-loc>New Jersey, USA</publisher-loc>
+        <publisher-name>Prentice-Hall, Upper Saddle River</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ong</surname>
+            <given-names>IM</given-names>
+          </name>
+        </person-group>
+        <article-title>Modelling regulatory pathways in E.coli from time series expression profiles</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>241</fpage>
+        <lpage>248</lpage>
+      </citation>
+    </ref>
+    <ref id="B26">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Segal</surname>
+            <given-names>E</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Module networks: identifying regulatory modules and their condition-specific regulators from gene expression data</article-title>
+        <source>Nat. Genet.</source>
+        <year>2003</year>
+        <volume>34</volume>
+        <fpage>166</fpage>
+        <lpage>176</lpage>
+        <pub-id pub-id-type="pmid">12740579</pub-id>
+      </citation>
+    </ref>
+    <ref id="B27">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tanay</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Revealing modularity and organization in the yeast molecular network by integrated analysis of highly heterogeneous genomewide data</article-title>
+        <source>Proc. Natl Acad. Sci.</source>
+        <year>2004</year>
+        <volume>101</volume>
+        <fpage>2981</fpage>
+        <lpage>2986</lpage>
+        <pub-id pub-id-type="pmid">14973197</pub-id>
+      </citation>
+    </ref>
+    <ref id="B28">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Uetz</surname>
+            <given-names>P</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A comprehensive analysis of protein-protein interactions in saccharomyces cerevisiae</article-title>
+        <source>Nature</source>
+        <year>2000</year>
+        <volume>403</volume>
+        <fpage>601</fpage>
+        <lpage>603</lpage>
+        <pub-id pub-id-type="pmid">10688178</pub-id>
+      </citation>
+    </ref>
+    <ref id="B29">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Vászquez</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The topological relationship between the large-scale attributes and local interaction patterns of complex networks</article-title>
+        <source>Proc. Natl Acad. Sci.</source>
+        <year>2004</year>
+        <volume>101</volume>
+        <fpage>17940</fpage>
+        <lpage>17945</lpage>
+        <pub-id pub-id-type="pmid">15598746</pub-id>
+      </citation>
+    </ref>
+    <ref id="B30">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wainwright</surname>
+            <given-names>M</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>High dimensional graphical model selection using l1-regularized logistic regression</article-title>
+        <source>Neural Information Processing Systems 19.</source>
+        <year>2006</year>
+        <publisher-loc>Cambridge, Massachusetts, USA</publisher-loc>
+        <publisher-name>MIT Press</publisher-name>
+        <fpage>1465</fpage>
+        <lpage>1472</lpage>
+      </citation>
+    </ref>
+    <ref id="B31">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Watts</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Strogatz</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Collective dynamics of ‘small-world’ networks</article-title>
+        <source>Nature</source>
+        <year>1998</year>
+        <volume>393</volume>
+        <fpage>440</fpage>
+        <lpage>442</lpage>
+        <pub-id pub-id-type="pmid">9623998</pub-id>
+      </citation>
+    </ref>
+    <ref id="B32">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhou</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Time varying undirected graphs</article-title>
+        <source>Proceeding of Annual Conference on Learning Theory.</source>
+        <year>2008</year>
+        <publisher-loc>Helsinki, Finland</publisher-loc>
+        <fpage>455</fpage>
+        <lpage>466</lpage>
+      </citation>
+    </ref>
+  </ref-list>
+</back>

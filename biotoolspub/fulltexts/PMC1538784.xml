@@ -1,0 +1,976 @@
+<?properties open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">Nucleic Acids Research</journal-id>
+    <journal-title>Nucleic Acids Research</journal-title>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">1538784</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gkl195</article-id>
+    <article-id pub-id-type="pmid">16845029</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>HHsenser: exhaustive transitive profile search using HMM–HMM comparison</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Söding</surname>
+          <given-names>Johannes</given-names>
+        </name>
+        <xref ref-type="corresp" rid="cor1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Remmert</surname>
+          <given-names>Michael</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Biegert</surname>
+          <given-names>Andreas</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Lupas</surname>
+          <given-names>Andrei N.</given-names>
+        </name>
+      </contrib>
+      <aff>
+        <institution>Department of Protein Evolution, Max-Planck-Institute for Developmental Biology</institution>
+        <addr-line>Spemannstrasse 35, 72076 Tübingen, Germany</addr-line>
+      </aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="cor1"><sup>*</sup>To whom correspondence should be addressed. Tel: +49 7071 601 451; Fax: +49 7071 601 349; Email: <email>johannes.soeding@tuebingen.mpg.de</email></corresp>
+    </author-notes>
+    <!--For NAR: both ppub and collection dates generated for PMC processing 1/27/05 beck-->
+    <pub-date pub-type="collection">
+      <day>01</day>
+      <month>7</month>
+      <year>2006</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <day>01</day>
+      <month>7</month>
+      <year>2006</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>14</day>
+      <month>7</month>
+      <year>2006</year>
+    </pub-date>
+    <volume>34</volume>
+    <issue>Web Server issue</issue>
+    <fpage>W374</fpage>
+    <lpage>W378</lpage>
+    <history>
+      <date date-type="received">
+        <day>14</day>
+        <month>2</month>
+        <year>2006</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>21</day>
+        <month>2</month>
+        <year>2006</year>
+      </date>
+      <date date-type="accepted">
+        <day>21</day>
+        <month>2</month>
+        <year>2006</year>
+      </date>
+    </history>
+    <copyright-statement>© The Author 2006. Published by Oxford University Press. All rights reserved</copyright-statement>
+    <copyright-year>2006</copyright-year>
+    <license license-type="openaccess">
+      <p>The online version of this article has been published under an open access model. Users are entitled to use, reproduce, disseminate, or display the open access version of this article for non-commercial purposes provided that: the original authorship is properly and fully attributed; the Journal and Oxford University Press are attributed as the original place of publication with the correct citation details given; if an article is subsequently reproduced or disseminated not in its entirety but only in part or as a derivative work this must be clearly indicated. For commercial re-use, please contact journals.permissions@oxfordjournals.org</p>
+    </license>
+    <abstract>
+      <p>HHsenser is the first server to offer exhaustive intermediate profile searches, which it combines with pairwise comparison of hidden Markov models. Starting from a single protein sequence or a multiple alignment, it can iteratively explore whole superfamilies, producing few or no false positives. The output is a multiple alignment of all detected homologs. HHsenser's sensitivity should make it a useful tool for evolutionary studies. It may also aid applications that rely on diverse multiple sequence alignments as input, such as homology-based structure and function prediction, or the determination of functional residues by conservation scoring and functional subtyping.</p>
+      <p>HHsenser can be accessed at <ext-link ext-link-type="uri" xlink:href="http://hhsenser.tuebingen.mpg.de/"/>. It has also been integrated into our structure and function prediction server HHpred (<ext-link ext-link-type="uri" xlink:href="http://hhpred.tuebingen.mpg.de/"/>) to improve predictions for near-singleton sequences.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>Most methods that predict properties about a protein from its sequence profit from the inclusion of evolutionary information in the form of a multiple sequence alignment. Examples are the prediction of secondary structure (<xref ref-type="bibr" rid="b1">1</xref>), solvent accessebility (<xref ref-type="bibr" rid="b2">2</xref>), disorder (<xref ref-type="bibr" rid="b3">3</xref>), transmembrane helices (<xref ref-type="bibr" rid="b4">4</xref>), intraprotein contacts (<xref ref-type="bibr" rid="b5">5</xref>), protein–protein interactions (<xref ref-type="bibr" rid="b6">6</xref>), subcellular localization (<xref ref-type="bibr" rid="b7">7</xref>), internal repeats (<xref ref-type="bibr" rid="b8">8</xref>), deleterious mutations (<xref ref-type="bibr" rid="b9">9</xref>) and conserved or subtype-specific functional residues (<xref ref-type="bibr" rid="b10">10</xref>–<xref ref-type="bibr" rid="b13">13</xref>). Finally, the sensitivity to detect remote homologs depends particularly on how much sequence information from distant homologs is used in a pairwise comparison (<xref ref-type="bibr" rid="b14">14</xref>,<xref ref-type="bibr" rid="b15">15</xref>). The ability to construct a diverse multiple alignment from a single query sequence can therefore critically influence the performance of a vast array of analyses and prediction methods.</p>
+    <p>To find as many homologs as possible, two approaches have been taken. In the first, exemplified by PSI-BLAST (<xref ref-type="bibr" rid="b16">16</xref>), a sequence profile or profile hidden Markov model (HMM) (<xref ref-type="bibr" rid="b17">17</xref>) is constructed iteratively by searching a sequence database and updating the profile with the statistically significant sequence matches after each round of search. In the second approach (‘intermediate sequence search’), a search with BLAST or a similar method is performed and each of the significantly matched sequences is used as an intermediate sequence for a new search (<xref ref-type="bibr" rid="b18">18</xref>–<xref ref-type="bibr" rid="b20">20</xref>). Very similar to the second approach is intermediate profile search, where PSI-BLAST with a fixed number of iterations is used instead of BLAST (<xref ref-type="bibr" rid="b14">14</xref>,<xref ref-type="bibr" rid="b21">21</xref>–<xref ref-type="bibr" rid="b23">23</xref>). To keep computation times manageable, a maximum sequence identity between intermediate sequences is normally enforced. For the same reason, the search depth, i.e. the number of intermediate sequence links, is generally limited to one, two, or three.</p>
+    <p>An extension of the third approach was implemented in SENSER (<xref ref-type="bibr" rid="b24">24</xref>), where sequences need not constitute a significant match (<italic>E</italic>-value &lt; 10<sup>−3</sup>) in order to be used as intermediate sequences. It suffices if they are found in the trailing end of the last PSI-BLAST search, i.e. with an <italic>E</italic>-value below 10. These sequences are used as seeds for the construction of new alignments by PSI-BLAST. If, starting from a new seed sequence, PSI-BLAST finds the query or one of its already accepted homologs with <italic>E</italic>-value lower than 10, the seed and its homologs are accepted. This concept, referred to as ‘back-validation’, relies on the asymmetry inherent in profile-sequence comparison. Owing to its sensitivity, SENSER was quite successful in several CASP competitions, but the unpredictable risk of false positives made manual checking of results necessary. We ascribe this to the heuristic, non-statistical nature of the back-validation criterion.</p>
+    <p>HHsenser was inspired by this method and has adopted the concept of seeds and trailing ends. Instead of back-validation, we use HMM–HMM comparison (<xref ref-type="bibr" rid="b25">25</xref>) in combination with a score correlation analysis. This should make HHsenser substantially more sensitive than straightforward implementations of intermediate profile search (<xref ref-type="bibr" rid="b14">14</xref>,<xref ref-type="bibr" rid="b22">22</xref>,<xref ref-type="bibr" rid="b23">23</xref>) (see caption of Figure 2). At the same time, it increases selectivity as compared with SENSER. Since HHsenser has not been described before, we will give a brief explanation in the following section.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>METHOD</title>
+    <p>HHsenser takes a single query sequence or a multiple alignment as input and returns two multiple alignments, a strict alignment and a permissive one. The strict alignment normally contains only homologous sequences, whereas the permissive one occasionally includes unrelated sequences. On the other hand, it often contains homologs not present in the strict alignment. The strict alignment may be more suitable for automated analyses, whereas the permissive alignment can be very useful for further expert analysis, where the occurrence of a limited number of non-homologous subgroups poses no problems (<xref ref-type="bibr" rid="b26">26</xref>).</p>
+    <p>The flow chart of HHsenser is shown in <xref ref-type="fig" rid="fig1">Figure 1</xref>. The query is used as the first seed in an iterated PSI-BLAST search with an <italic>E</italic>-value threshold of <italic>E</italic> = 10<sup>−3</sup> (steps 0–4). Steps 5–7 are skipped in the first pass, since the strict alignment is still empty. The alignment parsed out from the PSI-BLAST results is copied into the strict and permissive alignment (steps 8 and 9) and all matched sequence segments up to <italic>E</italic> = 1 are appended to the list of seeds (step 10). If there are seeds left in the list (step 1), a new seed is taken (step 2) and compared with all seeds for which an alignment has already been built (step 3). If the pairwise sequence identity to all these seeds is below an adjustable threshold (e.g. 30%), this seed is used to generate a new alignment with PSI-BLAST (step 4). The alignment is compared with the strict alignment by pairwise comparison of HMMs (step 5) (<xref ref-type="bibr" rid="b25">25</xref>). A correlation analysis is performed and an effective <italic>E</italic>-value is calculated. This is to account for the fact that the seed sequence may be a high-scoring false positive that was selected by PSI-BLAST for its chance similarity with the query profile from a large sequence database (see below). If the <italic>P</italic>-value from the HMM–HMM comparison is below 10<sup>−4</sup> and the effective <italic>E</italic>-value is below 1 (step 6), the new alignment is appended to the permissive alignment by HMM–HMM comparison (step 9) (<xref ref-type="bibr" rid="b25">25</xref>). If the <italic>P</italic>-value is below 10<sup>−6</sup> and the effective <italic>E</italic>-value is below 10<sup>−3</sup>, the new alignment is appended also to the strict alignment (steps 7 and 8). Finally, all matches that scored better than <italic>E</italic> = 1 in the last PSI-BLAST search are added to the list of seeds. The process continues until all seeds have been processed. If a multiple alignment is given as input instead of a single sequence, this alignment is used to jump-start one round of PSI-BLAST, upon which the program proceeds directly to step 7.</p>
+    <p>To understand the necessity of calculating an effective <italic>E</italic>-value, assume, for example, that a false positive seed was found with an <italic>E</italic>-value of 0.1 and that this seed is a singleton, in other words the PSI-BLAST alignment contains only the seed itself. An HMM-HMM comparison between this single-sequence alignment and the strict query alignment would give approximately the same <italic>P</italic>-value as the profile-sequence comparison in PSI-BLAST. With an effective database size of 10<sup>6</sup> the <italic>P</italic>-value would therefore be <italic>P</italic> ≈ 10<sup>−7</sup>. Hence, the sequence would get a good <italic>P</italic>-value just because it was selected from a large database for its chance similarity with the query alignment.</p>
+    <p>Several measures have been devised to improve efficiency, sensitivity and selectivity:
+<list list-type="bullet"><list-item><p>We have developed an ‘end-pruning’ procedure for PSI-BLAST that can significantly reduce the amount of non-homologous sequences creeping into the alignments (J. Söding, unpublished data).</p></list-item><list-item><p>The maximum sequence identity threshold in step 3 is automatically adjusted according to the number of seeds in the list. It varies from 80% (&lt;6 seeds) to 25% (&gt;1000 seeds), thereby avoiding excessively long search times for large superfamilies.</p></list-item><list-item><p>When extracting seeds in step 10, we add up to 50 residues on either side to the sequence segment matched by PSI-BLAST. In this way, we make sure that new seeds are not always shorter than their parent seed, since this would effectively limit the search depth.</p></list-item><list-item><p>The first time that step 10 is performed, we extract a minimum number of four seeds from the PSI-BLAST results, even if they have <italic>E</italic>-values higher than 1. This increases chances of bridging the gap between singleton sequences and their closest homologs.</p></list-item><list-item><p>Four databases can be selected: the non-redundant database (nr) at NCBI, and four filtered versions containing only eukaryotic, prokaryotic, bacterial, or archaeal sequences.</p></list-item><list-item><p>We use versions of the sequence databases (e.g. nr90f and nr70f) that are clustered at 90 and 70% maximum pairwise sequence identity by CD-HIT (<xref ref-type="bibr" rid="b22">22</xref>). In PSI-BLAST searches, we start with the nr90f and automatically switch to the nr70f when &gt;50 homologs are found. As a consequence, not all homologs contained in the complete nr database may appear in the alignments returned by HHsenser. If this is desired, however, the option ‘Show representative sequences’ can be disabled. In this case, the last PSI-BLAST search in step 4 will use the unclustered database.</p></list-item></list>
+In principle, our method works for single as well as multidomain sequences. However, it is recommended to break the sequence up into single domains (using HHpred or a similar method) since multi-domain sequences are at an increased risk of having non-homologous sequence segments included during the PSI-BLAST searches.</p>
+    <p>From the symmetry of HMM–HMM comparison one might be tempted to conclude that HHsenser will find the same sequences no matter with which particular sequence in a family it is started with. This is wrong for two reasons. First, even though the HMM–HMM comparison step is symmetric, the PSI-BLAST searches to detect new seed sequences are not. A sequence that has no homologs up to a BLAST <italic>E</italic>-value of 10 might very well come out as a significant match when the database is searched with a PSI-BLAST profile of related sequences. Second, the query sequence automatically defines the match state assignment for the strict and permissive HMMs used in the HMM–HMM comparisons in steps 5, 8 and 9: all aligment positions with a residue in the query sequence are assigned to match states, all others are inserts. Therefore, when starting from a different sequence, different positions will normally be assigned to match and insert states. In practice, we find that most of the times the choice of the start sequence does not influence the number of subgroups found and the sets of detected sequences do overlap to a high degree.</p>
+    <p>A downside of HHsenser, as of other intermediate profile search methods, are the long computation times involved, in particular when the query sequence is a member of a large superfamily. With ∼1000 homologs in the nr90f database, the calculation time is typically &lt;5 h, but for the largest superfamilies (like AAA+ ATPases, outer membrane beta barrels, TIM barrels or immunoglobulins) a search may take several days. To avoid straining our computational resources too much, we have therefore set a limit of 500 residues in the input sequence. Also, when a number of 5000 homologs is exceeded the search will terminate and the current results are returned. Last, the number of HHsenser jobs is limited to 10 and additional jobs will be queued. Users who would like to perform searches without these limitations are asked to contact us.</p>
+  </sec>
+  <sec>
+    <title>EXAMPLE APPLICATIONS</title>
+    <p>Pei and Grishin recently found by manual transitive PSI-BLAST searches and sequence analysis that the putative endopeptidase P5 from bacteriophage phi-6 and the family of lytic transglycosilases that cleave bacterial peptidoglycans are distantly related (<xref ref-type="bibr" rid="b27">27</xref>). When HHsenser is launched with P5 (sp∣P07582∣VLYS_BPPH6) and default parameters, it returns 1591 sequences in the strict alignment and 1991 sequences in the permissive one (<xref ref-type="fig" rid="fig2">Figure 2</xref>). A clustering analysis with CLANS (<xref ref-type="bibr" rid="b28">28</xref>) reveals that P5 from phi-6 is indeed a distant member of a superfamily containing various families of lytic transglycosilases (PilT, LysM, SLT, mltC/mltE, resuscitation-promoting factor Rpf), a group of putative periplasmic-binding transport proteins, lysozyme C and G, and several as yet undescribed groups of hypothetical proteins. We found no obvious false positives in either the strict or permissive alignment. This search took ∼3 h to complete on a 2.2 GHz AMD64 PC.</p>
+    <p>A further example is the family of AbrB-like transcription factors which we have studied recently (<xref ref-type="bibr" rid="b26">26</xref>). When the structure of AbrB was solved, we were surprised to learn that it adopted a new fold even though previous sequence analyses conducted in our group had indicated that it should be related to MazE and MraZ, two proteins which fold into swapped-hairpin barrels. We therefore decided to study AbrB and its homologs in more detail. HHsenser was started with the sequence of AbrB in <italic>Bacillus subtilis</italic> (ABRB_BACSU) and after ∼5 h it returned a permissive alignment with 724 sequences that contained no identifiable false positives. Both MazE and the two domains of MraZ showed up in our alignments. We therefore decided to redetermine the structure of AbrB and found indeed that it is very similar to the swapped-hairpin barrel of MazE and MraZ. Clustering of the sequences with CLANS resulted in eight major groups of bacterial transcription factors, six of which had been described before and two of which were groups of hypothetical proteins from cyanobacteria and proteobacteria. With the default parameters in our web server, all but the proteobacterial group of hypothetical proteins are recovered without false positives.</p>
+  </sec>
+  <sec>
+    <title>CONCLUSION</title>
+    <p>Starting from a single sequence, HHsenser is able to explore the space of homologous sequences and align these to the query sequence by HMM–HMM comparison. Its distinctive feature is its ability to jump between distantly related families while producing few or no false positives. In combination with an interactive clustering method such as the publicly available CLANS program (<xref ref-type="bibr" rid="b28">28</xref>), HHsenser is in our experience a powerful tool for the functional annotation and evolutionary analysis of whole protein superfamilies (<xref ref-type="bibr" rid="b26">26</xref>).</p>
+    <p>Its main drawback is the long computation times necessary for these exhaustive searches. Since we believe that HHsenser can be particularly useful for singletons or sequences with only few PSI-BLAST-detectable homologs, we offer a quick, non-exhaustive version that can be called from the results page of our structure and function prediction server HHpred (<xref ref-type="bibr" rid="b29">29</xref>). The search will terminate as soon as 100 homologs have been found, which will normally take &lt;15 min.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>We would like to thank Kristin Koretke for many fruitful discussions related to this work and for her help in testing HHsenser. Funding from the Max-Planck Society to pay for the open access publication charge is acknowledged.</p>
+    <p><italic>Conflict of interest statement</italic>. None declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="b1">
+      <label>1</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Przybylski</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Rost</surname>
+            <given-names>B.</given-names>
+          </name>
+        </person-group>
+        <article-title>Alignments grow, secondary structure prediction improves</article-title>
+        <source>Proteins</source>
+        <year>2002</year>
+        <volume>46</volume>
+        <fpage>197</fpage>
+        <lpage>205</lpage>
+        <pub-id pub-id-type="pmid">11807948</pub-id>
+      </citation>
+    </ref>
+    <ref id="b2">
+      <label>2</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Garg</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Kaur</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Raghava</surname>
+            <given-names>G.P.</given-names>
+          </name>
+        </person-group>
+        <article-title>Real value prediction of solvent accessibility in proteins using multiple sequence alignment and secondary structure</article-title>
+        <source>Proteins</source>
+        <year>2005</year>
+        <volume>61</volume>
+        <fpage>318</fpage>
+        <lpage>324</lpage>
+        <pub-id pub-id-type="pmid">16106377</pub-id>
+      </citation>
+    </ref>
+    <ref id="b3">
+      <label>3</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Peng</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Vucetic</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Radivojac</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>C.J.</given-names>
+          </name>
+          <name>
+            <surname>Dunker</surname>
+            <given-names>A.K.</given-names>
+          </name>
+          <name>
+            <surname>Obradovic</surname>
+            <given-names>Z.</given-names>
+          </name>
+        </person-group>
+        <article-title>Optimizing long intrinsic disorder predictors with protein evolutionary information</article-title>
+        <source>J. Bioinform. Comput. Biol.</source>
+        <year>2005</year>
+        <volume>3</volume>
+        <fpage>35</fpage>
+        <lpage>60</lpage>
+        <pub-id pub-id-type="pmid">15751111</pub-id>
+      </citation>
+    </ref>
+    <ref id="b4">
+      <label>4</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Viklund</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Elofsson</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Best alpha-helical transmembrane protein topology predictions are achieved using hidden Markov models and evolutionary information</article-title>
+        <source>Protein Sci.</source>
+        <year>2004</year>
+        <volume>13</volume>
+        <fpage>1908</fpage>
+        <lpage>1917</lpage>
+        <pub-id pub-id-type="pmid">15215532</pub-id>
+      </citation>
+    </ref>
+    <ref id="b5">
+      <label>5</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Punta</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Rost</surname>
+            <given-names>B.</given-names>
+          </name>
+        </person-group>
+        <article-title>PROFcon: novel prediction of long-range contacts</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>2960</fpage>
+        <lpage>2968</lpage>
+        <pub-id pub-id-type="pmid">15890748</pub-id>
+      </citation>
+    </ref>
+    <ref id="b6">
+      <label>6</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Res</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Mihalek</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Lichtarge</surname>
+            <given-names>O.</given-names>
+          </name>
+        </person-group>
+        <article-title>An evolution based classifier for prediction of protein interfaces without using protein structures</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>2496</fpage>
+        <lpage>2501</lpage>
+        <pub-id pub-id-type="pmid">15728113</pub-id>
+      </citation>
+    </ref>
+    <ref id="b7">
+      <label>7</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nair</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Rost</surname>
+            <given-names>B.</given-names>
+          </name>
+        </person-group>
+        <article-title>Better prediction of sub-cellular localization by combining evolutionary and structural information</article-title>
+        <source>Proteins</source>
+        <year>2003</year>
+        <volume>53</volume>
+        <fpage>917</fpage>
+        <lpage>930</lpage>
+        <pub-id pub-id-type="pmid">14635133</pub-id>
+      </citation>
+    </ref>
+    <ref id="b8">
+      <label>8</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Söding</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Remmert</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Biegert</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Lupas</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>HHrep: <italic>de novo</italic> protein repeat detection and the origin of TIM barrels</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2006</year>
+      </citation>
+    </ref>
+    <ref id="b9">
+      <label>9</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Saunders</surname>
+            <given-names>C.T.</given-names>
+          </name>
+          <name>
+            <surname>Baker</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>Evaluation of structural and evolutionary contributions to deleterious mutation prediction</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>2002</year>
+        <volume>322</volume>
+        <fpage>891</fpage>
+        <lpage>901</lpage>
+        <pub-id pub-id-type="pmid">12270722</pub-id>
+      </citation>
+    </ref>
+    <ref id="b10">
+      <label>10</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lichtarge</surname>
+            <given-names>O.</given-names>
+          </name>
+          <name>
+            <surname>Bourne</surname>
+            <given-names>H.R.</given-names>
+          </name>
+          <name>
+            <surname>Cohen</surname>
+            <given-names>F.E.</given-names>
+          </name>
+        </person-group>
+        <article-title>An evolutionary trace method defines binding surfaces common to protein families</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>1996</year>
+        <volume>257</volume>
+        <fpage>342</fpage>
+        <lpage>358</lpage>
+        <pub-id pub-id-type="pmid">8609628</pub-id>
+      </citation>
+    </ref>
+    <ref id="b11">
+      <label>11</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hannenhalli</surname>
+            <given-names>S.S.</given-names>
+          </name>
+          <name>
+            <surname>Russell</surname>
+            <given-names>R.B.</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis and prediction of functional sub-types from protein sequence alignments</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>2000</year>
+        <volume>303</volume>
+        <fpage>61</fpage>
+        <lpage>76</lpage>
+        <pub-id pub-id-type="pmid">11021970</pub-id>
+      </citation>
+    </ref>
+    <ref id="b12">
+      <label>12</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>delSol Mesa</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Pazos</surname>
+            <given-names>F.</given-names>
+          </name>
+          <name>
+            <surname>Valencia</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Automatic methods for predicting functionally important residues</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>2003</year>
+        <volume>326</volume>
+        <fpage>1289</fpage>
+        <lpage>1302</lpage>
+        <pub-id pub-id-type="pmid">12589769</pub-id>
+      </citation>
+    </ref>
+    <ref id="b13">
+      <label>13</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nimrod</surname>
+            <given-names>G.</given-names>
+          </name>
+          <name>
+            <surname>Glaser</surname>
+            <given-names>F.</given-names>
+          </name>
+          <name>
+            <surname>Steinberg</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Ben-Tal</surname>
+            <given-names>N.</given-names>
+          </name>
+          <name>
+            <surname>Pupko</surname>
+            <given-names>T.</given-names>
+          </name>
+        </person-group>
+        <article-title><italic>In silico</italic> identification of functional regions in proteins</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>i328</fpage>
+        <pub-id pub-id-type="pmid">15961475</pub-id>
+      </citation>
+    </ref>
+    <ref id="b14">
+      <label>14</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wallner</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Fang</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Ohlson</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Frey-Skott</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Elofsson</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Using evolutionary information for the query and target improves fold recognition</article-title>
+        <source>Proteins</source>
+        <year>2004</year>
+        <volume>54</volume>
+        <fpage>342</fpage>
+        <lpage>350</lpage>
+        <pub-id pub-id-type="pmid">14696196</pub-id>
+      </citation>
+    </ref>
+    <ref id="b15">
+      <label>15</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sadreyev</surname>
+            <given-names>R.I.</given-names>
+          </name>
+          <name>
+            <surname>Grishin</surname>
+            <given-names>N.V.</given-names>
+          </name>
+        </person-group>
+        <article-title>Quality of alignment comparison by COMPASS improves with inclusion of diverse confident homologs</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>818</fpage>
+        <lpage>828</lpage>
+        <pub-id pub-id-type="pmid">14751996</pub-id>
+      </citation>
+    </ref>
+    <ref id="b16">
+      <label>16</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>S.F.</given-names>
+          </name>
+          <name>
+            <surname>Madden</surname>
+            <given-names>T.L.</given-names>
+          </name>
+          <name>
+            <surname>Schäffer</surname>
+            <given-names>A.A.</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Z.</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Lipman</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>Gapped BLAST and PSI-BLAST: a new generation of protein database search programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3389</fpage>
+        <lpage>3402</lpage>
+        <pub-id pub-id-type="pmid">9254694</pub-id>
+      </citation>
+    </ref>
+    <ref id="b17">
+      <label>17</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Krogh</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Mian</surname>
+            <given-names>I.S.</given-names>
+          </name>
+          <name>
+            <surname>Sjolander</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Haussler</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>Hidden Markov models in computational biology. Applications to protein modeling</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>1994</year>
+        <volume>235</volume>
+        <fpage>1501</fpage>
+        <lpage>1531</lpage>
+        <pub-id pub-id-type="pmid">8107089</pub-id>
+      </citation>
+    </ref>
+    <ref id="b18">
+      <label>18</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Park</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Teichmann</surname>
+            <given-names>S.A.</given-names>
+          </name>
+          <name>
+            <surname>Hubbard</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Chothia</surname>
+            <given-names>C.</given-names>
+          </name>
+        </person-group>
+        <article-title>Intermediate sequences increase the detection of homology between sequences</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>1997</year>
+        <volume>273</volume>
+        <fpage>349</fpage>
+        <lpage>354</lpage>
+        <pub-id pub-id-type="pmid">9367767</pub-id>
+      </citation>
+    </ref>
+    <ref id="b19">
+      <label>19</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gerstein</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Measurement of the effectiveness of transitive sequence comparison, through a third ‘intermediate’ sequence</article-title>
+        <source>Bioinformatics</source>
+        <year>1998</year>
+        <volume>14</volume>
+        <fpage>707</fpage>
+        <lpage>714</lpage>
+        <pub-id pub-id-type="pmid">9789096</pub-id>
+      </citation>
+    </ref>
+    <ref id="b20">
+      <label>20</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Pio</surname>
+            <given-names>F.</given-names>
+          </name>
+          <name>
+            <surname>Pawlowski</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Godzik</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Saturated BLAST: an automated multiple intermediate sequence search used to detect distant homology</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>1105</fpage>
+        <lpage>1110</lpage>
+        <pub-id pub-id-type="pmid">11159329</pub-id>
+      </citation>
+    </ref>
+    <ref id="b21">
+      <label>21</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Margelevicius</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Venclovas</surname>
+            <given-names>C.</given-names>
+          </name>
+        </person-group>
+        <article-title>PSI-BLAST-ISS: an intermediate sequence search tool for estimation of the position-specific alignment reliability</article-title>
+        <source>BMC. Bioinformatics</source>
+        <year>2005</year>
+        <volume>6</volume>
+        <fpage>185</fpage>
+        <pub-id pub-id-type="pmid">16033659</pub-id>
+      </citation>
+    </ref>
+    <ref id="b22">
+      <label>22</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Jaroszewski</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Godzik</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Sequence clustering strategies improve remote homology recognitions while reducing search times</article-title>
+        <source>Protein. Eng.</source>
+        <year>2002</year>
+        <volume>15</volume>
+        <fpage>643</fpage>
+        <lpage>649</lpage>
+        <pub-id pub-id-type="pmid">12364578</pub-id>
+      </citation>
+    </ref>
+    <ref id="b23">
+      <label>23</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sandhya</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Chakrabarti</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Abhinandan</surname>
+            <given-names>K.R.</given-names>
+          </name>
+          <name>
+            <surname>Sowdhamini</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Srinivasan</surname>
+            <given-names>N.</given-names>
+          </name>
+        </person-group>
+        <article-title>Assessment of a rigorous transitive profile based search method to detect remotely similar proteins</article-title>
+        <source>J. Biomol. Struct. Dyn.</source>
+        <year>2005</year>
+        <volume>23</volume>
+        <fpage>283</fpage>
+        <lpage>298</lpage>
+        <pub-id pub-id-type="pmid">16218755</pub-id>
+      </citation>
+    </ref>
+    <ref id="b24">
+      <label>24</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Koretke</surname>
+            <given-names>K.K.</given-names>
+          </name>
+          <name>
+            <surname>Russell</surname>
+            <given-names>R.B.</given-names>
+          </name>
+          <name>
+            <surname>Lupas</surname>
+            <given-names>A.N.</given-names>
+          </name>
+        </person-group>
+        <article-title>Fold recognition without folds</article-title>
+        <source>Protein Sci.</source>
+        <year>2002</year>
+        <volume>11</volume>
+        <fpage>1575</fpage>
+        <lpage>1579</lpage>
+        <pub-id pub-id-type="pmid">12021456</pub-id>
+      </citation>
+    </ref>
+    <ref id="b25">
+      <label>25</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Söding</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>Protein homology detection by HMM–HMM comparison</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>951</fpage>
+        <lpage>960</lpage>
+        <pub-id pub-id-type="pmid">15531603</pub-id>
+      </citation>
+    </ref>
+    <ref id="b26">
+      <label>26</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Coles</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Djuranovic</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Söding</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Frickey</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Koretke</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Truffault</surname>
+            <given-names>V.</given-names>
+          </name>
+          <name>
+            <surname>Martin</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Lupas</surname>
+            <given-names>A.N.</given-names>
+          </name>
+        </person-group>
+        <article-title>AbrB-like transcription factors assume a swapped hairpin fold that is evolutionarily related to double-psi beta barrels</article-title>
+        <source>Structure</source>
+        <year>2005</year>
+        <volume>13</volume>
+        <fpage>919</fpage>
+        <lpage>928</lpage>
+        <pub-id pub-id-type="pmid">15939023</pub-id>
+      </citation>
+    </ref>
+    <ref id="b27">
+      <label>27</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pei</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Grishin</surname>
+            <given-names>N.V.</given-names>
+          </name>
+        </person-group>
+        <article-title>The P5 protein from bacteriophage phi-6 is a distant homolog of lytic transglycosylases</article-title>
+        <source>Protein Sci.</source>
+        <year>2005</year>
+        <volume>14</volume>
+        <fpage>1370</fpage>
+        <lpage>1374</lpage>
+        <pub-id pub-id-type="pmid">15802648</pub-id>
+      </citation>
+    </ref>
+    <ref id="b28">
+      <label>28</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Frickey</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Lupas</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>CLANS: a Java application for visualizing protein families based on pairwise similarity</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>3702</fpage>
+        <lpage>3704</lpage>
+        <pub-id pub-id-type="pmid">15284097</pub-id>
+      </citation>
+    </ref>
+    <ref id="b29">
+      <label>29</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Söding</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Biegert</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Lupas</surname>
+            <given-names>A.N.</given-names>
+          </name>
+        </person-group>
+        <article-title>The HHpred interactive server for protein homology detection and structure prediction</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <fpage>W244</fpage>
+        <lpage>W248</lpage>
+        <pub-id pub-id-type="pmid">15980461</pub-id>
+      </citation>
+    </ref>
+    <ref id="b30">
+      <label>30</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Clamp</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Cuff</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Searle</surname>
+            <given-names>S.M.</given-names>
+          </name>
+          <name>
+            <surname>Barton</surname>
+            <given-names>G.J.</given-names>
+          </name>
+        </person-group>
+        <article-title>The Jalview Java alignment editor</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>426</fpage>
+        <lpage>427</lpage>
+        <pub-id pub-id-type="pmid">14960472</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig id="fig1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p>Simplified flow chart (left) and schematic diagram of HHsenser (right). The red X in the diagram is the query sequence, the other, smaller X's represent seed sequences from which new alignments are built (shaded disks). The large circles indicate the space from which new seeds are selected (arrows). The large search radius (<italic>E</italic> &lt; 1) together with sensitive HMM–HMM comparison allows to jump wide gaps between related families (green arrow).</p>
+      </caption>
+      <graphic xlink:href="gkl195f1"/>
+    </fig>
+    <fig id="fig2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p>Sample output of HHsenser showing a part of the stringent alignment of lytic transglycosilases obtained with protein P5 from bacteriophage phi-6 as starting sequence. The overlaid window shows a JalView applet (<xref ref-type="bibr" rid="b30">30</xref>). Tabs allow to switch to the stringent alignment, the permissive alignment, the sequences rejected in the course of the transitive search and the various intermediate aligments accepted as homologs. Files can be downloaded via links, either with or without inserts relative to the query sequence.</p>
+      </caption>
+      <graphic xlink:href="gkl195f2"/>
+    </fig>
+  </sec>
+</back>

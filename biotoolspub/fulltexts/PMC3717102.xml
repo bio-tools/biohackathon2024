@@ -1,0 +1,1250 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3717102</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-14-220</article-id>
+    <article-id pub-id-type="pmid">23837734</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-14-220</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>NURD: an implementation of a new method to estimate isoform expression from non-uniform RNA-seq data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Ma</surname>
+          <given-names>Xinyun</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>maxy218@gmail.com</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A2">
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Xuegong</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>zhangxg@tsinghua.edu.cn</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>MOE Key Laboratory of Bioinformatics, Bioinformatics Division and Center for Synthetic and Systems Biology, TNLIST and Department of Automation, Tsinghua University, Beijing 100084, China</aff>
+    <aff id="I2"><label>2</label>School of Life Sciences, Tsinghua University, Beijing 100084, China</aff>
+    <pub-date pub-type="collection">
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>10</day>
+      <month>7</month>
+      <year>2013</year>
+    </pub-date>
+    <volume>14</volume>
+    <fpage>220</fpage>
+    <lpage>220</lpage>
+    <history>
+      <date date-type="received">
+        <day>19</day>
+        <month>12</month>
+        <year>2012</year>
+      </date>
+      <date date-type="accepted">
+        <day>7</day>
+        <month>7</month>
+        <year>2013</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2013 Ma and Zhang; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2013</copyright-year>
+      <copyright-holder>Ma and Zhang; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/14/220"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>RNA-Seq technology has been used widely in transcriptome study, and one of the most important applications is to estimate the expression level of genes and their alternative splicing isoforms. There have been several algorithms published to estimate the expression based on different models. Recently Wu et al. published a method that can accurately estimate isoform level expression by considering position-related sequencing biases using nonparametric models. The method has advantages in handling different read distributions, but there hasn’t been an efficient program to implement this algorithm.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We developed an efficient implementation of the algorithm in the program NURD. It uses a binary interval search algorithm. The program can correct both the global tendency of sequencing bias in the data and local sequencing bias specific to each gene. The correction makes the isoform expression estimation more reliable under various read distributions. And the implementation is computationally efficient in both the memory cost and running time and can be readily scaled up for huge datasets.</p>
+      </sec>
+      <sec>
+        <title>Conclusion</title>
+        <p>NURD is an efficient and reliable tool for estimating the isoform expression level. Given the reads mapping result and gene annotation file, NURD will output the expression estimation result. The package is freely available for academic use at <ext-link ext-link-type="uri" xlink:href="http://bioinfo.au.tsinghua.edu.cn/software/NURD/">http://bioinfo.au.tsinghua.edu.cn/software/NURD/</ext-link>.</p>
+      </sec>
+    </abstract>
+    <kwd-group>
+      <kwd>RNA-seq</kwd>
+      <kwd>Isoform expression estimation</kwd>
+      <kwd>Sequencing bias</kwd>
+    </kwd-group>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>As the high-throughput sequencing technology develops, using RNA-Seq data to estimate gene expression and isoform expression becomes an important task. There have been some different methods to estimate expression level from RNA-Seq data. Mortazavi et al. used a concept called RPKM to measure the gene expression
+[<xref ref-type="bibr" rid="B1">1</xref>], which had been widely used when alternative splicing is not considered. Jiang &amp; Wong developed a method to estimate the abundance of transcripts of alternative spliced genes
+[<xref ref-type="bibr" rid="B2">2</xref>]. This can be called isoform expression estimation. As it is now known that most human genes can have alternative splicing, estimating isoform expression is becoming a key question in RNA-Seq study. The main idea of Jiang and Wong’s method is to model the sequencing procedure as a random sampling process, and to infer the best estimation of isoform expression by maximizing a likelihood function. However, the method is based on the assumption that reads are uniformly sampled from all transcripts, while many experiments have shown that the distribution of real sequencing reads is not uniform. Instead, read distribution usually has some position-related biases and context-related biases. Based on such observations, people developed some new methods to deal with different types of biases
+[<xref ref-type="bibr" rid="B3">3</xref>-<xref ref-type="bibr" rid="B7">7</xref>]. In our experiments, we observed that position-related biases are a major cause of non-uniform distribution and has the most significant influence on expression estimation. We have developed a method to deal with such position-related biases using nonparametric models
+[<xref ref-type="bibr" rid="B3">3</xref>]. The nonparametric nature of the model allows the method to be capable for describing different types of read distributions. Experiments on both simulated data and real data showed that the method can calibrate non-uniform distribution well and outperforms other methods
+[<xref ref-type="bibr" rid="B3">3</xref>]. However, the method was implemented with a set of experimental codes that cannot be scaled up for applications on large RNA-Seq data and this hindered the availability of the method for public use. In this paper, we developed a software NURD as an efficient implementation of the method under C++ using a binary interval search algorithm. The software can handle large-scale data and have shown advantages in both memory use and running time comparing to some other popular software.</p>
+  </sec>
+  <sec>
+    <title>Implementation</title>
+    <sec>
+      <title>Brief introduction to Wu et al’s method</title>
+      <p>Wu et al’s method is based on the original method by Jiang &amp; Wong
+[<xref ref-type="bibr" rid="B2">2</xref>]. The original method assumes that the reads are uniformly sampled from the whole transcripts and models the reads count on a specific exon as a Poisson random variable with parameter
+<inline-formula><mml:math id="M1" name="1471-2105-14-220-i1" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:msub><mml:mi>l</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mi>w</mml:mi><mml:mstyle displaystyle="true"><mml:msubsup><mml:mi mathsize="big">∑</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow><mml:mi>m</mml:mi></mml:msubsup><mml:mrow><mml:msub><mml:mi>a</mml:mi><mml:mi mathvariant="italic">ij</mml:mi></mml:msub><mml:msub><mml:mi>θ</mml:mi><mml:mi>i</mml:mi></mml:msub></mml:mrow></mml:mstyle></mml:mrow></mml:math></inline-formula>. Here, <italic>m</italic> is the number of isoforms of the specific gene, <italic>θ</italic><sub><italic>i</italic></sub> is the expression level of the <italic>i</italic>-th isoform, <italic>w</italic> is the total reads count in this sample, <italic>l</italic><sub><italic>j</italic></sub> is the length of the <italic>j</italic>-th exon and (<italic>a</italic><sub><italic>ij</italic></sub>) is a matrix that indicates the gene structure, with <italic>a</italic><sub><italic>ij</italic></sub> = 1 or 0 indicating that exon <italic>j</italic> is included or excluded in isoform <italic>i</italic>. Thus the likelihood function of isoform expression based on the observation of <italic>j</italic>-th exon is
+<inline-formula><mml:math id="M2" name="1471-2105-14-220-i2" overflow="scroll"><mml:mrow><mml:mi>L</mml:mi><mml:mfenced open="(" close=")"><mml:mrow><mml:mi>Θ</mml:mi><mml:mo stretchy="true">|</mml:mo><mml:msub><mml:mi>x</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:mfenced><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:msup><mml:mi>e</mml:mi><mml:mrow><mml:mo>−</mml:mo><mml:msub><mml:mi>λ</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msup><mml:msub><mml:mi>λ</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:msup><mml:mrow/><mml:msub><mml:mi>x</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:msup></mml:mrow><mml:mrow><mml:msub><mml:mi>x</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>!</mml:mo></mml:mrow></mml:mfrac></mml:mrow></mml:math></inline-formula>. Assuming that exons are independent, we can get the joint log likelihood function of the whole gene as:</p>
+      <p>
+        <disp-formula id="bmcM1">
+          <label>(1)</label>
+          <mml:math id="M3" name="1471-2105-14-220-i3" overflow="scroll">
+            <mml:mtable columnalign="left">
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mo>log</mml:mo>
+                  <mml:mfenced open="(" close=")">
+                    <mml:mrow>
+                      <mml:mi>L</mml:mi>
+                      <mml:mfenced open="(" close=")">
+                        <mml:mrow>
+                          <mml:mi>Θ</mml:mi>
+                          <mml:mo stretchy="true">|</mml:mo>
+                          <mml:msub>
+                            <mml:mi>x</mml:mi>
+                            <mml:mn>1</mml:mn>
+                          </mml:msub>
+                          <mml:mo>,</mml:mo>
+                          <mml:msub>
+                            <mml:mi>x</mml:mi>
+                            <mml:mn>2</mml:mn>
+                          </mml:msub>
+                          <mml:mo>,</mml:mo>
+                          <mml:mo>.</mml:mo>
+                          <mml:mo>.</mml:mo>
+                          <mml:mo>.</mml:mo>
+                          <mml:mo>,</mml:mo>
+                          <mml:msub>
+                            <mml:mi>x</mml:mi>
+                            <mml:mi>n</mml:mi>
+                          </mml:msub>
+                        </mml:mrow>
+                      </mml:mfenced>
+                    </mml:mrow>
+                  </mml:mfenced>
+                  <mml:mo>=</mml:mo>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>w</mml:mi>
+                  <mml:munderover>
+                    <mml:mi mathsize="big">∑</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>n</mml:mi>
+                  </mml:munderover>
+                  <mml:munderover>
+                    <mml:mi mathsize="big">∑</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>m</mml:mi>
+                  </mml:munderover>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>l</mml:mi>
+                      <mml:mi>j</mml:mi>
+                    </mml:msub>
+                    <mml:msub>
+                      <mml:mi>a</mml:mi>
+                      <mml:mi mathvariant="italic">ij</mml:mi>
+                    </mml:msub>
+                    <mml:msub>
+                      <mml:mi>θ</mml:mi>
+                      <mml:mi>i</mml:mi>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:mtd>
+              </mml:mtr>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mspace width="15em"/>
+                  <mml:mo>+</mml:mo>
+                  <mml:munderover>
+                    <mml:mi mathsize="big">∑</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>n</mml:mi>
+                  </mml:munderover>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>x</mml:mi>
+                      <mml:mi>j</mml:mi>
+                    </mml:msub>
+                    <mml:mo>log</mml:mo>
+                    <mml:mfenced open="(" close=")">
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>l</mml:mi>
+                          <mml:mi>j</mml:mi>
+                        </mml:msub>
+                        <mml:mi>w</mml:mi>
+                        <mml:mstyle displaystyle="true">
+                          <mml:munderover>
+                            <mml:mi mathsize="big">∑</mml:mi>
+                            <mml:mrow>
+                              <mml:mi>i</mml:mi>
+                              <mml:mo>=</mml:mo>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                            <mml:mi>m</mml:mi>
+                          </mml:munderover>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>a</mml:mi>
+                              <mml:mi mathvariant="italic">ij</mml:mi>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mi>θ</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mstyle>
+                      </mml:mrow>
+                    </mml:mfenced>
+                  </mml:mrow>
+                </mml:mtd>
+              </mml:mtr>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mspace width="15em"/>
+                  <mml:mo>−</mml:mo>
+                  <mml:munderover>
+                    <mml:mi mathsize="big">∑</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>n</mml:mi>
+                  </mml:munderover>
+                  <mml:mrow>
+                    <mml:mo>log</mml:mo>
+                    <mml:mfenced open="(" close=")">
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>x</mml:mi>
+                          <mml:mi>j</mml:mi>
+                        </mml:msub>
+                        <mml:mo>!</mml:mo>
+                      </mml:mrow>
+                    </mml:mfenced>
+                  </mml:mrow>
+                </mml:mtd>
+              </mml:mtr>
+            </mml:mtable>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>The setting of <italic>a</italic><sub><italic>ij</italic></sub> = 1 for all exons of an isoform implies that reads are distributed uniformly across the whole isoform. To compensate for non-uniform distribution, Wu et al’s method takes nonparametric models of read distribution across an isoform
+[<xref ref-type="bibr" rid="B3">3</xref>]. It can deal with different kinds of read distribution. The nonparametric read models used include a global bias curve (GBC) for all genes and a local bias curve (LBC) for each gene. The GBC is used to capture the general trend of non-uniform read distribution with regard to the relative position in a gene, shared by all genes in the dataset, and LBC reflects the distribution pattern specific to each gene. Methods for estimating the GBC and LBC curves are described in
+[<xref ref-type="bibr" rid="B3">3</xref>]. Based on GBC curve and LBC curves, we get two corrected gene structure matrices: (GBM)<sub>ij</sub> and (LBM)<sub>ij</sub>, short for Global Bias Matrix and Local Bias Matrix respectively. The corrected structure matrices are weighted indicator matrices, instead of the 0–1 indicator matrices (<italic>a</italic><sub><italic>ij</italic></sub>). Weights in these two matrices reflect the bias tendency of corresponding exons in this gene. We mix these two matrices as the bias-corrected gene structure which is denoted as (<italic>b</italic><sub><italic>ij</italic></sub>):</p>
+      <p>
+        <disp-formula id="bmcM2">
+          <label>(2)</label>
+          <mml:math id="M4" name="1471-2105-14-220-i4" overflow="scroll">
+            <mml:mrow>
+              <mml:mfenced open="(" close=")">
+                <mml:msub>
+                  <mml:mi>b</mml:mi>
+                  <mml:mi mathvariant="italic">ij</mml:mi>
+                </mml:msub>
+              </mml:mfenced>
+              <mml:mo>=</mml:mo>
+              <mml:mfenced open="(" close=")">
+                <mml:mrow>
+                  <mml:mi mathvariant="italic">GB</mml:mi>
+                  <mml:msub>
+                    <mml:mi>M</mml:mi>
+                    <mml:mi mathvariant="italic">ij</mml:mi>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mfenced>
+              <mml:mi>α</mml:mi>
+              <mml:mo>+</mml:mo>
+              <mml:mfenced open="(" close=")">
+                <mml:mrow>
+                  <mml:mi mathvariant="italic">LB</mml:mi>
+                  <mml:msub>
+                    <mml:mi>M</mml:mi>
+                    <mml:mi mathvariant="italic">ij</mml:mi>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mfenced>
+              <mml:mfenced open="(" close=")">
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:mfenced>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>α</italic> is a weight parameter indicating the relative importance of (GBM)<sub>ij</sub> matrix verse the (LBM)<sub>ij</sub> matrix in the final gene structure matrix.</p>
+      <p>By replacing the 0–1 indicator gene structure matrix (<italic>a</italic><sub><italic>ij</italic></sub>) with the weighted gene structure matrix (<italic>b</italic><sub><italic>ij</italic></sub>), we re-define the log-likelihood function as:</p>
+      <p>
+        <disp-formula id="bmcM3">
+          <label>(3)</label>
+          <mml:math id="M5" name="1471-2105-14-220-i5" overflow="scroll">
+            <mml:mtable columnalign="left">
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mo>log</mml:mo>
+                  <mml:mfenced open="(" close=")">
+                    <mml:mi>L</mml:mi>
+                    <mml:mfenced open="(" close=")">
+                      <mml:mrow>
+                        <mml:mi>Θ</mml:mi>
+                        <mml:mo stretchy="true">|</mml:mo>
+                        <mml:msub>
+                          <mml:mi>x</mml:mi>
+                          <mml:mn>1</mml:mn>
+                        </mml:msub>
+                        <mml:mo>,</mml:mo>
+                        <mml:msub>
+                          <mml:mi>x</mml:mi>
+                          <mml:mn>2</mml:mn>
+                        </mml:msub>
+                        <mml:mo>,</mml:mo>
+                        <mml:mo>.</mml:mo>
+                        <mml:mo>.</mml:mo>
+                        <mml:mo>.</mml:mo>
+                        <mml:mo>,</mml:mo>
+                        <mml:msub>
+                          <mml:mi>x</mml:mi>
+                          <mml:mi>n</mml:mi>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mfenced>
+                  </mml:mfenced>
+                  <mml:mo>=</mml:mo>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>w</mml:mi>
+                  <mml:munderover>
+                    <mml:mi mathsize="big">∑</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>n</mml:mi>
+                  </mml:munderover>
+                  <mml:munderover>
+                    <mml:mi mathsize="big">∑</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>m</mml:mi>
+                  </mml:munderover>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>l</mml:mi>
+                      <mml:mi>j</mml:mi>
+                    </mml:msub>
+                    <mml:msub>
+                      <mml:mi>b</mml:mi>
+                      <mml:mi mathvariant="italic">ij</mml:mi>
+                    </mml:msub>
+                    <mml:msub>
+                      <mml:mi>θ</mml:mi>
+                      <mml:mi>i</mml:mi>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:mtd>
+              </mml:mtr>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mspace width="15em"/>
+                  <mml:mo>+</mml:mo>
+                  <mml:munderover>
+                    <mml:mi mathsize="big">∑</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>n</mml:mi>
+                  </mml:munderover>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>x</mml:mi>
+                      <mml:mi>j</mml:mi>
+                    </mml:msub>
+                    <mml:mo>log</mml:mo>
+                    <mml:mfenced open="(" close=")">
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>l</mml:mi>
+                          <mml:mi>j</mml:mi>
+                        </mml:msub>
+                        <mml:mi>w</mml:mi>
+                        <mml:mstyle displaystyle="true">
+                          <mml:munderover>
+                            <mml:mi mathsize="big">∑</mml:mi>
+                            <mml:mrow>
+                              <mml:mi>i</mml:mi>
+                              <mml:mo>=</mml:mo>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                            <mml:mi>m</mml:mi>
+                          </mml:munderover>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>b</mml:mi>
+                              <mml:mi mathvariant="italic">ij</mml:mi>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mi>θ</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mstyle>
+                      </mml:mrow>
+                    </mml:mfenced>
+                  </mml:mrow>
+                </mml:mtd>
+              </mml:mtr>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mspace width="15em"/>
+                  <mml:mo>−</mml:mo>
+                  <mml:mstyle displaystyle="true">
+                    <mml:munderover>
+                      <mml:mi mathsize="big">∑</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>j</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mn>1</mml:mn>
+                      </mml:mrow>
+                      <mml:mi>n</mml:mi>
+                    </mml:munderover>
+                    <mml:mrow>
+                      <mml:mo>log</mml:mo>
+                      <mml:mfenced open="(" close=")">
+                        <mml:mrow>
+                          <mml:msub>
+                            <mml:mi>x</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:msub>
+                          <mml:mo>!</mml:mo>
+                        </mml:mrow>
+                      </mml:mfenced>
+                    </mml:mrow>
+                  </mml:mstyle>
+                </mml:mtd>
+              </mml:mtr>
+            </mml:mtable>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>Further, we can get the gradient of this log-likelihood function by taking derivates for each <italic>θ</italic><sub><italic>i</italic></sub>:</p>
+      <p>
+        <disp-formula id="bmcM4">
+          <label>(4)</label>
+          <mml:math id="M6" name="1471-2105-14-220-i6" overflow="scroll">
+            <mml:mrow>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mo>∂</mml:mo>
+                  <mml:mo>log</mml:mo>
+                  <mml:mfenced open="(" close=")">
+                    <mml:mrow>
+                      <mml:mi>L</mml:mi>
+                      <mml:mfenced open="(" close=")">
+                        <mml:mrow>
+                          <mml:mi>Θ</mml:mi>
+                          <mml:mo stretchy="true">|</mml:mo>
+                          <mml:msub>
+                            <mml:mi>x</mml:mi>
+                            <mml:mn>1</mml:mn>
+                          </mml:msub>
+                          <mml:mo>,</mml:mo>
+                          <mml:msub>
+                            <mml:mi>x</mml:mi>
+                            <mml:mn>2</mml:mn>
+                          </mml:msub>
+                          <mml:mo>,</mml:mo>
+                          <mml:mo>.</mml:mo>
+                          <mml:mo>.</mml:mo>
+                          <mml:mo>.</mml:mo>
+                          <mml:mo>,</mml:mo>
+                          <mml:msub>
+                            <mml:mi>x</mml:mi>
+                            <mml:mi>n</mml:mi>
+                          </mml:msub>
+                        </mml:mrow>
+                      </mml:mfenced>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mo>∂</mml:mo>
+                  <mml:msub>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mi>i</mml:mi>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>=</mml:mo>
+              <mml:mo>−</mml:mo>
+              <mml:mi>w</mml:mi>
+              <mml:mstyle displaystyle="true">
+                <mml:munderover>
+                  <mml:mi mathsize="big">∑</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>j</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                  <mml:mi>n</mml:mi>
+                </mml:munderover>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mi>l</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:msub>
+                  <mml:msub>
+                    <mml:mi>b</mml:mi>
+                    <mml:mi mathvariant="italic">ij</mml:mi>
+                  </mml:msub>
+                  <mml:mo>+</mml:mo>
+                  <mml:mstyle displaystyle="true">
+                    <mml:munderover>
+                      <mml:mi mathsize="big">∑</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>j</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mn>1</mml:mn>
+                      </mml:mrow>
+                      <mml:mi>n</mml:mi>
+                    </mml:munderover>
+                    <mml:mrow>
+                      <mml:mfrac>
+                        <mml:mrow>
+                          <mml:msub>
+                            <mml:mi>x</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:msub>
+                          <mml:msub>
+                            <mml:mi>b</mml:mi>
+                            <mml:mi mathvariant="italic">ij</mml:mi>
+                          </mml:msub>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mstyle displaystyle="true">
+                            <mml:msubsup>
+                              <mml:mi mathsize="big">∑</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo>=</mml:mo>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                              <mml:mi>m</mml:mi>
+                            </mml:msubsup>
+                            <mml:mrow>
+                              <mml:msub>
+                                <mml:mi>b</mml:mi>
+                                <mml:mi mathvariant="italic">ij</mml:mi>
+                              </mml:msub>
+                              <mml:msub>
+                                <mml:mi>θ</mml:mi>
+                                <mml:mi>i</mml:mi>
+                              </mml:msub>
+                            </mml:mrow>
+                          </mml:mstyle>
+                        </mml:mrow>
+                      </mml:mfrac>
+                    </mml:mrow>
+                  </mml:mstyle>
+                </mml:mrow>
+              </mml:mstyle>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>The isoform expression levels can be estimated by maximizing this log-likelihood function. The log-likelihood function has been proved concave in previous work
+[<xref ref-type="bibr" rid="B3">3</xref>] and global optimum can be found by proper optimization algorithm.</p>
+    </sec>
+    <sec>
+      <title>Procedures of NURD</title>
+      <p>The input data of our NURD are the read-mapping file and gene annotation file. The output is isoform expression of each gene. Figure 
+<xref ref-type="fig" rid="F1">1</xref> shows the detailed flowchart of the algorithm.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Flowchart of NURD algorithm.</bold> Using NURD to estimate the isoform expression mainly consists of five steps: <bold>(1)</bold> read mapping, which is not a part of NURD, but the preparation for it; <bold>(2)</bold> getting gene annotation; <bold>(3)</bold> counting reads based on gene annotation and read mapping; <bold>(4)</bold> getting likelihood function based on read counts and gene annotation; <bold>(5)</bold> estimating isoform expression by maximize the likelihood.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-220-1"/>
+      </fig>
+      <p>Using NURD to estimate isoform expression typically involves the following five steps.</p>
+      <p>1 <bold>Read-mapping.</bold> This procedure is not a part of our algorithm, but is a preparation step for it. There have been many read-mapping tools published, such as Bowtie
+[<xref ref-type="bibr" rid="B8">8</xref>] or Tophat
+[<xref ref-type="bibr" rid="B9">9</xref>]. The current implementation of NURD requires that the reads mapping file be in the SAM format.</p>
+      <p>2 <bold>Gene annotation.</bold> Gene annotation file can be downloaded from a database or assembled by another software such as Cufflinks
+[<xref ref-type="bibr" rid="B5">5</xref>]. The current implementation of NURD requires that the gene annotation file be in the GTF format or refflat format. We extract the basic information of all genes from the gene annotation file, including gene names, number of isoforms and isoform names, number of exons of each gene, length of each exon, and gene structure. Gene structure information tells which exons are contained by each isoform.</p>
+      <p>3 <bold>Reads counts.</bold> Using reads mapping file and gene annotation file, NURD gets read counts for all exons of all genes in the annotation file.</p>
+      <p>4 <bold>Log-likelihood function.</bold> Based on the information we get in step 2 and step 3, NURD calculates the GBC of the whole data, LBC for each gene and the bias-corrected gene structure matrix, and furthermore get the corrected log-likelihood function.</p>
+      <p>5 <bold>Expression estimation.</bold> After the log-likelihood functions are calculated, the major task for NURD is to infer the best expression estimations that maximize the log-likelihood functions. The optimization algorithm we use here is the binary search algorithm, which is very effective and widely used in dealing with search problem
+[<xref ref-type="bibr" rid="B10">10</xref>].</p>
+    </sec>
+    <sec>
+      <title>Implementation of the NURD software</title>
+      <p>The key step for the efficient implementation of the method is the optimization of the log-likelihood functions for all genes and isoforms. We use the binary interval search technique for the optimization.</p>
+    </sec>
+    <sec>
+      <title>Binary search for single-isoform genes</title>
+      <p>First, we will illustrate how to use the binary interval search technique to optimize the log-likelihood function if one gene has only one isoform.</p>
+      <p>The log-likelihood function has been proved to be concave in our previous work
+[<xref ref-type="bibr" rid="B3">3</xref>], so the optimization problem can be transformed to finding the point where the gradient function is equal to zero. Since the objective function is concave and the gene has only one isoform, the corresponding gradient function is a univariate monotone function, in which situation <italic>binary interval search</italic> can be used. Obviously, the log-likelihood function is a real number function and the search space is a real number interval, so the objective of the algorithm is to find a very short interval to cover the optimum point. We initialize the search algorithm with a large enough interval and after each step of binary search algorithm, the length of the interval will shrink to half of the previous interval’s length. As the algorithm goes on, the length of interval will exponentially decrease. As a result, given the precision limit ϵ which is a small real number, the running time complexity of finding the interval covering the optimum point with the gradient equal to zero is O(log(1/ϵ)) .</p>
+      <p>Gradient ascending algorithm
+[<xref ref-type="bibr" rid="B11">11</xref>] is another technique that is widely used in optimization problem. The binary search algorithm has advantages over the gradient ascending algorithm: Binary search algorithm guarantees to converge to the optimum point in O(log(1/ϵ)), which is really a short time and is fixed given the precision ϵ, while time complexity of gradient ascending algorithm usually depends on step length and the shape of the optimized function. If the step size is not proper, it can be sometime difficult for gradient ascending algorithms to converge. Binary search algorithm doesn’t need to find the proper step size. In some kind of gradient ascending algorithm, there need be another procedure called <italic>line search</italic> for finding a proper step size.</p>
+      <p>A limitation of binary search compared with gradient ascending algorithm is that the binary search is not as general as the latter for it requires the optimized function to be concave. This is not a problem for the problem in NURD as the log-likelihood function in NURD has been proved concave.</p>
+    </sec>
+    <sec>
+      <title>Coordinate binary search for multi-isoform genes</title>
+      <p>Because binary search is a 1-dimension search technique, it can only handle the optimization problem of univariate functions. When estimating the expressions of multi-isoform genes, the objective function will be a multivariate function and we need to use coordinate binary search technique. The strategy of coordinate binary algorithm is described in the following pseudo code:</p>
+      <p>In the innermost loop, we hold all the expressions of isoforms fixed except for some <italic>θ</italic><sub><italic>i</italic></sub> and the log-likelihood function degenerates to a 1-dimension function. In each step of innermost loop, we maximize the log-likelihood with respect to <italic>θ</italic><sub><italic>i</italic></sub>, given the expressions of other isoforms. Because the log-likelihood function is concave, the 1-dimension objective function is also concave, in which case binary search is suitable.</p>
+      <p>The pseudo code clearly shows that after each step of the innermost loop, the log-likelihood function will ascend in some degree. As the log-likelihood function is concave, the global optimum will be found after a number of iterations.</p>
+      <p>The coordinate optimization in 2-dimension case is illustrated in Figure 
+<xref ref-type="fig" rid="F2">2</xref>.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Illustration of 2-dimension coordinate binary search algorithm.</bold> This is a visualization of a bivariate concave function with its contours. The maximum point is (1, 2). The arrowed line segments show the procedures of coordinate binary search algorithm when optimizing this function. The initial search point is (2.5, 0.5) and search direction is parallel with y axis. In this step of optimization, we fixed x = 2.5 and the bivariate function degenerated in to a univariate function with respect to only y. Since the original function is concave, this degenerated function is also concave and can be optimized by binary search algorithm. After we get the optimum of this degenerated function, the next step of coordinate binary search algorithm is to fix y to the current optimum’s projection on y axis and search in the direction parallel with x axis. These procedures are iterated and the optimum of this function will be finally reached.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-220-2"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Usage of the software</title>
+      <p>NURD is implemented in C++ and the runtime environment is the Linux systems. The source code is available for free for academic use at <ext-link ext-link-type="uri" xlink:href="http://bioinfo.au.tsinghua.edu.cn/software/NURD/">http://bioinfo.au.tsinghua.edu.cn/software/NURD/</ext-link>. After getting the source code, one can compile it and get the executable file by simply using <italic>make</italic> command. The software can be efficiently executed with command line inputs. The acceptable gene annotation file format is GTF and refFlat. The acceptable read mapping file is SAM. Short reads should be mapped to genome reference.</p>
+      <p>The current implementation has not taken the characteristic of paired-end sequencing into consideration, which means NURD regards paired reads as two independent single end reads.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <p>In this section, we will mainly focus on the performance of the NURD implementation in terms of accuracy of estimation, computing speed and memory requirement by comparing it with other three published isoform expression estimation related tools. Cufflinks
+[<xref ref-type="bibr" rid="B5">5</xref>] is a widely used tool in RNA-Seq data analysis. It can be used to estimate isoform level expression and assemble the new transcripts based on the RNA-Seq reads. In this manuscript, we will only consider the expression estimation function of Cufflinks for the consideration of fairness of the comparison between different tools. Cufflinks offers an option –G to estimate expression without assembling the transcripts. Cufflinks can also do bias correction if option –b is specified. RSEM
+[<xref ref-type="bibr" rid="B4">4</xref>,<xref ref-type="bibr" rid="B6">6</xref>] is another published expression estimation related tool. RSEM is based on a generative model and estimate transcripts’ expression by EM algorithm. When running experiments on RSEM, we will only consider the time and space complexity of parsing reads mapping file and EM algorithm, i.e. the sub-tools named <italic>rsem-parse-alignments</italic> and <italic>rsem-run-em</italic> of RSEM, which are the most important parts of this tool when estimating the isoforms’ expression. Furthermore, we don’t specify the option of <italic>--calc-ci</italic> and no confidence interval is estimated. eXpress
+[<xref ref-type="bibr" rid="B7">7</xref>] is a recently published tool to estimate isoform level expression with RNA-Seq data. It’s based on online EM algorithm, which processes data one fragment at a time.</p>
+    <sec>
+      <title>Comparing the estimation accuracy on simulated data</title>
+      <p>A systematic comparison with existing methods on the accuracy of estimating isoform expression has been conducted in Wu et al.
+[<xref ref-type="bibr" rid="B3">3</xref>] that presented the non-parametric method for correcting non-uniform read distribution. Significant advantages over the compared methods have been observed. However, some available tools have been updated since then and some of them also have taken non-uniform distriubion into consideration. Therefore, we further conducted experiments to compare the estimation accuracy of NURD with other recently proposed or updated tools on a set of simulated datasets. The simulations were done with the software flux simulator
+[<xref ref-type="bibr" rid="B12">12</xref>] and the simulated datasets are short read sequences in fastq format. We simulated different sequencing depths, with single-end reads of the length 75 bp sampled from genes of the human genome. Both reference and annotation are from UCSC’s human database (<ext-link ext-link-type="uri" xlink:href="http://hgdownload.cse.ucsc.edu/downloads.html#human">http://hgdownload.cse.ucsc.edu/downloads.html#human</ext-link>). We choose all genes on chromosome 1 to generate the simulated data. NURD and Cufflinks require the reads be mapped to genome reference, while RSEM and eXpress require the reads be mapped to transcriptome reference. Therefore we mapped the reads to both the reference genome and transcriptome.</p>
+      <p>The measurement of accuracy we use is Major Isoform Recovery Rate (MIRR for short)
+[<xref ref-type="bibr" rid="B3">3</xref>]. MIRR is defined as the percentage of genes whose major isoforms are correctly identified and it’s a robust measurement of the accuracy of some estimated result. Higher MIRR indicates the higher accuracy of estimation. To simplify the comparison, we only focus on the genes on chromosome 1 annotated with two alternative isoforms. We also filter out the genes that share some common exon regions with other genes. There are 391 genes used in total to compare the MIRR of the different tools. The true expression levels in the simulation data can be found in Profile (.PRO) file generated by the flux simulator.</p>
+      <p>The sequencing depth is defined as the total number of reads generated by software flux simulator. The sequencing depths of our simulating experiments range from 0.01 million reads to 10 million reads sampled from chromosome 1, which covers the typical sequencing depths in current RNA-Seq research.</p>
+      <p>Figure 
+<xref ref-type="fig" rid="F3">3</xref> summaries the accuracies of the compared tools on the simulated data. We can see that the accuracy of RSEM, NURD and Cufflinks are very close with each other. All of them perform better when the sequencing is deeper. eXpress does not perform well using the default parameters. By specifying eXpress’s option –B with 10 or 20, which will cause the additional batch EM rounds, the accuracy becomes closer to those of the other methods at moderate sequencing depths, but the performance degrades when the sequencing depth is higher. Also using the –B 10 or 20 option causes the running time to rise to about ten or twenty times of that with the default option (Table 
+<xref ref-type="table" rid="T1">1</xref>). Although there’s a significant improvement by specifying the –B 10 option when compared with the accuracy with default option, the further improvement by specifying the –B 20 option is small.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Comparison of estimation accuracies.</bold> Isoform expression estimation accuracies (measured by MIRR) of compared tools on the simulation data generated with genes on human chromosome 1 with different sequencing depths.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-220-3"/>
+      </fig>
+      <table-wrap position="float" id="T1">
+        <label>Table 1</label>
+        <caption>
+          <p>Comparison of computation performances on 3 typical RNA-Seq datasets</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th rowspan="2" align="center" valign="bottom"> <hr/></th>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>Marioni data</bold>
+                <hr/>
+              </th>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>Yale data</bold>
+                <hr/>
+              </th>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>Encode data</bold>
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>(size:3.7 M, length:36 bp)</bold>
+                <hr/>
+              </th>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>(size:39 M, length:74 bp)</bold>
+                <hr/>
+              </th>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>(size:213 M, length:76 bp)</bold>
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th align="center">
+                <bold>Methods</bold>
+              </th>
+              <th align="center">
+                <bold>Time</bold>
+              </th>
+              <th align="center">
+                <bold>Memory</bold>
+              </th>
+              <th align="center">
+                <bold>Time</bold>
+              </th>
+              <th align="center">
+                <bold>Memory</bold>
+              </th>
+              <th align="center">
+                <bold>Time</bold>
+              </th>
+              <th align="center">
+                <bold>Memory</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="center" valign="bottom">
+                <bold>NURD</bold>
+                <hr/>
+              </td>
+              <td align="center" valign="bottom">
+                <bold>36 s</bold>
+                <hr/>
+              </td>
+              <td align="center" valign="bottom">
+                <bold>60 MB</bold>
+                <hr/>
+              </td>
+              <td align="center" valign="bottom">
+                <bold>3 m 37 s</bold>
+                <hr/>
+              </td>
+              <td align="center" valign="bottom">
+                <bold>60 MB</bold>
+                <hr/>
+              </td>
+              <td align="center" valign="bottom">
+                <bold>19 m 27 s</bold>
+                <hr/>
+              </td>
+              <td align="center" valign="bottom">
+                <bold>60 MB</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" valign="bottom">Cufflinks<hr/></td>
+              <td align="center" valign="bottom">1 h 31 m 25 s<hr/></td>
+              <td align="center" valign="bottom">417 MB<hr/></td>
+              <td align="center" valign="bottom">2 h 43 m 17 s<hr/></td>
+              <td align="center" valign="bottom">776 MB<hr/></td>
+              <td align="center" valign="bottom">3 h 55 m 49 s<hr/></td>
+              <td align="center" valign="bottom">2.58GB<hr/></td>
+            </tr>
+            <tr>
+              <td align="center" valign="bottom">RSEM<hr/></td>
+              <td align="center" valign="bottom">1 h 38 m 11 s<hr/></td>
+              <td align="center" valign="bottom">832 MB<hr/></td>
+              <td align="center" valign="bottom">9 h 00 m 55 s<hr/></td>
+              <td align="center" valign="bottom">3.65GB<hr/></td>
+              <td align="center" valign="bottom">26 h 13 m 6 s<hr/></td>
+              <td align="center" valign="bottom">10.3GB<hr/></td>
+            </tr>
+            <tr>
+              <td align="center" valign="bottom">eXpress<hr/></td>
+              <td align="center" valign="bottom">17 m 50s<hr/></td>
+              <td align="center" valign="bottom">1.44GB<hr/></td>
+              <td align="center" valign="bottom">41 m 17 s<hr/></td>
+              <td align="center" valign="bottom">1.44GB<hr/></td>
+              <td align="center" valign="bottom">1 h 41 m 26 s<hr/></td>
+              <td align="center" valign="bottom">1.44GB<hr/></td>
+            </tr>
+            <tr>
+              <td align="center" valign="bottom">eXpress*<hr/></td>
+              <td align="center" valign="bottom">1 h 1 m 5 s<hr/></td>
+              <td align="center" valign="bottom">1.44GB<hr/></td>
+              <td align="center" valign="bottom">3 h 42 m 41 s<hr/></td>
+              <td align="center" valign="bottom">1.44GB<hr/></td>
+              <td align="center" valign="bottom">13 h 26 m 39 s<hr/></td>
+              <td align="center" valign="bottom">1.44GB<hr/></td>
+            </tr>
+            <tr>
+              <td align="center">eXpress**</td>
+              <td align="center">1 h 45 m 54 s</td>
+              <td align="center">1.44GB</td>
+              <td align="center">6 h 51 m 13 s</td>
+              <td align="center">1.44GB</td>
+              <td align="center">25 h 3 m 41 s</td>
+              <td align="center">1.44GB</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>eXpress: results with the default parameters.</p>
+          <p>eXpress*: results by specifying option –B with 10.</p>
+          <p>eXpress**: results by specifying option –B with 20.</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+    <sec>
+      <title>Comparing running time and memory usage on real data</title>
+      <p>To compare the running time and memory usage of different tools, we conduct some experiments on three real datasets with different sequencing depths. The first data set is an early RNA-Seq data set published by Marioni et al.
+[<xref ref-type="bibr" rid="B13">13</xref>] [SRA Accession Number: SRA000299]. We refer it as the Marioni data for short. It contains the least and shortest reads among the three datasets. There are about 3.7 M single-end reads of 36 bp length. The second data set is referred as the Yale data [SRA Accession Number: ERP000799], which was submitted by Yale Center for Genomic Analysis, 2013. We call this data as Yale data for short. It represents a moderate scale of current RNA-Seq data. There are about 39 M single-end reads of 74 bp. The largest data set is an ENCODE data with about 213 M paired-end reads of 76 bp [ENCODE Data Coordination Center: wgEncodeEH000140]. This data was granted by Gingeras, CSHL, 2010. We call this data as Encode data for short.</p>
+      <p>Both Cufflinks and RSEM support multi-threads computation, while NURD does not support in current version of implementation. So we will only consider the single-thread computational mode in our experiments. eXpress will automatically compute in multi-thread mode and the its running time is somehow incomparable with the other three tools. If the computer has only one core, the eXpress’s running time may be longer than the experiments in this manuscript. All the experiments are conducted on an 8-core 2.1GHz linux server with a 32GB RAM.</p>
+      <p>Table 
+<xref ref-type="table" rid="T1">1</xref> summarizes the running time and memory usage of the compared software on the three datasets. We can see the advantages of NURD over the other three tools on both running time and memory usage are significant. This is partially because that the other three tools are all based on the EM algorithm, which usually requires a number of iterations between E-step and M-step. Each M-step alone needs to solve an optimization problem whose complexity can be comparable with the optimization problem in NURD. Besides, both Cufflinks and eXpress estimate the confidence interval of isoform expression along with point estimation. Cufflinks adopts importance sampling from posterior distribution to do confidence interval estimation, which is usually very time-consuming.</p>
+      <p>The main reason that NURD consume much less memory than the other three tools is that NURD estimate isoform expression based on the read counts in each exon of each gene. Read counts compress the information of large mapping file into a small space which is only slightly larger than the corresponding annotation information. The computation based on read counts usually can save a lot of running time and consumed memory. The procedure of NURD mainly consists of following three steps: parsing the annotation file, parsing the read-mapping file and expression estimation. The running time and memory usage of the first and last steps roughly scales linearly with the annotation file size, while the time spent on the second step scales linearly only with the number of reads. The memory usage in expression estimation will not increase as the reads number grows, because NURD is based on read counting in exons and the memory usage only scales linearly with the annotation file size. Typically, the total time will increase roughly as a linearly function of the number of reads since RNA-Seq produce more and more short reads and the time spent on reads parsing will dominant the total running time.</p>
+    </sec>
+  </sec>
+  <sec sec-type="conclusions">
+    <title>Conclusion</title>
+    <p>We developed an efficient and robust implementation of Wu et al’s algorithm. It takes the nonparametric read distributions into consideration to improve the accuracy of isoform expression estimation. Experiments on simulated and real datasets have shown that NURD performs one of the best among the compared tools in terms estimation accuracy, and has significant advantage on computational performance. If one wants to get expression estimating from RNA-Seq data both accurately and quickly, NURD could be a competitive alternative.</p>
+  </sec>
+  <sec>
+    <title>Availability and requirements</title>
+    <p><bold>Project name:</bold> NURD</p>
+    <p><bold>Project home page:</bold><ext-link ext-link-type="uri" xlink:href="http://bioinfo.au.tsinghua.edu.cn/software/NURD/">http://bioinfo.au.tsinghua.edu.cn/software/NURD/</ext-link>.</p>
+    <p><bold>Operating system(s):</bold> Linux</p>
+    <p><bold>Programming language:</bold> C++</p>
+    <p><bold>License:</bold> freeware</p>
+    <p><bold>Any restrictions to use by non-academics:</bold> None</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors’ contributions</title>
+    <p>XZ designed the work. XM wrote the software and conducted the experiments. XM and XZ analyzed the results and wrote the manuscript. Both authors read and approved the final manuscript.</p>
+  </sec>
+  <sec>
+    <title>Authors’ information</title>
+    <p>XM, graduate student of Department of Automation, Tsinghua University, Beijing 100084, China. XZ, Ph.D., Professor of Pattern Recognition and Bioinformatics. Director of Bioinformatics Division, TNLIST. Deputy Director of MOE Key Laboratory of Bioinformatics. Department of Automation, Tsinghua University, Beijing 100084, China.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>This work is supported in part by the National Basic Research Program of China (2012CB316504) and the Hi-tech Research and Development Program of China (2012AA020401).</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ali</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Williams</surname>
+          <given-names>BA</given-names>
+        </name>
+        <name>
+          <surname>Kenneth</surname>
+          <given-names>MC</given-names>
+        </name>
+        <name>
+          <surname>Lorian</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Barbara</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Mapping and quantifying mammalian transcriptomes by RNA-Seq[J]</article-title>
+        <source>Nat Methods</source>
+        <year>2008</year>
+        <volume>14</volume>
+        <issue>7</issue>
+        <fpage>621</fpage>
+        <lpage>628</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1226</pub-id>
+        <?supplied-pmid 18516045?>
+        <pub-id pub-id-type="pmid">18516045</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Jiang</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>WH</given-names>
+        </name>
+        <article-title>Statistical inferences for isoform expression in RNA-Seq[J]</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>14</volume>
+        <issue>8</issue>
+        <fpage>1026</fpage>
+        <lpage>1032</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp113</pub-id>
+        <?supplied-pmid 19244387?>
+        <pub-id pub-id-type="pmid">19244387</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zhengpeng</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>X</given-names>
+        </name>
+        <article-title>Using non-uniform read distribution models to improve isoform expression inference in RNA-Seq</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>14</volume>
+        <issue>4</issue>
+        <fpage>502</fpage>
+        <lpage>508</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq696</pub-id>
+        <?supplied-pmid 21169371?>
+        <pub-id pub-id-type="pmid">21169371</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Ruotti</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Stewart</surname>
+          <given-names>RM</given-names>
+        </name>
+        <name>
+          <surname>Thomson</surname>
+          <given-names>JA</given-names>
+        </name>
+        <name>
+          <surname>Dewey</surname>
+          <given-names>CN</given-names>
+        </name>
+        <article-title>RNA-Seq gene expression estimation with read mapping uncertainty</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>14</volume>
+        <issue>4</issue>
+        <fpage>493</fpage>
+        <lpage>500</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp692</pub-id>
+        <?supplied-pmid 20022975?>
+        <pub-id pub-id-type="pmid">20022975</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Williams</surname>
+          <given-names>BA</given-names>
+        </name>
+        <name>
+          <surname>Pertea</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Mortazavi</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Kwan</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>van Baren</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <name>
+          <surname>Wold</surname>
+          <given-names>BJ</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>Transcript assembly and quantification by RNA-Seq reveals unannotated transcripts and isoform switching during cell differentiation</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2010 May</year>
+        <volume>14</volume>
+        <issue>5</issue>
+        <fpage>511</fpage>
+        <lpage>515</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt.1621</pub-id>
+        <pub-id pub-id-type="pmid">20436464</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Dewey</surname>
+          <given-names>CN</given-names>
+        </name>
+        <article-title>RSEM: accurate transcript quantification from RNA-Seq data with or without a reference genome</article-title>
+        <source>BMC Bioinforma</source>
+        <year>2011 Aug 4</year>
+        <volume>14</volume>
+        <fpage>323</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-12-323</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Roberts</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>Streaming fragment assignment for real-time analysis of sequencing experiments</article-title>
+        <source>Nat Methods</source>
+        <year>2013 Jan</year>
+        <volume>14</volume>
+        <issue>1</issue>
+        <fpage>71</fpage>
+        <lpage>73</lpage>
+        <pub-id pub-id-type="pmid">23160280</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>14</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-3-r25</pub-id>
+        <?supplied-pmid 19261174?>
+        <pub-id pub-id-type="pmid">19261174</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>TopHat: discovering splice junctions with RNA-Seq</article-title>
+        <source>Bioinformatics</source>
+        <year>2009 May 1</year>
+        <volume>14</volume>
+        <issue>9</issue>
+        <fpage>1105</fpage>
+        <lpage>1111</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp120</pub-id>
+        <pub-id pub-id-type="pmid">19289445</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Knuth</surname>
+          <given-names>D</given-names>
+        </name>
+        <source>Searching an Ordered Table. The Art of Computer Programming. Volume 3: Sorting and Searching</source>
+        <year>1997</year>
+        <edition>3</edition>
+        <publisher-name>Boston: Addison-Wesley</publisher-name>
+        <fpage>409</fpage>
+        <lpage>426</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Stephen</surname>
+          <given-names>B</given-names>
+        </name>
+        <source>Gradient descent method</source>
+        <series>Convex Optimization</series>
+        <year>2004</year>
+        <edition>1</edition>
+        <publisher-name>Cambridge: Cambridge University Press</publisher-name>
+        <fpage>466</fpage>
+        <lpage>489</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Griebel</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Zacher</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Ribeca</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Raineri</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Lacroix</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Guigó</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Sammeth</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Modelling and simulating generic RNA-Seq experiments with the flux simulator</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2012 Nov 1</year>
+        <volume>14</volume>
+        <issue>20</issue>
+        <fpage>10073</fpage>
+        <lpage>10083</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gks666</pub-id>
+        <pub-id pub-id-type="pmid">22962361</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marioni</surname>
+          <given-names>JC</given-names>
+        </name>
+        <name>
+          <surname>Mason</surname>
+          <given-names>CE</given-names>
+        </name>
+        <name>
+          <surname>Mane</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Stephens</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gilad</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>RNA-seq: an assessment of technical reproducibility and comparison with gene expression arrays</article-title>
+        <source>Genome Res</source>
+        <year>2008 Sep</year>
+        <volume>14</volume>
+        <issue>9</issue>
+        <fpage>1509</fpage>
+        <lpage>1517</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.079558.108</pub-id>
+        <pub-id pub-id-type="pmid">18550803</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

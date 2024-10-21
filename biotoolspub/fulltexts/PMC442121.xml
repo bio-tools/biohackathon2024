@@ -1,0 +1,1935 @@
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title>BMC Bioinformatics</journal-title>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">442121</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-5-71</article-id>
+    <article-id pub-id-type="pmid">15180907</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-5-71</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Evaluation of several lightweight stochastic context-free grammars for RNA secondary structure prediction</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib id="A1" contrib-type="author">
+        <name>
+          <surname>Dowell</surname>
+          <given-names>Robin D</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>robin@genetics.wustl.edu</email>
+      </contrib>
+      <contrib id="A2" corresp="yes" contrib-type="author">
+        <name>
+          <surname>Eddy</surname>
+          <given-names>Sean R</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>eddy@genetics.wustl.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Howard Hughes Medical Institute and Department of Genetics, Washington University School of Medicine, 4444 Forest Park Blvd. Box 8510, St. Louis, MO 63108 USA</aff>
+    <pub-date pub-type="collection">
+      <year>2004</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>4</day>
+      <month>6</month>
+      <year>2004</year>
+    </pub-date>
+    <volume>5</volume>
+    <fpage>71</fpage>
+    <lpage>71</lpage>
+    <ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/1471-2105/5/71"/>
+    <history>
+      <date date-type="received">
+        <day>19</day>
+        <month>4</month>
+        <year>2004</year>
+      </date>
+      <date date-type="accepted">
+        <day>4</day>
+        <month>6</month>
+        <year>2004</year>
+      </date>
+    </history>
+    <copyright-statement>Copyright © 2004 Dowell and Eddy; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL.</copyright-statement>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>RNA secondary structure prediction methods based on probabilistic modeling can be developed using stochastic context-free grammars (SCFGs). Such methods can readily combine different sources of information that can be expressed probabilistically, such as an evolutionary model of comparative RNA sequence analysis and a biophysical model of structure plausibility. However, the number of free parameters in an integrated model for consensus RNA structure prediction can become untenable if the underlying SCFG design is too complex. Thus a key question is, what small, simple SCFG designs perform best for RNA secondary structure prediction?</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>Nine different small SCFGs were implemented to explore the tradeoffs between model complexity and prediction accuracy. Each model was tested for single sequence structure prediction accuracy on a benchmark set of RNA secondary structures.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>Four SCFG designs had prediction accuracies near the performance of current energy minimization programs. One of these designs, introduced by Knudsen and Hein in their PFOLD algorithm, has only 21 free parameters and is significantly simpler than the others.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Many RNAs conserve a base-paired secondary structure that is important to their function [<xref ref-type="bibr" rid="B1">1</xref>,<xref ref-type="bibr" rid="B2">2</xref>]. Accurate RNA secondary structure predictions help in understanding an RNA's function, in identifying novel functional RNAs in genome sequences, and in recognizing evolutionarily related RNAs in other organisms. Most RNA secondary structure prediction algorithms are based on energy minimization [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B7">7</xref>]. Alternatively, probabilistic modeling approaches using stochastic context-free grammars (SCFGs) can be used [<xref ref-type="bibr" rid="B8">8</xref>-<xref ref-type="bibr" rid="B10">10</xref>]. A potential advantage of a probabilistic modeling approach is that it is more readily extended to include other sources of statistical information that constrain a structure prediction.</p>
+    <p>For example, an outstanding problem is consensus RNA secondary structure prediction for a small number of structurally homologous RNA sequences. Comparative sequence analysis is probably the most powerful source of information for RNA structure prediction [<xref ref-type="bibr" rid="B11">11</xref>-<xref ref-type="bibr" rid="B14">14</xref>]. Homologous RNAs tend to conserve a common base-paired secondary structure, and conserved base-pairing interactions are revealed by compensatory mutations in multiple RNA sequence alignments [<xref ref-type="bibr" rid="B12">12</xref>,<xref ref-type="bibr" rid="B15">15</xref>-<xref ref-type="bibr" rid="B19">19</xref>]. Comparative sequence analysis is extremely reliable, and has produced strikingly accurate RNA structure predictions [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B20">20</xref>], but one is usually not blessed with the large number of sequences (nor the time and human expertise) that a purely comparative approach requires. There is a need for automated approaches that combine evolutionary information from comparative sequence analysis with biophysical knowledge of what structures are most plausible.</p>
+    <p>However, it is not clear how best to combine probabilistic evolutionary information with the thermodynamic parameters of the standard energy minimization model into a meaningful, mathematically defensible objective function. Clearly one can use the Gibbs-Boltzmann equation to convert an <italic>overall </italic>ΔG for a structure into a probability of that structure in an ensemble of all possible structures [<xref ref-type="bibr" rid="B21">21</xref>,<xref ref-type="bibr" rid="B22">22</xref>], but it is not possible to interpret individual energy <italic>parameters </italic>in the thermodynamic model as log probabilities. Consequently, nearly all consensus RNA structure prediction methods that have been introduced optimize an <italic>ad hoc </italic>weighted combination of thermodynamic parameters and comparative sequence analysis terms, either for consensus structure prediction from predetermined multiple RNA sequence alignments [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B23">23</xref>-<xref ref-type="bibr" rid="B26">26</xref>], or for the harder problem of simultaneous folding and alignment of initially unaligned RNAs [<xref ref-type="bibr" rid="B27">27</xref>-<xref ref-type="bibr" rid="B34">34</xref>]. A notable exception is the approach described by Knudsen and Hein, who developed a full probabilistic model that combines an explicit stochastic evolutionary model with an SCFG-based probabilistic model of structure plausibility, so they can find a consensus structure that optimizes a joint probability of that structure and multiple aligned homologous sequences [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B26">26</xref>].</p>
+    <p>In addition to the Knudsen and Hein approach, at least three other SCFG-based approaches to RNA secondary structure prediction have been described. These include an SCFG-based mirror of the standard Zuker algorithm for single-sequence structure prediction [<xref ref-type="bibr" rid="B35">35</xref>], and two "pair-SCFG" approaches for simultaneous folding and alignment of two homologous RNAs [<xref ref-type="bibr" rid="B31">31</xref>,<xref ref-type="bibr" rid="B36">36</xref>]. All four papers use different underlying SCFG designs. No group appears to have explored different possible SCFG designs before settling on the one they used. Only Knudsen and Hein reported any benchmark results for the accuracy of their secondary structure predictions [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B26">26</xref>]. It is not known how different designs affect the accuracy of SCFG-based secondary structure prediction. Flexibility in model design comes from the fact that SCFG probability parameter estimation can be done by counting frequencies in databases of trusted RNA secondary structures, so it is easy to parameterize different models that vary in complexity and capture different features of RNA structure. In contrast, energy minimization algorithms are based on a standard set of thermodynamic parameters, most of which are determined experimentally [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B7">7</xref>], so it would take substantial effort to develop a radically new thermodynamic model.</p>
+    <p>Design decisions are likely to be particularly important in consensus structure prediction applications, because a natural trade-off arises. A complex RNA folding SCFG might predict structures for single sequences better than a simpler model, but extending a complex RNA folding SCFG to deal with multiple evolutionarily correlated sequences can easily result in a combinatorial explosion of parameters, making the model impractical. One wants to build consensus prediction models on top of small, simple (i.e. "lightweight") SCFG designs that sacrifice as little RNA structure prediction accuracy as possible, relative to state-of-the-art energy minimization approaches.</p>
+    <p>Here we explore the impact of different SCFG designs on single-sequence RNA secondary structure prediction accuracy. Our goal is to identify lightweight SCFG model designs that can serve as cores underlying more complex integrated approaches. We have implemented nine different lightweight SCFGs, estimated their parameters from rRNA structure data, evaluated their prediction accuracy on a benchmark of trusted RNA structures, and compared these results to the accuracy of energy minimization methods.</p>
+  </sec>
+  <sec>
+    <title>Algorithms</title>
+    <p>Dynamic programming algorithms for non-pseudoknotted RNA secondary structure prediction work by calculating scores for optimal foldings for all subsequences <italic>x</italic><sub><italic>i</italic></sub>...<italic>x</italic><sub><italic>j</italic></sub>, starting with subsequences of zero length and working outwards recursively on increasingly longer sequences [<xref ref-type="bibr" rid="B2">2</xref>]. For example, an example of an RNA folding algorithm [<xref ref-type="bibr" rid="B3">3</xref>] is:</p>
+    <p>Initialization:</p>
+    <p>γ(<italic>i</italic>, <italic>i </italic>- 1) = 0</p>
+    <p>γ(<italic>i</italic>, <italic>i</italic>) = 0</p>
+    <p>Iteration:</p>
+    <p>
+      <inline-graphic xlink:href="1471-2105-5-71-i1.gif"/>
+    </p>
+    <p>δ(<italic>x</italic><sub><italic>i</italic></sub>) and δ(<italic>x</italic><sub><italic>j</italic></sub>) are scores for single-stranded nucleotides, and δ(<italic>x</italic><sub><italic>i</italic></sub>, <italic>x</italic><sub><italic>j</italic></sub>) are scores for base pairs. For a sequence of length L, the score calculation terminates when γ(1, <italic>L</italic>) is calculated, the score of the best structure on the complete sequence. The optimal structure itself is retrieved by a traceback of the dynamic programming matrix.</p>
+    <p>When δ(<italic>x</italic><sub><italic>i</italic></sub>, <italic>x</italic><sub><italic>j</italic></sub>) = 1 for base pairs and all other scores are zero, this algorithm finds the structure that maximizes the number of base pairs with the final score γ(1, <italic>L</italic>) as the number of base pairs in the optimal structure [<xref ref-type="bibr" rid="B3">3</xref>]. In the more complicated loop-dependent algorithms (e.g. the Zuker algorithm), the algorithm is fundamentally the same (though with more terms, more matrices, and minimization instead of maximization); but the scores are energy parameters, and the final score is Δ<italic>G</italic>, the calculated thermodynamic stability of the optimal structure [<xref ref-type="bibr" rid="B2">2</xref>].</p>
+    <p>In a probabilistic approach, the algorithm again remains fundamentally the same, but the parameters are log probabilities (we will call the parameter set Θ) and the final score is the log probability of the optimal structure (<inline-graphic xlink:href="1471-2105-5-71-i2.gif"/>) and the sequence (<bold>x</bold>) given the model parameters, log <italic>P</italic>(<inline-graphic xlink:href="1471-2105-5-71-i2.gif"/>, <bold>x</bold>|Θ). This is the quantity we need for statistical inference approaches [<xref ref-type="bibr" rid="B37">37</xref>,<xref ref-type="bibr" rid="B38">38</xref>]. Probabilities must sum to one, so we have to be sure that for our model, <inline-graphic xlink:href="1471-2105-5-71-i3.gif"/> over all possible sequences <bold>x </bold>and all possible structures <italic>v </italic>for those sequences. But there are an infinite number of possible sequences and a combinatorial explosion of possible structures, so we can't enumerate all these possibilities; we need a formal system to be confident that we can form a correct probabilistic model.</p>
+    <p>Stochastic context-free grammars (SCFGs) are that formal system. SCFGs are probabilistic models capable of capturing the long range, nested, pairwise correlations, such as those induced by base pairing in non-pseudoknotted RNA secondary structures [<xref ref-type="bibr" rid="B8">8</xref>-<xref ref-type="bibr" rid="B10">10</xref>]. Here we give a somewhat informal introduction to SCFGs, specifically as they apply to RNA folding, starting with (nonstochastic) context-free grammars. For a review of the use of SCFGs for RNA folding, see [<xref ref-type="bibr" rid="B10">10</xref>]. For more formal descriptions of CFGs, see [<xref ref-type="bibr" rid="B39">39</xref>-<xref ref-type="bibr" rid="B41">41</xref>].</p>
+    <sec>
+      <title>Context-free grammars</title>
+      <p>A context-free grammar <inline-graphic xlink:href="1471-2105-5-71-i4.gif"/> can be defined by <inline-graphic xlink:href="1471-2105-5-71-i4.gif"/> = (<bold>V</bold>, <bold>T</bold>, <bold>P</bold>, <italic>S</italic>) where:</p>
+      <p>• <bold>V </bold>is a finite set of nonterminal symbols ("states"),</p>
+      <p>• <bold>T </bold>is a finite set of terminal symbols (for RNA: {<italic>a</italic>, <italic>c</italic>, <italic>g</italic>, <italic>u</italic>}),</p>
+      <p>• <bold>P </bold>is a finite set of <italic>production rules </italic>(described below), and</p>
+      <p>• <italic>S </italic>is the initial (start) nonterminal (<italic>S </italic>∈ <bold>V</bold>).</p>
+      <p><italic>Production rules </italic>describe how the grammar generates an observed symbol string in steps, starting from the initial start nonterminal <italic>S</italic>. Production rules take the form <italic>A </italic>→ α where <italic>A </italic>∈ <bold>V </bold>and α is any combination of nonterminals <bold>T </bold>and/or terminals <bold>V</bold>. By convention, capital letters denote nonterminal symbols and lower-case letters are terminals. <italic>S </italic>→ <italic>gSc </italic>is an example of a CFG production rule; it generates a 'g' and a 'c' terminal symbol in one correlated step. The ability to generate or score two or more correlated symbols in a single step is what gives CFGs the power to deal with base pairing.</p>
+      <p>At each step of a <italic>production </italic>from the grammar, one has a current string of terminals and/or nonterminals; one chooses a nonterminal, and transforms that nonterminal into a new substring using a valid production rule. This process starts with the initial string <italic>S</italic>, iterates until one arrives at a string consisting solely of terminal symbols.</p>
+      <p>For example, consider a "palindrome grammar" <bold>V </bold>= {<italic>S</italic>}, <bold>T </bold>= {<italic>a</italic>, <italic>b</italic>}, and <bold>P </bold>= {<italic>S </italic>→ <italic>aSa</italic>, <italic>S </italic>→ <italic>bSb</italic>, <italic>S </italic>→ ε}, where ε is a null string used as an ending production. This little grammar generates only strings consisting of palindromes of <italic>a </italic>and <italic>b </italic>symbols. RNA base pairing is essentially palindromic, except pairings are complements rather than identities. An example production is <italic>S </italic>⇒ <italic>aSa </italic>⇒ <italic>abSba </italic>⇒ <italic>abbSbba </italic>⇒ <italic>abbbba</italic>, resulting in the string <italic>abbbba</italic>. Note that the grammar produces this string in an nested fashion (as opposed to a left-to-right fashion, the way simpler string alignment algorithms work), and that this CFG efficiently describes the set of all palindromes over the alphabet {<italic>a</italic>, <italic>b</italic>}.</p>
+      <p>Now consider an example CFG that generates RNA structures: <bold>V </bold>= {<italic>S</italic>}, <bold>T </bold>= {<italic>a</italic>, <italic>c</italic>, <italic>g</italic>, <italic>u</italic>}, and <bold>P </bold>=</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-71-i5.gif"/>
+      </p>
+      <p>where '|' represents 'or' between production rules. The productions can be rewritten in a shorthand as:</p>
+      <p><italic>S </italic>→ <italic>aS</italic><inline-graphic xlink:href="1471-2105-5-71-i6.gif"/> | <italic>aS </italic>| <italic>Sa </italic>| <italic>SS </italic>| ε</p>
+      <p>where we are now using <italic>a </italic>generically to represent any single terminal symbol in <bold>T</bold>, and the rule <italic>S </italic>→ <italic>aS</italic><inline-graphic xlink:href="1471-2105-5-71-i6.gif"/> implies <italic>a </italic>basepairs with <inline-graphic xlink:href="1471-2105-5-71-i6.gif"/>. (We could also allow GU pairs here. In SCFGs, below, we will have probability scores for all 16 base pairs including noncanonical ones, or in the case of grammars that take base-pair stacking into account, the full 16 × 16 matrix of possibilities.)</p>
+      <p>A CFG derivation has an elegant representation known as a <italic>parse tree</italic>, π. Figure <xref ref-type="fig" rid="F1">1</xref> shows an example RNA structure and two example parse trees for the RNA CFG. Given appropriate production rules, a parse tree has a natural correspondence with an RNA secondary structure.</p>
+      <p>Nonstochastic CFGs are used in pattern search applications, where one represents an RNA structural consensus as a CFG and ask if a particular sequence matches or doesn't match that query. They are not useful for structure prediction. For the CFG above, for example, for any RNA sequence there will be a huge number of valid parse trees, each of which corresponds to a possible RNA secondary structure. However, our problem in structure prediction is not to determine whether an RNA sequence has at least one possible structure. Given a sequence, we want to score and rank the possible parse trees for that sequence to infer the optimal one. To score and rank parse trees, we need to use stochastic context free grammars. In addition, we need efficient algorithms for finding the optimal SCFG parse tree for a given sequence.</p>
+    </sec>
+    <sec>
+      <title>Stochastic context-free grammars</title>
+      <p>In an SCFG <inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, we associate a probability with each CFG production rule. The probabilities of the set of productions from any given nonterminal must sum to one. We refer to the full set of probabilities (the parameters of a model) as Θ. The probability <italic>P</italic>(<bold>x</bold>, π|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ) is the product of all the probabilities of the production rules used in a parse tree π for sequence <bold>x</bold>. An SCFG is a probabilistic model that describes a joint probability distribution <italic>P</italic>(x, π|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ) over all RNA sequences <bold>x </bold>and all possible parse trees π.</p>
+      <p>Given a parameterized SCFG (<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ) and a sequence <bold>x</bold>, the Cocke-Younger-Kasami (CYK) dynamic programming algorithm finds an optimal (maximum probability) parse tree <inline-graphic xlink:href="1471-2105-5-71-i7.gif"/> for a sequence <bold>x</bold>,</p>
+      <p><inline-graphic xlink:href="1471-2105-5-71-i7.gif"/> = argmax<sub>π </sub><italic>P</italic>(π, <bold>x</bold>|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ).</p>
+      <p>For notational and formal reasons, the CYK algorithm is usually described for SCFGs in a special "Chomsky normal form" with only two kinds of production rules, <italic>A </italic>→ <italic>AA </italic>and <italic>A </italic>→ <italic>a</italic>; any SCFG can provably be converted to a set of production rules of this form [<xref ref-type="bibr" rid="B10">10</xref>]. But in applications, it is convenient to avoid this conversion and express a CYK algorithm directly in terms of the grammar's own production rules. For an RNA SCFG based on the example grammar in the previous section, the CYK algorithm is:</p>
+      <p>Initialization:</p>
+      <p>γ(<italic>i</italic>, <italic>i </italic>- 1) = log <italic>p</italic>(<italic>S </italic>→ ε)</p>
+      <p>Iteration:</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-71-i8.gif"/>
+      </p>
+      <p>When the algorithm terminates, γ(1, <italic>L</italic>) is log<italic>P</italic>(<bold>x</bold>, <inline-graphic xlink:href="1471-2105-5-71-i7.gif"/>|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ), the log probability of the most probable parse tree <inline-graphic xlink:href="1471-2105-5-71-i7.gif"/> for the sequence <bold>x </bold>given the grammar <inline-graphic xlink:href="1471-2105-5-71-i4.gif"/> and parameters Θ. A traceback recovers this optimal parse tree.</p>
+      <p>The near-exact correspondence between the CYK algorithm and standard dynamic programming algorithms for RNA folding should be clear. SCFG algorithms are essentially the same as existing RNA folding algorithms, but the scoring system is probabilistic, based on factoring the score for a structure down into a sum of log probability terms, rather than factoring the structure into a sum of energy terms or arbitrary base-pair scores. The thermodynamic scoring parameters for energy minimization are largely derived by experimental melting studies of small model structures [<xref ref-type="bibr" rid="B7">7</xref>]; in contrast, SCFG log probability parameters are derived from frequencies observed in training sets of known RNA secondary structures. That is, instead of scoring a G-C pair stacked on a C-G base pair by adding a term for the free energy contribution of the GC/CG stack, an SCFG would add a log probability that GC/CG stacks are observed in known RNA structures.</p>
+      <p>A related SCFG algorithm, the Inside algorithm, is used to obtain the total probability of the sequence given the model summed over all parse trees,</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-71-i9.gif"/>
+      </p>
+      <p>The Inside algorithm replaces the max operations in CYK with sums and additions of terms with multiplications. It is analogous to the McCaskill algorithm for calculating partition functions using the thermodynamic model of RNA folding [<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B21">21</xref>]. Suboptimal parse trees can be sampled from their posterior probability distribution by a probabilistic traceback of the Inside matrix, analogous to techniques used for energy minimization algorithms [<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B42">42</xref>].</p>
+    </sec>
+    <sec>
+      <title>Grammar ambiguity</title>
+      <p>A grammar is said to be <italic>ambiguous </italic>when there is more than one possible parse tree for some sequence [<xref ref-type="bibr" rid="B39">39</xref>-<xref ref-type="bibr" rid="B41">41</xref>]. Any SCFG that will be useful for RNA secondary structure prediction must be ambiguous in this sense. We are interested in looking at all possible base paired structures for the sequence, represented as a set of possible parse trees, and finding the optimal (highest probability) one.</p>
+      <p>A more subtle form of grammar ambiguity concerns us here. The CYK algorithm finds the mathematically optimal parse tree <inline-graphic xlink:href="1471-2105-5-71-i7.gif"/>; we want the optimal secondary structure <inline-graphic xlink:href="1471-2105-5-71-i2.gif"/>. The optimal parse tree gives us the optimal structure if and only if there is a one to one correspondence between parse trees and secondary structures. However, a given secondary structure does not necessarily have a unique parse tree. For instance, consider the two possible parse trees for the example in Figure <xref ref-type="fig" rid="F1">1</xref>, both of which express the same set of base pairs but use different series of production rules. (We consider two structures to be identical if they have the same set of base pairs.) When multiple valid parse trees describe the same secondary structure, we call the grammar <italic>structurally ambiguous</italic>. If a grammar is structurally ambiguous, then we cannot equate the probability of a parse tree with the probability of its structure [<xref ref-type="bibr" rid="B43">43</xref>]. The probability of a structure is a sum over the probabilities of all parse trees consistent with that structure. This summation is not reconcilable with the CYK algorithm; an optimal structure cannot be calculated efficiently if we need to do the summation over multiple possible parse trees for each structure. Thus, we will either have to use grammars that are structurally unambiguous, or we will have to assume that it is a valid approximation to assume an optimal parse tree gives us the optimal structure. We explore this issue in the results.</p>
+      <p>It can be tricky to write grammars that are structurally unambiguous, and it appears to be difficult to prove that they are so, except in simple cases. Determining grammar ambiguity in the usual formal language sense is undecidable [<xref ref-type="bibr" rid="B40">40</xref>,<xref ref-type="bibr" rid="B41">41</xref>]. We can, however, test empirically whether a particular grammar is unambiguous for a given sequence <bold>x </bold>and structure <italic>v</italic>. We do this with a <italic>conditional Inside </italic>algorithm that calculates:</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-71-i10.gif"/>
+      </p>
+      <p>by limiting the Inside calculation to <inline-graphic xlink:href="1471-2105-5-71-i11.gif"/>(<italic>v</italic>), those parse trees consistent with the given structure <italic>v</italic>. For example, the conditional Inside algorithm for the RNA grammar described above is:</p>
+      <p>Initialization:</p>
+      <p>γ(<italic>i</italic>, <italic>i </italic>- 1) = <italic>p</italic>(<italic>S </italic>→ ε)</p>
+      <p>Iteration:</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-71-i12.gif"/>
+      </p>
+      <p>If <italic>P</italic>(<bold>x</bold>, <inline-graphic xlink:href="1471-2105-5-71-i7.gif"/>|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ) calculated by CYK equals <italic>P</italic>(<bold>x</bold>, <italic>v</italic>|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ) calculated by conditional Inside then there is only one parse tree, namely <inline-graphic xlink:href="1471-2105-5-71-i7.gif"/>, of nonzero probability for the structure <italic>v</italic>. Operationally, we consider a grammar to be structurally unambiguous if this condition holds for a large sample of different sequences.</p>
+      <p>An interesting difference between the thermodynamic and probabilistic approaches with respect to ambiguity is worth noting. The thermodynamic scoring scheme is not normalized, so structural ambiguity is not an issue for finding optimal structures; regardless of how many different ways there are of scoring the energy of a structure, the lowest energy structure still wins. However, ambiguity becomes a painstaking issue for calculating the equilibrium partition function [<xref ref-type="bibr" rid="B21">21</xref>], where one must be careful not to count any structure more than once. For SCFG-based methods, with normalized probabilities as scores, exactly the opposite is the case. Ambiguity is an issue for optimal structure prediction, but the summed Inside calculation (the analog of the summed partition function calculation) gives the correct result even for ambiguous grammars.</p>
+    </sec>
+    <sec>
+      <title>SCFG designs</title>
+      <p>The RNA SCFG shown above factors a secondary structure into scoring terms for each individual base pair and each individual unpaired residue. In this paper we will examine four additional grammars of this type. However, state of the art thermodynamic models use a loop-dependent thermodynamic model that factors a structure in a more complex way, into nearest-neighbor base stacking terms (as opposed to individual base pairs) and tables of penalties for different lengths of different kinds of loops (bulge, interior, hairpin, and multifurcation). SCFG methods can also capture more sophisticated folding features.</p>
+      <p>Base pair stacking is a first order Markov dependence. It can be modeled in a grammar by capturing a limited amount of context dependency, a technique called <italic>lexicalization </italic>in natural language processing. One uses production rules of the type, <inline-graphic xlink:href="1471-2105-5-71-i13.gif"/>, where the probability of emitting a new pair <italic>a</italic>, <inline-graphic xlink:href="1471-2105-5-71-i6.gif"/> is dependent on the previous base pair <italic>b</italic>, <inline-graphic xlink:href="1471-2105-5-71-i14.gif"/>. The notation <inline-graphic xlink:href="1471-2105-5-71-i15.gif"/> indicates that the <italic>P </italic>nonterminal will "remember" that it just generated an <italic>a</italic>, <inline-graphic xlink:href="1471-2105-5-71-i6.gif"/> pair. Formally, in the production rules, this means 16 <inline-graphic xlink:href="1471-2105-5-71-i15.gif"/> nonterminals, one for each pair of nucleotides, each one of which can generate 16 possible pairs: thus, we have the desired 16 × 16 table for base stacking parameters in terms of our production rules. However, lexicalized nonterminals do not incur any extra storage nor additional computational cost when parsing, because the lexicalization depends completely on the local sequence context; the 16 <inline-graphic xlink:href="1471-2105-5-71-i15.gif"/> nonterminals can just be treated as one "meta" <italic>P </italic>nonterminal, with scores conditioned on the local context around the base pair <italic>x</italic><sub><italic>i</italic></sub>, <italic>x</italic><sub><italic>j</italic></sub>.</p>
+      <p>The simplest (and most common) model of loop lengths in a grammar uses recursive rules like <italic>S </italic>→ <italic>aS</italic>, which imply a geometric length distribution. Explicit loop length distributions can be modeled by enumerating a set of production rules, one for each possible length. A set of such loop length probabilities is no different in effect than the lookup table of loop length penalties in the thermodynamic parameters.</p>
+      <p>Base stacking and explicit loop lengths are the most important two features of SCFGs that would closely mirror the current thermodynamic model. Most other desirable features, such as parameterizing stacked terminal mismatches for hairpin and internal loops, dangled bases, and special stable tetraloops, can also be dealt with using techniques like the above. Coaxial stacking [<xref ref-type="bibr" rid="B44">44</xref>,<xref ref-type="bibr" rid="B45">45</xref>] can also be accommodated [<xref ref-type="bibr" rid="B46">46</xref>], but adds to complexity. In this paper, four grammars model base stacking, but we do not explore the use of explicit loop lengths or other more complex features included in the thermodynamic model.</p>
+    </sec>
+    <sec>
+      <title>Parameterization</title>
+      <p>The parameters of each SCFG were estimated from frequencies observed in annotated secondary structures. The training data were large and small subunit rRNAs, obtained from the European Ribosomal Database [<xref ref-type="bibr" rid="B47">47</xref>,<xref ref-type="bibr" rid="B48">48</xref>]. Sequences containing more than 5% ambiguous bases and with less than 40% base pairing are discarded. The resulting data set was then filtered to remove sequences with greater than 80% identity. The final training set contains randomly chosen equal numbers of LSU and SSU sequences from the filtered data, totaling 278 sequences, 586,293 nucleotides, and 146,759 base pairs.</p>
+      <p>For a given grammar, a parse tree for each structure is determined from the secondary structure annotation, and the number of occurrences of each production type is counted. Production probabilities are then estimated from these counts using a Laplace (plus-one) prior [<xref ref-type="bibr" rid="B10">10</xref>].</p>
+      <p>When determining a parse tree for an ambiguous grammar, one possible parse tree was arbitrarily chosen. A more sophisticated approach is possible (for example, expectation maximization using a conditional Inside/Outside algorithm, to estimate the expected number of occurrences of productions in all possible parse trees given a structure), but we did not explore this.</p>
+      <p>We separated each production rule into a product of a <italic>transition </italic>probability (to go from one nonterminal to the new one) and an <italic>emission </italic>probability (for generating zero or more terminal symbols). This is the standard treatment in hidden Markov models.</p>
+    </sec>
+    <sec>
+      <title>Testing</title>
+      <p>A benchmark data set was built from the Ribonuclease P database [<xref ref-type="bibr" rid="B49">49</xref>], the Signal Recognition Particle database [<xref ref-type="bibr" rid="B50">50</xref>] and the tmRNA database [<xref ref-type="bibr" rid="B51">51</xref>]. Each of these databases provides high quality <italic>individual </italic>sequence structure information and curated structural alignments in a readily parsable form. Each structural alignment was filtered to remove sequences with greater than 80% identity. The structure for each member of the filtered families were then retrieved from the databases. Any sequence containing ambiguous bases was removed. The resulting test set contains 403 total sequences, consisting of 225 RNase P's, 81 SRP's, and 97 tmRNA's.</p>
+      <p>We count the number of base pairs that are correctly predicted, given a predicted structure and the trusted benchmark structure. That is, if we predict a base pair <italic>i</italic>, <italic>j</italic>, it is correct if and only if base pair <italic>i, j </italic>is present in the trusted structure. No helix offsetting/sliding is allowed, so our accuracy percentages are systematically lower than other published benchmarks that count base pairs as correct if they are within one base of a trusted base pair.</p>
+      <p>Predicted base pairs that are in the trusted structure are true positives (TP); predicted base-pairs not in the trusted structure are false positives (FP); base-pairs in the trusted structure but not predicted by the algorithm are false negatives (FN).</p>
+      <p>Sensitivity is the fraction of base pairs in the trusted structures that are predicted correctly: TP / (TP + FN). Positive predictive value (PPV; often called specificity) is the number of predicted base pairs that are in the trusted structure: TP / (TP + FP).</p>
+      <p>Rfam v5.0 [<xref ref-type="bibr" rid="B52">52</xref>] was utilized to build a second, larger test set for grammar ambiguity experiments, from a wide variety of different RNA structures. This set was constructed by filtering the seed alignments at 80% identity and then imposing the family's consensus structure onto each sequence to infer individual secondary structures. Any sequence containing ambiguous bases was removed. The resulting dataset contains 2455 sequences from 174 different RNA families.</p>
+    </sec>
+    <sec>
+      <title>Implementations</title>
+      <p>Training (parameter estimation), CYK parsing (structure prediction), and conditional Inside (ambiguity testing) code was written for each of the nine grammars. Inside with stochastic traceback (suboptimal sampling of parse trees) was implemented for the ambiguous grammars. The ANSI C source code for these implementations is freely available under the GNU General Public License (GPL) from <ext-link ext-link-type="uri" xlink:href="http://www.genetics.wustl.edu/eddy/publications/#DowellEddy04"/>. The data sets (training, testing, and benchmark) are freely available from the same URL.</p>
+      <p>For benchmarking experiments, we used <italic>mfold </italic>v3.1.2, Pfold (Oct 2003), PKNOTS v 1.01, RNAstructure v4.0, and the Vienna RNA package vl.4. The <italic>mfold </italic>software was obtained from Michael Zuker at <ext-link ext-link-type="uri" xlink:href="http://www.bioinfo.rpi.edu/~zukerm/rna/mfold-3.0.html"/>. An early release of RNAstructure v4.0 [<xref ref-type="bibr" rid="B53">53</xref>] was graciously provided by Dave Mathews. Both <italic>mfold </italic>and RNAstructure was run with MAX = 750 P = 20 W = 0 and efn2 rearrangement as recommended by [<xref ref-type="bibr" rid="B7">7</xref>]. The Vienna RNA package was obtained at <ext-link ext-link-type="uri" xlink:href="http://www.tbi.univie.ac.at/~ivo/RNA/"/> and was run with default parameters. Bjarne Knudsen provided Pfold executables and guidance on how to run the package (personal communication). The PKNOTS program was run with default parameters, which does not attempt to predict pseudoknots. All benchmarks were conducted on Intel-based servers running a GNU/Linux operating system, with the exception of RNAstructure which was run in batch mode under Windows XP Pro 2002.</p>
+      <p>For all the grammars in this paper, the CYK and Inside algorithms are <italic>O</italic>(<italic>ML</italic><sup>2</sup>) and <italic>O</italic>(<italic>ML</italic><sup>3</sup>) in memory and time respectively, for <italic>M </italic>nonterminals in the grammar and a sequence of length <italic>L</italic>.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <sec>
+      <title>Two ambiguous grammars</title>
+      <p>We first implemented two structurally ambiguous grammars:</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-71-i16.gif"/>
+      </p>
+      <p>G1 is the simple grammar we used as an example in Methods. G2 extends it to include base pair stacking parameters.</p>
+      <p>It seemed possible that structural ambiguity might be only a formal concern. This would be the case if, in a set of possible parse trees for any particular structure, one parse tree has a probability that dominates the others, and approximates the summed probability of the ensemble. For example, many of the alternative parse trees are pathological cases that invoke fruitless cycles of bifurcation and destruction; any <italic>S </italic>⇒ ε derivation in a parse tree could also be <italic>S </italic>⇒ <italic>SS </italic>⇒ ε<italic>S </italic>⇒ εε, but these more elaborate trees have probabilities that asymptote towards zero. Additionally, our parameterization of ambiguous grammars will tend to be biased towards concentrating probability in a single possible parse tree, because we nonrandomly choose only one possible parse tree for each training structure, favoring smaller, more sensible parse trees where ambiguous choices were possible. And finally, if all structures have about the same amount of probability diffusion to ambiguous parses, the rank order of the best parse trees might still reflect the rank order of the best structures, so that a CYK algorithm that finds the best parse tree would still recover the best structure.</p>
+      <p>To test whether structural ambiguity made a practical impact on structure prediction, we performed the following "reordering" experiment. For a given RNA sequence, we use CYK to find the optimal parse tree <inline-graphic xlink:href="1471-2105-5-71-i7.gif"/>. We sample <italic>N </italic>more suboptimal parse trees from the posterior distribution (using Inside with stochastic traceback). We rank the <italic>N </italic>+ 1 trees by their probabilities <italic>P</italic>(<bold>x</bold>, π|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ), where the optimal CYK parse is ranked first by definition. Then for each parse tree π, we get the base-paired structure <italic>v </italic>and use conditional Inside to calculate the <italic>P</italic>(<bold>x</bold>, <italic>v</italic>|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ) summed over all parse trees for that structure. We then ask two questions: first, if the rank order of the <italic>N </italic>+ 1 parse trees is the same as the rank order of their <italic>N </italic>+ 1 structures; second, if the structure of the optimal CYK parse tree becomes suboptimal in the ranked list of structure probabilities <italic>P</italic>(<bold>x</bold>, <italic>v</italic>|<inline-graphic xlink:href="1471-2105-5-71-i4.gif"/>, Θ). If ambiguity does not matter in practice, we should not see many differences in rank order, and we hope to never see the top-ranked structure differ from the structure implied by the top-ranked CYK parse. We did the reordering experiment on all 2455 sequences in the Rfam5-based test set, for <italic>N </italic>varying from 10 to 3000 suboptimal parse trees.</p>
+      <p>The results showed that even in a small number of samples, the rank order of the parse tree probabilities and the structural probabilities were nearly always significantly different. For <italic>N </italic>= 10 suboptimals, for grammar G1 a better structure than the CYK parse was found for 2% of the sequences (41/2455), and for G2, a better structure was found for 69% (1704/2455). Sampling deeper into the posterior probability distribution for parse trees increases the chance of finding a more optimal structure; for <italic>N </italic>= 1000 suboptimals, better structures than the CYK parse were found for about 20% of the sequences for G1 (495/2455), and 98% of the sequences for G2 (2417/2455).</p>
+      <p>Thus these results showed that the CYK algorithm often does not give the optimal secondary structure if one is using a structurally ambiguous grammar. Structural ambiguity appears to be a practical concern. We therefore focused on developing several lightweight unambiguous grammars.</p>
+    </sec>
+    <sec>
+      <title>Four unambiguous grammars</title>
+      <p>It is something of a challenge to make unambiguous grammars with a small number of productions. We do not know of a way to systematically generate and explore the space of unambiguous grammars. There appear to be many different ways to make unambiguous RNA grammars that have the same simple emission parameterization (4 probabilities for unpaired residues, 16 probabilities for base pairs). We used the following four grammars:</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-71-i17.gif"/>
+      </p>
+      <p>G3 was developed by RDD. We challenged Graeme Mitchison to make a smaller one, and he produced G4 (G. Mitchison, personal communication). The ultracompact G5 grammar is from Ivo Hofacker (personal communication). G6 is the Knudsen/Hein grammar utilized in the Pfold package [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B26">26</xref>]. Each of the four grammars was conjectured to be unambiguous by inspection. Each one also passed the empirical test for ambiguity described in Methods, using the test set of 2455 Rfam sequences.</p>
+      <p>Each grammar imposes slightly different restrictions on the "language" of possible structures. G3 imposes a minimum hairpin loop length of one nucleotide, G6 has a minimum of two, and G4 and G5 do not impose minimum hairpin loop lengths. Also, G3 and G6 can not emit an empty string, ε, whereas G4 and G5 can. Figure <xref ref-type="fig" rid="F2">2</xref> shows parse trees for an example RNA structure using these four grammars G3-G6. The figure shows how each grammar factors a structure into elementary scorable steps in a different manner.</p>
+      <p>Table <xref ref-type="table" rid="T1">1</xref> shows the resource requirements of these four grammars as well as the simple ambiguous grammar G1. Each non-terminal of a grammar requires storage of a dynamic programming matrix, so memory usage scales linearly with nonterminal number.</p>
+    </sec>
+    <sec>
+      <title>Three unambiguous stacking grammars</title>
+      <p>The G6 grammar is readily extended to include stacking parameters, by changing the <italic>F </italic>nonterminal parameterization to a first order Markov chain, <inline-graphic xlink:href="1471-2105-5-71-i18.gif"/>. We call this grammar G6<sup><italic>S</italic></sup>. We also restructured two of the simple backbones (G3 and G4) to include base pair stacking parameters, resulting in grammars G7 and G8:</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-71-i19.gif"/>
+      </p>
+      <p>As written, these grammars do not permit lone pairs (a base-pair with no stacking partner). An alternative formulation (<inline-graphic xlink:href="1471-2105-5-71-i20.gif"/> → <italic>N</italic>) that does allow lone pairs was found to give slightly poorer results (data not shown), even though roughly one quarter of the sequences in our benchmark set have annotated lone pairs.</p>
+      <p>Table <xref ref-type="table" rid="T2">2</xref> shows the general resource requirements for each of the stacking grammars. Each one is conjectured to be unambiguous. Each one passed the empirical ambiguity test for the set of 2455 Rfam sequences.</p>
+    </sec>
+    <sec>
+      <title>Prediction accuracy</title>
+      <p>The secondary structure prediction accuracy of each of the nine parameterized grammars was then measured, by calculating sensitivity and PPV on the benchmark set of 403 trusted secondary structures derived by comparative analysis. The results are shown in Table <xref ref-type="table" rid="T3">3</xref>.</p>
+      <p>In order to minimize performance differences due to differences in free parameter number, as opposed to grammar structure, we tied emission parameters together where possible. That is, each grammar uses only one emission distribution for 4 unpaired bases and 16 base pairs (and, in the case of the stacking grammars, 256 stacking parameters). Thus the effective (tied) number of parameters only differs because of the number of transitions in each grammar (Tables <xref ref-type="table" rid="T1">1</xref> and <xref ref-type="table" rid="T2">2</xref>). To minimize differences caused by the grammars having slightly different languages, we also forced each grammar to have the same minimum hairpin loop size (two) by implementing the appropriate steps in dynamic programming parsers to ignore hairpin loops of length one or zero, even if the grammar permits them. Maximum a posteriori parameters were then determined for each grammar using a set of annotated ribosomal RNA secondary structures (see Methods).</p>
+      <p>For comparison, we also evaluated the performance of several implementations of energy minimization algorithms for predicting secondary structure on the same benchmark set: <italic>mfold </italic>v3.1.2, PKNOTS vl.0l, RNAstructure v4.0, and the Vienna RNA package vl.4. Vienna RNA and <italic>mfold </italic>use the thermodynamic parameters described in [<xref ref-type="bibr" rid="B7">7</xref>] but use slightly different implementations of the rules for exterior and multibranch loops. RNAstructure uses a recently revised set of parameters [<xref ref-type="bibr" rid="B53">53</xref>], and PKNOTS uses an earlier set of thermodynamic parameters [<xref ref-type="bibr" rid="B54">54</xref>].</p>
+      <p>We also benchmarked the Knudsen and Hein Pfold program, which independently implements the G6 grammar. The Pfold program was parameterized on a different training set composed of rRNAs and tRNAs, and has heuristics to call only confident base pairs, which increases PPV at the expense of sensitivity. Pfold is intended for consensus structure prediction, using an RNA evolutionary model to fold a given input RNA alignment, but we have used it here in single-sequence mode to compare to our implementation and parameterization of G6.</p>
+      <p>Among the four simple (nonstacking) unambiguous grammars, the simplest grammar, G5, with only three types of production rules, has an abysmal prediction performance. The grammar with the most rules, G3, did not give the best performance. The best simple SCFG design we tested is G6, the grammar used in Knudsen and Hein's Pfold. Though G6 does not perform quite as well as energy minimization methods, it does surprisingly well considering its simplicity. G6's performance is nearly comparable to the performance of PKNOTS, which uses the older (1995) thermodynamic energy rules. G6 has only 21 free probability parameters, compared to the several hundred thermodynamic parameters in energy minimization programs.</p>
+      <p>Performance for two of the grammars (G3 and G4) increased significantly when these grammars were extended to include stacking correlations (G7 and G8, respectively). Interestingly, G6 did not show any real performance gain when extended to include stacking correlations (G6<sup><italic>S</italic></sup>); this was unexpected. Once stacking correlations are included, four of the grammars (G6, G7, G8, and G6<sup><italic>S</italic></sup>) have comparably good performance, at the cost of increasing parameter number to include the 16 × 16 parameters set for the three with stacking correlations.</p>
+      <p>The reason for the strong differences between different designs is probably related to how naturally the production rules of the grammar correspond to the biological constraints of RNA structures. The compact G5 grammar, for instance, must invoke the same bifurcation rule <italic>S </italic>→ <italic>aS</italic><inline-graphic xlink:href="1471-2105-5-71-i6.gif"/><italic>S </italic>for every base pair and for every structural bifurcation, which are quite different structural features that occur with very different frequencies. The productions of G5 are thus "semantically overloaded": they collapse too many different types of information into the same parameters. Looking at Figure <xref ref-type="fig" rid="F2">2</xref>, G6 and G3 arguably have the most natural parse trees, in the sense that they invoke one dedicated production per base pair (as opposed to two, as in G4's stutter-step for each base pair, or the overloaded basepair/bifurcation production in G5).</p>
+      <p>Our results here probably underestimate the performance that could be wrung from any of these SCFGs if they were more systematically and carefully parameterized. Our parameterization here was based just on counts from a large rRNA database. SSU and LSU ribosomal RNAs, though large, are not representative of all RNA structures; the ideal training set would be a large number of evolutionarily <italic>unrelated </italic>RNA secondary structures. Additional performance can probably be achieved from these SCFGs by training on larger, more diverse datasets. One might also explore more sophisticated parameterization strategies. We have done some exploratory work using conditional maximum likelihood training [<xref ref-type="bibr" rid="B55">55</xref>] to find parameters that directly optimize the accuracy of structure predictions in the training rRNA data, rather than using maximum likelihood parameters, but did not obtain a significant performance increase. Another potentially promising strategy would be to "crosstrain" the parameters, incorporating the thermodynamic parameters in some way as prior information to smooth some of the more poorly determined probabilistic parameters, analogous to how probabilistic data is increasingly being used to augment the energy rules [<xref ref-type="bibr" rid="B7">7</xref>].</p>
+    </sec>
+    <sec>
+      <title>Comparison to Mathews et al. benchmark</title>
+      <p>The sensitivity of <italic>mfold </italic>and RNAstructure was reported to be 73% on a different benchmark dataset, which is quite a bit higher than the 56% as obtained here [<xref ref-type="bibr" rid="B7">7</xref>]. This concerned us, so before drawing any conclusions from our results, we did additional work to verify our benchmarking of the thermodynamic methods, using <italic>mfold </italic>as a representative method.</p>
+      <p>Dave Mathews kindly provided us the benchmark set used in [<xref ref-type="bibr" rid="B7">7</xref>]. Because some of the sources of his structure data were privileged, Mathews could not grant us permission to freely distribute this benchmark set (which is why we report performance results on a new benchmark set we are comfortable distributing). We measure <italic>mfold </italic>at 67% sensitivity on Mathews' dataset instead of the 73% sensitivity reported in Mathews <italic>et al. </italic>[<xref ref-type="bibr" rid="B7">7</xref>]. Our procedure differs from theirs in two steps. First, we count only exactly correct base pair predictions, whereas Mathews <italic>et al. </italic>count a base pair as correct even if there is a slight (1 nt) slip in the prediction. Second, we report the sensitivity over all base pairs (total correct base pairs / total base pairs predicted in the whole benchmark), whereas they calculate an average of this value over each sequence. We found that each of these differences contributes about a 3% difference in the measured sensitivities, with our procedures systematically producing more conservative measures than Mathews et al.</p>
+      <p>The difference between the 56% we report and the 67% obtained by applying our method to Mathews' dataset lies in the choice of secondary structures. Most importantly, prediction accuracy varies significantly from RNA family to RNA family. We have excluded tRNAs from our benchmark set because they are small and reasonably predicted by both methods (the G6<sup><italic>S </italic></sup>grammar achieves roughly 80% sensitivity on the Mathews' tRNAs, and Mathews reports 83% for energy minimization [<xref ref-type="bibr" rid="B7">7</xref>].) Instead, we included tmRNAs, which tend to be difficult to predict (<italic>mfold </italic>and G6<sup><italic>S </italic></sup>achieve around 45% sensitivity) because of the presence of pseudoknots which account for 21% of base pairs in the family. These differences account for some of the difference, since Mathews <italic>et al. </italic>included tRNAs but did not use tmRNAs.</p>
+      <p>We also looked carefully at the overlap between the 16 RNase P's in the Mathews benchmark and the 225 RNase P's in ours: 9 are unique to the Mathews set; 218 are unique to ours; and 7 occur in both sets. <italic>mfold </italic>predicts the 9 structures unique to the Mathews set with 65% sensitivity and the 218 structures unique to our dataset at 56% sensitivity, so there may be some bias towards more difficult-to-predict structures in our set. In addition, there are differences between the secondary structures in our dataset and in Mathews' set even for exactly the same sequences. We compared the structures for the 7 RNase Ps included in both sets and found that these matched in only about 90% of their base pairs. <italic>mfold </italic>predicted those structures annotated in the Mathews benchmark at 60% sensitivity, whereas it predicted those in ours (e.g. structures as annotated in Jim Brown's current RNase P database) at 56% sensitivity. The secondary structures of many bacterial and archaeal RNase P's were revised in 2001 in light of additional comparative sequence analysis [<xref ref-type="bibr" rid="B56">56</xref>]. This suggests (not unexpectedly) that there is a slight bias towards <italic>mfold </italic>in benchmarks. RNA secondary structures are derived from a combination of manual comparative analysis and computational prediction, so there is some logical circularity when benchmarking (that is, we are benchmarking <italic>mfold </italic>on structures that sometimes may have been produced in part by <italic>mfold</italic>.) This bias disappears gradually as comparative evidence accumulates and structures are refined. We therefore feel we can adequately account for the absolute differences in prediction accuracy as measured by the two benchmarks.</p>
+      <p>The most relevant question is whether different prediction methods are ranked the same on either data set. This appears to be the case. For example, on the Mathews benchmark set measured by our procedures, the G3 grammar has a sensitivity of 41%, G6 has a sensitivity of 55%, and <italic>mfold </italic>is at 67%, which is essentially the same relative difference as shown in Table <xref ref-type="table" rid="T3">3</xref>. We therefore believe that the relative performances reported in Table <xref ref-type="table" rid="T3">3</xref> are reasonably fair and largely independent of our choice of test structures. The benchmark set we used in Table <xref ref-type="table" rid="T3">3</xref> is available from our web site.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>Our goal in this work was to explore how much SCFG design decisions impact RNA secondary structure prediction accuracy. Structural ambiguity is clearly a concern if structure prediction is the goal, as we showed with the reordering experiment. The results in Table <xref ref-type="table" rid="T3">3</xref> indicate that even among different unambiguous SCFG designs, design decisions matter quite a bit.</p>
+    <p>The prediction accuracy of relatively simple SCFGs is not too far from the accuracy of the energy minimization methods. SCFGs are easily trained from secondary structure databases, and different designs can be explored fairly easily. It might be useful to explore more sophisticated SCFG designs to see if an appropriately designed SCFG might even be able to outperform the existing energy minimization methods for single-sequence prediction. For instance, it would be interesting to know how an unambiguous SCFG mirror of the Zuker algorithm would perform, with probabilistic parameters for stacking, hairpin, bulge, and interior loop lengths, multifurcations, dangles, and coaxial stacking. Although one implementation of an SCFG mirror of the Zuker algorithm has been described [<xref ref-type="bibr" rid="B35">35</xref>], it used a structurally ambiguous grammar (it was not intended for secondary structure prediction per se; it was only used in summed Inside algorithm calculations where ambiguity doesn't matter, not in a CYK algorithm where ambiguity does matter).</p>
+    <p>Apparently without considering alternative designs, Knudsen and Hein had already described the simple and effective G6 grammar, and extended it to analysis of input multiple sequence alignments in the program Pfold [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B26">26</xref>]. Because our exploration has not been exhaustive, we can not say that G6 is the best possible simple grammar. However, after exploring various alternative SCFG designs, we confirm that the Knudsen/Hein grammar is an excellent, simple framework in which to develop some probabilistic RNA analysis methods.</p>
+    <p>The long term goal of this line of work is to extend a single sequence SCFG design into a pairwise SCFG to address the problem of structural alignment, combining structural and evolutionary information in the same model. Given that the pairwise algorithm will be <inline-graphic xlink:href="1471-2105-5-71-i21.gif"/>(<italic>MN</italic><sup>4</sup>) in memory and <inline-graphic xlink:href="1471-2105-5-71-i21.gif"/><italic>(MN</italic><sup>6</sup>) in time for grammars of <italic>M </italic>nonterminals and sequences of length <italic>N </italic>[<xref ref-type="bibr" rid="B27">27</xref>], we know that we will have computational complexity issues and therefore must seek the simplest reasonably performing grammars. While the G6 grammar is small and works well, the G7 and G8 grammars look easiest to extend to the pairwise SCFG case. We are currently implementing methods to extend them to pair-SCFGs for pairwise alignment and structure prediction.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>RDD wrote the code and carried out all the experiments. SRE suggested the idea of comparing grammar designs. RDD drafted the manuscript, and both authors collaborated closely in writing the final version.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <sec>
+      <title>Acknowledgments</title>
+      <p>RDD was supported by a Howard Hughes predoctoral fellowship and an Olin predoctoral fellowship. The work was also supported by funding from the Howard Hughes Medical Institute, Alvin Goldfarb, and NIH NHGRI HG01363. We thank Graeme Mitchison for discussions leading to the G4 grammar, Ivo Hofacker for discussions which led to the G5 grammar, Bjarne Knudsen for help with Pfold, David Mathews for help with RNAstructure and for providing the benchmark dataset from [<xref ref-type="bibr" rid="B7">7</xref>], and Elena Rivas for numerous discussions. Some of this work was conceived at an ESF and NIH funded workshop on computational RNA biology in Benasque, Spain, in summer 2003.</p>
+    </sec>
+  </ack>
+  <ref-list>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Non-Coding RNA Genes and the Modern RNA World</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2001</year>
+        <volume>2</volume>
+        <fpage>919</fpage>
+        <lpage>929</lpage>
+        <pub-id pub-id-type="pmid">11733745</pub-id>
+        <pub-id pub-id-type="doi">10.1038/35103511</pub-id>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zuker</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Calculating Nucleic Acid Secondary Structure</article-title>
+        <source>Curr Opin Struct Biol</source>
+        <year>2000</year>
+        <volume>10</volume>
+        <fpage>303</fpage>
+        <lpage>310</lpage>
+        <pub-id pub-id-type="pmid">10851192</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0959-440X(00)00088-9</pub-id>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nussinov</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Pieczenik</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Griggs</surname>
+            <given-names>JR</given-names>
+          </name>
+          <name>
+            <surname>Kleitman</surname>
+            <given-names>DJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Algorithms for Loop Matchings</article-title>
+        <source>SIAM J Appl Math</source>
+        <year>1978</year>
+        <volume>35</volume>
+        <fpage>68</fpage>
+        <lpage>82</lpage>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Waterman</surname>
+            <given-names>MS</given-names>
+          </name>
+          <name>
+            <surname>Smith</surname>
+            <given-names>TF</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA Secondary Structure: A Complete Mathematical Analysis</article-title>
+        <source>Math Biosci</source>
+        <year>1978</year>
+        <volume>42</volume>
+        <fpage>257</fpage>
+        <lpage>266</lpage>
+        <pub-id pub-id-type="doi">10.1016/0025-5564(78)90099-8</pub-id>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zuker</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Stiegler</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Optimal Computer Folding of Large RNA Sequences Using Thermodynamics and Auxiliary Information</article-title>
+        <source>Nucl Acids Res</source>
+        <year>1981</year>
+        <volume>9</volume>
+        <fpage>133</fpage>
+        <lpage>148</lpage>
+        <pub-id pub-id-type="pmid">6163133</pub-id>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hofacker</surname>
+            <given-names>IL</given-names>
+          </name>
+          <name>
+            <surname>Fontana</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Stadler</surname>
+            <given-names>PF</given-names>
+          </name>
+          <name>
+            <surname>Bonhoeffer</surname>
+            <given-names>LS</given-names>
+          </name>
+          <name>
+            <surname>Tacker</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Schuster</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Fast Folding and Comparison of RNA Secondary Structures (The Vienna RNA Package)</article-title>
+        <source>Monatsh Chem</source>
+        <year>1994</year>
+        <volume>125</volume>
+        <fpage>167</fpage>
+        <lpage>188</lpage>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mathews</surname>
+            <given-names>DH</given-names>
+          </name>
+          <name>
+            <surname>Sabina</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Zuker</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Turner</surname>
+            <given-names>DH</given-names>
+          </name>
+        </person-group>
+        <article-title>Expanded Sequence Dependence of Thermodynamic Parameters Improves Prediction of RNA Secondary Structure</article-title>
+        <source>J Mol Biol</source>
+        <year>1999</year>
+        <volume>288</volume>
+        <fpage>911</fpage>
+        <lpage>940</lpage>
+        <pub-id pub-id-type="pmid">10329189</pub-id>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1999.2700</pub-id>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA Sequence Analysis Using Covariance Models</article-title>
+        <source>Nucl Acids Res</source>
+        <year>1994</year>
+        <volume>22</volume>
+        <fpage>2079</fpage>
+        <lpage>2088</lpage>
+        <pub-id pub-id-type="pmid">8029015</pub-id>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sakakibara</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Hughey</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Mian</surname>
+            <given-names>IS</given-names>
+          </name>
+          <name>
+            <surname>Sjolander</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Underwood</surname>
+            <given-names>RC</given-names>
+          </name>
+          <name>
+            <surname>Haussler</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Stochastic Context-Free Grammars for tRNA Modeling</article-title>
+        <source>Nucl Acids Res</source>
+        <year>1994</year>
+        <volume>22</volume>
+        <fpage>5112</fpage>
+        <lpage>5120</lpage>
+        <pub-id pub-id-type="pmid">7800507</pub-id>
+      </citation>
+    </ref>
+    <ref id="B10">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+          <name>
+            <surname>Krogh</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Mitchison</surname>
+            <given-names>GJ</given-names>
+          </name>
+        </person-group>
+        <source>Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids</source>
+        <year>1998</year>
+        <publisher-name>Cambridge UK: Cambridge University Press</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B11">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pace</surname>
+            <given-names>NR</given-names>
+          </name>
+          <name>
+            <surname>Smith</surname>
+            <given-names>DK</given-names>
+          </name>
+          <name>
+            <surname>Olsen</surname>
+            <given-names>GJ</given-names>
+          </name>
+          <name>
+            <surname>James</surname>
+            <given-names>BD</given-names>
+          </name>
+        </person-group>
+        <article-title>Phylogenetic Comparative Analysis and the Secondary Structure of Ribonuclease P RNA – A Review</article-title>
+        <source>Gene</source>
+        <year>1989</year>
+        <volume>82</volume>
+        <fpage>65</fpage>
+        <lpage>75</lpage>
+        <pub-id pub-id-type="pmid">2479592</pub-id>
+        <pub-id pub-id-type="doi">10.1016/0378-1119(89)90031-0</pub-id>
+      </citation>
+    </ref>
+    <ref id="B12">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gutell</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Power</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Hertz</surname>
+            <given-names>GZ</given-names>
+          </name>
+          <name>
+            <surname>Putz</surname>
+            <given-names>EJ</given-names>
+          </name>
+          <name>
+            <surname>Stormo</surname>
+            <given-names>GD</given-names>
+          </name>
+        </person-group>
+        <article-title>Identifying Constraints on the Higher-Order Structure of RNA: Continued Development and Application of Comparative Sequence Analysis Methods</article-title>
+        <source>Nucl Acids Res</source>
+        <year>1992</year>
+        <volume>20</volume>
+        <fpage>5785</fpage>
+        <lpage>5795</lpage>
+        <pub-id pub-id-type="pmid">1454539</pub-id>
+      </citation>
+    </ref>
+    <ref id="B13">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gutell</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Larsen</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Woese</surname>
+            <given-names>CR</given-names>
+          </name>
+        </person-group>
+        <article-title>Lessons from an Evolving rRNA: 16S and 23S rRNA Structures from a Comparative Perspective</article-title>
+        <source>Microbiol Rev</source>
+        <year>1994</year>
+        <volume>58</volume>
+        <fpage>10</fpage>
+        <lpage>26</lpage>
+        <pub-id pub-id-type="pmid">8177168</pub-id>
+      </citation>
+    </ref>
+    <ref id="B14">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gutell</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>JC</given-names>
+          </name>
+          <name>
+            <surname>Cannone</surname>
+            <given-names>JJ</given-names>
+          </name>
+        </person-group>
+        <article-title>The Accuracy of Ribosomal RNA Comparative Structure Models</article-title>
+        <source>Curr Opin Struct Biol</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>301</fpage>
+        <lpage>310</lpage>
+        <pub-id pub-id-type="pmid">12127448</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0959-440X(02)00339-1</pub-id>
+      </citation>
+    </ref>
+    <ref id="B15">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chiu</surname>
+            <given-names>DKY</given-names>
+          </name>
+          <name>
+            <surname>Kolodziejczak</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>Inferring Consensus Structure from Nucleic Acid Sequences</article-title>
+        <source>Comput Applic Biosci</source>
+        <year>1991</year>
+        <volume>7</volume>
+        <fpage>347</fpage>
+        <lpage>352</lpage>
+      </citation>
+    </ref>
+    <ref id="B16">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Muse</surname>
+            <given-names>SV</given-names>
+          </name>
+        </person-group>
+        <article-title>Evolutionary Analyses of DNA Sequences Subject to Constraints on Secondary Structure</article-title>
+        <source>Genetics</source>
+        <year>1995</year>
+        <volume>139</volume>
+        <fpage>1429</fpage>
+        <lpage>1439</lpage>
+        <pub-id pub-id-type="pmid">7768450</pub-id>
+      </citation>
+    </ref>
+    <ref id="B17">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gulko</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Haussler</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Using Multiple Alignments and Phylogenetic Trees to Detect RNA Secondary Structure</article-title>
+        <source>In Pac Symp Biocomput</source>
+        <year>1996</year>
+        <fpage>350</fpage>
+        <lpage>367</lpage>
+      </citation>
+    </ref>
+    <ref id="B18">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Knudsen</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Hein</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA Secondary Structure Prediction Using Stochastic Context-Free Grammars and Evolutionary History</article-title>
+        <source>Bioinformatics</source>
+        <year>1999</year>
+        <volume>15</volume>
+        <fpage>446</fpage>
+        <lpage>454</lpage>
+        <pub-id pub-id-type="pmid">10383470</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/15.6.446</pub-id>
+      </citation>
+    </ref>
+    <ref id="B19">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Akmaev</surname>
+            <given-names>VR</given-names>
+          </name>
+          <name>
+            <surname>Kelley</surname>
+            <given-names>ST</given-names>
+          </name>
+          <name>
+            <surname>Stormo</surname>
+            <given-names>GD</given-names>
+          </name>
+        </person-group>
+        <article-title>Phylogenetically Enhanced Statistical Tools for RNA Structure Prediction</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>501</fpage>
+        <lpage>512</lpage>
+        <pub-id pub-id-type="pmid">10980147</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/16.6.501</pub-id>
+      </citation>
+    </ref>
+    <ref id="B20">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Michel</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Westhof</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Modelling of the Three-Dimensional Architecture of Group I Catalytic Introns Based on Comparative Sequence Analysis</article-title>
+        <source>J Mol Biol</source>
+        <year>1990</year>
+        <volume>216</volume>
+        <fpage>585</fpage>
+        <lpage>610</lpage>
+        <pub-id pub-id-type="pmid">2258934</pub-id>
+      </citation>
+    </ref>
+    <ref id="B21">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McCaskill</surname>
+            <given-names>JS</given-names>
+          </name>
+        </person-group>
+        <article-title>The Equilibrium Partition Function and Base Pair Binding Probabilities for RNA Secondary Structure</article-title>
+        <source>Biopolymers</source>
+        <year>1990</year>
+        <volume>29</volume>
+        <fpage>1105</fpage>
+        <lpage>19</lpage>
+        <pub-id pub-id-type="pmid">1695107</pub-id>
+      </citation>
+    </ref>
+    <ref id="B22">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ding</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Lawrence</surname>
+            <given-names>CE</given-names>
+          </name>
+        </person-group>
+        <article-title>A Statistical Sampling Algorithm for RNA Secondary Structure Prediction</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>7280</fpage>
+        <lpage>7301</lpage>
+        <pub-id pub-id-type="pmid">14654704</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/gkg938</pub-id>
+      </citation>
+    </ref>
+    <ref id="B23">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tabaska</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Cary</surname>
+            <given-names>RB</given-names>
+          </name>
+          <name>
+            <surname>Gabow</surname>
+            <given-names>HN</given-names>
+          </name>
+          <name>
+            <surname>Stormo</surname>
+            <given-names>GD</given-names>
+          </name>
+        </person-group>
+        <article-title>An RNA Folding Method Capable of Identifying Pseudoknots and Base Triples</article-title>
+        <source>Bioinformatics</source>
+        <year>1998</year>
+        <volume>14</volume>
+        <fpage>691</fpage>
+        <lpage>699</lpage>
+        <pub-id pub-id-type="pmid">9789095</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/14.8.691</pub-id>
+      </citation>
+    </ref>
+    <ref id="B24">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Juan</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Wilson</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA Secondary Structure Prediction Based on Free Energy and Phylogenetic Analysis</article-title>
+        <source>J Mol Biol</source>
+        <year>1999</year>
+        <volume>289</volume>
+        <fpage>935</fpage>
+        <lpage>947</lpage>
+        <pub-id pub-id-type="pmid">10369773</pub-id>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1999.2801</pub-id>
+      </citation>
+    </ref>
+    <ref id="B25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hofacker</surname>
+            <given-names>IL</given-names>
+          </name>
+          <name>
+            <surname>Fekete</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Stadler</surname>
+            <given-names>PF</given-names>
+          </name>
+        </person-group>
+        <article-title>Secondary Structure Prediction for Aligned RNA Sequences</article-title>
+        <source>J Mol Biol</source>
+        <year>2002</year>
+        <volume>319</volume>
+        <fpage>1059</fpage>
+        <lpage>1066</lpage>
+        <pub-id pub-id-type="pmid">12079347</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0022-2836(02)00308-X</pub-id>
+      </citation>
+    </ref>
+    <ref id="B26">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Knudsen</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Hein</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Pfold: RNA Secondary Structure Prediction Using Stochastic Context-Free Grammars</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>3423</fpage>
+        <lpage>3428</lpage>
+        <pub-id pub-id-type="pmid">12824339</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/gkg614</pub-id>
+      </citation>
+    </ref>
+    <ref id="B27">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sankoff</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Simultaneous Solution of the RNA Folding, Alignment, and Protosequence Problems</article-title>
+        <source>SIAM J Appl Math</source>
+        <year>1985</year>
+        <volume>45</volume>
+        <fpage>810</fpage>
+        <lpage>825</lpage>
+      </citation>
+    </ref>
+    <ref id="B28">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gorodkin</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Heyer</surname>
+            <given-names>LJ</given-names>
+          </name>
+          <name>
+            <surname>Stormo</surname>
+            <given-names>GD</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding the Most Significant Common Sequence and Structure Motifs in a set of RNA Sequences</article-title>
+        <source>Nucl Acids Res</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3724</fpage>
+        <lpage>3732</lpage>
+        <pub-id pub-id-type="pmid">9278497</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/25.18.3724</pub-id>
+      </citation>
+    </ref>
+    <ref id="B29">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lück</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Gräf</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Steger</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>Construct: a Tool for Thermodynamic Controlled Prediction of Conserved Secondary Structure</article-title>
+        <source>Nucl Acids Res</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <fpage>4208</fpage>
+        <lpage>4217</lpage>
+        <pub-id pub-id-type="pmid">10518612</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/27.21.4208</pub-id>
+      </citation>
+    </ref>
+    <ref id="B30">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gorodkin</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Stricklin</surname>
+            <given-names>SL</given-names>
+          </name>
+          <name>
+            <surname>Stormo</surname>
+            <given-names>GD</given-names>
+          </name>
+        </person-group>
+        <article-title>Discovering Common Stem-Loop Motifs in Unaligned RNA Sequences</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>2135</fpage>
+        <lpage>2144</lpage>
+        <pub-id pub-id-type="pmid">11353083</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/29.10.2135</pub-id>
+      </citation>
+    </ref>
+    <ref id="B31">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Holmes</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Rubin</surname>
+            <given-names>GM</given-names>
+          </name>
+        </person-group>
+        <article-title>Pairwise RNA Structure Comparison with Stochastic Context-Free Grammars</article-title>
+        <source>In Pac Symp Biocomput</source>
+        <year>2002</year>
+        <fpage>163</fpage>
+        <lpage>174</lpage>
+      </citation>
+    </ref>
+    <ref id="B32">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Perriquet</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Touzet</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Dauchet</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding the Common Structure Shared by Two Homologous RNAs</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <fpage>108</fpage>
+        <lpage>116</lpage>
+        <pub-id pub-id-type="pmid">12499300</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/19.1.108</pub-id>
+      </citation>
+    </ref>
+    <ref id="B33">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mathews</surname>
+            <given-names>DH</given-names>
+          </name>
+          <name>
+            <surname>Turner</surname>
+            <given-names>DH</given-names>
+          </name>
+        </person-group>
+        <article-title>Dynalign: an Algorithm for Finding the Secondary Structure Common to two RNA Sequences</article-title>
+        <source>J Mol Biol</source>
+        <year>2002</year>
+        <volume>317</volume>
+        <fpage>191</fpage>
+        <lpage>203</lpage>
+        <pub-id pub-id-type="pmid">11902836</pub-id>
+        <pub-id pub-id-type="doi">10.1006/jmbi.2001.5351</pub-id>
+      </citation>
+    </ref>
+    <ref id="B34">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ji</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Xu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Stormo</surname>
+            <given-names>GD</given-names>
+          </name>
+        </person-group>
+        <article-title>A Graph Theoretical Approach to Predict Common RNA Secondary Structure Motifs Including Pseudoknots in Unaligned Sequences</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <comment/>
+      </citation>
+    </ref>
+    <ref id="B35">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rivas</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Secondary Structure Alone is Generally Not Statistically Significant for the Detection of Noncoding RNAs</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>6</volume>
+        <fpage>583</fpage>
+        <lpage>605</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/16.7.583</pub-id>
+      </citation>
+    </ref>
+    <ref id="B36">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rivas</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Noncoding RNA Gene Detection Using Comparative Sequence Analysis</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2001</year>
+        <volume>2</volume>
+        <fpage>8</fpage>
+        <pub-id pub-id-type="pmid">11801179</pub-id>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-2-8</pub-id>
+      </citation>
+    </ref>
+    <ref id="B37">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jaynes</surname>
+            <given-names>ET</given-names>
+          </name>
+        </person-group>
+        <source>Probability Theory: The Logic of Science</source>
+        <year>2003</year>
+        <publisher-name>Cambridge University Press</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B38">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>MacKay</surname>
+            <given-names>DJC</given-names>
+          </name>
+        </person-group>
+        <source>Information Theory, Inference, and Learning Algorithms</source>
+        <year>2003</year>
+        <publisher-name>Cambridge University Press</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B39">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sipser</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <source>Introduction to Theory of Computation</source>
+        <year>1996</year>
+        <publisher-name>Brooks Cole Pub Co</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B40">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hopcroft</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Ullman</surname>
+            <given-names>JD</given-names>
+          </name>
+        </person-group>
+        <source>Introduction to Automata Theory, Languages, and Computation</source>
+        <year>1979</year>
+        <publisher-name>Addison-Wesley</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B41">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Harrison</surname>
+            <given-names>MA</given-names>
+          </name>
+        </person-group>
+        <source>Introduction to Formal Language Theory</source>
+        <year>1978</year>
+        <publisher-name>Addison-Wesley</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B42">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ding</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Lawrence</surname>
+            <given-names>CE</given-names>
+          </name>
+        </person-group>
+        <article-title>Statistical Prediction of Single-Stranded Regions in RNA Secondary Structure and Application to Predicting Effective Antisense Target Sites and Beyond</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>1034</fpage>
+        <lpage>1046</lpage>
+        <pub-id pub-id-type="pmid">11222752</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/29.5.1034</pub-id>
+      </citation>
+    </ref>
+    <ref id="B43">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Giegerich</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Giancarlo R, Sankoff D</surname>
+          </name>
+        </person-group>
+        <article-title>Explaining and Controlling Ambiguity in Dynamic Programming</article-title>
+        <source>In Proceedings of the 11th Annual Symposium on Combinatorial Pattern Matching, 1848</source>
+        <year>2000</year>
+        <publisher-name>Montréal, Canada: Springer-Verlag, Berlin</publisher-name>
+        <fpage>46</fpage>
+        <lpage>59</lpage>
+      </citation>
+    </ref>
+    <ref id="B44">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Walter</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Turner</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Lyttle</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Muller</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Mathews</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Zuker</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Coaxial Stacking of Helixes Enhances Binding of Oligoribonucleotides and Improves Predictions of RNA Folding</article-title>
+        <source>PNAS</source>
+        <year>1994</year>
+        <volume>91</volume>
+        <fpage>9218</fpage>
+        <lpage>9222</lpage>
+        <pub-id pub-id-type="pmid">7524072</pub-id>
+      </citation>
+    </ref>
+    <ref id="B45">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Walter</surname>
+            <given-names>AE</given-names>
+          </name>
+          <name>
+            <surname>Turner</surname>
+            <given-names>DH</given-names>
+          </name>
+        </person-group>
+        <article-title>Thermodynamics of Coaxially Stacked Helixes With GA and CC Mismatches</article-title>
+        <source>Biochemistry</source>
+        <year>1996</year>
+        <volume>35</volume>
+        <fpage>13753</fpage>
+        <lpage>13761</lpage>
+        <pub-id pub-id-type="pmid">8901517</pub-id>
+        <pub-id pub-id-type="doi">10.1021/bi960913z</pub-id>
+      </citation>
+    </ref>
+    <ref id="B46">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rivas</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>A Dynamic Programming Algorithm for RNA Structure Prediction Including Pseudoknots</article-title>
+        <source>J Mol Biol</source>
+        <year>1999</year>
+        <volume>285</volume>
+        <fpage>2053</fpage>
+        <lpage>2068</lpage>
+        <pub-id pub-id-type="pmid">9925784</pub-id>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1998.2436</pub-id>
+      </citation>
+    </ref>
+    <ref id="B47">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wuyts</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Rijk</surname>
+            <given-names>PD</given-names>
+          </name>
+          <name>
+            <surname>de Peer</surname>
+            <given-names>YV</given-names>
+          </name>
+          <name>
+            <surname>Winkelmans</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Wachter</surname>
+            <given-names>RD</given-names>
+          </name>
+        </person-group>
+        <article-title>The European Large Subunit Ribosomal RNA Database</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>175</fpage>
+        <lpage>177</lpage>
+        <pub-id pub-id-type="pmid">11125083</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/29.1.175</pub-id>
+      </citation>
+    </ref>
+    <ref id="B48">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wuyts</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>de Peer</surname>
+            <given-names>YV</given-names>
+          </name>
+          <name>
+            <surname>Winkelmans</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Wachter</surname>
+            <given-names>RD</given-names>
+          </name>
+        </person-group>
+        <article-title>The European Database on Small Subunit Ribosomal RNA</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>183</fpage>
+        <lpage>185</lpage>
+        <pub-id pub-id-type="pmid">11752288</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/30.1.183</pub-id>
+      </citation>
+    </ref>
+    <ref id="B49">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brown</surname>
+            <given-names>JW</given-names>
+          </name>
+        </person-group>
+        <article-title>The Ribonuclease P Database</article-title>
+        <source>Nucl Acids Res</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <fpage>314</fpage>
+        <pub-id pub-id-type="pmid">9847214</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/27.1.314</pub-id>
+      </citation>
+    </ref>
+    <ref id="B50">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rosenblad</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Gorodkin</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Knudsen</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Zwieb</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Samuelsson</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>SRPDB: Signal Recognition Particle Database</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>363</fpage>
+        <lpage>364</lpage>
+        <pub-id pub-id-type="pmid">12520023</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/gkg107</pub-id>
+      </citation>
+    </ref>
+    <ref id="B51">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zwieb</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Gorodkin</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Knudsen</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Burks</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wower</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>tmRDB (tmRNA Database)</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>446</fpage>
+        <lpage>447</lpage>
+        <pub-id pub-id-type="pmid">12520048</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/gkg019</pub-id>
+      </citation>
+    </ref>
+    <ref id="B52">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Griffiths-Jones</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Bateman</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Marshall</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Khanna</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Rfam: an RNA Family Database</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>439</fpage>
+        <lpage>441</lpage>
+        <pub-id pub-id-type="pmid">12520045</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/gkg006</pub-id>
+      </citation>
+    </ref>
+    <ref id="B53">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mathews</surname>
+            <given-names>DH</given-names>
+          </name>
+          <name>
+            <surname>Disney</surname>
+            <given-names>DH</given-names>
+          </name>
+          <name>
+            <surname>Childs</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Schroeder</surname>
+            <given-names>JL</given-names>
+          </name>
+          <name>
+            <surname>Zuker</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Turner</surname>
+            <given-names>DH</given-names>
+          </name>
+        </person-group>
+        <article-title>Incorporating chemical modification constraints into a dynamic programming algorithm for prediction of RNA secondary structure</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2004</year>
+        <volume>101</volume>
+        <fpage>7287</fpage>
+        <lpage>7292</lpage>
+        <pub-id pub-id-type="pmid">15123812</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.0401799101</pub-id>
+      </citation>
+    </ref>
+    <ref id="B54">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Serra</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Turner</surname>
+            <given-names>DH</given-names>
+          </name>
+        </person-group>
+        <article-title>Predicting Thermodynamic Properties of RNA</article-title>
+        <source>Meth Enzymol</source>
+        <year>1995</year>
+        <volume>25</volume>
+        <fpage>242</fpage>
+        <lpage>261</lpage>
+      </citation>
+    </ref>
+    <ref id="B55">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Krogh</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Two Methods for Improving Performance of an HMM and Their Application for Gene Finding</article-title>
+        <source>Proc Int Conf on Intelligent Systems in Molecular Biology</source>
+        <year>1997</year>
+        <volume>5</volume>
+        <fpage>179</fpage>
+        <lpage>186</lpage>
+      </citation>
+    </ref>
+    <ref id="B56">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Harris</surname>
+            <given-names>JK</given-names>
+          </name>
+          <name>
+            <surname>Haas</surname>
+            <given-names>ES</given-names>
+          </name>
+          <name>
+            <surname>Williams</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Frank</surname>
+            <given-names>DN</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>JW</given-names>
+          </name>
+        </person-group>
+        <article-title>New Insight Into RNase P RNA Structure From Comparative Analysis of the Archaeal RNA</article-title>
+        <source>RNA</source>
+        <year>2001</year>
+        <volume>7</volume>
+        <fpage>220</fpage>
+        <lpage>232</lpage>
+        <pub-id pub-id-type="pmid">11233979</pub-id>
+        <pub-id pub-id-type="doi">10.1017/S1355838201001777</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig position="float" id="F1">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Examples of CFG parse trees for an example RNA structure </bold>Left: an RNA secondary structure with two stems. Middle: a parse tree for that structure using the grammar <italic>S </italic>→ <italic>aS</italic><inline-graphic xlink:href="1471-2105-5-71-i6.gif"/> | <italic>aS </italic>| <italic>Sa </italic>| <italic>SS </italic>| ε, with nonterminals in red and terminals in black. Note the correspondence between the RNA structure and the structure of the parse tree; that the individual steps in the grammar correspond to base pairs and single nucleotides (that is, the grammar is used to factor the structure down into individually scored steps); and that the RNA sequence can be read off the parse tree by following the margin of the tree counterclockwise. Right: an alternative parse tree for the same structure, demonstrating that this grammar is structurally ambiguous.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-71-1"/>
+    </fig>
+    <fig position="float" id="F2">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Example parse trees for four different unambiguous grammars, G3-G6. </bold>Each grammar's production rules defines how the example structure will be described. Some aspects seem artificial, having more to do with the constraints of being unambiguous rather than biologically meaningful features of RNA. G3 must bifurcate to accomodate a bulge on one side, but not the other. G4 shows a stutter-step behavior in stems, with a cycle of <italic>S </italic>⇒ <italic>T </italic>⇒ <italic>aS</italic><inline-graphic xlink:href="1471-2105-5-71-i6.gif"/> productions for each base pair. G5 (rightmost) uses a bifurcation and a null production for every base pair. G6 uses bifurcations at every single stranded residue.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-71-2"/>
+    </fig>
+    <table-wrap position="float" id="T1">
+      <label>Table 1</label>
+      <caption>
+        <p>Simple grammar specifications.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td/>
+            <td/>
+            <td align="center" colspan="2">Parameters</td>
+            <td/>
+            <td/>
+          </tr>
+          <tr>
+            <td align="center">
+              <bold>Grammar</bold>
+            </td>
+            <td align="center">NT</td>
+            <td align="center">Total</td>
+            <td align="center">Tied</td>
+            <td align="center"><italic>C. elegans </italic>LSU Memory (MB)</td>
+            <td align="left">Notes</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">G1</td>
+            <td align="center">1</td>
+            <td align="center">29 (25)</td>
+            <td align="center">25 (22)</td>
+            <td align="center">26.9</td>
+            <td align="left">ambiguous</td>
+          </tr>
+          <tr>
+            <td align="center">G3</td>
+            <td align="center">3</td>
+            <td align="center">56 (47)</td>
+            <td align="center">28 (23)</td>
+            <td align="center">79.4</td>
+            <td align="left">min 1 nt loop; no ε string</td>
+          </tr>
+          <tr>
+            <td align="center">G4</td>
+            <td align="center">2</td>
+            <td align="center">46 (40)</td>
+            <td align="center">26 (22)</td>
+            <td align="center">53.2</td>
+            <td align="left">none</td>
+          </tr>
+          <tr>
+            <td align="center">G5</td>
+            <td align="center">1</td>
+            <td align="center">23 (20)</td>
+            <td align="center">23 (20)</td>
+            <td align="center">26.9</td>
+            <td align="left">none</td>
+          </tr>
+          <tr>
+            <td align="center">G6</td>
+            <td align="center">3</td>
+            <td align="center">42 (36)</td>
+            <td align="center">26 (21)</td>
+            <td align="center">79.4</td>
+            <td align="left">min 2 nt loop; no ε string</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>Each simple grammar requires a different number of nonterminals (NT) and parameters (with free parameters in parenthesis). Memory requirements were determined empirically by measuring the memory each grammar utilizes to fold a single <italic>C. elegans </italic>large subunit ribosomal RNA sequence (3662 nucleotides). Under "notes", we give some of the implications each grammar has on the language it describes.</p>
+      </table-wrap-foot>
+    </table-wrap>
+    <table-wrap position="float" id="T2">
+      <label>Table 2</label>
+      <caption>
+        <p>Stacking grammar specifications.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td/>
+            <td/>
+            <td align="center" colspan="2">Parameters</td>
+            <td/>
+            <td/>
+          </tr>
+          <tr>
+            <td align="center">
+              <bold>Grammar</bold>
+            </td>
+            <td align="center">NT</td>
+            <td align="center">Total</td>
+            <td align="center">Tied</td>
+            <td align="center"><italic>C. elegans </italic>LSU Memory (MB)</td>
+            <td align="left">Notes</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">G2</td>
+            <td align="center">2</td>
+            <td align="center">287(281)</td>
+            <td align="center">283(278)</td>
+            <td align="center">53.2</td>
+            <td align="left">ambiguous</td>
+          </tr>
+          <tr>
+            <td align="center">G7</td>
+            <td align="center">5</td>
+            <td align="center">341(326)</td>
+            <td align="center">289(281)</td>
+            <td align="center">128</td>
+            <td align="left">min 1 nt loop; no lone pairs; no ε string</td>
+          </tr>
+          <tr>
+            <td align="center">G8</td>
+            <td align="center">4</td>
+            <td align="center">347(334)</td>
+            <td align="center">287(280)</td>
+            <td align="center">103</td>
+            <td align="left">min 1 nt loop; no lone pairs</td>
+          </tr>
+          <tr>
+            <td align="center">G6<sup><italic>S</italic></sup></td>
+            <td align="center">3</td>
+            <td align="center">282(276)</td>
+            <td align="center">282(276)</td>
+            <td align="center">79.4</td>
+            <td align="left">min 2 nt loop; no ε string</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>Stacking adds to grammars more nonterminals (NT) and total (free) parameters. This translates into increased memory requirements, as shown by the folding of <italic>C. elegans </italic>large subunit ribosomal RNA (3662 nucleotides). It also may introduce other restrictions such as not permitting lone pairs.</p>
+      </table-wrap-foot>
+    </table-wrap>
+    <table-wrap position="float" id="T3">
+      <label>Table 3</label>
+      <caption>
+        <p>Grammar performance.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td/>
+            <td/>
+            <td align="center" colspan="3">Sensitivity % (PPV %)</td>
+          </tr>
+          <tr>
+            <td align="center">
+              <bold>Grammar</bold>
+            </td>
+            <td align="center">
+              <bold>Full Benchmarking </bold>
+              <break/>
+              <bold>Set Sensitivity % (PPV %)</bold>
+            </td>
+            <td align="center">RNase P</td>
+            <td align="center">SRP</td>
+            <td align="center">tmRNA</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">G1</td>
+            <td align="center">
+              <bold>17 (12)</bold>
+            </td>
+            <td align="center">14 (11)</td>
+            <td align="center">37 (32)</td>
+            <td align="center">10(6)</td>
+          </tr>
+          <tr>
+            <td align="center">G3</td>
+            <td align="center">
+              <bold>34 (31)</bold>
+            </td>
+            <td align="center">37 (35)</td>
+            <td align="center">28 (28)</td>
+            <td align="center">31 (22)</td>
+          </tr>
+          <tr>
+            <td align="center">G4</td>
+            <td align="center">
+              <bold>10 (8)</bold>
+            </td>
+            <td align="center">10(8)</td>
+            <td align="center">19 (17)</td>
+            <td align="center">4(2)</td>
+          </tr>
+          <tr>
+            <td align="center">G5</td>
+            <td align="center">
+              <bold>3(4)</bold>
+            </td>
+            <td align="center">3(4)</td>
+            <td align="center">2(3)</td>
+            <td align="center">4(3)</td>
+          </tr>
+          <tr>
+            <td align="center">G6</td>
+            <td align="center">
+              <bold>47 (45)</bold>
+            </td>
+            <td align="center">49 (49)</td>
+            <td align="center">47 (49)</td>
+            <td align="center">44 (33)</td>
+          </tr>
+          <tr>
+            <td align="center">G2</td>
+            <td align="center">
+              <bold>36 (25)</bold>
+            </td>
+            <td align="center">31 (23)</td>
+            <td align="center">59 (48)</td>
+            <td align="center">33 (17)</td>
+          </tr>
+          <tr>
+            <td align="center">G7</td>
+            <td align="center">
+              <bold>45 (43)</bold>
+            </td>
+            <td align="center">46 (46)</td>
+            <td align="center">50 (52)</td>
+            <td align="center">40 (30)</td>
+          </tr>
+          <tr>
+            <td align="center">G8</td>
+            <td align="center">
+              <bold>46 (44)</bold>
+            </td>
+            <td align="center">46 (46)</td>
+            <td align="center">52 (53)</td>
+            <td align="center">44 (32)</td>
+          </tr>
+          <tr>
+            <td align="center">G6<sup><italic>S</italic></sup></td>
+            <td align="center">
+              <bold>49 (45)</bold>
+            </td>
+            <td align="center">50 (50)</td>
+            <td align="center">50 (51)</td>
+            <td align="center">44 (32)</td>
+          </tr>
+          <tr>
+            <td align="center"><italic>mfold </italic>v3.1.2</td>
+            <td align="center">
+              <bold>56 (48)</bold>
+            </td>
+            <td align="center">56 (51)</td>
+            <td align="center">70 (66)</td>
+            <td align="center">46 (30)</td>
+          </tr>
+          <tr>
+            <td align="center">Vienna RNA</td>
+            <td align="center">
+              <bold>55 (47)</bold>
+            </td>
+            <td align="center">55 (51)</td>
+            <td align="center">67 (64)</td>
+            <td align="center">45 (30)</td>
+          </tr>
+          <tr>
+            <td align="center">PKNOTS</td>
+            <td align="center">
+              <bold>50 (41)</bold>
+            </td>
+            <td align="center">53 (46)</td>
+            <td align="center">58 (55)</td>
+            <td align="center">38 (24)</td>
+          </tr>
+          <tr>
+            <td align="center">RNAstructure</td>
+            <td align="center">
+              <bold>56 (47)</bold>
+            </td>
+            <td align="center">58 (52)</td>
+            <td align="center">62 (58)</td>
+            <td align="center">46 (30)</td>
+          </tr>
+          <tr>
+            <td align="center">Pfold</td>
+            <td align="center">
+              <bold>39 (69)</bold>
+            </td>
+            <td align="center">42 (76)</td>
+            <td align="center">35 (64)</td>
+            <td align="center">33 (54)</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>The first section contains simple grammars, the second contains stacking grammars, and the last section contains other available software packages that predict secondary structure. The nine grammars were trained on rRNA as described in the text. The second column gives the performance on the full benchmarking dataset, which is subdivided into each family in the subsequent columns. The metrics are calculated over base pairs as described in the text, evaluating the metrics over individual sequences shows similar results (data not shown).</p>
+      </table-wrap-foot>
+    </table-wrap>
+  </sec>
+</back>

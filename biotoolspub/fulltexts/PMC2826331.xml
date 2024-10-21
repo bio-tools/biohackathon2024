@@ -1,0 +1,1418 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Algorithms Mol Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Algorithms for Molecular Biology : AMB</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1748-7188</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2826331</article-id>
+    <article-id pub-id-type="publisher-id">1748-7188-5-3</article-id>
+    <article-id pub-id-type="pmid">20047659</article-id>
+    <article-id pub-id-type="doi">10.1186/1748-7188-5-3</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Phylogenetic comparative assembly</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Husemann</surname>
+          <given-names>Peter</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>phuseman@cebitec.uni-bielefeld.de</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Stoye</surname>
+          <given-names>Jens</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I3">3</xref>
+        <email>stoye@techfak.uni-bielefeld.de</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>AG Genominformatik, Technische Fakultät, Bielefeld University, Germany</aff>
+    <aff id="I2"><label>2</label>International Graduate School in Bioinformatics and Genome Research, Bielefeld University, Germany</aff>
+    <aff id="I3"><label>3</label>Institute for Bioinformatics, Center for Biotechnology (CeBiTec), Bielefeld University, Germany</aff>
+    <pub-date pub-type="collection">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>4</day>
+      <month>1</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>5</volume>
+    <fpage>3</fpage>
+    <lpage>3</lpage>
+    <history>
+      <date date-type="received">
+        <day>7</day>
+        <month>8</month>
+        <year>2009</year>
+      </date>
+      <date date-type="accepted">
+        <day>4</day>
+        <month>1</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Husemann and Stoye; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Husemann and Stoye; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.almob.org/content/5/1/3"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Recent high throughput sequencing technologies are capable of generating a huge amount of data for bacterial genome sequencing projects. Although current sequence assemblers successfully merge the overlapping reads, often several contigs remain which cannot be assembled any further. It is still costly and time consuming to close all the gaps in order to acquire the whole genomic sequence.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>Here we propose an algorithm that takes several related genomes and their phylogenetic relationships into account to create a graph that contains the likelihood for each pair of contigs to be adjacent.</p>
+        <p>Subsequently, this graph can be used to compute a layout graph that shows the most promising contig adjacencies in order to aid biologists in finishing the complete genomic sequence. The layout graph shows unique contig orderings where possible, and the best alternatives where necessary.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>Our new algorithm for contig ordering uses sequence similarity as well as phylogenetic information to estimate adjacencies of contigs. An evaluation of our implementation shows that it performs better than recent approaches while being much faster at the same time.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Today the nucleotide sequences of many genomes are known. In the first genome projects, the process of obtaining the DNA sequence by multi-step clone-by-clone sequencing approaches was costly and tedious. Nowadays, the most common approach for de-novo genome sequencing is <italic>whole genome shotgun sequencing </italic>[<xref ref-type="bibr" rid="B1">1</xref>,<xref ref-type="bibr" rid="B2">2</xref>]. Here, the genome is fragmented randomly into small parts. Each of these fragments is sequenced, for example, with recent high throughput methods [<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B4">4</xref>]. In the next step, overlapping reads are merged with an <italic>assembler </italic>software into a contiguous string. However, instead of the desired one sequence of the whole genome, often many <italic>contigs </italic>remain, separated by gaps. The main reasons for these gaps are lost fragments in the fragmentation phase and repeating sequences in the genome. In a process called <italic>scaffolding</italic>, the relative order of the contigs as well as the size of the gaps between them is estimated. In a subsequent <italic>finishing </italic>phase the gaps between the contigs are closed with a procedure called <italic>primer walking</italic>. For the ends of two estimated adjacent contigs, specific primer sequences have to be designed that function as start points for two polymerase chain reactions (PCRs) for Sanger sequencing [<xref ref-type="bibr" rid="B5">5</xref>]. These PCRs ideally run towards each other until the sequences overlap. To close a gap completely, new primer pairs have to be generated again and again since the maximum read length for Sanger sequencing is restricted. This makes the process expensive and work intensive. It is thus advisable to reduce the pairs of contigs that have to be considered. Given <italic>n </italic>contigs and no further information about their order, there are <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i1.gif"/></inline-formula>(<italic>n</italic><sup>2</sup>) possibilities to apply primer walking. If the order is known, it suffices to do <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i1.gif"/></inline-formula>(<italic>n</italic>) primer walks to fill the gaps.</p>
+    <p>An algorithm that estimates a reasonable order for the contigs is thus a good help for sequencing projects. The estimation is usually based on the sequences of closely related species that are assumed to have a high degree of synteny. A few tools have been developed which use one or several related reference genomes to devise an ordering of the contigs: Projector2 [<xref ref-type="bibr" rid="B6">6</xref>], for example, is a web service that maps contig ends on a template genome using BLAST [<xref ref-type="bibr" rid="B7">7</xref>] or BLAT [<xref ref-type="bibr" rid="B8">8</xref>]. Features of Projector2 are an optional repeat masking for contig and template sequences, a visualization of the mapping, and an automated primer-design step for gap-closing purposes. Prior to the automated primer design, difficult regions for primer walking are removed, like, for example, repetitive sequences (phage DNA, IS elements or gene duplications) or sequences with unbalanced GC content. The program OSLay [<xref ref-type="bibr" rid="B9">9</xref>] takes a set of BLAST matches between the contigs and a reference sequence or scaffold and computes from this a layout for the contigs. The algorithm minimizes the height differences of so-called local diagonal extensions, which are basically matches from the border of a contig to the reference sequence. The resulting layout is visualized and can be imported into a Consed [<xref ref-type="bibr" rid="B10">10</xref>] project to aid gap-closure. Zhao et al. [<xref ref-type="bibr" rid="B11">11</xref>] present a method to find an ordering for a set of contigs using several related sequences as references. For each reference genome a <italic>fitness matrix </italic>is computed giving distances between the contigs, based on their BLAST matches. All matrices are combined into a single fitness matrix to search an optimal path of contig connections with their heuristic PGA (pheromone trail-based genetic algorithm).</p>
+    <p>Our work in this field commenced when analyzing data from in-house sequencing projects for different species of the <italic>Corynebacteria </italic>genus. We observed several aspects making it hard to find an ordering of the contigs. Zhao et al. [<xref ref-type="bibr" rid="B11">11</xref>] show that poor sequence coverage can be overcome by using multiple reference genomes, but problematic for this approach are major rearrangements in the genomic sequences of more distantly related species. Another challenge are repeating regions in the sequence of the newly sequenced genome. We developed an algorithm that uses the information of all similar regions between a set of contigs and several related reference genomes to estimate an ordering of the contigs. The novel idea is to incorporate the phylogenetic distance of the species in order to alleviate the impact of rearrangements to the ordering. While generating one 'optimal' order of the contigs is the predominant approach to aid the closure of gaps, we propose a more flexible format to describe contig adjacencies that is also capable of dealing with repeating contigs.</p>
+    <p>The algorithm we present here is based on a simple data structure, the <italic>contig adjacency graph</italic>, that is introduced in the next section. There we also give an optimal solution for finding a linear ordering of the contigs using this graph. However, a linear ordering is not sufficient to reflect all relations of real contig data. Therefore we propose a heuristic by which the most promising, but not necessarily unique, adjacencies are revealed in a <italic>layout graph</italic>. In section 'Results and discussion' we show the evaluation of applying our method to real sequencing data and compare the results with those obtained by PGA.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <p>A natural strategy to devise an 'optimal' linear ordering of the contigs, based on one or several related reference genomes, works in three steps: At first, all similar regions between the contigs and each reference genome are determined. Then a graph is created, containing edge weights that reflect the neighborhood of the contigs. In the last step a weight maximizing path through the graph is calculated, which defines the desired order of the contigs. In the following, we describe these three steps in more detail. In particular, in Section 'Contig adjacency graph', we define a novel edge weight function that incorporates the phylogenetic distance of the involved species.</p>
+    <sec>
+      <title>Matching contigs against a reference</title>
+      <p>Let Σ ={<italic>A</italic>, <italic>C</italic>, <italic>G</italic>, <italic>T</italic>} be the alphabet of nucleotides. We denote by Σ* the set of all finite strings over Σ, by |<italic>s</italic>|:= ℓ the <italic>length </italic>of string <italic>s </italic>= <italic>s</italic><sub>1 </sub>... <italic>s</italic><sub>ℓ</sub>, and by <italic>s </italic>[<italic>i</italic>, <italic>j</italic>]:= <italic>s</italic><sub><italic>i</italic></sub>... <italic>s</italic><sub><italic>j </italic></sub>with 1 ≤ <italic>i </italic>≤ <italic>j </italic>≤ ℓ the <italic>substring </italic>of <italic>s </italic>that starts at position <italic>i </italic>and ends at position <italic>j</italic>. Suppose we are given a set of contigs <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i2.gif"/></inline-formula> ={<italic>c</italic><sub>1</sub>, ..., <italic>c</italic><sub><italic>n</italic></sub>}, <italic>c</italic><sub><italic>i </italic></sub>∈ Σ*, and a set of already finished reference genomes ℛ ={<italic>g</italic><sub>1</sub>, ..., <italic>g</italic><sub><italic>m</italic></sub>}, <italic>g</italic><sub><italic>r </italic></sub>∈ Σ*. The relation of the reference genomes is given by a phylogenetic tree <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i3.gif"/></inline-formula> that contains the evolutionary distances of the species. Note that the tree can be generated even if some genomes are not completely assembled yet, for example from 16S-rRNAs. To infer information about the order and orientation of the contigs, these are mapped onto each reference genome by calculating local alignments. Let <italic>s </italic>= <italic>c </italic>[<italic>s</italic><sub><italic>b</italic></sub>, <italic>s</italic><sub><italic>e</italic></sub>] be a substring of contig <italic>c </italic>and <italic>t </italic>= <italic>g </italic>[<italic>t</italic><sub><italic>b</italic></sub>, <italic>t</italic><sub><italic>e</italic></sub>] be a substring of reference genome <italic>g</italic>. The tuple <italic>m </italic>= ((<italic>s</italic><sub><italic>b</italic></sub>, <italic>s</italic><sub><italic>e</italic></sub>), (<italic>t</italic><sub><italic>b</italic></sub>, <italic>t</italic><sub><italic>e</italic></sub>)) is called a <italic>matching region </italic>or simply <italic>match </italic>if <italic>s </italic>and <italic>t </italic>share sufficient sequence similarity. The <italic>length </italic>of a match, |<italic>m</italic>|:= <italic>t</italic><sub><italic>e</italic></sub>-<italic>t</italic><sub><italic>b </italic></sub>+1, is defined as the length of the covered substring in the reference genome. Sufficient sequence similarity could be defined, for example, by a BLAST hit of significance above a user-defined threshold. Another possibility, that we employ in our implementation, is to use the <italic>swift </italic>algorithm [<xref ref-type="bibr" rid="B12">12</xref>] for matching. It utilizes a <italic>q</italic>-gram index and provides for each match <italic>m </italic>the number of exactly matching <italic>q</italic>-grams, denoted as qhits(<italic>m</italic>), which can be used as a quality estimation for that match. Note that each contig can have several matches on a reference genome. For <italic>s</italic><sub><italic>b</italic></sub><italic>&gt; s</italic><sub><italic>e </italic></sub>we define <italic>c </italic>[<italic>s</italic><sub><italic>b</italic></sub>, <italic>s</italic><sub><italic>e</italic></sub>] to be the reverse complement of <italic>c </italic>[<italic>s</italic><sub><italic>e</italic></sub>, <italic>s</italic><sub><italic>b</italic></sub>] and call <italic>m </italic>a <italic>reverse match</italic>. Further we assume w.l.o.g. that <italic>t</italic><sub><italic>b</italic></sub><italic>&lt; t</italic><sub><italic>e </italic></sub>for all <italic>g </italic>[<italic>t</italic><sub><italic>b</italic></sub>, <italic>t</italic><sub><italic>e</italic></sub>], otherwise we can replace the involved contig sequence by its reverse complement. For brevity of notation, <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i4.gif"/></inline-formula> denotes a match between contig <italic>c</italic><sub><italic>i </italic></sub>∈ <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i2.gif"/></inline-formula> and reference genome <italic>g</italic><sub><italic>r </italic></sub>∈ ℛ, and <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i5.gif"/></inline-formula> denotes the (possibly empty) set of all such matches.</p>
+      <p>Each match <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i4.gif"/></inline-formula> = ((<italic>s</italic><sub><italic>b</italic></sub>, <italic>s</italic><sub><italic>e</italic></sub>), (<italic>t</italic><sub><italic>b</italic></sub>, <italic>t</italic><sub><italic>e</italic></sub>)) implies a projection of the contig <italic>c</italic><sub><italic>i </italic></sub>onto the reference genome <italic>g</italic><sub><italic>r </italic></sub>. The <italic>projected contig π </italic>(<inline-formula><inline-graphic xlink:href="1748-7188-5-3-i4.gif"/></inline-formula>) = ((<italic>t</italic><sub><italic>b</italic></sub>- <italic>s</italic><sub><italic>b</italic></sub>), (<italic>t</italic><sub><italic>e</italic></sub>+ |<italic>c</italic><sub><italic>i</italic></sub>| - <italic>s</italic><sub><italic>e</italic></sub>)) refers to the implied pair of index positions on <italic>g</italic><sub><italic>r </italic></sub>. For reverse complement matches, the projection can be defined similarly. Figure <xref ref-type="fig" rid="F1">1</xref> shows an example of two projected contigs as well as their distance, which will be defined next.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Projection of a match</bold>. Projections <italic>π </italic>(<italic>m</italic><sub>1</sub>) and <italic>π </italic>(<italic>m</italic><sub>2</sub>) of the contigs <italic>c</italic><sub>1 </sub>and <italic>c</italic><sub>2 </sub>based on their matches <italic>m</italic><sub>1 </sub>and <italic>m</italic><sub>2</sub>. The distance <italic>d </italic>reflects the displacement of the projections.</p>
+        </caption>
+        <graphic xlink:href="1748-7188-5-3-1"/>
+      </fig>
+      <p>The <italic>distance </italic>of two projected contigs <italic>π </italic>(<italic>m</italic>) = (<italic>t</italic><sub><italic>b</italic></sub>, <italic>t</italic><sub><italic>e</italic></sub>) and <italic>π </italic>(<italic>m'</italic>) = (<inline-formula><inline-graphic xlink:href="1748-7188-5-3-i6.gif"/></inline-formula>) is defined as follows:<disp-formula><graphic xlink:href="1748-7188-5-3-i7.gif"/></disp-formula></p>
+      <p>If the matches refer to different reference genomes, the distance of their projections is undefined. Note that the term distance is used here in the sense of 'displacement', <italic>d </italic>is <italic>not </italic>a metric in the mathematical sense. For example, <italic>d </italic>is negative if the projected contigs overlap.</p>
+    </sec>
+    <sec>
+      <title>Contig adjacency graph</title>
+      <p>In the following we define the edge-weighted <italic>contig adjacency graph </italic><inline-formula><inline-graphic xlink:href="1748-7188-5-3-i8.gif"/></inline-formula> = (<italic>V</italic>, <italic>E</italic>) that contains for each contig <italic>c</italic><sub><italic>i </italic></sub>∈ <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i2.gif"/></inline-formula> two vertices: <italic>l</italic><sub><italic>i </italic></sub>as the <italic>left connector </italic>and <italic>r</italic><sub><italic>i </italic></sub>as the <italic>right connector </italic>of contig <italic>c</italic><sub><italic>i</italic></sub>. The set of vertices <italic>V </italic>is then defined as <italic>V </italic>= <italic>L </italic>∪ <italic>R</italic>, where <italic>L </italic>={<italic>l</italic><sub>1</sub>, ..., <italic>l</italic><sub><italic>n</italic></sub>} and <italic>R </italic>= {<italic>r</italic><sub>1</sub>, ..., <italic>r</italic><sub><italic>n</italic></sub>}.</p>
+      <p>The graph <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i8.gif"/></inline-formula> is fully connected: <italic>E </italic>= (<inline-formula><inline-graphic xlink:href="1748-7188-5-3-i9.gif"/></inline-formula>). We split these edges into two subsets: the <italic>intra contig edges I </italic>={{<italic>l</italic><sub>1</sub>, <italic>r</italic><sub>1</sub>}, ..., {<italic>l</italic><sub><italic>n</italic></sub>, <italic>r</italic><sub><italic>n</italic></sub>}} which connect for each contig its left and its right connector; and the set of <italic>adjacency edges A </italic>= <italic>E</italic>\<italic>I </italic>that connect the contigs among each other.</p>
+      <p>Now we define a weight function for the edges. For each intra contig edge <italic>e </italic>∈ <italic>I </italic>we set the weight <italic>w</italic>(<italic>e</italic>) = 0. For the remaining edges let <italic>e </italic>= {<italic>v</italic><sub><italic>i</italic></sub>, <italic>v</italic><sub><italic>j</italic></sub>} ∈ <italic>A </italic>with <italic>v</italic><sub><italic>i </italic></sub>∈ {<italic>l</italic><sub><italic>i</italic></sub>, <italic>r</italic><sub><italic>i</italic></sub>} and <italic>v</italic><sub><italic>j</italic></sub><italic>∈ </italic>{<italic>l</italic><sub><italic>j</italic></sub>, <italic>r</italic><sub><italic>j</italic></sub>} be an adjacency between contigs <italic>c</italic><sub><italic>i </italic></sub>and <italic>c</italic><sub><italic>j</italic></sub>. Then the weight of this adjacency edge is defined as<disp-formula><graphic xlink:href="1748-7188-5-3-i10.gif"/></disp-formula></p>
+      <p>where the (symmetric) function <italic>w</italic><sub><italic>r</italic></sub>(<italic>v</italic><sub><italic>i</italic></sub>, <italic>v</italic><sub><italic>j</italic></sub>) defines a likelihood score for the contigs <italic>c</italic><sub><italic>i </italic></sub>and <italic>c</italic><sub><italic>j </italic></sub>being adjacent, with respect to their connectors <italic>v</italic><sub><italic>i </italic></sub>and <italic>v</italic><sub><italic>j </italic></sub>. Each score <italic>w</italic><sub><italic>r </italic></sub>is based on the matches to reference <italic>g</italic><sub><italic>r </italic></sub>and employs the phylogenetic distance <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i11.gif"/></inline-formula> between the contig species and the reference genome species as a weight factor:<disp-formula><graphic xlink:href="1748-7188-5-3-i12.gif"/></disp-formula></p>
+      <p>where <italic>d </italic>is the distance between the projected contigs and <italic>s</italic>(<italic>d</italic>, <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i11.gif"/></inline-formula>) is a suitably defined scoring function. In order to define <italic>s </italic>we will give some further biological motivations. The scoring function <italic>s </italic>models the likelihood that two contigs are adjacent based on the distance <italic>d </italic>of their projected contigs. Projected contigs that are not adjacent have a high distance and should obtain a low score. Adjacent contigs should gain a high score for usually having a distance close to zero. However, the distance of two projected contigs can reach positive values due to insertions in the reference's genome. Similarly, the distances can be negative if the projections overlap, which is the case if there are insertions in the newly sequenced genome. Both cases can be seen in Figure <xref ref-type="fig" rid="F2">2</xref>. Note that an insertion in the one genome corresponds to a deletion in the other.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Insertion distance</bold>. (a) An insertion in the reference genome leads to a positive distance, whereas (b) an insertion in a contig leads to a negative distance.</p>
+        </caption>
+        <graphic xlink:href="1748-7188-5-3-2"/>
+      </fig>
+      <p>A second important aspect that is included in our model are rearrangements between the related species, which can lead to misleading adjacencies of projected contigs. Assuming that between closer related species less rearrangements have taken place, we use the phylogenetic tree distance <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i11.gif"/></inline-formula> to weight the match information.</p>
+      <p>To model the two mentioned considerations, we use a Gaussian distribution with an expected value of zero:<disp-formula><graphic xlink:href="1748-7188-5-3-i13.gif"/></disp-formula></p>
+      <p>where <italic>s </italic>is the standard deviation for the size of deletions or insertions. A higher tree distance <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i11.gif"/></inline-formula> allows larger insertions and deletions, but scores the reliability of the matches to more distantly related genomes to a lesser degree.</p>
+      <p>However, this model neglects the fact that in the fragmentation phase, for example in parallel pyrosequencing, often fragments disappear, such that there are no reads for this fragment. If a fragment is not sequenced, the same situation arises as if there is an insertion into the reference genome, which causes positive distances. To include this detail we use two superimposed Gaussian distributions for the scoring. The first distribution models insertions into the contigs and into the reference genome, the second models lost fragments during sequence assembly. The influence of each model is determined by a weighting factor <italic>φ</italic>:<disp-formula id="bmcM1"><label>(1)</label><graphic xlink:href="1748-7188-5-3-i14.gif"/></disp-formula></p>
+      <p>The expected value <italic>μ </italic>of the second Gaussian distribution is equal to the average size of the lost fragments.</p>
+      <p>The standard deviations <italic>σ</italic><sub>1 </sub>and <italic>σ</italic><sub>2 </sub>can be estimated from sequencing projects.</p>
+    </sec>
+    <sec>
+      <title>Finding a tour through the graph</title>
+      <p>The contig adjacency graph with the described edge weights can be used to find a linear ordering of the contigs. This can be achieved by computing a tour through the graph that incorporates all contigs and maximizes the total weight. With minor enhancements of the graph, this becomes equivalent to finding a shortest Hamiltonian cycle.</p>
+      <p>The modifications are as follows: At first all edge weights have to be converted to distances. This is done by replacing each edge weight <italic>w </italic>by <italic>m - w </italic>where <italic>m </italic>is the maximum weight in the graph. To ensure that each contig is incorporated exactly once, and only in one direction, we add an intermediate node between the left and the right connector of each contig. The modified graph is then defined as <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i15.gif"/></inline-formula> = (V', E') with <italic>V' </italic>= <italic>V </italic>∪ {<italic>v</italic><sub><italic>i</italic></sub>| 1 ≤ <italic>i </italic>≤ <italic>n</italic>} and <italic>E' </italic>= <italic>A </italic>∪ {{<italic>l</italic><sub><italic>i</italic></sub>, <italic>v</italic><sub><italic>i</italic></sub>}, {<italic>v</italic><sub><italic>i</italic></sub>, <italic>r</italic><sub><italic>i</italic></sub>}| 1 ≤ <italic>i </italic>≤ <italic>n</italic>}. The distance of all edges that lead to an intermediate node <italic>v</italic><sub><italic>i </italic></sub>is set to 0. It is easy to see that a shortest Hamiltonian cycle in the modified graph defines an ordering as well as the orientation of all contigs, and thus any TSP algorithm can be used to find an optimal linear layout of the contigs.</p>
+    </sec>
+    <sec>
+      <title>Fast adjacency discovery algorithm</title>
+      <p>As described in the previous section, a linear ordering of the contigs, which is optimal with respect to the adjacency edge weights, can be computed using a suitable optimization algorithm. However, our analysis of real data in the results section shows that a linear order of the contigs is not necessarily possible, mainly due to arbitrary placement of repeated or rearranged regions. A method that provides a unique layout where possible, but also points out alternative solutions where necessary, may be more useful in practice. We present an approach following this overall strategy in this section.</p>
+      <p>The basis of our algorithm is a greedy heuristic for the TSP, known as the <italic>multi-fragment heuristic </italic>[<xref ref-type="bibr" rid="B13">13</xref>], that proceeds as follows: First the edges of the graph are sorted by increasing distance and then added in this order into an initially empty set of path fragments. Whenever an involved node would exceed the maximal degree of two, or if a path fragment would create a cycle, the edge is skipped. The only exception to the latter is the final Hamiltonian cycle of length <italic>n</italic>.</p>
+      <p>This <italic>best connection first </italic>procedure creates multiple low distance path fragments which are merged sooner or later. We chose this approach because it seems natural to incorporate those adjacencies first into an ordering that are most promising to be investigated for gap closure.</p>
+      <p>As already indicated, repeating or rearranged regions may prohibit an unambiguous linear ordering of the contigs. Repeating contigs create cycles in a possible path, and rearrangements can lead to conflicting adjacencies of a contig. To model both, we relax the constraints of the multi-fragment heuristic: First, we do not check for cycles, which permits repeating contigs to be incorporated adequately. Secondly, when inserting an edge, we allow one of the incident nodes, but not both, to exceed the degree of two, which allows to also include conflicting information into our layout. The result of this modified heuristic is a subgraph of the contig adjacency graph <italic>L </italic>⊂ <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i8.gif"/></inline-formula> that we call the <italic>layout graph</italic>. The algorithm to generate the layout graph is formally described in Figure <xref ref-type="fig" rid="F3">3</xref>. Note that the resulting layout graph is not necessarily connected.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Contig adjacency discovery algorithm</bold>. Heuristic to compute the layout graph which shows the most promising contig adjacencies.</p>
+        </caption>
+        <graphic xlink:href="1748-7188-5-3-3"/>
+      </fig>
+      <p>The layout graph can be analyzed to make assumptions about repeating contigs and rearrangements. Conflicting edges can give hints about these two problems, whereas the information about unambiguously incorporated contigs can be used to generate primer pairs for gap closure. Displaying also the ambiguities allows to investigate the conflicting connections further. Instead of pinning the result down to a single, possibly wrong, order of the contigs we prefer to output the best possibilities. Nonetheless it should be kept in mind that rearrangements can cause seemingly good adjacencies that do not belong to a correct layout.</p>
+    </sec>
+    <sec>
+      <title>Integrating additional information</title>
+      <p>In sequencing projects often additional information occurs which can be helpful for the scaffolding of a genome. After introducing two of such information types, we outline how they may be incorporated into our approach.</p>
+      <p>1. Recent protocols for parallel pyrosequencing produce <italic>mate pair information</italic>. Fragments of a defined size are sequenced from both ends thus providing the approximate distance as well as the orientation of both reads relative to each other. This information simplifies the assembly and sometimes indicates adjacencies of contigs.</p>
+      <p>2. After an initial assembly of the reads, often <italic>fosmid libraries </italic>are employed to accomplish the finishing of a genome. Fragments of the genome with a size between 35 and 40 kb are used as inserts for the fosmids in order to sequence the ends of each inserted fragment. If those end sequences can be mapped to different contigs, it is possible to infer the distance and orientation of contigs towards each other. Fosmid libraries have the additional advantage that they can be used for primer walking even if the gaps between the contigs exceed the usual size to do primer walking on the genome. But of course this advantage is paid for with a high amount of work to create the library.</p>
+      <p>The information from mate pairs, fosmid libraries or on a larger scale even radiation hybrid maps can be included into our approach by modifying the weights of the computed contig adjacency graph. This influences also the predicted adjacencies in the layout graph which is the outcome of our algorithm. If expert information indicates that two contigs are not adjacent, it suffices to set the appropriate edge weight to zero. This contig connection will not occur in the result afterwards. On the contrary, if for example fosmid end sequencing shows that two contigs are adjacent and quite close, the incorporation of that edge into the layout graph can be forced by setting the corresponding edge weight to the maximum weight of the graph.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <sec>
+      <title>Datasets</title>
+      <p>To evaluate our proposed method, we prepared three datasets, each consisting of a set of contigs to be layouted and a set of reference genomes which are related to the contig's genome. From sequencing projects conducted at Bielefeld University, we obtained the contig sequences for three genomes of the <italic>Corynebacteria </italic>genus: <italic>C. aurimucosum </italic>(<ext-link ext-link-type="gen" xlink:href="NC_012590">NC_012590</ext-link>), <italic>C. urealyticum </italic>[<xref ref-type="bibr" rid="B14">14</xref>], and <italic>C. kroppenstedtii </italic>[<xref ref-type="bibr" rid="B15">15</xref>]. The complete genomes of these species have already been finished and are available from NCBI [<xref ref-type="bibr" rid="B16">16</xref>,<xref ref-type="bibr" rid="B17">17</xref>]. This enables us to compute a <italic>reference order </italic>for each set of contigs that serves as a 'standard of truth'. The reference order was devised by mapping the contigs onto their corresponding finished genome and placing each contig on that region where it gained the most matches. We would like to note that such a reference order is not necessarily unique since contigs often contain or even consist of repeating regions which map non-uniquely to multiple locations. On the contrary, some of the contigs do not even match at all and could for this reason not be included in the reference order: Five out of originally 113 contigs were affected in the <italic>C. aurimucosum </italic>genome. Two of them are very small (241 and 304 bases, respectively) but the other three have a considerable size of 28 kb in total. The explanation for the latter not matching is that the sequences belong to the <italic>C. aurimucosum </italic>plasmid pET44827. On the finished <italic>C. kroppenstedtii </italic>genome, two very small contigs (118 and 222 bases) out of 11 could not be matched. For <italic>C. urealyticum </italic>we used all contigs larger than 500 bases since many smaller contigs could not be placed appropriately. This way 154 of originally 223 contigs with a total size of 22 kb were not used which equals less than 0.01% of the finished genome. Moreover, the N50 contig size, which is a more robust measure than the mean or median to characterize the contig's size distribution, stays the same for the reduced set. In all following experiments the contig sets were composed of only those contigs that also appear in the reference order. The contig sets together with some important properties are shown in Table <xref ref-type="table" rid="T1">1</xref>.</p>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Contig sets</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Contig Organism</th>
+              <th align="right"># Contigs</th>
+              <th align="center">Total Length</th>
+              <th align="right">N50 Contig Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left"><italic>C. aurimucosum </italic>ATCC 700975</td>
+              <td align="right">108</td>
+              <td align="center">2 716 204 bp</td>
+              <td align="right">96 704 bp</td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. kroppenstedtii </italic>DSM 44385</td>
+              <td align="right">9</td>
+              <td align="center">2 434 935 bp</td>
+              <td align="right">546 376 bp</td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. urealyticum </italic>DSM 7109</td>
+              <td align="right">69</td>
+              <td align="center">2 294 755 bp</td>
+              <td align="right">86 391 bp</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>The three contig sets that were used to evaluate our algorithm. All corresponding genomes have already been finished. The N50 contig size gives the size of the largest contig such that at least half of the total size is covered by contigs larger than that contig. This measure is more robust than the mean or median if many small contigs exist.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>As reference genomes for ordering the contigs, the three above mentioned finished genomes were used and were extended by choosing four more publicly available <italic>Corynebacteria </italic>genomes, <italic>C. diphtheriae</italic>, <italic>C. efficiens</italic>, <italic>C. glutamicum</italic>, and <italic>C. jeikeium</italic>, that we downloaded from NCBI. The complete set of reference genomes, including their accession numbers, is shown in Table <xref ref-type="table" rid="T2">2</xref>. Obviously, whenever a genome is to be reconstructed from its set of contigs, this genome is removed from the dataset of reference genomes. For our algorithm the phylogenetic relationship between the species plays an important role. Figure <xref ref-type="fig" rid="F4">4</xref> shows the evolutionary tree of all employed genomes. The tree was generated with the EDGAR framework [<xref ref-type="bibr" rid="B18">18</xref>] applying Neighbor Joining [<xref ref-type="bibr" rid="B19">19</xref>] to a set of <italic>core </italic>genes. As a more detailed illustration for the varying degree of rearrangements and synteny between the employed species, Figure <xref ref-type="fig" rid="F5">5</xref> shows four example synteny plots for the contigs of <italic>C. urealyticum</italic>. While Figure <xref ref-type="fig" rid="F5">5(a)</xref> shows a high degree of synteny and only few rearrangements to the <italic>C. jeikeium </italic>genome, Figure <xref ref-type="fig" rid="F5">5(d)</xref> shows low synteny combined with many major rearrangements in the <italic>C. aurimucosum </italic>genome. Figures <xref ref-type="fig" rid="F5">5(b)</xref> and <xref ref-type="fig" rid="F5">5(c)</xref> show similar rearrangements but differing levels of synteny with respect to the genomes of <italic>C. efficiens </italic>and <italic>C. diphtheriae</italic>. It is clearly observable that due to rearrangements a mapping of the contigs on the displayed related genomes would provide incorrect adjacencies of some contigs.</p>
+      <table-wrap id="T2" position="float">
+        <label>Table 2</label>
+        <caption>
+          <p>Reference genomes</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Reference Organism</th>
+              <th align="right">Sequence Length</th>
+              <th align="center"><bold>Accession Nr</bold>.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left"><italic>C. aurimucosum </italic>ATCC 700975</td>
+              <td align="right">2 790 189 bp</td>
+              <td align="center">
+                <ext-link ext-link-type="gen" xlink:href="NC_012590">NC_012590</ext-link>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. diphtheriae </italic>NCTC 13129</td>
+              <td align="right">2 488 635 bp</td>
+              <td align="center">
+                <ext-link ext-link-type="gen" xlink:href="NC_002935">NC_002935</ext-link>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. efficiens </italic>YS-314</td>
+              <td align="right">3 147 090 bp</td>
+              <td align="center">
+                <ext-link ext-link-type="gen" xlink:href="NC_004369">NC_004369</ext-link>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. glutamicum </italic>ATCC 13032</td>
+              <td align="right">3 282 708 bp</td>
+              <td align="center">
+                <ext-link ext-link-type="gen" xlink:href="NC_006958">NC_006958</ext-link>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. jeikeium </italic>K411</td>
+              <td align="right">2 462 499 bp</td>
+              <td align="center">
+                <ext-link ext-link-type="gen" xlink:href="NC_007164">NC_007164</ext-link>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. jeikeium </italic>K411 plasmid pKW4</td>
+              <td align="right">14 323 bp</td>
+              <td align="center">
+                <ext-link ext-link-type="gen" xlink:href="NC_003080">NC_003080</ext-link>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. kroppenstedtii </italic>DSM 44385</td>
+              <td align="right">2 446 804 bp</td>
+              <td align="center">
+                <ext-link ext-link-type="gen" xlink:href="NC_012704">NC_012704</ext-link>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"><italic>C. urealyticum </italic>DSM 7109</td>
+              <td align="right">2 369 219 bp</td>
+              <td align="center">
+                <ext-link ext-link-type="gen" xlink:href="NC_010545">NC_010545</ext-link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Overview of the reference sequences of the <italic>Corynebacteria </italic>genus that were employed for our study.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Phylogenetic tree</bold>. Phylogenetic tree of the employed Corynebacteria. For all species marked with an asterisk (*) the underlying contig data were available. The tree was calculated with EDGAR [<xref ref-type="bibr" rid="B18">18</xref>], the image was generated with PHY.FI [<xref ref-type="bibr" rid="B23">23</xref>].</p>
+        </caption>
+        <graphic xlink:href="1748-7188-5-3-4"/>
+      </fig>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Synteny plots</bold>. Pairwise synteny plots of the contigs of <italic>C. urealyticum </italic>and four chosen complete genomes of the <italic>Corynebacteria </italic>genus. The contigs are stacked on the vertical axis in reference order, separated by horizontal lines. The ticks below each synteny plot indicate uncovered regions.</p>
+        </caption>
+        <graphic xlink:href="1748-7188-5-3-5"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Experimental setup</title>
+      <p>In the following we address the outcome of three different experiments: At first we used PGA [<xref ref-type="bibr" rid="B11">11</xref>] to order the contigs, given the finished genome as reference. Secondly, we applied OSLay [<xref ref-type="bibr" rid="B9">9</xref>] and Projector2 [<xref ref-type="bibr" rid="B6">6</xref>] to find an ordering of the contigs, each time with the closest genome as reference sequence. Finally, as an evaluation of our proposed method, we compare the performance of PGA and our implementation <italic>treecat </italic>using all reference genomes except for the one to be finished.</p>
+      <p>In each experiment, the mentioned programs were run to devise an ordering of the contigs. The output was then compared to the reference order. We counted all connections which also occur in the corresponding reference order as <italic>true positives </italic>(TP), all others as <italic>false positives </italic>(FP). From these values we calculated the <italic>sensitivity </italic>(also called <italic>true positive rate</italic>, <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i16.gif"/></inline-formula>, where P is the number of connections in the reference order) as well as the <italic>precision </italic>(also called <italic>positive predictive value</italic>, <inline-formula><inline-graphic xlink:href="1748-7188-5-3-i17.gif"/></inline-formula>). All four values are given in the result tables for each experiment. For PGA, which is a randomized algorithm, the results were often varying, so we give the mean values for applying the program 20 times. Additionally the best result, which yielded the highest TP while having the lowest FP, is given in parentheses.</p>
+    </sec>
+    <sec>
+      <title>Assessing the difficulty of comparative assembly</title>
+      <sec>
+        <title>Uniqueness of a linear order</title>
+        <p>Our first experiment serves as a demonstration how difficult it is to order the contigs of the given datasets. PGA was applied on each contig set with only one reference, the already finished genome of the contigs, which ought to provide the 'perfect' information.</p>
+        <p>A run of PGA proceeds as follows: First BLAST is used to match the contigs on each given genome. After that PGA computes five paths for the contigs that optimize a <italic>fitness matrix </italic>which is comparable to our contig adjacency graph. For that purpose a genetic algorithm is used, possibly giving different connections with each run. The connections of all five paths are included into the result together with a weight giving the percentage how often this connection occurred.</p>
+        <p>The results of this experiment are shown in Table <xref ref-type="table" rid="T3">3</xref>. Both sensitivity and precision are comparably low for all datasets. We see the reason for this mainly in repeating sequences flanking the contigs. Sometimes almost the whole sequence of a contig is repeating which leads to cycles in a potential path that orders the contigs. This can clearly be observed in Figure <xref ref-type="fig" rid="F6">6</xref> which visualizes the contig connections that PGA predicts for the example of <italic>C. urealyticum</italic>. The node labels in this graph are the ranks of the corresponding contigs with respect to the reference order of the contigs. The correct path should therefore be 0, 1, ..., 68. Some nodes are missing in this graph since PGA filters all contigs of length less than 3 500 bases. The edge labels give the percentage how often a connection occurs in the five paths. In this example it is observable that there are loops of connections where the contigs are almost uniquely orderable but there also occur parts where such a linear order can not be achieved. This experiment shows that it is not feasible to generate a linear ordering if repeating regions would create cycles in a potential path. If the contig adjacencies are not unique, then, to our opinion, it would be better to show the most probable alternatives instead of relying on a linear path. This, however increases the false positive rate of results created that way. In fact PGA does show alternatives by combining the results of five paths but each path corresponds still to a linear ordering. One has to decide what is more valuable: A single linear ordering which could also be wrong or the display of possible alternatives with the risk of producing some false positives. We believe that the latter pays off when trying to manually close the gaps during genome finishing.</p>
+        <table-wrap id="T3" position="float">
+          <label>Table 3</label>
+          <caption>
+            <p>PGA results - Perfect reference</p>
+          </caption>
+          <table frame="hsides" rules="groups">
+            <thead>
+              <tr>
+                <th/>
+                <th align="center" colspan="4">PGA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left">
+                  <bold>Organism</bold>
+                </td>
+                <td align="right">
+                  <bold>TP</bold>
+                </td>
+                <td align="right">
+                  <bold>FP</bold>
+                </td>
+                <td align="right">
+                  <bold>TPR</bold>
+                </td>
+                <td align="right">
+                  <bold>PPV</bold>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="5">
+                  <hr/>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. aurimucosum</italic>
+                </td>
+                <td align="right">19.3 (20)</td>
+                <td align="right">44.2 (40)</td>
+                <td align="right">0.18 (0.19)</td>
+                <td align="right">0.30 (0.33)</td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. kroppenstedtii</italic>
+                </td>
+                <td align="right">3.0 (3)</td>
+                <td align="right">3.0 (3)</td>
+                <td align="right">0.33 (0.33)</td>
+                <td align="right">0.50 (0.50)</td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. urealyticum</italic>
+                </td>
+                <td align="right">24.2 (25)</td>
+                <td align="right">33.4 (31)</td>
+                <td align="right">0.35 (0.36)</td>
+                <td align="right">0.42 (0.45)</td>
+              </tr>
+            </tbody>
+          </table>
+          <table-wrap-foot>
+            <p>Results of applying PGA using the already finished genome as reference sequence. The values are averaged over 20 times applying PGA. The best result of these runs is given in parentheses.</p>
+          </table-wrap-foot>
+        </table-wrap>
+        <fig id="F6" position="float">
+          <label>Figure 6</label>
+          <caption>
+            <p><bold>PGA with perfect reference</bold>. <italic>C. urealyticum </italic>contig connections generated by PGA when using the finished genome as reference sequence. Here, the best result (25 TP, 31 FP) achieved in 20 runs is displayed. The contig nodes are numbered in reference order.</p>
+          </caption>
+          <graphic xlink:href="1748-7188-5-3-6"/>
+        </fig>
+      </sec>
+      <sec>
+        <title>Single reference based ordering</title>
+        <p>The second experiment was designed to underline that the incorporation of several related genomes is favorable to the use of only a single reference sequence. Therefore, we applied OSLay [<xref ref-type="bibr" rid="B9">9</xref>] and Projector2 [<xref ref-type="bibr" rid="B6">6</xref>] on our datasets using the closest phylogenetic neighbor as reference sequence.</p>
+        <p>To generate the OSLay results, the contigs were mapped using nucmer from the MUMMER package [<xref ref-type="bibr" rid="B20">20</xref>]. We used OSLay then to compute an optimal syntenic layout of the contigs using the standard parameters of the implementation. The adjacencies were finally extracted from the <monospace>supercontigsList.x.txt</monospace> files. The Projector2 results were generated using its web-service with standard parameters. The matching was performed by running BLAT on the server.</p>
+        <p>The results for OSLay and Projector2 are shown in Table <xref ref-type="table" rid="T4">4</xref>. Both programs do not predict many connections that also occur in the reference order. Although a direct comparison is not fair we will see in the next experiment that the use of multiple related genomes as reference sequences improves the resulting layouts.</p>
+        <table-wrap id="T4" position="float">
+          <label>Table 4</label>
+          <caption>
+            <p>OSLay and Projector2 results</p>
+          </caption>
+          <table frame="hsides" rules="groups">
+            <thead>
+              <tr>
+                <th/>
+                <th/>
+                <th align="center" colspan="4">OSLay</th>
+                <th/>
+                <th align="center" colspan="4">Projector2</th>
+              </tr>
+              <tr>
+                <th/>
+                <th/>
+                <th colspan="4">
+                  <hr/>
+                </th>
+                <th/>
+                <th colspan="4">
+                  <hr/>
+                </th>
+              </tr>
+              <tr>
+                <th align="left">Organism</th>
+                <th align="left">Closest Reference</th>
+                <th align="right">TP</th>
+                <th align="right">FP</th>
+                <th align="right">TPR</th>
+                <th align="right">PPV</th>
+                <th/>
+                <th align="right">TP</th>
+                <th align="right">FP</th>
+                <th align="right">TPR</th>
+                <th align="right">PPV</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left">
+                  <italic>C. aurimucosum</italic>
+                </td>
+                <td align="left">
+                  <italic>C. glutamicum</italic>
+                </td>
+                <td align="right">0</td>
+                <td align="right">1</td>
+                <td align="right">0.00</td>
+                <td align="right">0.00</td>
+                <td/>
+                <td align="right">10</td>
+                <td align="right">20</td>
+                <td align="right">0.09</td>
+                <td align="right">0.33</td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. kroppenstedtii</italic>
+                </td>
+                <td align="left">
+                  <italic>C. jeikeium</italic>
+                </td>
+                <td align="right">0</td>
+                <td align="right">0</td>
+                <td align="right">0.00</td>
+                <td align="right"><italic>undef</italic>.</td>
+                <td/>
+                <td align="right">1</td>
+                <td align="right">2</td>
+                <td align="right">0.11</td>
+                <td align="right">0.33</td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. urealyticum</italic>
+                </td>
+                <td align="left">
+                  <italic>C. jeikeium</italic>
+                </td>
+                <td align="right">6</td>
+                <td align="right">6</td>
+                <td align="right">0.09</td>
+                <td align="right">0.50</td>
+                <td/>
+                <td align="right">8</td>
+                <td align="right">18</td>
+                <td align="right">0.12</td>
+                <td align="right">0.31</td>
+              </tr>
+            </tbody>
+          </table>
+          <table-wrap-foot>
+            <p>Results of OSLay and Projector2 using the phylogenetically closest genome as reference sequence.</p>
+          </table-wrap-foot>
+        </table-wrap>
+      </sec>
+    </sec>
+    <sec>
+      <title>Evaluation</title>
+      <sec>
+        <title>Implementation treecat</title>
+        <p>We implemented our proposed algorithm in Java. The software <italic>treecat </italic>(tree based contig arrangement tool) contains a re-implementation of the fast local alignment algorithm <italic>swift </italic>[<xref ref-type="bibr" rid="B12">12</xref>], the contig adjacency graph creation, a branch and bound exact TSP algorithm, and the fast layout graph heuristic described in section 'Fast adjacency discovery algorithm'. The software is open source (GPL) and available within the <italic>Comparative Genomics - Contig Arrangement Toolsuite </italic>(cg-cat, <ext-link ext-link-type="uri" xlink:href="http://bibiserv.techfak.uni-bielefeld.de/cg-cat">http://bibiserv.techfak.uni-bielefeld.de/cg-cat</ext-link>) on the Bielefeld Bioinformatics Server (BiBiServ). Input to <italic>treecat </italic>are the FASTA [<xref ref-type="bibr" rid="B21">21</xref>] sequences of the contigs and of the related references as well as a phylogenetic tree in Newick format. Each reference can consist of several sequences, for example several chromosomes. When the algorithm is run, first all matches from the contigs to each reference are computed. For the following results, matches were considered to have a minimal length of 64 bases and a maximum error rate of 8%. The matches are cached which allows a visualization like in Figure <xref ref-type="fig" rid="F5">5</xref> and avoids a new computation if subsequent steps are re-run with different parameters. As the second step, after the matching, the contig adjacency graph is constructed as defined in the Methods section. The following (empirically estimated) parameters were used for the scoring function (1) to compute the results: The standard deviation of the insertion/deletion size was set to <italic>σ</italic><sub>1 </sub>= 10 000 bases and the expected lost fragment size to <italic>μ </italic>= 2 000 bases with a standard deviation of <italic>σ</italic><sub>2 </sub>= 1 000 bases. The lost fragment weighting factor <italic>φ </italic>was set to 0.1. In the last step, the computed adjacency graph is used to devise the contig layout graph which can then be visualized with the open source software package GraphViz [<xref ref-type="bibr" rid="B22">22</xref>].</p>
+      </sec>
+      <sec>
+        <title>Comparison of PGA and treecat</title>
+        <p>In this experiment we applied our new algorithm to the three evaluation datasets and compared the results to the output of PGA. All sequences of Table <xref ref-type="table" rid="T2">2</xref>, except the genome of the contigs to be layouted, served as references to find a layout for one of the contig sets in Table <xref ref-type="table" rid="T1">1</xref>. PGA was run using the standard parameters given in [<xref ref-type="bibr" rid="B11">11</xref>], for <italic>treecat </italic>the parameters were used as stated above. The results of this comparison are listed in Table <xref ref-type="table" rid="T5">5</xref> and the running times of both programs, for matching and layouting, are shown in Table <xref ref-type="table" rid="T6">6</xref>. The comparison shows that our method achieves in general better results than PGA, even compared to the best PGA result out of 20 runs, while being much faster.</p>
+        <table-wrap id="T5" position="float">
+          <label>Table 5</label>
+          <caption>
+            <p>PGA and treecat results using multiple references</p>
+          </caption>
+          <table frame="hsides" rules="groups">
+            <thead>
+              <tr>
+                <th/>
+                <th align="center" colspan="4">PGA</th>
+                <th/>
+                <th align="center" colspan="4">
+                  <italic>treecat</italic>
+                </th>
+              </tr>
+              <tr>
+                <th/>
+                <th colspan="4">
+                  <hr/>
+                </th>
+                <th/>
+                <th colspan="4">
+                  <hr/>
+                </th>
+              </tr>
+              <tr>
+                <th align="left">Organism</th>
+                <th align="center">TP</th>
+                <th align="center">FP</th>
+                <th align="center">TPR</th>
+                <th align="center">PPV</th>
+                <th/>
+                <th align="center">TP</th>
+                <th align="center">FP</th>
+                <th align="center">TPR</th>
+                <th align="center">PPV</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left">
+                  <italic>C. aurimucosum</italic>
+                </td>
+                <td align="right">14.5 (16)</td>
+                <td align="right">66.5 (70)</td>
+                <td align="right">0.13 (0.15)</td>
+                <td align="right">0.18 (0.19)</td>
+                <td/>
+                <td align="right">
+                  <bold>17</bold>
+                </td>
+                <td align="right">
+                  <bold>66</bold>
+                </td>
+                <td align="right">
+                  <bold>0.16</bold>
+                </td>
+                <td align="right">
+                  <bold>0.20</bold>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. kroppenstedtii</italic>
+                </td>
+                <td align="right">2.0 (2)</td>
+                <td align="right"><bold>4.0 </bold>(<bold>4</bold>)</td>
+                <td align="right">0.22 (0.22)</td>
+                <td align="right"><bold>0.33 </bold>(<bold>0.33</bold>)</td>
+                <td/>
+                <td align="right">
+                  <bold>3</bold>
+                </td>
+                <td align="right">6</td>
+                <td align="right">
+                  <bold>0.33</bold>
+                </td>
+                <td align="right">
+                  <bold>0.33</bold>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. urealyticum</italic>
+                </td>
+                <td align="right">20.9 (25)</td>
+                <td align="right">72.5 (76)</td>
+                <td align="right">0.30 (0.36)</td>
+                <td align="right">0.22 (0.25)</td>
+                <td/>
+                <td align="right">
+                  <bold>27</bold>
+                </td>
+                <td align="right">
+                  <bold>70</bold>
+                </td>
+                <td align="right">
+                  <bold>0.39</bold>
+                </td>
+                <td align="right">
+                  <bold>0.28</bold>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <table-wrap-foot>
+            <p>Evaluation of applying PGA and <italic>treecat </italic>for ordering the sets of contigs with the help of the remaining genomes as references. PGA's results are averaged over 20 runs, the best run (highest TP with lowest FP) is given in parentheses. The overal best result is printed in bold face.</p>
+          </table-wrap-foot>
+        </table-wrap>
+        <table-wrap id="T6" position="float">
+          <label>Table 6</label>
+          <caption>
+            <p>PGA and treecat results using multiple references: Times</p>
+          </caption>
+          <table frame="hsides" rules="groups">
+            <thead>
+              <tr>
+                <th/>
+                <th align="center" colspan="2">PGA</th>
+                <th/>
+                <th align="center" colspan="2">
+                  <italic>treecat</italic>
+                </th>
+              </tr>
+              <tr>
+                <th/>
+                <th colspan="2">
+                  <hr/>
+                </th>
+                <th/>
+                <th colspan="2">
+                  <hr/>
+                </th>
+              </tr>
+              <tr>
+                <th align="left">Organism</th>
+                <th align="right">Matching</th>
+                <th align="right">Layouting</th>
+                <th/>
+                <th align="right">Matching</th>
+                <th align="right">Layouting</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left">
+                  <italic>C. aurimucosum</italic>
+                </td>
+                <td align="right">436.2 s</td>
+                <td align="right">184.1 s</td>
+                <td/>
+                <td align="right"><bold>104.4 </bold>s</td>
+                <td align="right"><bold>0.9 </bold>s</td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. kroppenstedtii</italic>
+                </td>
+                <td align="right">208.4 s</td>
+                <td align="right">25.6 s</td>
+                <td/>
+                <td align="right"><bold>83.4 </bold>s</td>
+                <td align="right"><bold>0.4 </bold>s</td>
+              </tr>
+              <tr>
+                <td align="left">
+                  <italic>C. urealyticum</italic>
+                </td>
+                <td align="right">458.8 s</td>
+                <td align="right">161.5 s</td>
+                <td/>
+                <td align="right"><bold>100.0 </bold>s</td>
+                <td align="right"><bold>1.2 </bold>s</td>
+              </tr>
+            </tbody>
+          </table>
+          <table-wrap-foot>
+            <p>Running times for PGA and <italic>treecat </italic>to generate the results of Table 5. The matching for PGA, done with BLAST, was measured only once, the times for layouting are the mean of 20 runs. The times for treecat are the mean of three runs. All times are given in seconds for performing the experiments on a sparcv9 processor operating at 750 MHz under Solaris.</p>
+          </table-wrap-foot>
+        </table-wrap>
+        <p>As an illustration of the results, Figures <xref ref-type="fig" rid="F7">7</xref> and <xref ref-type="fig" rid="F8">8</xref> show the resulting graphs of PGA and <italic>treecat</italic>, respectively, for the example of the <italic>C. urealyticum </italic>contigs. In both graphs the number of a node is again the rank of the corresponding contig with respect to the reference order. In Figure <xref ref-type="fig" rid="F8">8</xref> some additional information about the size and the repetitiveness of the contigs is given. The second line of a node indicates the size of a contig in kb, contigs smaller than 3.5 kb are drawn in gray. Contigs of which more than 95% of the sequence is repeating on at least one reference genome have a rectangular node. The edge weights in Figure <xref ref-type="fig" rid="F8">8</xref> are the weights calculated with the scoring function (1) in logarithmic scale.</p>
+        <fig id="F7" position="float">
+          <label>Figure 7</label>
+          <caption>
+            <p><bold>PGA with multiple references</bold>. The best result (25 TP, 76 FP) PGA generated in 20 runs for ordering the <italic>C. urealyticum </italic>contigs when using all other genomes as reference sequences. The contig nodes are numbered in reference order.</p>
+          </caption>
+          <graphic xlink:href="1748-7188-5-3-7"/>
+        </fig>
+        <fig id="F8" position="float">
+          <label>Figure 8</label>
+          <caption>
+            <p><bold>treecat with multiple references</bold>. <italic>C. urealyticum </italic>contig connections generated by <italic>treecat </italic>when using all other genomes as reference sequences. The contig nodes are numbered in reference order. Contigs smaller than 3.5 kb have gray nodes, repeating contigs for which at least 95% of the sequence occurs more than once on a reference genome have rectangular nodes. Edge weights are given in logarithmic scale.</p>
+          </caption>
+          <graphic xlink:href="1748-7188-5-3-8"/>
+        </fig>
+        <p>Comparing the graphs of both programs visually gives the impression that the <italic>treecat </italic>result is a little less cluttered. This impression becomes even stronger if all small nodes in gray are ignored.</p>
+        <p>There are a few details to mention when investigating the resulting graphs for ordering the <italic>C. urealyticum </italic>contigs. PGA's graph contains a connection placing contig 26 next to contig 52 which is obviously incorrect. Our approach does not show this connection. Manual inspection shows that this is due to the evolutionary distances that we incorporate for the edge scoring since phylogenetically closer genomes do not contain this adjacency. This is further supported by the fact that the connection is also not present when PGA uses the 'perfect' reference, see Figure <xref ref-type="fig" rid="F6">6</xref>.</p>
+        <p>In our graph the connection from contig 4 to contig 56 as well as the connection from contig 7 to contig 58 has a high score but is not correct. This is explainable due to the big inversion, see Figure <xref ref-type="fig" rid="F5">5(a)</xref>, in the <italic>C. jeikeium </italic>genome which is the next phylogenetic neighbor to <italic>C. urealyticum </italic>and therefore has a high influence on our result.</p>
+        <p>Further investigation of the <italic>treecat </italic>result in Figure <xref ref-type="fig" rid="F8">8</xref> gives additional details: For the contigs 12 to 26, an almost unique path can be observed that orders most of the inner contigs. Repeating contigs like 27 or 62 show a star-like adjacency pattern which can be explained by different adjacencies of the corresponding repeat occurrences. However, there are also larger non-repeating contigs, like contig 12, that show such a star pattern. In this case several different repeating contigs neighbor this contig on different references. The graph shows a double connection 46 to 47, which can be explained by a repeating reverse complement match of a part of contig 46 that lies once before contig 47 and once behind it. This results in a high edge weight for the left connectors {<italic>l</italic><sub>46</sub>, <italic>l</italic><sub>47</sub>}, as well as the right connectors {<italic>r</italic><sub>46</sub>, <italic>r</italic><sub>47</sub>} of these contigs. Some connections, like 52 to 55, seem to imply missing contigs, but further investigation reveals that contigs 53 and 54 are partially repeating contigs which fit between the mentioned contigs but as well next to other contigs. There are adjacencies in the layout graph that have a high difference in the rank of the reference order. For example the connection from contig 16 to 44 seems erroneous but it can be explained by a 1.5 kb repeating substring of contig 44. Similar observations can be made in several other places.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>In this paper, we presented an algorithm that orders a set of contigs, given several related reference genomes and a phylogenetic tree of the involved species. In particular, we proposed a more flexible output for the ordering of contigs since our results demonstrate that for real world data the search for one linear optimal ordering of the contigs is not feasible. Consequently, our algorithm allows alternative connections in a layout which is necessary because of repeating regions and rearrangements between the species. Secondly, we introduced a novel scoring function for the contig adjacency estimation that is biologically motivated in two ways: It contains a sophisticated weighting scheme for the distances of projected contigs and it integrates the phylogenetic distances of the species to alleviate the effects caused by rearrangements. An evaluation of our algorithm shows that its implementation <italic>treecat </italic>is considerably faster than a recent approach from the literature while it is at the same time generating better results. We believe that with our approach of including phylogenetic information into the problem of contig layouting, we have gone one step further in using all available information for this important task within genome finishing.</p>
+    <p>Nevertheless, in sequencing projects, often additional information emerges which is not yet included in our approach. For example, information derived from mate pairs, fosmid libraries or radiation hybrid maps might give valuable hints on the orientation and the distance of contigs while not being biased by evolutionary events. Concerning the phylogenetic tree, rearrangements between the genomes were not predicted by the methods presented in this paper. This leads to ambiguous information for the ordering of contigs and thus to weak or misleading adjacency scores which need to be curated manually. A strategy for the discovery of rearrangements is thus desired in future work. Furthermore, due to horizontal gene transfer some regions of a genome can have different evolutionary histories than others. Detecting such regions and treating them in a special way might be advisable in an even more sophisticated approach.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>PH conceived the algorithm, implemented the software, performed the evaluation, and drafted the manuscript. JS supervised this work, provided the initial idea and contributed to the editing of the manuscript. Both authors read and approved the final manuscript.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>The authors wish to thank Christian Rückert, Susanne Schneiker-Bekel, Eva Trost, and Andreas Tauch for the sequence data, Jochen Blom and Burkhard Linke for the phylogenetic tree, and Travis Gagie and Roland Wittler for helpful discussions.</p>
+    <p>A preliminary version of this work appeared in the WABI'09 proceedings.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Staden</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>A strategy of DNA sequencing employing computer programs</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1979</year>
+        <volume>6</volume>
+        <issue>7</issue>
+        <fpage>2601</fpage>
+        <lpage>2610</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/6.7.2601</pub-id>
+        <pub-id pub-id-type="pmid">461197</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Anderson</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Shotgun DNA sequencing using cloned DNase I-generated fragments</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1981</year>
+        <volume>9</volume>
+        <issue>13</issue>
+        <fpage>3015</fpage>
+        <lpage>3027</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/9.13.3015</pub-id>
+        <pub-id pub-id-type="pmid">6269069</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mardis</surname>
+          <given-names>ER</given-names>
+        </name>
+        <article-title>The impact of next-generation sequencing technology on genetics</article-title>
+        <source>Trends Genet</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <issue>3</issue>
+        <fpage>133</fpage>
+        <lpage>141</lpage>
+        <pub-id pub-id-type="pmid">18262675</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Bioinformatics challenges of new sequencing technology</article-title>
+        <source>Trends Genet</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <issue>3</issue>
+        <fpage>142</fpage>
+        <lpage>149</lpage>
+        <pub-id pub-id-type="pmid">18262676</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sanger</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Nicklen</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Coulson</surname>
+          <given-names>AR</given-names>
+        </name>
+        <article-title>DNA sequencing with chain-terminating inhibitors</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>1977</year>
+        <volume>74</volume>
+        <issue>12</issue>
+        <fpage>5463</fpage>
+        <lpage>5467</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.74.12.5463</pub-id>
+        <pub-id pub-id-type="pmid">271968</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>van Hijum</surname>
+          <given-names>SAFT</given-names>
+        </name>
+        <name>
+          <surname>Zomer</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Kuipers</surname>
+          <given-names>OP</given-names>
+        </name>
+        <name>
+          <surname>Kok</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Projector 2: contig mapping for efficient gap-closure of prokaryotic genome sequence assemblies</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <fpage>W560</fpage>
+        <lpage>W566</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gki356</pub-id>
+        <pub-id pub-id-type="pmid">15980536</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Altschul</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Gish</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Lipman</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Basic local alignment search tool</article-title>
+        <source>J Mol Biol</source>
+        <year>1990</year>
+        <volume>215</volume>
+        <fpage>403</fpage>
+        <lpage>410</lpage>
+        <pub-id pub-id-type="pmid">2231712</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kent</surname>
+          <given-names>WJ</given-names>
+        </name>
+        <article-title>BLAT - The BLAST-Like Alignment Tool</article-title>
+        <source>Genome Res</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <issue>4</issue>
+        <fpage>656</fpage>
+        <lpage>664</lpage>
+        <pub-id pub-id-type="pmid">11932250</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Richter</surname>
+          <given-names>DC</given-names>
+        </name>
+        <name>
+          <surname>Schuster</surname>
+          <given-names>SC</given-names>
+        </name>
+        <name>
+          <surname>Huson</surname>
+          <given-names>DH</given-names>
+        </name>
+        <article-title>OSLay: optimal syntenic layout of unfinished assemblies</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <issue>13</issue>
+        <fpage>1573</fpage>
+        <lpage>1579</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btm153</pub-id>
+        <pub-id pub-id-type="pmid">17463020</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gordon</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Abajian</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Green</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Consed: a graphical tool for sequence finishing</article-title>
+        <source>Genome Res</source>
+        <year>1998</year>
+        <volume>8</volume>
+        <issue>3</issue>
+        <fpage>195</fpage>
+        <lpage>202</lpage>
+        <pub-id pub-id-type="pmid">9521923</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zhao</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Zhao</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Bryant</surname>
+          <given-names>DA</given-names>
+        </name>
+        <article-title>A new pheromone trail-based genetic algorithm for comparative genome assembly</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2008</year>
+        <volume>36</volume>
+        <issue>10</issue>
+        <fpage>3455</fpage>
+        <lpage>3462</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkn168</pub-id>
+        <pub-id pub-id-type="pmid">18445633</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rasmussen</surname>
+          <given-names>KR</given-names>
+        </name>
+        <name>
+          <surname>Stoye</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>EW</given-names>
+        </name>
+        <article-title>Efficient q-Gram Filters for Finding All epsilon-Matches over a Given Length</article-title>
+        <source>J Comp Biol</source>
+        <year>2006</year>
+        <volume>13</volume>
+        <issue>2</issue>
+        <fpage>296</fpage>
+        <lpage>308</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.2006.13.296</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bentley</surname>
+          <given-names>JL</given-names>
+        </name>
+        <article-title>Fast Algorithms for Geometric Traveling Salesman Problems</article-title>
+        <source>Informs J Comp</source>
+        <year>1992</year>
+        <volume>4</volume>
+        <issue>4</issue>
+        <fpage>387</fpage>
+        <lpage>411</lpage>
+        <pub-id pub-id-type="doi">10.1287/ijoc.4.4.387</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tauch</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Trost</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Tilker</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Ludewig</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Schneiker</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Goesmann</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Arnold</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Bekel</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Brinkrolf</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Brune</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Götker</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Kalinowski</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Kamp</surname>
+          <given-names>PB</given-names>
+        </name>
+        <name>
+          <surname>Lobo</surname>
+          <given-names>FP</given-names>
+        </name>
+        <name>
+          <surname>Viehoever</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Weisshaar</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Soriano</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Dröge</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Pühler</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>The lifestyle of <italic>Corynebacterium urealyticum </italic>derived from its complete genome sequence established by pyrosequencing</article-title>
+        <source>J Biotechnol</source>
+        <year>2008</year>
+        <volume>136</volume>
+        <issue>1-2</issue>
+        <fpage>11</fpage>
+        <lpage>21</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.jbiotec.2008.02.009</pub-id>
+        <pub-id pub-id-type="pmid">18367281</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tauch</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Schneider</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Szczepanowski</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Tilker</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Viehoever</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Gartemann</surname>
+          <given-names>KH</given-names>
+        </name>
+        <name>
+          <surname>Arnold</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Blom</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Brinkrolf</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Brune</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Götker</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Weisshaar</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Goesmann</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Dröge</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Pühler</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Ultrafast pyrosequencing of <italic>Corynebacterium kroppenstedtii DSM44385 </italic>revealed insights into the physiology of a lipophilic corynebacterium that lacks mycolic acids</article-title>
+        <source>J Biotechnol</source>
+        <year>2008</year>
+        <volume>136</volume>
+        <issue>12</issue>
+        <fpage>22</fpage>
+        <lpage>30</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.jbiotec.2008.03.004</pub-id>
+        <pub-id pub-id-type="pmid">18430482</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wheeler</surname>
+          <given-names>DL</given-names>
+        </name>
+        <name>
+          <surname>Chappey</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Lash</surname>
+          <given-names>AE</given-names>
+        </name>
+        <name>
+          <surname>Leipe</surname>
+          <given-names>DD</given-names>
+        </name>
+        <name>
+          <surname>Madden</surname>
+          <given-names>TL</given-names>
+        </name>
+        <name>
+          <surname>Schuler</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Tatusova</surname>
+          <given-names>TA</given-names>
+        </name>
+        <name>
+          <surname>Rapp</surname>
+          <given-names>BA</given-names>
+        </name>
+        <article-title>Database resources of the National Center for Biotechnology Information</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2000</year>
+        <volume>28</volume>
+        <fpage>10</fpage>
+        <lpage>14</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/28.1.10</pub-id>
+        <pub-id pub-id-type="pmid">10592169</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Benson</surname>
+          <given-names>DA</given-names>
+        </name>
+        <name>
+          <surname>Karsch-Mizrachi</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Lipman</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Ostell</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Rapp</surname>
+          <given-names>BA</given-names>
+        </name>
+        <name>
+          <surname>Wheeler</surname>
+          <given-names>DL</given-names>
+        </name>
+        <article-title>GenBank</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2000</year>
+        <volume>28</volume>
+        <fpage>15</fpage>
+        <lpage>18</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/28.1.15</pub-id>
+        <pub-id pub-id-type="pmid">10592170</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Blom</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Albaum</surname>
+          <given-names>SP</given-names>
+        </name>
+        <name>
+          <surname>Doppmeier</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Pühler</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Vorhölter</surname>
+          <given-names>FJ</given-names>
+        </name>
+        <name>
+          <surname>Goesmann</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>EDGAR: A software framework for the comparative analysis of microbial genomes</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>154</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-10-154</pub-id>
+        <pub-id pub-id-type="pmid">19457249</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Saitou</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Nei</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>The neighbor-joining method: a new method for reconstructing phylogenetic trees</article-title>
+        <source>Mol Biol Evol</source>
+        <year>1987</year>
+        <volume>4</volume>
+        <issue>4</issue>
+        <fpage>406</fpage>
+        <lpage>425</lpage>
+        <pub-id pub-id-type="pmid">3447015</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kurtz</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Phillippy</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Delcher</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Smoot</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Shumway</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Antonescu</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Versatile and open software for comparing large genomes</article-title>
+        <source>Genome Biol</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <issue>2</issue>
+        <fpage>R12</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2004-5-2-r12</pub-id>
+        <pub-id pub-id-type="pmid">14759262</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pearson</surname>
+          <given-names>WR</given-names>
+        </name>
+        <name>
+          <surname>Lipman</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <article-title>Improved tools for biological sequence comparison</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>1988</year>
+        <volume>85</volume>
+        <issue>8</issue>
+        <fpage>2444</fpage>
+        <lpage>2448</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.85.8.2444</pub-id>
+        <pub-id pub-id-type="pmid">3162770</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gansner</surname>
+          <given-names>ER</given-names>
+        </name>
+        <name>
+          <surname>North</surname>
+          <given-names>SC</given-names>
+        </name>
+        <article-title>An Open Graph Visualization System and Its Applications to Software Engineering</article-title>
+        <source>Softw Pract Exper</source>
+        <year>1999</year>
+        <volume>30</volume>
+        <fpage>1203</fpage>
+        <lpage>1233</lpage>
+        <pub-id pub-id-type="doi">10.1002/1097-024X(200009)30:11&lt;1203::AID-SPE338&gt;3.0.CO;2-N</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Fredslund</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>PHY.FI: fast and easy online creation and manipulation of phylogeny color figures</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2006</year>
+        <volume>7</volume>
+        <fpage>315</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-7-315</pub-id>
+        <pub-id pub-id-type="pmid">16792795</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

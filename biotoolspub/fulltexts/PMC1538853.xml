@@ -1,0 +1,707 @@
+<?properties open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">Nucleic Acids Research</journal-id>
+    <journal-title>Nucleic Acids Research</journal-title>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">1538853</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gkl298</article-id>
+    <article-id pub-id-type="pmid">16845003</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>BindN: a web-based tool for efficient prediction of DNA and RNA binding sites in amino acid sequences</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Wang</surname>
+          <given-names>Liangjiang</given-names>
+        </name>
+        <xref ref-type="corresp" rid="cor1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Brown</surname>
+          <given-names>Susan J.</given-names>
+        </name>
+      </contrib>
+      <aff>
+        <institution>Bioinformatics Center, Division of Biology, Kansas State University</institution>
+        <addr-line>Manhattan, Kansas 66506, USA</addr-line>
+      </aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="cor1"><sup>*</sup>To whom correspondence should be addressed. Tel: +1 785 532 6347; Fax: +1 785 532 6653; Email: <email>ljwang@ksu.edu</email></corresp>
+    </author-notes>
+    <!--For NAR: both ppub and collection dates generated for PMC processing 1/27/05 beck-->
+    <pub-date pub-type="collection">
+      <day>01</day>
+      <month>7</month>
+      <year>2006</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <day>01</day>
+      <month>7</month>
+      <year>2006</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>14</day>
+      <month>7</month>
+      <year>2006</year>
+    </pub-date>
+    <volume>34</volume>
+    <issue>Web Server issue</issue>
+    <fpage>W243</fpage>
+    <lpage>W248</lpage>
+    <history>
+      <date date-type="received">
+        <day>12</day>
+        <month>2</month>
+        <year>2006</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>01</day>
+        <month>3</month>
+        <year>2006</year>
+      </date>
+      <date date-type="accepted">
+        <day>07</day>
+        <month>4</month>
+        <year>2006</year>
+      </date>
+    </history>
+    <copyright-statement>© The Author 2006. Published by Oxford University Press. All rights reserved</copyright-statement>
+    <copyright-year>2006</copyright-year>
+    <license license-type="openaccess">
+      <p>The online version of this article has been published under an open access model. Users are entitled to use, reproduce, disseminate, or display the open access version of this article for non-commercial purposes provided that: the original authorship is properly and fully attributed; the Journal and Oxford University Press are attributed as the original place of publication with the correct citation details given; if an article is subsequently reproduced or disseminated not in its entirety but only in part or as a derivative work this must be clearly indicated. For commercial re-use, please contact journals.permissions@oxfordjournals.org</p>
+    </license>
+    <abstract>
+      <p>BindN (<ext-link ext-link-type="uri" xlink:href="http://bioinformatics.ksu.edu/bindn/"/>) takes an amino acid sequence as input and predicts potential DNA or RNA-binding residues with support vector machines (SVMs). Protein datasets with known DNA or RNA-binding residues were selected from the Protein Data Bank (PDB), and SVM models were constructed using data instances encoded with three sequence features, including the side chain pK<sub>a</sub> value, hydrophobicity index and molecular mass of an amino acid. The results suggest that DNA-binding residues can be predicted at 69.40% sensitivity and 70.47% specificity, while prediction of RNA-binding residues achieves 66.28% sensitivity and 69.84% specificity. When compared with previous studies, the SVM models appear to be more accurate and more efficient for online predictions. BindN provides a useful tool for understanding the function of DNA and RNA-binding proteins based on primary sequence data.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>Many proteins perform essential functions through interactions with DNA or RNA molecules. For example, transcription factors bind to specific DNA motifs in the promoters, resulting in activation or repression of transcription (<xref ref-type="bibr" rid="b1">1</xref>). Protein–RNA interactions play pivotal roles in both assembly and function of ribosomes (<xref ref-type="bibr" rid="b2">2</xref>) as well as eukaryotic spliceosomes (<xref ref-type="bibr" rid="b3">3</xref>). Thus, identification of the amino acid residues that recognize DNA or RNA is important for understanding a variety of biological processes.</p>
+    <p>Analysis of structural data has provided valuable information about the mechanisms of protein–nucleic acid interactions. At the atomic level, the interactions involve a complex combination of hydrogen bonds, van der Waals contacts and water-mediated bonds between amino acid residues and nucleotide bases (<xref ref-type="bibr" rid="b4">4</xref>,<xref ref-type="bibr" rid="b5">5</xref>). It has also been found that the composition of DNA or RNA-binding residues is biased towards basic and polar amino acids (e.g. arginine and serine), while hydrophobic and acidic amino acids such as leucine and glutamic acid are statistically under-represented at the interaction interface (<xref ref-type="bibr" rid="b6">6</xref>–<xref ref-type="bibr" rid="b8">8</xref>). The information from structural analysis has been used to predict DNA-binding residues in solved protein structures (<xref ref-type="bibr" rid="b9">9</xref>,<xref ref-type="bibr" rid="b10">10</xref>).</p>
+    <p>However, it is still challenging to predict DNA or RNA-binding residues directly from amino acid sequence data, which are rapidly accumulating from many species. The problem for machine learning can be specified as follows: given the amino acid sequence of a protein that is supposed to bind DNA or RNA, the task is to predict which amino acid residues may be located at the interaction interface. Both the structure of the protein and the sequence of the target DNA or RNA are assumed to be unknown. Recently, artificial neural networks have been trained with sequence information and residue solvent accessibility for prediction of DNA-binding residues (<xref ref-type="bibr" rid="b8">8</xref>). The performance of the neural networks is at 40.3% sensitivity and 81.8% specificity. Evolutionary information in terms of a position-specific scoring matrix (PSSM) has been shown to enhance the predictive performance to 68.2% sensitivity and 66.0% specificity (<xref ref-type="bibr" rid="b11">11</xref>). To derive the PSSM, the query sequence is searched against a large reference database using the PSI-BLAST program (<xref ref-type="bibr" rid="b12">12</xref>). Thus, the PSSM-based method is computationally intensive and may not be used for efficient online predictions. Furthermore, PSSMs cannot be derived for query sequences that have no homologues in the reference database.</p>
+    <p>In the present work, support vector machines (SVMs) are trained using three simple sequence features for the prediction of DNA and RNA-binding residues. SVMs are a class of relatively new machine learning algorithms, which have recently been applied to a variety of biological problems for pattern classification (<xref ref-type="bibr" rid="b13">13</xref>). When compared with neural networks, SVMs may have advantages in their superior generalization power and the ability to avoid overfitting. We show that the SVM models can predict DNA-binding residues at 69.40% sensitivity and 70.47% specificity, while prediction of RNA-binding residues achieves 66.28% sensitivity and 69.84% specificity. Importantly, the three sequence features, including the side chain pK<sub>a</sub> value, hydrophobicity index and molecular mass of an amino acid, are very efficient to compute for online predictions. Thus, we have developed the BindN web server (<ext-link ext-link-type="uri" xlink:href="http://bioinformatics.ksu.edu/bindn/"/>) for public access to the SVM classifiers.</p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>MATERIALS AND METHODS</title>
+    <sec>
+      <title>Datasets</title>
+      <p>Two amino acid sequence datasets, PDNA-62 and PRINR25, have been used to construct the SVM models for predicting DNA and RNA-binding residues, respectively. The PDNA-62 dataset was derived from 62 structures of representative protein–DNA complexes and had &lt;25% identity among the sequences (<xref ref-type="bibr" rid="b8">8</xref>,<xref ref-type="bibr" rid="b11">11</xref>). The PRINR25 dataset was collected in this study from the protein–RNA complexes available at the Protein Data Bank (PDB, <ext-link ext-link-type="uri" xlink:href="http://www.rcsb.org/pdb/"/>). We selected 174 structures that had been determined by X-ray crystallography with resolution better than 3.5 Å. To remove redundancy among the amino acid sequences, clustering analysis was performed using the blastclust program in the BLAST package from NCBI (<ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/BLAST/download.shtml"/>). The blastclust program was run with the sequence identity threshold set to 25%, and the longest sequence in each cluster was selected for the non-redundant dataset, PRINR25.</p>
+      <p>As in the previous studies (<xref ref-type="bibr" rid="b8">8</xref>,<xref ref-type="bibr" rid="b11">11</xref>), an amino acid residue was designated as a binding site if the side chain or backbone atoms of the residue fell within a cutoff distance of 3.5 Å from any atoms of the DNA or RNA molecule in the complex. All the other residues were regarded as non-binding sites. A Perl program was developed to take a set of structure files as input and create an output file of amino acid sequences with each residue labeled as a binding or non-binding site according to the above criterion.</p>
+      <p>The lists of sequences in the PDNA-62 and PRINR25 datasets are provided in the supplementary material. The PDNA-62 dataset contains 1215 DNA-binding residues and 6948 non-binding residues, while the PRINR25 dataset has 3239 RNA-binding residues and 18 519 non-binding residues.</p>
+    </sec>
+    <sec>
+      <title>Training and testing</title>
+      <p>SVMs were trained with residue-wise data instances extracted from the sequence datasets. Each data instance was a subsequence of length <italic>w</italic>, where <italic>w</italic> was the sliding window size set to eleven in this study. Other window sizes were also tested, but the SVM classifiers constructed with <italic>w</italic> = 11 gave the best performance. From a protein sequence with <italic>n</italic> amino acid residues, a total of (<italic>n</italic> − <italic>w</italic> + 1) data instances were extracted. The target residue was positioned in the middle of the subsequence, and the five neighboring residues on each side provided context information for the target residue. A data instance was labeled with 1 (positive) if the target residue was DNA or RNA-binding, or −1 (negative) if the target residue was non-binding.</p>
+      <p>Each residue was represented with three biochemical features, including the side chain pK<sub>a</sub> value, hydrophobicity index and molecular mass of the amino acid. For a data instance with 11 residues, the input vector consists of 33 feature values. The biochemical features are very efficient to compute for a given amino acid sequence, and appear to be relevant for prediction of DNA and RNA-binding residues. The side chain pK<sub>a</sub> value determines the ionization state of a residue. Since the phosphate groups of nucleic acids are negatively charged, the ionization state of amino acid side chains affects the interaction with DNA or RNA molecules. In this study, the side chain pK<sub>a</sub> values from (<xref ref-type="bibr" rid="b14">14</xref>) were used, and the feature value was set to 7 for the amino acids with no side chain pK<sub>a</sub> values. Hydrophobicity is a key factor in amino acid side chain packing and protein folding. Hydrophobic amino acids are often located inside globular proteins, but under-represented at the DNA or RNA interaction interfaces (<xref ref-type="bibr" rid="b6">6</xref>–<xref ref-type="bibr" rid="b8">8</xref>). We used the hydrophobicity scale developed by Kyte and Doolittle (<xref ref-type="bibr" rid="b15">15</xref>) to assign the feature values in this study. Since each amino acid has a unique value of molecular mass, this feature is used to represent the sequence information. Molecular mass is also related to the volume of space that a residue occupies in structures.</p>
+      <p>The SVMlight package (<xref ref-type="bibr" rid="b16">16</xref>) available at <ext-link ext-link-type="uri" xlink:href="http://svmlight.joachims.org/"/> was used to construct the SVM classifiers. For a given set of binary-labeled training examples, SVM maps the input space into a higher-dimensional space and seeks a hyperplane to separate the positive data instances from the negative ones (<xref ref-type="bibr" rid="b17">17</xref>). The optimal hyperplane maximizes the separation margin between the two classes of training data, and is defined by a fraction of the input data instances close to the hyperplane (the so-called support vectors). The distance measurement between the data points in the high-dimensional space is defined by the kernel function. In this study, we used the radial basis function (RBF) kernel
+<disp-formula id="e1"><label>1</label><mml:math id="M1"><mml:mrow><mml:mi>K</mml:mi><mml:mo>(</mml:mo><mml:mover accent="true"><mml:mi>x</mml:mi><mml:mo>→</mml:mo></mml:mover><mml:mo>,</mml:mo><mml:mover accent="true"><mml:mi>y</mml:mi><mml:mo>→</mml:mo></mml:mover><mml:mo>)</mml:mo><mml:mo>=</mml:mo><mml:mtext>exp</mml:mtext><mml:mo>(</mml:mo><mml:mo>−</mml:mo><mml:mi>γ</mml:mi><mml:msup><mml:mrow><mml:mo>‖</mml:mo><mml:mover accent="true"><mml:mi>x</mml:mi><mml:mo>→</mml:mo></mml:mover><mml:mo>−</mml:mo><mml:mover accent="true"><mml:mi>y</mml:mi><mml:mo>→</mml:mo></mml:mover><mml:mo>‖</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msup><mml:mo>)</mml:mo><mml:mo>,</mml:mo></mml:mrow></mml:math></disp-formula>
+where <inline-formula><mml:math id="M2"><mml:mrow><mml:mover accent="true"><mml:mi>x</mml:mi><mml:mo>⟶</mml:mo></mml:mover></mml:mrow></mml:math></inline-formula> and <inline-formula><mml:math id="M3"><mml:mrow><mml:mover accent="true"><mml:mi>y</mml:mi><mml:mo>⟶</mml:mo></mml:mover></mml:mrow></mml:math></inline-formula> are two data vectors, and γ is a training parameter. A smaller γ value makes the decision boundary smoother. Another parameter for SVM training is the regularization factor <italic>C</italic>, which controls the trade-off between low training error and large margin (<xref ref-type="bibr" rid="b16">16</xref>). Different values for the <italic>C</italic> and γ parameters have been tested in this work to optimize the prediction accuracy.</p>
+      <p>A 5-fold cross-validation approach was used to evaluate the classifier performance. The positive and negative data instances were distributed randomly into five sets or the so-called folds. In each of the five iterative steps, four of the five sets were used to build a classifier (training), and then the classifier was evaluated using the remaining one set (testing). The predictions made for the test data instances in all the five iterations were combined and used to compute the results presented in this paper. However, the SVM models used by the BindN web server were constructed with all the available data instances.</p>
+    </sec>
+    <sec>
+      <title>Classifier performance measures</title>
+      <p>The predictions made for the test data instances are compared with the class labels (binding or non-binding) to evaluate the classifiers. The overall accuracy is defined as
+<disp-formula id="e2"><label>2</label><mml:math id="M4"><mml:mrow><mml:mtext>Accuracy</mml:mtext><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:mtext>TP</mml:mtext><mml:mo>+</mml:mo><mml:mtext>TN</mml:mtext></mml:mrow><mml:mrow><mml:mtext>TP</mml:mtext><mml:mo>+</mml:mo><mml:mtext>TN</mml:mtext><mml:mo>+</mml:mo><mml:mtext>FP</mml:mtext><mml:mo>+</mml:mo><mml:mtext>FN</mml:mtext></mml:mrow></mml:mfrac><mml:mo>,</mml:mo></mml:mrow></mml:math></disp-formula>
+where TP is the number of true positives (binding residues with positive predictions); TN is the number of true negatives (non-binding residues with negative predictions); FP is the number of false positives (non-binding residues but predicted as binding sites) and FN is the number of false negatives (binding residues but predicted as non-binding sites). However, the overall accuracy alone could be misleading in this case. Since there are more non-binding residues than binding ones in the datasets, a classifier can achieve &gt;85% accuracy by simply predicting all the residues as negatives. Thus, sensitivity and specificity of the predictions are also computed as follows:
+<disp-formula id="e3"><label>3</label><mml:math id="M5"><mml:mrow><mml:mtext>Sensitivity</mml:mtext><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:mtext>TP</mml:mtext></mml:mrow><mml:mrow><mml:mtext>TP</mml:mtext><mml:mo>+</mml:mo><mml:mtext>FN</mml:mtext></mml:mrow></mml:mfrac></mml:mrow></mml:math></disp-formula>
+<disp-formula id="e4"><label>4</label><mml:math id="M6"><mml:mrow><mml:mtext>Specificity</mml:mtext><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:mtext>TN</mml:mtext></mml:mrow><mml:mrow><mml:mtext>TN</mml:mtext><mml:mo>+</mml:mo><mml:mtext>FP</mml:mtext></mml:mrow></mml:mfrac></mml:mrow></mml:math></disp-formula>
+The receiver operating characteristic (ROC) curve is probably the most robust approach for classifier evaluation (<xref ref-type="bibr" rid="b18">18</xref>). The ROC curve is drawn by plotting the true positive rate (i.e. sensitivity) against the false positive rate, which equals to (1 − specificity). The area under the ROC curve (AUC) can be used as a reliable measure of classifier performance (<xref ref-type="bibr" rid="b19">19</xref>). Since the ROC plot is a unit square, the maximum value of AUC is 1, which is achieved by a perfect classifier. Weak classifiers and random guessing have AUC values close to 0.5.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>RESULTS</title>
+    <p><xref ref-type="table" rid="tbl1">Table 1</xref> shows the performance of the SVM classifiers in 5-fold cross validations. The results have been obtained using the training parameters, <italic>C</italic> = 0.5 and γ = 0.1, which give better results than other values for prediction of both DNA and RNA-binding residues. The classifier for DNA-binding residues achieves 70.31% overall accuracy with 69.40% sensitivity and 70.47% specificity. For RNA-binding residues, predictions can be made at 69.32% overall accuracy with 66.28% sensitivity and 69.84% specificity (<xref ref-type="table" rid="tbl1">Table 1</xref>).</p>
+    <p>The ROC curves for prediction of DNA and RNA-binding residues are shown in <xref ref-type="fig" rid="fig1">Figure 1</xref>. These ROC curves have been generated by varying the output threshold of the SVM classifiers and plotting the true positive rate against false positive rate for each of the threshold values. The default output threshold used by SVMlight is 0, thus all the outputs ≥0 result in positive predictions and the outputs &lt;0 give rise to negative predictions. When higher thresholds are used, only the data instances with relatively higher output values are predicted as positives and thus the true positive rate (sensitivity) becomes lower. Meanwhile, with higher thresholds, specificity becomes higher but the false positive rate (1 − specificity) gets lower. Therefore, each point on the ROC curve represents the trade-off between sensitivity and specificity. The ROC curves shown in <xref ref-type="fig" rid="fig1">Figure 1</xref> are used by the BindN web server to allow users to specify the desired level of specificity or sensitivity (see below).</p>
+    <p>The ROC analysis shows that the classifier for DNA-binding residues is slightly more accurate than the classifier for RNA-binding residues, except at very low false positive rates (<xref ref-type="fig" rid="fig1">Figure 1</xref>). The AUC values are 0.7524 and 0.7308 for prediction of DNA and RNA-binding residues, respectively (<xref ref-type="table" rid="tbl1">Table 1</xref>). These AUC values are significantly higher than that of random guessing (0.5).</p>
+    <p>The SVM classifier for DNA-binding residues appears to be better than the previous neural network predictors constructed using the same dataset (PDNA-62). The SVM's average of sensitivity and specificity is 69.94%, whereas the average (also called ‘net prediction’) was 61.1% for the neural network trained with sequence information and residue solvent accessibility (<xref ref-type="bibr" rid="b8">8</xref>). The PSSM-based approach improved the ‘net prediction’ to 67.1% (<xref ref-type="bibr" rid="b11">11</xref>), but required intensive computation for feature extraction. In contrast, the three sequence features used in our approach are very efficient to compute and thus well suited for online predictions.</p>
+    <p>For direct comparison of the SVM and neural network classifiers, a separate test dataset has been collected from the protein–DNA complexes available at PDB. As listed in Supplementary Table 3, the test dataset contains 92 amino acid sequences. These sequences show &lt;30% identity among them and with any sequences in the PDNA-62 dataset. Except for the above constraints, the test dataset has been processed in the same way as described for the PRINR25 dataset. Putative DNA-binding residues have been predicted using both BindN and DBS-PSSM. The DBS-PSSM web server available at <ext-link ext-link-type="uri" xlink:href="http://www.netasa.org/dbs-pssm/"/> was build using the PSSM-based neural network approach (<xref ref-type="bibr" rid="b11">11</xref>). The predictions have been made with the expected specificity at 72.3%, which is allowed at the DBS-PSSM server (DBS-PSSM does not allow users to specify their desired levels of specificity). As shown in <xref ref-type="table" rid="tbl2">Table 2</xref>, the actual specificity levels achieved by the two servers are close to the expected value. However, BindN achieves a much higher level of sensitivity than DBS-PSSM (65.22 versus 36.73%). While the specificity achieved by BindN (65.22%) is close to the expected value based on the ROC analysis (67.19%), the actual specificity of DBS-PSSM does not reach the expected level (60.2%) on the new test dataset, probably owing to poor generalization of the representative DNA-binding residues in the relatively small training dataset (PDNA-62).</p>
+    <p>The SVM classifiers have been constructed using known DNA or RNA-binding proteins. The residues that do not bind to DNA or RNA have been used as the negative data instances for training. To further evaluate the SVM classifiers, we have analyzed a set of 100 proteins that do not interact with DNA or RNA. The protein sequences listed in Supplementary Table 4 have been selected randomly from the Swiss-Prot database (<ext-link ext-link-type="uri" xlink:href="http://www.expasy.org/sprot/"/>). When these sequences are analyzed using BindN with the expected specificity at 80% (default value), the actual specificity levels achieved by the SVM classifiers are 81.58 and 80.86% for the analysis of DNA and RNA-binding residues, respectively. The results suggest that BindN is reliable in achieving user-defined levels of specificity for various proteins. Thus, putative DNA or RNA-binding proteins with uncharacterized functional domains can be used as inputs to BindN. If the number of predicted binding residues is significantly higher than the expected number of false positives, the prediction results may be used to guide experimental characterization of these proteins.</p>
+    <p>To demonstrate that BindN can provide useful information for understanding protein–nucleic acid interactions, we have examined the predicted binding residues in the context of three-dimensional structures. <xref ref-type="fig" rid="fig2">Figure 2</xref> shows two representative examples of the results. In <xref ref-type="fig" rid="fig2">Figure 2a</xref>, putative DNA-binding residues predicted by BindN for the mouse ETS-1 transcription factor are verified using the available structural data (PDB ID: 1K79). The structure includes residues 331–440 of the ETS-1 protein, which was not used for training the SVM classifier. The only homologue in the PDNA-62 dataset is the PU.1 DNA-binding domain (PDB ID: 1PUE), which has 28% sequence identity with the ETS-1 peptide. As shown in <xref ref-type="fig" rid="fig2">Figure 2a</xref>, 10 of the 16 DNA-binding residues (62.50%) are predicted correctly from the amino acid sequence data. These true positives are highlighted in red. The residues in blue are the six false negatives (DNA-binding residues but predicted as negatives). For the 88 non-binding residues, 79 or 89.77% are predicted correctly (residues in green), which agrees well with the desired level of specificity at 90%. Nevertheless, nine of the non-binding residues are predicted incorrectly (false positives in yellow). In <xref ref-type="fig" rid="fig2">Figure 2b</xref>, putative RNA-binding residues predicted for the archaeal protein L7Ae (box C/D RNA-binding domain) are examined. Chain B of the structure (PDB ID: 1RLG) is not included in the PRINR25 dataset, but shows 34% sequence identity with the training data, 1E7K_A (human spliceosomal 15.5 KDa protein). Correct predictions are made for 6 of the 13 RNA-binding residues (46.15%) and 96 of the 104 non-binding residues (92.31%). Therefore, the predictions made by BindN can provide useful information for understanding protein–nucleic acid interactions. Such information may be used to guide experimental studies such as site-directed mutagenesis for functional characterization of DNA or RNA-binding proteins.</p>
+  </sec>
+  <sec>
+    <title>SERVER DESCRIPTION</title>
+    <p>On the BindN web page, users can enter an amino acid sequence in FASTA format; choose the type of prediction to be performed (either DNA or RNA-binding site prediction); and specify the desired level of sensitivity or specificity for the prediction results. The system uses the three biochemical features to encode the input sequence as described in Materials and Methods. The svm_classify program of the SVMlight package (<xref ref-type="bibr" rid="b16">16</xref>) is then called to classify the amino acid residues using one of the SVM models developed in this study. The user-defined level of sensitivity or specificity is used to choose the output threshold according to the ROC analysis discussed above. To reduce the number of false positive predictions, users may choose a specificity level higher than the default value (80%). In addition, if the DNA or RNA-binding domain is known, users may use the domain sequence instead of the full-length protein sequence as the input to BindN. Since a protein often has many more non-binding residues than binding ones, a long sequence, even with a high level of specificity, may result in a number of false positive predictions. However, the overall prediction accuracy appears to be at the same level for the binding domains and other sequence regions (data not shown).</p>
+    <p>As shown in <xref ref-type="fig" rid="fig3">Figure 3</xref>, the output report returned from the BindN server includes the following three sections: (i) a summary of the prediction results, including the number of binding sites predicted, the expected sensitivity and specificity; (ii) an overview of the predictions with the binding residues highlighted in red and the non-binding residues in green and (iii) detailed information about the prediction for each residue. For the summary, either sensitivity or specificity is chosen by the user, and the other value is estimated using the ROC curve shown in <xref ref-type="fig" rid="fig1">Figure 1</xref>. The overview can be used to examine the distribution of the predicted DNA or RNA-binding residues along the input sequence. In the output report, binding residues are labeled with ‘+’ and non-binding residues are labeled with ‘−’. The confidence of prediction is based on the SVM output and computed as (1 − <italic>s</italic>), where <italic>s</italic> is the expected sensitivity for positive predictions or specificity for negative predictions if the SVM output is used as the threshold in the ROC analysis. Intuitively, the confidence value indicates where the SVM output is ranked when compared with all the true positive or true negative predictions in the cross-validation. For example, the fifth residue (I) of the input sequence in <xref ref-type="fig" rid="fig3">Figure 3</xref> gives the SVM output equal to −1.9374 and has the confidence for negative prediction equal to 0.9847, which indicates that only 1.53% of the non-binding residues in the PDNA-62 dataset have SVM outputs less than −1.9374. For the prediction overview, the confidence level is computed as the floor of (10 × confidence) so that it ranges from the lowest level 0 to the highest level 9 for presentation.</p>
+  </sec>
+  <sec>
+    <title>CONCLUSIONS</title>
+    <p>In this work, we have described a new SVM-based approach for prediction of DNA and RNA-binding residues based on amino acid sequence data. The average of sensitivity and specificity reaches nearly 70% for prediction of DNA-binding residues and ∼68% for prediction of RNA-binding residues. We have demonstrated that the prediction results can provide useful information for understanding protein–nucleic acid interactions. A web server, called BindN, has been developed for efficient online predictions. Currently, work is being performed to further improve the prediction accuracy by including more sequence features for the input encoding. In addition, the current system uses a fixed cutoff distance (3.5 Å) to discriminate binding residues from non-binding ones. This limitation will be overcome by constructing a series of SVM models with different cutoff distances and allowing users to choose which model to be used for online predictions.</p>
+  </sec>
+  <sec>
+    <title>SUPPLEMENTARY DATA</title>
+    <p>Supplementary data are available at <italic>NAR</italic> Online.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>This work is supported by the K-INBRE Bioinformatics Core (NIH grant number P20 RR016475). Funding to pay the Open Access publication charges for this article was provided by the K-INBRE Bioinformatics Core (NIH grant number P30 RR016475.</p>
+    <p><italic>Conflict of interest statement</italic>. None declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="b1">
+      <label>1</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ptashne</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Regulation of transcription: from lambda to eukaryotes</article-title>
+        <source>Trends Biochem. Sci.</source>
+        <year>2005</year>
+        <volume>30</volume>
+        <fpage>275</fpage>
+        <lpage>279</lpage>
+        <pub-id pub-id-type="pmid">15950866</pub-id>
+      </citation>
+    </ref>
+    <ref id="b2">
+      <label>2</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Noller</surname>
+            <given-names>H.F.</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA structure: reading the ribosome</article-title>
+        <source>Science</source>
+        <year>2005</year>
+        <volume>309</volume>
+        <fpage>1508</fpage>
+        <lpage>1514</lpage>
+        <pub-id pub-id-type="pmid">16141058</pub-id>
+      </citation>
+    </ref>
+    <ref id="b3">
+      <label>3</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hertel</surname>
+            <given-names>K.J.</given-names>
+          </name>
+          <name>
+            <surname>Graveley</surname>
+            <given-names>B.R.</given-names>
+          </name>
+        </person-group>
+        <article-title>RS domains contact the pre-mRNA throughout spliceosome assembly</article-title>
+        <source>Trends Biochem. Sci.</source>
+        <year>2005</year>
+        <volume>30</volume>
+        <fpage>115</fpage>
+        <lpage>118</lpage>
+        <pub-id pub-id-type="pmid">15752982</pub-id>
+      </citation>
+    </ref>
+    <ref id="b4">
+      <label>4</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jones</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Daley</surname>
+            <given-names>D.T.A.</given-names>
+          </name>
+          <name>
+            <surname>Luscombe</surname>
+            <given-names>N.M.</given-names>
+          </name>
+          <name>
+            <surname>Berman</surname>
+            <given-names>H.M.</given-names>
+          </name>
+          <name>
+            <surname>Thornton</surname>
+            <given-names>J.M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Protein–RNA interactions: a structural analysis</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>943</fpage>
+        <lpage>954</lpage>
+        <pub-id pub-id-type="pmid">11160927</pub-id>
+      </citation>
+    </ref>
+    <ref id="b5">
+      <label>5</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Luscombe</surname>
+            <given-names>N.M.</given-names>
+          </name>
+          <name>
+            <surname>Laskowski</surname>
+            <given-names>R.A.</given-names>
+          </name>
+          <name>
+            <surname>Thornton</surname>
+            <given-names>J.M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Amino acid-base interactions: a three-dimensional analysis of protein–DNA interactions at an atomic level</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>2860</fpage>
+        <lpage>2874</lpage>
+        <pub-id pub-id-type="pmid">11433033</pub-id>
+      </citation>
+    </ref>
+    <ref id="b6">
+      <label>6</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nadassy</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Wodak</surname>
+            <given-names>S.J.</given-names>
+          </name>
+          <name>
+            <surname>Janin</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>Structural features of protein–nucleic acid recognition sites</article-title>
+        <source>Biochemistry</source>
+        <year>1999</year>
+        <volume>38</volume>
+        <fpage>1999</fpage>
+        <lpage>2017</lpage>
+        <pub-id pub-id-type="pmid">10026283</pub-id>
+      </citation>
+    </ref>
+    <ref id="b7">
+      <label>7</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Draper</surname>
+            <given-names>D.E.</given-names>
+          </name>
+        </person-group>
+        <article-title>Themes in RNA-protein recognition</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>1999</year>
+        <volume>293</volume>
+        <fpage>255</fpage>
+        <lpage>270</lpage>
+        <pub-id pub-id-type="pmid">10550207</pub-id>
+      </citation>
+    </ref>
+    <ref id="b8">
+      <label>8</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ahmad</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Gromiha</surname>
+            <given-names>M.M.</given-names>
+          </name>
+          <name>
+            <surname>Sarai</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis and prediction of DNA-binding proteins and their binding residues based on composition, sequence and structural information</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>477</fpage>
+        <lpage>486</lpage>
+        <pub-id pub-id-type="pmid">14990443</pub-id>
+      </citation>
+    </ref>
+    <ref id="b9">
+      <label>9</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jones</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Shanahan</surname>
+            <given-names>H.P.</given-names>
+          </name>
+          <name>
+            <surname>Berman</surname>
+            <given-names>H.M.</given-names>
+          </name>
+          <name>
+            <surname>Thornton</surname>
+            <given-names>J.M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Using electrostatic potentials to predict DNA-binding sites on DNA-binding proteins</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>7189</fpage>
+        <lpage>7198</lpage>
+        <pub-id pub-id-type="pmid">14654694</pub-id>
+      </citation>
+    </ref>
+    <ref id="b10">
+      <label>10</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tsuchiya</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>Kinoshita</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Nakamura</surname>
+            <given-names>H.</given-names>
+          </name>
+        </person-group>
+        <article-title>PreDs: a server for predicting dsDNA-binding site on protein molecular surfaces</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>1721</fpage>
+        <lpage>1723</lpage>
+        <pub-id pub-id-type="pmid">15613393</pub-id>
+      </citation>
+    </ref>
+    <ref id="b11">
+      <label>11</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ahmad</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Sarai</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>PSSM-based prediction of DNA binding sites in proteins</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2005</year>
+        <volume>6</volume>
+        <fpage>33</fpage>
+        <pub-id pub-id-type="pmid">15720719</pub-id>
+      </citation>
+    </ref>
+    <ref id="b12">
+      <label>12</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>S.F.</given-names>
+          </name>
+          <name>
+            <surname>Madden</surname>
+            <given-names>T.L.</given-names>
+          </name>
+          <name>
+            <surname>Schaffer</surname>
+            <given-names>A.A.</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Z.</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Lipman</surname>
+            <given-names>D.J.</given-names>
+          </name>
+        </person-group>
+        <article-title>Gapped BLAST and PSI-BLAST: a new generation of protein database search programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3389</fpage>
+        <lpage>3402</lpage>
+        <pub-id pub-id-type="pmid">9254694</pub-id>
+      </citation>
+    </ref>
+    <ref id="b13">
+      <label>13</label>
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Noble</surname>
+            <given-names>W.S.</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Scholkopf</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Tsuda</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Vert</surname>
+            <given-names>J.P.</given-names>
+          </name>
+        </person-group>
+        <article-title>Support vector machine applications in computational biology</article-title>
+        <source>Kernel Methods in Computational Biology</source>
+        <year>2004</year>
+        <publisher-loc>Cambridge</publisher-loc>
+        <publisher-name>MIT Press</publisher-name>
+      </citation>
+    </ref>
+    <ref id="b14">
+      <label>14</label>
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nelson</surname>
+            <given-names>D.L.</given-names>
+          </name>
+          <name>
+            <surname>Cox</surname>
+            <given-names>M.M.</given-names>
+          </name>
+        </person-group>
+        <source>Lehninger Principles of Biochemistry</source>
+        <year>2000</year>
+        <edition>3rd edn</edition>
+        <publisher-loc>New York</publisher-loc>
+        <publisher-name>Worth Publishers</publisher-name>
+      </citation>
+    </ref>
+    <ref id="b15">
+      <label>15</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kyte</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Doolittle</surname>
+            <given-names>R.F.</given-names>
+          </name>
+        </person-group>
+        <article-title>A simple method for displaying the hydropathic character of a protein</article-title>
+        <source>J. Mol. Biol.</source>
+        <year>1982</year>
+        <volume>157</volume>
+        <fpage>105</fpage>
+        <lpage>132</lpage>
+        <pub-id pub-id-type="pmid">7108955</pub-id>
+      </citation>
+    </ref>
+    <ref id="b16">
+      <label>16</label>
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Joachims</surname>
+            <given-names>T.</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Scholkopf</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Burges</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Sola</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Making large scale SVM learning practical</article-title>
+        <source>Advances in Kernel Methods—Support Vector Learning</source>
+        <year>1999</year>
+        <publisher-loc>Cambridge</publisher-loc>
+        <publisher-name>MIT Press</publisher-name>
+      </citation>
+    </ref>
+    <ref id="b17">
+      <label>17</label>
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Vapnik</surname>
+            <given-names>V.N.</given-names>
+          </name>
+        </person-group>
+        <source>Statistical Learning Theory</source>
+        <year>1998</year>
+        <publisher-loc>New York</publisher-loc>
+        <publisher-name>John Wiley and Sons</publisher-name>
+      </citation>
+    </ref>
+    <ref id="b18">
+      <label>18</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Swets</surname>
+            <given-names>J.A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Measuring the accuracy of diagnostic systems</article-title>
+        <source>Science</source>
+        <year>1988</year>
+        <volume>240</volume>
+        <fpage>1285</fpage>
+        <lpage>1293</lpage>
+        <pub-id pub-id-type="pmid">3287615</pub-id>
+      </citation>
+    </ref>
+    <ref id="b19">
+      <label>19</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bradley</surname>
+            <given-names>A.P.</given-names>
+          </name>
+        </person-group>
+        <article-title>The use of the area under the ROC curve in the evaluation of machine learning algorithms</article-title>
+        <source>Pattern Recognition</source>
+        <year>1997</year>
+        <volume>30</volume>
+        <fpage>1145</fpage>
+        <lpage>1159</lpage>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig id="fig1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p>ROC curves for prediction of DNA and RNA-binding residues with SVMs.</p>
+      </caption>
+      <graphic xlink:href="gkl298f1"/>
+    </fig>
+    <fig id="fig2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p>Representative prediction results shown in the context of three-dimensional structures. In each complex, the correctly predicted binding residues (true positives) are in red and spacefill; the correctly predicted non-binding residues (true negatives) are in green and wireframe; the binding residues but predicted as negatives (false negatives) are in blue and spacefill; the non-binding residues but predicted as positives (false positives) are in yellow and spacefill; the nucleic acid molecule is shown in purple. (<bold>a</bold>) Putative DNA-binding residues predicted for the mouse ETS-1 transcription factor. The structure (PDB ID: 1K79) includes residues 331–440 of the ETS-1 protein. Chain D of 1K79 was used as the input sequence to BindN with the expected specificity set to 90%. (<bold>b</bold>) Putative RNA-binding residues predicted for the box C/D RNA-binding domain of the archaeal protein L7Ae. Chain B of the structure (PDB ID: 1RLG) was used for BindN prediction with the expected specificity set to 90%.</p>
+      </caption>
+      <graphic xlink:href="gkl298f2"/>
+    </fig>
+    <fig id="fig3" position="float">
+      <label>Figure 3</label>
+      <caption>
+        <p>Sample output from the BindN server. Putative DNA-binding residues were predicted for the <italic>Arabidopsis</italic> transcription factor WRKY1 (residues 301–380). Most of the positive predictions are located in the putative WRKY DNA-binding domain, for which structural data are still not available.</p>
+      </caption>
+      <graphic xlink:href="gkl298f3"/>
+    </fig>
+    <table-wrap id="tbl1" position="float">
+      <label>Table 1</label>
+      <caption>
+        <p>Performance of the SVMs for prediction of DNA and RNA binding residues in proteins</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="left" rowspan="1" colspan="1">Prediction type</th>
+            <th align="left" rowspan="1" colspan="1">Accuracy (%)</th>
+            <th align="left" rowspan="1" colspan="1">Sensitivity (%)</th>
+            <th align="left" rowspan="1" colspan="1">Specificity (%)</th>
+            <th align="left" rowspan="1" colspan="1">ROC AUC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">DNA-binding</td>
+            <td align="left" rowspan="1" colspan="1">70.31</td>
+            <td align="left" rowspan="1" colspan="1">69.40</td>
+            <td align="left" rowspan="1" colspan="1">70.47</td>
+            <td align="left" rowspan="1" colspan="1">0.7524</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">RNA-binding</td>
+            <td align="left" rowspan="1" colspan="1">69.32</td>
+            <td align="left" rowspan="1" colspan="1">66.28</td>
+            <td align="left" rowspan="1" colspan="1">69.84</td>
+            <td align="left" rowspan="1" colspan="1">0.7308</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+    <table-wrap id="tbl2" position="float">
+      <label>Table 2</label>
+      <caption>
+        <p>Performance comparison of the web servers for prediction of DNA-binding residues</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="left" rowspan="1" colspan="1">Web server</th>
+            <th align="left" rowspan="1" colspan="1">Accuracy (%)</th>
+            <th align="left" rowspan="1" colspan="1">Sensitivity (%)</th>
+            <th align="left" rowspan="1" colspan="1">Specificity (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">BindN</td>
+            <td align="left" rowspan="1" colspan="1">72.18</td>
+            <td align="left" rowspan="1" colspan="1">65.22</td>
+            <td align="left" rowspan="1" colspan="1">72.84</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">DBS-PSSM</td>
+            <td align="left" rowspan="1" colspan="1">67.82</td>
+            <td align="left" rowspan="1" colspan="1">36.73</td>
+            <td align="left" rowspan="1" colspan="1">70.79</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+  </sec>
+</back>

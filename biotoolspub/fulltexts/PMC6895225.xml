@@ -1,0 +1,1503 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//Springer-Verlag//DTD A++ V2.4//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName A++V2.4.dtd?>
+<?SourceDTD.Version 2.4?>
+<?ConverterInfo.XSLTName springer2nlmx2.xsl?>
+<?ConverterInfo.Version 1?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Sci Rep</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Sci Rep</journal-id>
+    <journal-title-group>
+      <journal-title>Scientific Reports</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">2045-2322</issn>
+    <publisher>
+      <publisher-name>Nature Publishing Group UK</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">6895225</article-id>
+    <article-id pub-id-type="publisher-id">54708</article-id>
+    <article-id pub-id-type="doi">10.1038/s41598-019-54708-8</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Computing the statistical significance of optimized communities in networks</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes">
+        <name>
+          <surname>Palowitch</surname>
+          <given-names>John</given-names>
+        </name>
+        <address>
+          <email>palowitch@google.com</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1"/>
+      </contrib>
+      <aff id="Aff1"><institution-wrap><institution-id institution-id-type="GRID">grid.420451.6</institution-id><institution>Google Research, </institution></institution-wrap>San Francisco, 94105 USA </aff>
+    </contrib-group>
+    <pub-date pub-type="epub">
+      <day>5</day>
+      <month>12</month>
+      <year>2019</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>5</day>
+      <month>12</month>
+      <year>2019</year>
+    </pub-date>
+    <pub-date pub-type="collection">
+      <year>2019</year>
+    </pub-date>
+    <volume>9</volume>
+    <elocation-id>18444</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>8</day>
+        <month>8</month>
+        <year>2019</year>
+      </date>
+      <date date-type="accepted">
+        <day>14</day>
+        <month>11</month>
+        <year>2019</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author(s) 2019</copyright-statement>
+      <license license-type="OpenAccess">
+        <license-p><bold>Open Access</bold> This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons license, and indicate if changes were made. The images or other third party material in this article are included in the article’s Creative Commons license, unless indicated otherwise in a credit line to the material. If material is not included in the article’s Creative Commons license and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this license, visit <ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</ext-link>.</license-p>
+      </license>
+    </permissions>
+    <abstract id="Abs1">
+      <p id="Par1">In scientific problems involving systems that can be modeled as a network (or “graph”), it is often of interest to find network <italic>communities</italic> - strongly connected node subsets - for unsupervised learning, feature discovery, anomaly detection, or scientific study. The vast majority of community detection methods proceed via optimization of a quality function, which is possible even on random networks without communities. Therefore there is usually not an easy way to tell if a community is “significant”, in this context meaning more internally connected than would be expected under a random graph model without communities. This paper generalizes existing null models and statistical tests for this purpose to bipartite graphs, and introduces a new significance scoring algorithm called Fast Optimized Community Significance (FOCS) that is highly scalable and agnostic to the type of graph. Compared with existing methods on unipartite graphs, FOCS is more numerically stable and better balances the trade-off between detection power and false positives. On a large-scale bipartite graph derived from the Internet Movie Database (IMDB), the significance scores provided by FOCS correlate strongly with meaningful actor/director collaborations on serial cinematic projects.</p>
+    </abstract>
+    <kwd-group kwd-group-type="npg-subject">
+      <title>Subject terms</title>
+      <kwd>Statistics</kwd>
+      <kwd>Computer science</kwd>
+    </kwd-group>
+    <custom-meta-group>
+      <custom-meta>
+        <meta-name>issue-copyright-statement</meta-name>
+        <meta-value>© The Author(s) 2019</meta-value>
+      </custom-meta>
+    </custom-meta-group>
+  </article-meta>
+</front>
+<body>
+  <sec id="Sec1" sec-type="introduction">
+    <title>Introduction</title>
+    <p id="Par2">Many natural systems can be modeled as a network, with network nodes representing entities and network edges representing links or relationships between those entities. As such, a wide variety of network models and graph algorithms have been developed, generalized, and improved over many decades, forming the field of network science and the study of complex networks<sup><xref ref-type="bibr" rid="CR1">1</xref></sup>. A sub-field of network science is focused on methodology for and applications of “community” detection. Defined loosely, a community is a subset of nodes in a network that are more connected to each other than they are to other nodes. There are many distinct, precise definitions of a community, with utilities that vary by application<sup><xref ref-type="bibr" rid="CR2">2</xref></sup>. In practice, the purpose of community detection is to discover dynamics or features of the networked system that were not known in advance. Community detection has been profitably applied to naturally arising networks in diverse fields like machine learning, social science, and computational biology<sup><xref ref-type="bibr" rid="CR3">3</xref></sup>.</p>
+    <p id="Par3">Usually, community detection proceeds by finding a division or cover of the network that is optimal with respect to some quality function or search procedure. Often, a <italic>partition</italic> of the network is the object being optimized with the quality function. Arguably the most commonly used and studied quality function for partition optimization is modularity, which is the sum of the first-order deviations of each community’s internal edge count from a random graph null model<sup><xref ref-type="bibr" rid="CR4">4</xref></sup>. Other community detection methods aim to find a <italic>collection</italic> of communities, where the requirement that communities be disjoint and exhaustive is relaxed (partitions are also collections). In some approaches, collections of communities are found by optimizing communities one-by-one, according to a community-level quality function<sup><xref ref-type="bibr" rid="CR5">5</xref>–<xref ref-type="bibr" rid="CR7">7</xref></sup>.</p>
+    <p id="Par4">Hundreds of distinct community detection methods have been introduced in recent decades. Despite this, relatively few articles discuss issues of statistical significance related to community detection. In particular, there is often no immediate way to determine if the communities returned by a community detection algorithm are of higher “quality” than would be expected (on average) if the algorithm were run repeatedly on a random graph model without true communities. When significance is discussed or addressed, it is usually with reference to the overall partition, rather than individual communities<sup><xref ref-type="bibr" rid="CR8">8</xref>,<xref ref-type="bibr" rid="CR9">9</xref></sup>.</p>
+    <p id="Par5">This paper introduces a method called Fast Optimized Community Significance (FOCS) for scoring the statistical significance of individual communities that, importantly, have been optimized by a separate method. As discussed in the Methods section, there are several approaches for scoring optimized communities. This paper makes two advancements in this area:<list list-type="order"><list-item><p id="Par6">Null models for scoring optimized communities are made explicit and newly generalized to bipartite graphs.</p></list-item><list-item><p id="Par7">A new method (FOCS) is introduced which enjoys some benefits over existing methods:<list list-type="bullet"><list-item><label/><p id="Par8">A core algorithm that is transparent, easy to implement, and applies freely to either unipartite or bipartite graphs.</p></list-item><list-item><label/><p id="Par9">Higher numerical stability and 10–100x faster runtimes.</p></list-item><list-item><label/><p id="Par10">Type-I error control with improved power to detect ground-truth communities.</p></list-item></list></p></list-item></list></p>
+    <p id="Par11">For the rest of this introduction, we turn to a discussion of related work. First, we should note that there are community detection and clustering methods which use significance tests to <italic>discover</italic> communities<sup><xref ref-type="bibr" rid="CR6">6</xref>,<xref ref-type="bibr" rid="CR7">7</xref></sup>, and some methods for assessing the significance of community partitions as a whole [e.g.<sup><xref ref-type="bibr" rid="CR8">8</xref>–<xref ref-type="bibr" rid="CR10">10</xref></sup>]. However, none of these provide significance tests for individual communities, and are therefore out-of-scope in this work.</p>
+    <p id="Par12">Recently<sup><xref ref-type="bibr" rid="CR11">11</xref></sup>, proposed a simulation-based method called the QS-Test for inference on individual communities via community quality scores. The QS-Test generates a large sample of null networks with the configuration model<sup><xref ref-type="bibr" rid="CR12">12</xref></sup>, each with a degree distribution matching the observed network. On each null network, a community detection algorithm is run, and a kernel density estimate of the quality score’s null distribution is computed from the resulting communities. For inference, observed quality scores from the original network are compared against the estimated null. The QS-Test approach is quite general, as it can be applied with many quality scores, and any community detection algorithm. Furthermore, it is (at least in principle) evaluating community significance against a direct estimate of its quality function’s null distribution. However, a drawback to the approach is that it is not scalable to large networks, as it requires many independent simulations of networks that have the same amount of edges as the original network, as well as a community detection run on each simulated network.</p>
+    <p id="Par13">Another simulation-based method introduced in<sup><xref ref-type="bibr" rid="CR13">13</xref></sup> uses parameteric bootstrapping of the <italic>observed</italic> network, and a measure of cluster stability across the bootstrapped networks, to assess “significance” of individual clusters. This approach does not measure <italic>statistical</italic> significance, as it is based on cluster persistence across bootstrap samples rather than a null model. In this work we only consider methods that compute statistical significance of clusters.</p>
+    <p id="Par14">An approach introduced in<sup><xref ref-type="bibr" rid="CR14">14</xref></sup> uses an analytical approximation to compute the statistical significance of a community. The authors of <sup><xref ref-type="bibr" rid="CR14">14</xref></sup> first define a null model for simple undirected graphs. The authors reason that, if the community is a false positive, the community in-degree of its <italic>worst</italic>-connected node should be distributed as the maximum order statistic of the external nodes, with respect to the null model. They derive a basic significance score from this observation, and then propose a modified version of the score for an <italic>optimized</italic> community. The particulars of this method will be discussed further in the Methods section, as the FOCS approach has a similar foundation. Building upon their score based on a community’s worst node, the authors then propose to test nodes up to the <italic>k</italic>-th worst node in the community. They show through empirical studies that this “B-Score” (for “border” score) is more powerful while controlling false-positive rates in null networks. The strengths of the B-Score approach over the QS-Test is that it is analytical and therefore can be faster to compute on a single machine. A drawback of the approach is that it contains more approximations to the null distribution than the QS-Test, and does not have the notion of effect-size or quality score which is inherent to that method.</p>
+  </sec>
+  <sec id="Sec2">
+    <title>Methods</title>
+    <p id="Par15">In this paper, a network is denoted by <inline-formula id="IEq1"><alternatives><tex-math id="M1">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G\,:=(V,A)$$\end{document}</tex-math><mml:math id="M2"><mml:mi>G</mml:mi><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-0.25em"/><mml:mo>=</mml:mo><mml:mo stretchy="false">(</mml:mo><mml:mi>V</mml:mi><mml:mo>,</mml:mo><mml:mi>A</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq1.gif"/></alternatives></inline-formula>, where <italic>V</italic> is a set of vertices and <italic>A</italic> is an adjacency matrix. Let the operator |·| denote the size of a set, and let <inline-formula id="IEq2"><alternatives><tex-math id="M3">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$n\,:\,=|V|$$\end{document}</tex-math><mml:math id="M4"><mml:mi>n</mml:mi><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mo stretchy="false">|</mml:mo><mml:mi>V</mml:mi><mml:mo stretchy="false">|</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq2.gif"/></alternatives></inline-formula>. For <italic>u</italic>, <inline-formula id="IEq3"><alternatives><tex-math id="M5">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$v\in V$$\end{document}</tex-math><mml:math id="M6"><mml:mi>v</mml:mi><mml:mo>∈</mml:mo><mml:mi>V</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq3.gif"/></alternatives></inline-formula>, the entry <inline-formula id="IEq4"><alternatives><tex-math id="M7">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$A(u,v)$$\end{document}</tex-math><mml:math id="M8"><mml:mi>A</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>v</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq4.gif"/></alternatives></inline-formula> is equal to the number of edges between nodes <italic>u</italic> to <italic>v</italic>. We consider only <italic>undirected</italic> networks for which <inline-formula id="IEq5"><alternatives><tex-math id="M9">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$A(u,v)=A(v,u)$$\end{document}</tex-math><mml:math id="M10"><mml:mi>A</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>v</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mi>A</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>v</mml:mi><mml:mo>,</mml:mo><mml:mi>u</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq5.gif"/></alternatives></inline-formula>. Denote the degree of <inline-formula id="IEq6"><alternatives><tex-math id="M11">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u\in V$$\end{document}</tex-math><mml:math id="M12"><mml:mi>u</mml:mi><mml:mo>∈</mml:mo><mml:mi>V</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq6.gif"/></alternatives></inline-formula> by <inline-formula id="IEq7"><alternatives><tex-math id="M13">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${d}_{u}\,:\,={\sum }_{v\in V}\,A(u,v)$$\end{document}</tex-math><mml:math id="M14"><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:msub><mml:mo>∑</mml:mo><mml:mrow><mml:mi>v</mml:mi><mml:mo>∈</mml:mo><mml:mi>V</mml:mi></mml:mrow></mml:msub><mml:mspace width=".1em"/><mml:mi>A</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>v</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq7.gif"/></alternatives></inline-formula>. Let <inline-formula id="IEq8"><alternatives><tex-math id="M15">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$C\subseteq V$$\end{document}</tex-math><mml:math id="M16"><mml:mi>C</mml:mi><mml:mo>⊆</mml:mo><mml:mi>V</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq8.gif"/></alternatives></inline-formula> denote a community or any node subset. With a slight abuse of notation, let <inline-formula id="IEq9"><alternatives><tex-math id="M17">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${d}_{C}\,:\,={\sum }_{u\in C}\,d(u)$$\end{document}</tex-math><mml:math id="M18"><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>C</mml:mi></mml:mrow></mml:msub><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:msub><mml:mo>∑</mml:mo><mml:mrow><mml:mi>u</mml:mi><mml:mo>∈</mml:mo><mml:mi>C</mml:mi></mml:mrow></mml:msub><mml:mspace width=".1em"/><mml:mi>d</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>u</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq9.gif"/></alternatives></inline-formula> be the total degree of a subset. Analogously, <inline-formula id="IEq10"><alternatives><tex-math id="M19">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${d}_{u}(C)\,:\,={\sum }_{v\in C}\,A(u,v)$$\end{document}</tex-math><mml:math id="M20"><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:msub><mml:mo>∑</mml:mo><mml:mrow><mml:mi>v</mml:mi><mml:mo>∈</mml:mo><mml:mi>C</mml:mi></mml:mrow></mml:msub><mml:mspace width=".1em"/><mml:mi>A</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>v</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq10.gif"/></alternatives></inline-formula>, and <inline-formula id="IEq11"><alternatives><tex-math id="M21">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${d}_{C}(C^{\prime} )\,:\,={\sum }_{u\in C}\,{d}_{u}(C^{\prime} )$$\end{document}</tex-math><mml:math id="M22"><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>C</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:msub><mml:mo>∑</mml:mo><mml:mrow><mml:mi>u</mml:mi><mml:mo>∈</mml:mo><mml:mi>C</mml:mi></mml:mrow></mml:msub><mml:mspace width=".1em"/><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq11.gif"/></alternatives></inline-formula>, where <inline-formula id="IEq12"><alternatives><tex-math id="M23">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$C^{\prime} \,:\,=V\backslash C$$\end{document}</tex-math><mml:math id="M24"><mml:mi>C</mml:mi><mml:mo>′</mml:mo><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mi>V</mml:mi><mml:mo>\</mml:mo><mml:mi>C</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq12.gif"/></alternatives></inline-formula>. Note that for undirected networks, <inline-formula id="IEq13"><alternatives><tex-math id="M25">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${d}_{C}(C^{\prime} )={d}_{C^{\prime} }(C)$$\end{document}</tex-math><mml:math id="M26"><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>C</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq13.gif"/></alternatives></inline-formula> for any <inline-formula id="IEq14"><alternatives><tex-math id="M27">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$C\subseteq V$$\end{document}</tex-math><mml:math id="M28"><mml:mi>C</mml:mi><mml:mo>⊆</mml:mo><mml:mi>V</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq14.gif"/></alternatives></inline-formula>.</p>
+    <sec id="Sec3">
+      <title>Fast Optimized-Community Significance (FOCS)</title>
+      <p id="Par16">Given a community of interest <italic>C</italic>, the focus of the core FOCS algorithm is on the edge distribution of external nodes <inline-formula id="IEq15"><alternatives><tex-math id="M29">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u\in C^{\prime} $$\end{document}</tex-math><mml:math id="M30"><mml:mi>u</mml:mi><mml:mo>∈</mml:mo><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq15.gif"/></alternatives></inline-formula>, under a random graph null model. The null model is a community-conditional version of the standard configuration model<sup><xref ref-type="bibr" rid="CR12">12</xref></sup>, described here first for unipartite graphs, and then newly extended to bipartite graphs later in this section. The null model breaks edges coming out of <italic>C</italic>, and all edges internal to <italic>C</italic>′, and randomly re-assigns the edges of <italic>u</italic> without replacement. This process models, in a sense, the typical “exclusivity” of <italic>C</italic> expected in a graph with the same degree distribution but with a uniformly random edge distribution. Under the model, the degree of <italic>u</italic> in <italic>C</italic> has a hypergeometric probability mass function:<disp-formula id="Equ1"><label>1</label><alternatives><tex-math id="M31">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P({d}_{u}(C)=a)=\frac{(\begin{array}{c}{d}_{C}(C^{\prime} )\\ a\end{array})\,(\begin{array}{c}{d}_{C^{\prime} }(C^{\prime} )\\ {d}_{u}-a\end{array})}{(\begin{array}{c}{d}_{C^{\prime} }\\ {d}_{u}\end{array})}.$$\end{document}</tex-math><mml:math id="M32" display="block"><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:mrow><mml:mo stretchy="true">(</mml:mo><mml:mrow><mml:mtable><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>C</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mi>a</mml:mi></mml:mtd></mml:mtr></mml:mtable></mml:mrow><mml:mo stretchy="true">)</mml:mo></mml:mrow><mml:mspace width=".1em"/><mml:mrow><mml:mo stretchy="true">(</mml:mo><mml:mrow><mml:mtable><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo>−</mml:mo><mml:mi>a</mml:mi></mml:mrow></mml:mtd></mml:mtr></mml:mtable></mml:mrow><mml:mo stretchy="true">)</mml:mo></mml:mrow></mml:mrow><mml:mrow><mml:mo stretchy="true">(</mml:mo><mml:mrow><mml:mtable><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow></mml:msub></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:mtd></mml:mtr></mml:mtable></mml:mrow><mml:mo stretchy="true">)</mml:mo></mml:mrow></mml:mfrac><mml:mo>.</mml:mo></mml:math><graphic xlink:href="41598_2019_54708_Article_Equ1.gif" position="anchor"/></alternatives></disp-formula></p>
+      <p id="Par17">The null model in<sup><xref ref-type="bibr" rid="CR14">14</xref></sup> is similar and also involves the hypergeometric distribution, but with different parameters. If <italic>C</italic> is optimized, the least-connected or “worst” in-community node <inline-formula id="IEq16"><alternatives><tex-math id="M33">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$w\in C$$\end{document}</tex-math><mml:math id="M34"><mml:mi>w</mml:mi><mml:mo>∈</mml:mo><mml:mi>C</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq16.gif"/></alternatives></inline-formula> should be at the maximum quantile of <italic>P</italic>, among external nodes. Therefore, we measure the statistical significance of <italic>C</italic> by testing the quantile of the worst node, via p-values. Because standard p-values for discrete distributions are not exact, we now introduce an efficient simulation-based method for deriving exact Uniform p-values from a discrete variable.</p>
+      <sec id="Sec4">
+        <title>Continuity correction for in-degree quantiles</title>
+        <p id="Par18">Define the cumulative distribution function of <italic>P</italic> as <inline-formula id="IEq17"><alternatives><tex-math id="M35">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$g(a;u,C):\,=P({\tilde{d}}_{u}(C)\le a)$$\end{document}</tex-math><mml:math id="M36"><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq17.gif"/></alternatives></inline-formula>, where <inline-formula id="IEq18"><alternatives><tex-math id="M37">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${\tilde{d}}_{u}(C)$$\end{document}</tex-math><mml:math id="M38"><mml:msub><mml:mrow><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq18.gif"/></alternatives></inline-formula> is the random version of <inline-formula id="IEq19"><alternatives><tex-math id="M39">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${d}_{u}(C)$$\end{document}</tex-math><mml:math id="M40"><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq19.gif"/></alternatives></inline-formula> with respect to <italic>P</italic>. Note that <inline-formula id="IEq20"><alternatives><tex-math id="M41">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$g(\cdot ;u,C)$$\end{document}</tex-math><mml:math id="M42"><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mspace width="-0.25em"/><mml:mo>⋅</mml:mo><mml:mspace width="-0.25em"/><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq20.gif"/></alternatives></inline-formula> is not continuous and therefore <inline-formula id="IEq21"><alternatives><tex-math id="M43">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${g}_{P}({\tilde{d}}_{u}(C);u,C)$$\end{document}</tex-math><mml:math id="M44"><mml:msub><mml:mrow><mml:mi>g</mml:mi></mml:mrow><mml:mrow><mml:mi>P</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq21.gif"/></alternatives></inline-formula> is not a uniform random variable. We use a stochastic approach to construct a uniform CDF of <italic>P</italic>, from which to derive p-values for the FOCS algorithm. Denote a uniform variable on the range <inline-formula id="IEq22"><alternatives><tex-math id="M45">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[{x}_{1},{x}_{2}]$$\end{document}</tex-math><mml:math id="M46"><mml:mo stretchy="false">[</mml:mo><mml:msub><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msub><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq22.gif"/></alternatives></inline-formula> by <inline-formula id="IEq23"><alternatives><tex-math id="M47">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$U[{x}_{1},{x}_{2}]$$\end{document}</tex-math><mml:math id="M48"><mml:mi>U</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:msub><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msub><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq23.gif"/></alternatives></inline-formula>, and define<disp-formula id="Equ2"><label>2</label><alternatives><tex-math id="M49">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\hat{g}(a;u,C):\,=U[g(a-1;u,C),g(a;u,C)].$$\end{document}</tex-math><mml:math id="M50" display="block"><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mi>U</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>−</mml:mo><mml:mn>1</mml:mn><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>,</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo stretchy="false">]</mml:mo><mml:mo>.</mml:mo></mml:math><graphic xlink:href="41598_2019_54708_Article_Equ2.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p id="Par19">The following theorem shows that <inline-formula id="IEq24"><alternatives><tex-math id="M51">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\hat{g}({\tilde{d}}_{u}(C);u,C)$$\end{document}</tex-math><mml:math id="M52"><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq24.gif"/></alternatives></inline-formula> is a uniform random variable with respect to <italic>P</italic>.</p>
+        <sec id="FPar1">
+          <title>
+            <bold>Theorem 1:</bold>
+          </title>
+          <p id="Par20"><italic>Let</italic><inline-formula id="IEq25"><alternatives><tex-math id="M53">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\tilde{d}$$\end{document}</tex-math><mml:math id="M54"><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq25.gif"/></alternatives></inline-formula><italic>be a discrete random variable on a finite set</italic><inline-formula id="IEq26"><alternatives><tex-math id="M55">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$S\subset {\mathbb{R}}$$\end{document}</tex-math><mml:math id="M56"><mml:mi>S</mml:mi><mml:mo>⊂</mml:mo><mml:mi>ℝ</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq26.gif"/></alternatives></inline-formula>. <italic>Let</italic><inline-formula id="IEq27"><alternatives><tex-math id="M57">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$g:S\mapsto [0,1]$$\end{document}</tex-math><mml:math id="M58"><mml:mi>g</mml:mi><mml:mo>:</mml:mo><mml:mi>S</mml:mi><mml:mo>↦</mml:mo><mml:mo stretchy="false">[</mml:mo><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq27.gif"/></alternatives></inline-formula><italic>be its cumulative distribution function defined</italic><inline-formula id="IEq28"><alternatives><tex-math id="M59">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$g(a)\,:\,=P(\tilde{d}\le a)$$\end{document}</tex-math><mml:math id="M60"><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo>≤</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq28.gif"/></alternatives></inline-formula>. <italic>Order the elements of S so that for</italic><inline-formula id="IEq29"><alternatives><tex-math id="M61">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${a}_{i},{a}_{j}\in S$$\end{document}</tex-math><mml:math id="M62"><mml:msub><mml:mrow><mml:mi>a</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:mi>a</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow></mml:msub><mml:mo>∈</mml:mo><mml:mi>S</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq29.gif"/></alternatives></inline-formula>, <inline-formula id="IEq30"><alternatives><tex-math id="M63">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$g({a}_{i})\le g({a}_{j})$$\end{document}</tex-math><mml:math id="M64"><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>a</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>a</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq30.gif"/></alternatives></inline-formula><italic>if and only if</italic><inline-formula id="IEq31"><alternatives><tex-math id="M65">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$i\le j$$\end{document}</tex-math><mml:math id="M66"><mml:mi>i</mml:mi><mml:mo>≤</mml:mo><mml:mi>j</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq31.gif"/></alternatives></inline-formula>. <italic>By convention</italic>, <italic>define</italic><inline-formula id="IEq32"><alternatives><tex-math id="M67">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${a}_{0}\,:\,={a}_{1}-1$$\end{document}</tex-math><mml:math id="M68"><mml:msub><mml:mrow><mml:mi>a</mml:mi></mml:mrow><mml:mrow><mml:mn>0</mml:mn></mml:mrow></mml:msub><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:msub><mml:mrow><mml:mi>a</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>−</mml:mo><mml:mn>1</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq32.gif"/></alternatives></inline-formula>. <italic>Define the uniform random variable</italic><inline-formula id="IEq33"><alternatives><tex-math id="M69">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\hat{g}(a)\,:\,=U[g(a^{\prime} ),g(a)]$$\end{document}</tex-math><mml:math id="M70"><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mi>U</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mo>,</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq33.gif"/></alternatives></inline-formula><italic>where</italic><inline-formula id="IEq34"><alternatives><tex-math id="M71">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$a^{\prime} ={a}_{i-1}$$\end{document}</tex-math><mml:math id="M72"><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo>=</mml:mo><mml:msub><mml:mrow><mml:mi>a</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>−</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msub></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq34.gif"/></alternatives></inline-formula><italic>when</italic><inline-formula id="IEq35"><alternatives><tex-math id="M73">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$a={a}_{i}$$\end{document}</tex-math><mml:math id="M74"><mml:mi>a</mml:mi><mml:mo>=</mml:mo><mml:msub><mml:mrow><mml:mi>a</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow></mml:msub></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq35.gif"/></alternatives></inline-formula>. <italic>Then for any</italic><inline-formula id="IEq36"><alternatives><tex-math id="M75">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$x\in [0,1]$$\end{document}</tex-math><mml:math id="M76"><mml:mi>x</mml:mi><mml:mo>∈</mml:mo><mml:mo stretchy="false">[</mml:mo><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq36.gif"/></alternatives></inline-formula>, <italic>the conditional random variable</italic><inline-formula id="IEq37"><alternatives><tex-math id="M77">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\hat{g}(\tilde{d})$$\end{document}</tex-math><mml:math id="M78"><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq37.gif"/></alternatives></inline-formula><italic>satisfies</italic><inline-formula id="IEq38"><alternatives><tex-math id="M79">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P(\hat{g}(\tilde{d})\le x)=x$$\end{document}</tex-math><mml:math id="M80"><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mi>x</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq38.gif"/></alternatives></inline-formula>.</p>
+          <p id="Par21"><italic>Proof</italic>. First write the distribution of <inline-formula id="IEq39"><alternatives><tex-math id="M81">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\hat{g}(\tilde{d})$$\end{document}</tex-math><mml:math id="M82"><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq39.gif"/></alternatives></inline-formula> as the sum<disp-formula id="Equ3"><label>3</label><alternatives><tex-math id="M83">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P(\hat{g}(\tilde{d})\le x)=\sum _{a\in S}\,P(\{\tilde{d}=a\}\cap \{\hat{g}(\tilde{d}) &lt; x\})=\sum _{a\in S}\,P(\tilde{d}=a)P(\hat{g}(a)\le x)$$\end{document}</tex-math><mml:math id="M84" display="block"><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mrow><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>a</mml:mi><mml:mo>∈</mml:mo><mml:mi>S</mml:mi></mml:mrow></mml:munder></mml:mrow><mml:mspace width=".1em"/><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mo stretchy="false">{</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo>=</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">}</mml:mo><mml:mo>∩</mml:mo><mml:mo stretchy="false">{</mml:mo><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo stretchy="false">)</mml:mo><mml:mo>&lt;</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">}</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mrow><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>a</mml:mi><mml:mo>∈</mml:mo><mml:mi>S</mml:mi></mml:mrow></mml:munder></mml:mrow><mml:mspace width=".1em"/><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo>=</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><graphic xlink:href="41598_2019_54708_Article_Equ3.gif" position="anchor"/></alternatives></disp-formula></p>
+          <p id="Par22">Define <inline-formula id="IEq40"><alternatives><tex-math id="M85">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta (a):\,=g(a)-g(a^{\prime} )$$\end{document}</tex-math><mml:math id="M86"><mml:mi mathvariant="normal">Δ</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>−</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq40.gif"/></alternatives></inline-formula>. By definition of <inline-formula id="IEq41"><alternatives><tex-math id="M87">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\hat{g}$$\end{document}</tex-math><mml:math id="M88"><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq41.gif"/></alternatives></inline-formula>, accounting for <italic>x</italic> with respect to the range <inline-formula id="IEq42"><alternatives><tex-math id="M89">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[g(a^{\prime} ),g(a)]$$\end{document}</tex-math><mml:math id="M90"><mml:mo stretchy="false">[</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mo>,</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq42.gif"/></alternatives></inline-formula>, we have<disp-formula id="Equ4"><label>4</label><alternatives><tex-math id="M91">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P(\hat{g}(a)\le x)={\int }_{g(a^{\prime} )}^{{\rm{\min }}(x,g(a))}\,\Delta {(a)}^{-1}1(g(a^{\prime} )\le x)dz$$\end{document}</tex-math><mml:math id="M92" display="block"><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:msubsup><mml:mo>∫</mml:mo><mml:mrow><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mrow><mml:mi mathvariant="normal">min</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>x</mml:mi><mml:mo>,</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup><mml:mspace width=".1em"/><mml:mi mathvariant="normal">Δ</mml:mi><mml:msup><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mrow><mml:mo>−</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msup><mml:mn>1</mml:mn><mml:mo stretchy="false">(</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mi>d</mml:mi><mml:mi>z</mml:mi></mml:math><graphic xlink:href="41598_2019_54708_Article_Equ4.gif" position="anchor"/></alternatives></disp-formula></p>
+          <p id="Par23">Note that <inline-formula id="IEq43"><alternatives><tex-math id="M93">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta (a)=P(\tilde{d}=a)$$\end{document}</tex-math><mml:math id="M94"><mml:mi mathvariant="normal">Δ</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo>=</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq43.gif"/></alternatives></inline-formula>, by definition of <italic>g</italic>. Therefore,<disp-formula id="Equ5"><label>5</label><alternatives><tex-math id="M95">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P(\tilde{d}=a)P(\hat{g}(a)\le x)=\Delta (a)\,{\int }_{g(a^{\prime} )}^{{\rm{\min }}(x,g(a))}\Delta {(a)}^{-1}1(g(a^{\prime} )\le x)dz={\int }_{g(a^{\prime} )}^{{\rm{\min }}(x,g(a))}\,1(g(a^{\prime} )\le x)dz.$$\end{document}</tex-math><mml:math id="M96" display="block"><mml:mstyle mathsize="8pt"><mml:mrow><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo>=</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:mrow><mml:mi mathvariant="normal">Δ</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mspace width=".1em"/><mml:msubsup><mml:mo>∫</mml:mo><mml:mrow><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mrow><mml:mi mathvariant="normal">min</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>x</mml:mi><mml:mo>,</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup><mml:mi mathvariant="normal">Δ</mml:mi><mml:msup><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mrow><mml:mo>−</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msup><mml:mn>1</mml:mn><mml:mo stretchy="false">(</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mi>d</mml:mi><mml:mi>z</mml:mi></mml:mrow><mml:mo>=</mml:mo><mml:mrow><mml:msubsup><mml:mo>∫</mml:mo><mml:mrow><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mrow><mml:mi mathvariant="normal">min</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>x</mml:mi><mml:mo>,</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup><mml:mspace width=".1em"/><mml:mn>1</mml:mn><mml:mo stretchy="false">(</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mi>d</mml:mi><mml:mi>z</mml:mi><mml:mo>.</mml:mo></mml:mrow></mml:mstyle></mml:math><graphic xlink:href="41598_2019_54708_Article_Equ5.gif" position="anchor"/></alternatives></disp-formula></p>
+          <p id="Par24">Combining Eqs. <xref rid="Equ3" ref-type="">3</xref> and <xref rid="Equ5" ref-type="">5</xref>, we have <inline-formula id="IEq44"><alternatives><tex-math id="M97">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P(\hat{g}(\tilde{d})\le x)={\sum }_{a\in S}\,{\int }_{g(a^{\prime} )}^{{\rm{\min }}(x,g(a))}\,1(g(a^{\prime} )\le x)dz={\int }_{0}^{x}\,dz$$\end{document}</tex-math><mml:math id="M98"><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:msub><mml:mo>∑</mml:mo><mml:mrow><mml:mi>a</mml:mi><mml:mo>∈</mml:mo><mml:mi>S</mml:mi></mml:mrow></mml:msub><mml:mspace width=".1em"/><mml:msubsup><mml:mo>∫</mml:mo><mml:mrow><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mrow><mml:mi mathvariant="normal">min</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>x</mml:mi><mml:mo>,</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msubsup><mml:mspace width=".1em"/><mml:mn>1</mml:mn><mml:mo stretchy="false">(</mml:mo><mml:mi>g</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>a</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mo>≤</mml:mo><mml:mspace width="-0.25em"/><mml:mi>x</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mi>d</mml:mi><mml:mi>z</mml:mi><mml:mo>=</mml:mo><mml:msubsup><mml:mo>∫</mml:mo><mml:mn>0</mml:mn><mml:mi>x</mml:mi></mml:msubsup><mml:mspace width=".1em"/><mml:mi>d</mml:mi><mml:mi>z</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq44.gif"/></alternatives></inline-formula>, which completes the proof.</p>
+          <p>Due to the uniformity of <inline-formula id="IEq46"><alternatives><tex-math id="M99">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\hat{g}({\tilde{d}}_{u}(C);u,C)$$\end{document}</tex-math><mml:math id="M100"><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mover accent="true"><mml:mi>d</mml:mi><mml:mo>˜</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq46.gif"/></alternatives></inline-formula> as established by Theorem 1, we define a node-wise p-value function <inline-formula id="IEq47"><alternatives><tex-math id="M101">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$p(u,C):\,=1-\hat{g}({d}_{u}(C);u,C)$$\end{document}</tex-math><mml:math id="M102"><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mover accent="true"><mml:mi>g</mml:mi><mml:mo>ˆ</mml:mo></mml:mover><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>;</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq47.gif"/></alternatives></inline-formula> to find the worst community node. Order the nodes in <italic>C</italic> as <inline-formula id="IEq48"><alternatives><tex-math id="M103">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${u}_{1},{u}_{2},\ldots ,{u}_{|C|}$$\end{document}</tex-math><mml:math id="M104"><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>…</mml:mi><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">|</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">|</mml:mo></mml:mrow></mml:msub></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq48.gif"/></alternatives></inline-formula> such that <inline-formula id="IEq49"><alternatives><tex-math id="M105">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$p({u}_{1},C)\ge p({u}_{2},C)\ge \ldots \ge p({u}_{|C|},C)$$\end{document}</tex-math><mml:math id="M106"><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>≥</mml:mo><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>≥</mml:mo><mml:mi>…</mml:mi><mml:mo>≥</mml:mo><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">|</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">|</mml:mo></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq49.gif"/></alternatives></inline-formula>. With this ordering, we call <italic>u</italic><sub>1</sub> the “worst” node as its in-degree <inline-formula id="IEq50"><alternatives><tex-math id="M107">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${d}_{{u}_{1}}(C)$$\end{document}</tex-math><mml:math id="M108"><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msub></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq50.gif"/></alternatives></inline-formula> falls the lowest against the null distribution <italic>P</italic>. Thus, by Theorem 1, it is possible to test the significance of <italic>C</italic> by comparing <inline-formula id="IEq51"><alternatives><tex-math id="M109">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$p({u}_{1},C)$$\end{document}</tex-math><mml:math id="M110"><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq51.gif"/></alternatives></inline-formula> to the distribution of the minimum of <inline-formula id="IEq52"><alternatives><tex-math id="M111">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$|C^{\prime} |+1$$\end{document}</tex-math><mml:math id="M112"><mml:mo stretchy="false">|</mml:mo><mml:mi>C</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">|</mml:mo><mml:mo>+</mml:mo><mml:mn>1</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq52.gif"/></alternatives></inline-formula> uniform random variables from the range <inline-formula id="IEq53"><alternatives><tex-math id="M113">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[p({u}_{2},C),1]$$\end{document}</tex-math><mml:math id="M114"><mml:mo stretchy="false">[</mml:mo><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq53.gif"/></alternatives></inline-formula>. Writing as <inline-formula id="IEq54"><alternatives><tex-math id="M115">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${F}_{(1)}(x;{u}_{2},C,m)$$\end{document}</tex-math><mml:math id="M116"><mml:msub><mml:mrow><mml:mi>F</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>x</mml:mi><mml:mo>;</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo>,</mml:mo><mml:mi>m</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq54.gif"/></alternatives></inline-formula> the cumulative distribution function of the minimum of <italic>m</italic> uniform order statistics on that range, the significance score on which FOCS is based is defined<disp-formula id="Equ6"><label>6</label><alternatives><tex-math id="M117">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$f(C)={F}_{(1)}(p({u}_{1},C);{u}_{2},C,|C^{\prime} |+1).$$\end{document}</tex-math><mml:math id="M118" display="block"><mml:mi>f</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:msub><mml:mrow><mml:mi>F</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>;</mml:mo><mml:msub><mml:mrow><mml:mi>u</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo>,</mml:mo><mml:mo stretchy="false">|</mml:mo><mml:mi>C</mml:mi><mml:mo>′</mml:mo><mml:mo stretchy="false">|</mml:mo><mml:mo>+</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">)</mml:mo><mml:mo>.</mml:mo></mml:math><graphic xlink:href="41598_2019_54708_Article_Equ6.gif" position="anchor"/></alternatives></disp-formula></p>
+          <p>The score <italic>f</italic>(<italic>C</italic>) has the standard interpretation given to traditional p-values - a low value of <italic>f</italic>(<italic>C</italic>) implies that the connectivity observed in <italic>C</italic> is unlikely to have arisen in a random (community-less) network.</p>
+          <p>The idea of using the worst node of a community to test optimized communities was introduced in<sup><xref ref-type="bibr" rid="CR14">14</xref></sup>. However, those authors proposed adjusted hypergeometric parameters that account for perfect community optimization, which is more fully described in their publication. The approach in the present paper relies on the assumption that in practice, communities are rarely perfectly optimized. In fact, exact modularity optimization is exponentially complex and computationally infeasible on networks with any more than a few hundred nodes<sup><xref ref-type="bibr" rid="CR15">15</xref></sup>. Furthermore, the modularity maximization surface is glassy, with many local optima extremely close to the true maximum<sup><xref ref-type="bibr" rid="CR16">16</xref></sup>. This suggests that for a locally optimized false-positive community, the distribution of worst nodes can be adequately described by the simpler model outlined above, despite the optimization. Note that the null model described is well-defined on graphs that allow for multiple edges between nodes.</p>
+          <p>There may be multiple nodes in an optimized community that are spurious, in the sense that moving them to another community would not significantly change the quality score of the overall partition<sup><xref ref-type="bibr" rid="CR16">16</xref></sup>. Therefore, instead of a single worst node, a “worst set” of nodes may be a more robust test subject for determining significance. To test a worst set of nodes, the FOCS method computes <italic>f</italic>(<italic>C</italic>), removes the worst node, re-computes <italic>f</italic>, and so-on until a given proportion <inline-formula id="IEq55"><alternatives><tex-math id="M119">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\rho $$\end{document}</tex-math><mml:math id="M120"><mml:mi>ρ</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq55.gif"/></alternatives></inline-formula> nodes are tested. The minimum <italic>f</italic>(<italic>C</italic>) observed over the iterations is used as the FOCS score. We found that the globally-applied setting of <inline-formula id="IEq56"><alternatives><tex-math id="M121">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\rho =0.25$$\end{document}</tex-math><mml:math id="M122"><mml:mi>ρ</mml:mi><mml:mo>=</mml:mo><mml:mn>0.25</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq56.gif"/></alternatives></inline-formula> worked well on simulations and data analyses, and nearby values performed similarly. This is intuitive, as testing the “best” or most interior nodes of an optimized community (<inline-formula id="IEq57"><alternatives><tex-math id="M123">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\rho  &gt; 0.5$$\end{document}</tex-math><mml:math id="M124"><mml:mi>ρ</mml:mi><mml:mo>&gt;</mml:mo><mml:mn>0.5</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq57.gif"/></alternatives></inline-formula>) may lead to spuriously low values of <italic>f</italic>, even under the null, since the community has been optimized.</p>
+          <p>The complete FOCS algorithm, as just described, is given in Algorithm 1. The algorithm has multiple practical benefits. First, it is simple to implement and fast to compute. Second, testing multiple worst-nodes is beneficial when there are ground-truth communities in the network. As mentioned above, modularity optimization is necessarily local, and thus even real communities may be contaminated with noise nodes. The FOCS algorithm is able to bypass noise nodes in a real community, increasing detection power. Note that removal of the worst node changes the index of the second-worst node <italic>u</italic><sub>2</sub>, and therefore the FOCS significance score naturally accounts for previously computed scores. The B-Score approach employs a similar accounting via conditional probabilities. Neither method uses multiple-testing across significance scores. The benefits and trade-offs of multiple testing in this setting is an area for future research.<fig position="anchor" id="Figa"><label>Algorithm 1</label><caption><p>FOCS.</p></caption><graphic position="anchor" xlink:href="41598_2019_54708_Figa_HTML" id="d29e3076"/></fig></p>
+        </sec>
+      </sec>
+      <sec id="Sec5">
+        <title>Extension to bipartite and directed networks</title>
+        <p id="Par30">The unipartite null model and the FOCS algorithm can be naturally extended to bipartite networks. The node set of a bipartite network is divided into two sides <italic>U</italic> and <italic>V</italic> such that each <inline-formula id="IEq58"><alternatives><tex-math id="M125">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u\in U$$\end{document}</tex-math><mml:math id="M126"><mml:mi>u</mml:mi><mml:mo>∈</mml:mo><mml:mi>U</mml:mi></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq58.gif"/></alternatives></inline-formula> can form edges only with nodes in <italic>V</italic>, and vice versa. Consider a candidate bipartite community <inline-formula id="IEq59"><alternatives><tex-math id="M127">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$C=({C}_{U},{C}_{V})$$\end{document}</tex-math><mml:math id="M128"><mml:mi>C</mml:mi><mml:mo>=</mml:mo><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi></mml:mrow><mml:mrow><mml:mi>U</mml:mi></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi></mml:mrow><mml:mrow><mml:mi>V</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq59.gif"/></alternatives></inline-formula>, and an exterior node <inline-formula id="IEq60"><alternatives><tex-math id="M129">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u\in {C^{\prime} }_{U}:\,=U\backslash {C}_{U}$$\end{document}</tex-math><mml:math id="M130"><mml:mi>u</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>U</mml:mi></mml:mrow></mml:msub><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mi>U</mml:mi><mml:mo>\</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi></mml:mrow><mml:mrow><mml:mi>U</mml:mi></mml:mrow></mml:msub></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq60.gif"/></alternatives></inline-formula>. In the bipartite null, analogously to the unipartite model, all outgoing edges from <italic>C</italic> and all edges between <inline-formula id="IEq61"><alternatives><tex-math id="M131">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${C^{\prime} }_{U}$$\end{document}</tex-math><mml:math id="M132"><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>U</mml:mi></mml:mrow></mml:msub></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq61.gif"/></alternatives></inline-formula> and <inline-formula id="IEq62"><alternatives><tex-math id="M133">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${C^{\prime} }_{V}\,:\,=V\backslash {C}_{V}$$\end{document}</tex-math><mml:math id="M134"><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>V</mml:mi></mml:mrow></mml:msub><mml:mspace width="0.25em"/><mml:mo>:</mml:mo><mml:mspace width="-.25em"/><mml:mo>=</mml:mo><mml:mi>V</mml:mi><mml:mo>\</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi></mml:mrow><mml:mrow><mml:mi>V</mml:mi></mml:mrow></mml:msub></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq62.gif"/></alternatives></inline-formula> are broken, and edge stubs coming from <italic>u</italic> are re-assigned without replacement. In this setting, the degree of <italic>u</italic> in <italic>C</italic><sub><italic>V</italic></sub> has the hypergeometric probability mass function<disp-formula id="Equ7"><label>7</label><alternatives><tex-math id="M135">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P({d}_{u}({C}_{V})=a)=\frac{(\begin{array}{c}{d}_{{C}_{V}}({C^{\prime} }_{U})\\ a\end{array})\,(\begin{array}{c}{d}_{{C^{\prime} }_{V}}({C^{\prime} }_{U})\\ {d}_{u}-a\end{array})}{(\begin{array}{c}{d}_{{C^{\prime} }_{U}}\\ {d}_{u}\end{array})}$$\end{document}</tex-math><mml:math id="M136" display="block"><mml:mi>P</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi></mml:mrow><mml:mrow><mml:mi>V</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mi>a</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:mrow><mml:mo stretchy="true">(</mml:mo><mml:mrow><mml:mtable><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:msub><mml:mrow><mml:mi>C</mml:mi></mml:mrow><mml:mrow><mml:mi>V</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>U</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mi>a</mml:mi></mml:mtd></mml:mtr></mml:mtable></mml:mrow><mml:mo stretchy="true">)</mml:mo></mml:mrow><mml:mspace width=".1em"/><mml:mrow><mml:mo stretchy="true">(</mml:mo><mml:mrow><mml:mtable><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>V</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>U</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub><mml:mo>−</mml:mo><mml:mi>a</mml:mi></mml:mrow></mml:mtd></mml:mtr></mml:mtable></mml:mrow><mml:mo stretchy="true">)</mml:mo></mml:mrow></mml:mrow><mml:mrow><mml:mo stretchy="true">(</mml:mo><mml:mrow><mml:mtable><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>U</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:msub></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mrow><mml:msub><mml:mrow><mml:mi>d</mml:mi></mml:mrow><mml:mrow><mml:mi>u</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:mtd></mml:mtr></mml:mtable></mml:mrow><mml:mo stretchy="true">)</mml:mo></mml:mrow></mml:mfrac></mml:math><graphic xlink:href="41598_2019_54708_Article_Equ7.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p id="Par31">The edge-breaking bipartite null model which produces the above distribution is illustrated in Fig. <xref rid="Fig1" ref-type="fig">1</xref>. Using (<xref rid="Equ7" ref-type="">7</xref>) instead of (<xref rid="Equ1" ref-type="">1</xref>), the rest of the FOCS approach follows unchanged, treating <inline-formula id="IEq63"><alternatives><tex-math id="M137">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${C^{\prime} }_{U}\cup {C^{\prime} }_{V}$$\end{document}</tex-math><mml:math id="M138"><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>U</mml:mi></mml:mrow></mml:msub><mml:mo>∪</mml:mo><mml:msub><mml:mrow><mml:mi>C</mml:mi><mml:mo>′</mml:mo></mml:mrow><mml:mrow><mml:mi>V</mml:mi></mml:mrow></mml:msub></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq63.gif"/></alternatives></inline-formula> as the external nodes. As for directed networks, the use of FOCS depends on the type of community optimization, that is, whether in-degree, out-degree, or joint in-out-degree communities are being optimized. Each of these cases involves external node null distributions similar to that for undirected unipartite and bipartite cases, and can be used straightforwardly within the general iterative algorithm given above.<fig id="Fig1"><label>Figure 1</label><caption><p>Illustration of bipartite null model for FOCS score. Circles and squares represent <italic>U</italic> nodes and <italic>V</italic> nodes, respectively. Blue nodes are the community to be scored. <italic>u</italic> is an external node for testing against the null model. The legend explains the edge counts’ role in the model.</p></caption><graphic xlink:href="41598_2019_54708_Fig1_HTML" id="d29e3464"/></fig></p>
+      </sec>
+    </sec>
+    <sec id="Sec6">
+      <title>Benchmarks and empirical studies</title>
+      <p id="Par32">Here we describe the setup for and application of FOCS and existing methods to (1) communities from simulated null networks, (2) ground-truth communities from simulated community-laden networks, (3) standard real-world networks from the literature, and (4) a new actor-movie network introduced in this paper.</p>
+      <sec id="Sec7">
+        <title>Simulation study</title>
+        <p id="Par33">We perform two simulation experiments to examine the empirical Type-I error and power of the proposed and existing methodologies. In all experiments, the QS-Test and B-Score methods were run with default parameter settings (as presented in the associated papers and code manuals), and FOCS was run with <inline-formula id="IEq64"><alternatives><tex-math id="M139">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$p=0.25$$\end{document}</tex-math><mml:math id="M140"><mml:mi>p</mml:mi><mml:mo>=</mml:mo><mml:mn>0.25</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq64.gif"/></alternatives></inline-formula>. The first simulation experiment involves “null” networks generated by the configuration model, which is a standard model for networks <italic>without</italic> communities<sup><xref ref-type="bibr" rid="CR17">17</xref></sup>. Each network had 100 nodes, and the degree distribution was generated by a power law with exponent −2 on the range <inline-formula id="IEq65"><alternatives><tex-math id="M141">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[10,50]$$\end{document}</tex-math><mml:math id="M142"><mml:mo stretchy="false">[</mml:mo><mml:mn>10</mml:mn><mml:mo>,</mml:mo><mml:mn>50</mml:mn><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq65.gif"/></alternatives></inline-formula>. The total number of simulation repetitions was 1,000. At each repetition, the Louvain community detection algorithm was run<sup><xref ref-type="bibr" rid="CR18">18</xref></sup>, and a community for scoring was chosen uniformly at random from the set of non-trivial communities (size &gt; 2).</p>
+        <p id="Par34">The second simulation experiment involves community-laden networks generated by the LFR model<sup><xref ref-type="bibr" rid="CR19">19</xref></sup>, which will help assess the relative detection powers of the methods. The central parameter of this model is <inline-formula id="IEq66"><alternatives><tex-math id="M143">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\mu \in [0,1]$$\end{document}</tex-math><mml:math id="M144"><mml:mi>μ</mml:mi><mml:mo>∈</mml:mo><mml:mo stretchy="false">[</mml:mo><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq66.gif"/></alternatives></inline-formula>, which controls the average proportion of out-edges of each community. If <italic>μ</italic> is 1, all edges from each node point outside the node’s community, and if <italic>μ</italic> is 0, all communities are externally disconnected. Other parameters of the model control the distribution of community sizes and the degree distribution. In this experiment, four LFR network settings are tested: “small” networks with <inline-formula id="IEq67"><alternatives><tex-math id="M145">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$n=1,000$$\end{document}</tex-math><mml:math id="M146"><mml:mi>n</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn><mml:mo>,</mml:mo><mml:mspace width="-0.25em"/><mml:mn>000</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq67.gif"/></alternatives></inline-formula> vs. “large” networks with <inline-formula id="IEq68"><alternatives><tex-math id="M147">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$n=5,000$$\end{document}</tex-math><mml:math id="M148"><mml:mi>n</mml:mi><mml:mo>=</mml:mo><mml:mn>5</mml:mn><mml:mo>,</mml:mo><mml:mspace width="-0.25em"/><mml:mn>000</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq68.gif"/></alternatives></inline-formula>, and “small” communities with sizes in <inline-formula id="IEq69"><alternatives><tex-math id="M149">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[10,50]$$\end{document}</tex-math><mml:math id="M150"><mml:mo stretchy="false">[</mml:mo><mml:mn>10</mml:mn><mml:mo>,</mml:mo><mml:mspace width="-0.25em"/><mml:mn>50</mml:mn><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq69.gif"/></alternatives></inline-formula> vs. “large” communities with sizes in <inline-formula id="IEq70"><alternatives><tex-math id="M151">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[20,100]$$\end{document}</tex-math><mml:math id="M152"><mml:mo stretchy="false">[</mml:mo><mml:mn>20</mml:mn><mml:mo>,</mml:mo><mml:mspace width="-0.25em"/><mml:mn>100</mml:mn><mml:mo stretchy="false">]</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq70.gif"/></alternatives></inline-formula>. Note that all these networks are tiny by today’s industry standard, but that QS-Test and B-Score are prohibitively slow on networks beyond this order of magnitude. In each setting, five LFR networks were simulated at each <italic>μ</italic> on an even grid, and the average significance scores for each method were computed across the ground-truth communities from all five repetitions.</p>
+      </sec>
+      <sec id="Sec8">
+        <title>Real data studies</title>
+        <p id="Par35">We test FOCS, B-Score, and QS-Test on real-world network data sets commonly used in the network science literature. The data sets used were obtained from the open-access data repository KONECT<sup><xref ref-type="bibr" rid="CR20">20</xref></sup> and through links provided at Dr. Mark Newman’s website (http://www-personal.umich.edu/~mejn/netdata/), and were chosen so that these results could be compared to those from<sup><xref ref-type="bibr" rid="CR11">11</xref></sup>. The data sets are listed, with references and numerical properties, in Table <xref rid="Tab1" ref-type="table">1</xref>. To compare the FOCS, QS-Test, and B-Score methods on a particular data set, first the Louvain algorithm was run on the network 50 times, with different randomized initializations. Each method scored every Louvain community from the partition with the highest modularity, and the proportion of significant communities (score ≤ 0.05) is shown in Table <xref rid="Tab1" ref-type="table">1</xref>. We describe insights from this study in the Results section.<table-wrap id="Tab1"><label>Table 1</label><caption><p>Description of real-world benchmark datasets, and summary numbers: number of nodes (#Nodes), number of edges (#Edges), number of communities found by the Louvain algorithm (#Com), and proportion of communities found significant (score &lt; 0.05) by each method (columns labelled by method).</p></caption><table frame="hsides" rules="groups"><thead><tr><th>Network name</th><th>Network Description</th><th>#Nodes</th><th>#Edges</th><th>#Com</th><th>FOCS</th><th>B-Score</th><th>QS-Test</th></tr></thead><tbody><tr><td>zachary<sup><xref ref-type="bibr" rid="CR22">22</xref></sup></td><td>karate club social</td><td>34</td><td>78</td><td>4</td><td>0.250</td><td>0.500</td><td>0.500</td></tr><tr><td>dolphins<sup><xref ref-type="bibr" rid="CR23">23</xref></sup></td><td>dolphin interaction</td><td>62</td><td>158</td><td>4</td><td>0.000</td><td>0.250</td><td>1.000</td></tr><tr><td>lesmis<sup><xref ref-type="bibr" rid="CR24">24</xref></sup></td><td>Les Miserables character appearance</td><td>77</td><td>254</td><td>6</td><td>0.167</td><td>0.333</td><td>1.000</td></tr><tr><td>enron<sup><xref ref-type="bibr" rid="CR25">25</xref></sup></td><td>ENRON email send/receive</td><td>87273</td><td>1148071</td><td>378</td><td>0.889</td><td>0.958</td><td>0.423</td></tr><tr><td>netscience<sup><xref ref-type="bibr" rid="CR26">26</xref></sup></td><td>network science collaboration</td><td>1589</td><td>2742</td><td>177</td><td>0.819</td><td>0.887</td><td>0.525</td></tr><tr><td>polblogs<sup><xref ref-type="bibr" rid="CR27">27</xref></sup></td><td>political blog hyperlink</td><td>1490</td><td>19090</td><td>7</td><td>0.286</td><td>0.571</td><td>0.000</td></tr><tr><td>airports<sup><xref ref-type="bibr" rid="CR20">20</xref></sup></td><td>U.S. airport flight</td><td>7976</td><td>30501</td><td>23</td><td>0.957</td><td>0.739</td><td>0.522</td></tr><tr><td>propro<sup><xref ref-type="bibr" rid="CR28">28</xref></sup></td><td>yeast protein interaction</td><td>1870</td><td>2277</td><td>76</td><td>0.066</td><td>0.184</td><td>0.461</td></tr><tr><td>chess<sup><xref ref-type="bibr" rid="CR20">20</xref></sup></td><td>chess game</td><td>7301</td><td>65052</td><td>36</td><td>0.722</td><td>0.583</td><td>0.361</td></tr><tr><td>astro-ph<sup><xref ref-type="bibr" rid="CR29">29</xref></sup></td><td>physical science collaboration</td><td>18771</td><td>198050</td><td>184</td><td>0.989</td><td>0.859</td><td>0.141</td></tr><tr><td>internet<sup><xref ref-type="bibr" rid="CR20">20</xref></sup></td><td>autonomous systems</td><td>34761</td><td>171402</td><td>39</td><td>0.051</td><td>0.179</td><td>0.692</td></tr></tbody></table></table-wrap></p>
+        <p id="Par36">Next, we tested FOCS on a network derived from a regularly updated IMDB database (<ext-link ext-link-type="uri" xlink:href="https://datasets.imdbws.com">https://datasets.imdbws.com</ext-link>). To display FOCS’s handling of diverse network types, we constructed a bipartite actor-movie network from the database. We used a snapshot of the database downloaded in November of 2018. We included as “actors” writers and directors, additionally. In the network, an actor and a movie share an edge if and only if the actor played a role in the movie. No actor-actor or movie-movie pairs share edges. The movie set was restricted to those released in the US with more than 100 ratings on IMDB, and the actor set was restricted to those with at least one movie from this set. The resulting network had 37,611 movies, 151,571 actors, and 362,850 edges. The existing community scoring methods discussed in this paper, QS-Test and B-Score, were not included in this application, because they do not handle bipartite graphs. We describe the application of FOCS and the results in the next section.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec id="Sec9" sec-type="results">
+    <title>Results</title>
+    <sec id="Sec10">
+      <title>Simulation study: configuration model (null) networks</title>
+      <p id="Par37">As described in the previous section, we simulated 1,000 null networks with 100 nodes each, performed Louvain community detection, chose one resulting community uniformly at random, and scored the community with each method. In this way, we generated a null distribution of significance scores for both FOCS and existing methods. The left 2 × 2 plot in Fig. <xref rid="Fig2" ref-type="fig">2</xref> shows the log-scale distribution of significance scores from the three methods, plotted against the grid of uniform quantiles that would be expected in a perfectly null distribution of scores. Purple dotted lines show the standard 0.05 significance cutoff under the log transformation. Therefore, the bottom-right quadrant formed by the purple dotted lines is the region in which observed scores would indicate significance but uniform-generated scores would not. The top-left quadrant is vice-versa. The figure suggests that the QS-Test is anti-conservative on null networks. In other words, applying the QS-Test with a significance cut-off of <inline-formula id="IEq71"><alternatives><tex-math id="M153">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\alpha =0.05$$\end{document}</tex-math><mml:math id="M154"><mml:mi>α</mml:mi><mml:mo>=</mml:mo><mml:mn>0.05</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq71.gif"/></alternatives></inline-formula> to a given community will yield a probability of false positive greater than <italic>α</italic>. An explanation for this behavior is not obvious, as the method is performing simulations directly from a null model. The error may be due to poor interaction of the quality function’s kernel density estimator with the null model.<fig id="Fig2"><label>Figure 2</label><caption><p>Left: Significance score log-distribution on configuration model networks. Purple dotted lines show significance cut-offs. Diagonal line is the expected Uniform distribution - conservative scores fall above this line, and anti-conservative scores below. Right: Results on the four tested LFR settings. Scores are on the log-scale, so that more negative values imply greater significance. Flat lines are across regions where raw scores went below machine precision.</p></caption><graphic xlink:href="41598_2019_54708_Fig2_HTML" id="d29e4045"/></fig></p>
+      <p id="Par38">In contrast, the B-Score method is conservative for all values of <italic>α</italic>. The proposed FOCS method is conservative for <inline-formula id="IEq72"><alternatives><tex-math id="M155">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\alpha \le 0.5$$\end{document}</tex-math><mml:math id="M156"><mml:mi>α</mml:mi><mml:mo>≤</mml:mo><mml:mn>0.5</mml:mn></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq72.gif"/></alternatives></inline-formula>, but slightly anti-conservative for larger <italic>α</italic>, which does not affect practical use as having false-positive rates greater than 50% is rarely acceptable protocol. Thus, we can see the trade-off effect of the FOCS null model’s relaxation of the perfect community optimization assumed by the B-Score method. FOCS is conservative for practical values of <italic>α</italic>, while less conservative overall than B-Score, which allows FOCS greater power in the presence of communities (as described in the next section).</p>
+    </sec>
+    <sec id="Sec11">
+      <title>Simulation study: LFR networks</title>
+      <p id="Par39">As described in the “Methods” section, our second simulation study involved simulating networks with planted communities of various strengths, and computing the median significance score from each method at each level of community strength. These median curves are displayed in the right 2 × 2 plot in Fig. <xref rid="Fig2" ref-type="fig">2</xref>, along with the 5% and 95% percentiles across repetitions. The <italic>y</italic>-axis corresponds to significance score, plotted on the log scale to amplify differences in extreme significance regions. On this scale, more negative values imply greater significance. The <italic>x</italic>-axis corresponds to the community strength (higher values imply more outward-linking and hence weaker communities). The right-hand plot in Fig. <xref rid="Fig2" ref-type="fig">2</xref> shows that the detection power of the methods vary with both network size and community size. On small networks with small communities, FOCS is the dominant method. On small networks with large communities, FOCS is comparable to B-score, while QS-Test outperforms both these approaches. On large networks, FOCS is the dominant method, and surprisingly, QS-Test loses much of its detection power.</p>
+    </sec>
+    <sec id="Sec12">
+      <title>Empirical study: standard real-world network benchmarks</title>
+      <p id="Par40">Here we present the results of the proposed and existing methods on standard real-world networks from the literature. Table <xref rid="Tab1" ref-type="table">1</xref> shows information about the data sets, and the detection rates (significance score &lt; 0.05) of each method.</p>
+      <sec id="Sec13">
+        <title>Detection rates on real data</title>
+        <p id="Par41">Two patterns from the detection rates in Table <xref rid="Tab1" ref-type="table">1</xref> reflect the LFR network simulation study. First, FOCS detection rates are more correlated with those from B-Score than those from QS-Test. Second, QS-Test detection rates are much lower on large networks, with the exception of the internet data set. Based on the simulation study, this exception may be due to the fact that the network had relatively larger communities. Note that in this study, higher detection rates does not necessarily suggest better performance, as not all communities in real networks are indicative of real-world ground truth - indeed, this is the reason optimized-community inference methods are useful. For instance, the FOCS method declared two communities significant on the political blogs data set, whereas B-Score declared four. However, the two communities FOCS found significant were the large communities corresponding to, respectively, liberal and conservative sentiments. Other smaller, less-focused communities were ignored, which is a reasonable result.</p>
+      </sec>
+      <sec id="Sec14">
+        <title>Stability and runtime</title>
+        <p id="Par42">On some representative real data sets, each method’s significance score computation was repeated 30 times with different seeds, for the purposes of measuring (i) numerical stability and (ii) runtime. The largest data sets were not included in this study, as the runtimes for QS-Test and B-Score on these data sets were prohibitively long. Numerical stability was measured because each method has randomized steps in its algorithm. The metric used to measure stability on a fixed community and network is the coefficient of variation of the significance score (standard deviation score divided by mean score), across multiple runs of the algorithm. A low CV score implies that the randomized parts of the method being tested did not drastically affect the significance scores, on the particular community. Figure <xref rid="Fig3" ref-type="fig">3</xref> shows boxplots of CV scores on a logarithmic scale, within each data set, across communities. The results show that each method had dominant numerical stability in some data set. However, interestingly, the FOCS CV metrics were by far the most consistent, which suggests that, in contrast to other methods, the expected numerical stability of FOCS scores does not depend on the particular community nor the particular data set, which is desirable.<fig id="Fig3"><label>Figure 3</label><caption><p>Boxplots of score coefficient of variations across communities, by method and dataset.</p></caption><graphic xlink:href="41598_2019_54708_Fig3_HTML" id="d29e4120"/></fig></p>
+        <p id="Par43">The stability and runtime analyses were performed on 2.20 GHz Intel(R) Xeon(R) CPU E7-8890 processors, and the QS-Test computations were distributed across 24 cores, using parallelization options provided with the authors’ package (see <ext-link ext-link-type="uri" xlink:href="https://github.com/skojaku/qstest">https://github.com/skojaku/qstest</ext-link>). Computations for B-Score and FOCS methods were not parallelized. Table <xref rid="Tab2" ref-type="table">2</xref> gives the mean and standard deviation of runtimes of each method, over the computation repetitions. Note that each runtime (out of thirty runtimes) is the sum of the runtimes from each individual community. On all data sets, FOCS achieved the lowest average runtime compared with the other methods, often by one or two orders of magnitude.<table-wrap id="Tab2"><label>Table 2</label><caption><p>Average runtime in seconds of methods across 30 repetitions.</p></caption><table frame="hsides" rules="groups"><thead><tr><th>Method</th><th>dolphins</th><th>lesmis</th><th>zachary</th><th>airports</th><th>chess</th><th>netscience</th><th>polblogs</th></tr></thead><tbody><tr><td>B-Score</td><td>0.35 ± 0.05</td><td>0.41 ± 0.00</td><td>0.13 ± 0.00</td><td>166.85 ± 4.25</td><td>1228.03 ± 70.62</td><td>4.92 ± 0.01</td><td>160.22 ± 0.72</td></tr><tr><td>FOCS</td><td><bold>0</bold>.<bold>16</bold> ± 0.01</td><td><bold>0</bold>.<bold>16</bold> ± 0.01</td><td><bold>0</bold>.<bold>16</bold> ± 0.03</td><td><bold>1</bold>.<bold>40</bold> ± 0.06</td><td><bold>5</bold>.<bold>37</bold> ± 0.24</td><td><bold>0</bold>.<bold>53</bold> ± 0.04</td><td><bold>0</bold>.<bold>88</bold> ± 0.07</td></tr><tr><td>QS-Test</td><td>1.14 ± 0.05</td><td>1.37 ± 0.04</td><td>0.84 ± 0.01</td><td>74.66 ± 0.89</td><td>356.63 ± 3.22</td><td>28.17 ± 0.52</td><td>55.45 ± 0.75</td></tr></tbody></table><table-wrap-foot><p>QS-Test computations were distributed across 24 cores.</p></table-wrap-foot></table-wrap></p>
+      </sec>
+    </sec>
+    <sec id="Sec15">
+      <title>Empirical study: Internet Movie Database (IMDB) network application</title>
+      <p id="Par44">As described in the Methods section, we constructed a bipartite IMDB actor-movie network comprised of ~38 K movies and ~152 K actors. Here we discuss the results of FOCS scoring on communities from this network. Note that the published version of the existing methods discussed in this paper cannot handle bipartite networks, so we did not apply those methods to this data. To find optimized communities in the network, a single stage of the Louvain algorithm was performed until convergence on a local maximum of Barber’s bipartite modularity<sup><xref ref-type="bibr" rid="CR21">21</xref></sup>. This produced 25,830 communities in the IMDB network with median size 6, and maximum size 16,467. A manual review of these communities would be cumbersome - this is where a method like FOCS becomes useful. Each community was scored with FOCS and ranked by decreasing FOCS score. Furthermore, <inline-formula id="IEq73"><alternatives><tex-math id="M157">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${g}_{P}(u,C)$$\end{document}</tex-math><mml:math id="M158"><mml:msub><mml:mrow><mml:mi>g</mml:mi></mml:mrow><mml:mrow><mml:mi>P</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq73.gif"/></alternatives></inline-formula> scores for each actor (see Section below Eq. <xref rid="Equ1" ref-type="">1</xref>), which indicate connectivity to the community, were computed and used to filter actors for display purposes.</p>
+      <p id="Par45">The three highly-ranked communities are shown in Table <xref rid="Tab3" ref-type="table">3</xref>, with all movies from each community listed, as well as the top six actors from each community by <inline-formula id="IEq74"><alternatives><tex-math id="M159">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${g}_{P}(u,C)$$\end{document}</tex-math><mml:math id="M160"><mml:msub><mml:mrow><mml:mi>g</mml:mi></mml:mrow><mml:mrow><mml:mi>P</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mi>u</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo stretchy="false">)</mml:mo></mml:math><inline-graphic xlink:href="41598_2019_54708_Article_IEq74.gif"/></alternatives></inline-formula> score. Each filtered actor/director set included the major writers and lead actors and actresses from each film, showing the sensitivity of the node-wise <italic>g</italic><sub><italic>P</italic></sub> score to real-world signal. Note that “Daisy”, listed in the top community actor set, was the actual name of the dog featured in most of the Blondie titles. “Go West, Young Lady” is a film directed by Frank R. Strayer, director of the Blondie films, and stars Penny Singleton and other members of the Blondie movies, which explains its inclusion in the community. We also point out that the Blondie series, in fact, had the highest FOCS significance score among the discovered communities. This is due to the fact that film, as an entertainment genre, was relatively new at the time of the Blondie movies. Therefore, the participating actors and writers had few other projects, making the Blondie-movie community inordinately exclusive and concentrated.<table-wrap id="Tab3"><label>Table 3</label><caption><p>Top-ranked IMDB bipartite communities with well-known titles, ordered by FOCS score.</p></caption><table frame="hsides" rules="groups"><thead><tr><th>Size</th><th>FOCS</th><th>Movie Set</th><th>Actor Set</th></tr></thead><tbody><tr><td>44</td><td>5 · 10<sup>−16</sup></td><td>{24 out of 28 original Blondie titles}</td><td>Penny Singleton 4 · 10<sup>−98</sup></td></tr><tr><td rowspan="5"/><td rowspan="5"/><td>Go West, Young Lady</td><td>Larry Simms 2 · 10<sup>−94</sup></td></tr><tr><td rowspan="4"/><td>Chic Young 2 · 10<sup>−94</sup></td></tr><tr><td>Arthur Lake 7 · 10<sup>−92</sup></td></tr><tr><td>Daisy 2 · 10<sup>−57</sup></td></tr><tr><td>Frank R. Strayer 8 · 10<sup>−48</sup></td></tr><tr><td>18</td><td>7 · 10<sup>−11</sup></td><td>Harry Potter and the:</td><td>J. K. Rowling 1 · 10<sup>−30</sup></td></tr><tr><td rowspan="7"/><td rowspan="7"/><td>- Sorceror’s Stone</td><td>Rupert Grint 1 · 10<sup>−30</sup></td></tr><tr><td>- Prisoner of Azkaban</td><td>David Heyman 3 · 10<sup>−28</sup></td></tr><tr><td>- Goblet of Fire</td><td>Daniel Radcliffe 7 · 10<sup>−27</sup></td></tr><tr><td>- Order of the Phoenix</td><td>Steve Kloves 4 · 10<sup>−24</sup></td></tr><tr><td>- Half-Blood Prince</td><td>Emma Watson 8 · 10<sup>−24</sup></td></tr><tr><td>- Deathly Hallows pt 1</td><td rowspan="2"/></tr><tr><td>- Deathly Hallows pt 2</td></tr><tr><td>12</td><td>2 · 10<sup>−9</sup></td><td>Twilight</td><td>Melissa Rosenberg 6 · 10<sup>−21</sup></td></tr><tr><td rowspan="5"/><td rowspan="5"/><td>The Twilight Saga:</td><td>Stephenie Meyer 6 · 10<sup>−21</sup></td></tr><tr><td>- Eclipse</td><td>Robert Pattinson 8 · 10<sup>−19</sup></td></tr><tr><td>- Breaking Dawn pt 1</td><td>Kristen Stewart 3 · 10<sup>−17</sup></td></tr><tr><td>- Breaking Dawn pt 2</td><td>Taylor Lautner 1 · 10<sup>−15</sup></td></tr><tr><td>- New Moon</td><td>Karen Rosenfelt 3 · 10<sup>−15</sup></td></tr></tbody></table></table-wrap></p>
+      <p id="Par46">These communities, and other highly-ranked communities not shown in the table, showed clear correspondence with stand-out actor/director collaborations. They featured well-known movie series or collections, paired with their directors, lead writers, and lead actors, and <italic>only</italic> those actors/directors/films that were linked to the series. Since the null model used by FOCS involves global re-assignment of edge stubs, it makes sense that focused, persistent activity by groups of actors across related films would receive the lowest significance scores. Communities with large FOCS scores exhibited much less internal coherence - from a manual inspection, many communities contained pairs of unrelated movies with few actor overlaps. This illustrates the fact that not every optimized community is meaningful in practice. It is a particular feature of a method like FOCS to be able to distinguish between these communities and important, strongly-connected communities that correspond to true underlying dynamics of a system.</p>
+      <p id="Par47">To quantitatively assess ground-truth quality of each community, for each actor, we determined the set of movies they are “known for” according to the IMDB metadata. Then, we compared these sets with the communities to which each actor belonged. Explicitly, we computed the jaccard similarity between each community’s movie set and, for the corresponding actor set, the union of the “known-for” sets. This metric is a proxy for the coherence of the community with respect to established cinema trends. The jaccard-based coherency metric correlated highly with FOCS significance scores (r = 0.1536, p = 9 × 10<sup>−137</sup>). Figure <xref rid="Fig4" ref-type="fig">4</xref> shows a breakdown of jaccard scores by FOCS score range, showing a general upward trend as FOCS scores become lower on a quasi-logarithmic scale. This association shows that the manually identified patterns discussed above hold in general, and that in this application, the community ranking provided by FOCS aligned with meaningful real-world signal.<fig id="Fig4"><label>Figure 4</label><caption><p>Distribution of jaccard similarities between cluster movie sets and actor “known-for” movie sets, across clusters, within ranges of FOCS scores. <italic>x</italic>-axis labels display the upper endpoint of the range, which extends back to the previous (left) upper endpoint. The lowest range extends to zero.</p></caption><graphic xlink:href="41598_2019_54708_Fig4_HTML" id="d29e4602"/></fig></p>
+    </sec>
+  </sec>
+  <sec id="Sec16" sec-type="discussion">
+    <title>Discussion</title>
+    <p id="Par48">This paper introduces new models and tests for optimized communities in networks, and presents FOCS, an algorithm for significance scoring that has multiple performance benefits over existing approaches. FOCS uses a core scoring approach that relies on the fact that communities are rarely optimized perfectly, and therefore weakly connected nodes in communities distribute edges approximately according to a random graph null model. Because of this, FOCS has a simplicity that previous methods lack, making it more scalable, more numerically stable, and more easily generalizable. Despite its simplicity and speed, FOCS performs ahead of or comparably to preceding methods in terms of reduced tendency for false positives, and reduced significance scores on true communities. On a large-scale bipartite movie-actor network derived from IMDB data, the highest FOCS-ranked Louvain communities were those with highly related movie sets sharing continuous involvement from a dedicated cast and crew. This suggests that FOCS can be useful in detecting communities exhibiting anomalous, persistent involvement from its members.</p>
+    <p id="Par49">The FOCS method’s main limitation is that the underlying null model is based on arguably plausible yet non-rigorous ideas about the distribution of nodes in communities that have been locally-optimized by partition-based community detection techniques. For these reasons, FOCS is not an exact statistical test, and its results should be reported with these caveats. It should be noted that existing methods also rely on approximations, which is often necessary when dealing with the intractable distributions of certain statistics under many graph models. Secondly, our null network model simulations showed that FOCS may be too conservative on useful ranges of the significance level. This means that there may be headroom to improve FOCS by making it less conservative and more powerful, which is an area for future research.</p>
+    <p id="Par50">Despite these limitations, the FOCS method appears to improve greatly on the existing options for scoring the significance of individual communities. Given its scalability and straightforward implementation, it can be readily used in real-time anomaly detection, machine learning pipelines, and scientific studies. A basic implementation of the FOCS method used in experiments discussed in this paper can be found at <ext-link ext-link-type="uri" xlink:href="https://github.com/google/fast-optimized-community-significance">https://github.com/google/fast-optimized-community-significance</ext-link>, and the pipeline of experiments can be reproduced with code at <ext-link ext-link-type="uri" xlink:href="https://jpalowitch.github.io/focs_experiments/">https://jpalowitch.github.io/focs_experiments/</ext-link>.</p>
+  </sec>
+</body>
+<back>
+  <fn-group>
+    <fn>
+      <p><bold>Publisher’s note</bold> Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.</p>
+    </fn>
+  </fn-group>
+  <ack>
+    <title>Acknowledgements</title>
+    <p>The author is grateful for helpful conversations with Andrea Lancichinetti and Peter J. Mucha.</p>
+  </ack>
+  <notes notes-type="COI-statement">
+    <title>Competing interests</title>
+    <p id="Par51">The author is currently employed at Google.</p>
+  </notes>
+  <ref-list id="Bib1">
+    <title>References</title>
+    <ref id="CR1">
+      <label>1.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Boccaletti</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Latora</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Moreno</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Chavez</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Hwang</surname>
+            <given-names>D-U</given-names>
+          </name>
+        </person-group>
+        <article-title>Complex networks: Structure and dynamics</article-title>
+        <source>Physics reports</source>
+        <year>2006</year>
+        <volume>424</volume>
+        <fpage>175</fpage>
+        <lpage>308</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.physrep.2005.10.009</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR2">
+      <label>2.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fortunato</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Hric</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Community detection in networks: A user guide</article-title>
+        <source>Physics Reports</source>
+        <year>2016</year>
+        <volume>659</volume>
+        <fpage>1</fpage>
+        <lpage>44</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.physrep.2016.09.002</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR3">
+      <label>3.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fortunato</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Community detection in graphs</article-title>
+        <source>Physics reports</source>
+        <year>2010</year>
+        <volume>486</volume>
+        <fpage>75</fpage>
+        <lpage>174</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.physrep.2009.11.002</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR4">
+      <label>4.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Newman</surname>
+            <given-names>ME</given-names>
+          </name>
+          <name>
+            <surname>Girvan</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding and evaluating community structure in networks</article-title>
+        <source>Physical review E</source>
+        <year>2004</year>
+        <volume>69</volume>
+        <fpage>026113</fpage>
+        <pub-id pub-id-type="doi">10.1103/PhysRevE.69.026113</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR5">
+      <label>5.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhao</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Levina</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Zhu</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Community extraction for social networks</article-title>
+        <source>Proceedings of the National Academy of Sciences</source>
+        <year>2011</year>
+        <volume>108</volume>
+        <fpage>7321</fpage>
+        <lpage>7326</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.1006642108</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR6">
+      <label>6.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lancichinetti</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Radicchi</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Ramasco</surname>
+            <given-names>JJ</given-names>
+          </name>
+          <name>
+            <surname>Fortunato</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding statistically significant communities in networks</article-title>
+        <source>PloS one</source>
+        <year>2011</year>
+        <volume>6</volume>
+        <fpage>e18961</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0018961</pub-id>
+        <pub-id pub-id-type="pmid">21559480</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR7">
+      <label>7.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wilson</surname>
+            <given-names>JD</given-names>
+          </name>
+          <name>
+            <surname>Palowitch</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Bhamidi</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Nobel</surname>
+            <given-names>AB</given-names>
+          </name>
+        </person-group>
+        <article-title>Community extraction in multilayer networks with heterogeneous community structure</article-title>
+        <source>Journal of Machine Learning Research</source>
+        <year>2017</year>
+        <volume>18</volume>
+        <fpage>5458</fpage>
+        <lpage>5506</lpage>
+      </element-citation>
+    </ref>
+    <ref id="CR8">
+      <label>8.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhang</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Moore</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Scalable detection of statistically significant communities and hierarchies, using message passing for modularity</article-title>
+        <source>Proceedings of the National Academy of Sciences</source>
+        <year>2014</year>
+        <volume>111</volume>
+        <fpage>18144</fpage>
+        <lpage>18149</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.1409770111</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR9">
+      <label>9.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Peixoto</surname>
+            <given-names>TP</given-names>
+          </name>
+        </person-group>
+        <article-title>Model selection and hypothesis testing for large-scale network models with overlapping groups</article-title>
+        <source>Physical Review X</source>
+        <year>2015</year>
+        <volume>5</volume>
+        <fpage>011033</fpage>
+        <pub-id pub-id-type="doi">10.1103/PhysRevX.5.011033</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR10">
+      <label>10.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lambiotte</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Delvenne</surname>
+            <given-names>J-C</given-names>
+          </name>
+          <name>
+            <surname>Barahona</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Random walks, markov processes and the multiscale modular organization of complex networks</article-title>
+        <source>IEEE Transactions on Network Science and Engineering</source>
+        <year>2014</year>
+        <volume>1</volume>
+        <fpage>76</fpage>
+        <lpage>90</lpage>
+        <pub-id pub-id-type="doi">10.1109/TNSE.2015.2391998</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR11">
+      <label>11.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kojaku</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Masuda</surname>
+            <given-names>N</given-names>
+          </name>
+        </person-group>
+        <article-title>A generalised significance test for individual communities in networks</article-title>
+        <source>Scientific reports</source>
+        <year>2018</year>
+        <volume>8</volume>
+        <fpage>7351</fpage>
+        <pub-id pub-id-type="doi">10.1038/s41598-018-25560-z</pub-id>
+        <pub-id pub-id-type="pmid">29743534</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR12">
+      <label>12.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bollobás</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>A probabilistic proof of an asymptotic formula for the number of labelled regular graphs</article-title>
+        <source>European Journal of Combinatorics</source>
+        <year>1980</year>
+        <volume>1</volume>
+        <fpage>311</fpage>
+        <lpage>316</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0195-6698(80)80030-8</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR13">
+      <label>13.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rosvall</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Bergstrom</surname>
+            <given-names>CT</given-names>
+          </name>
+        </person-group>
+        <article-title>Mapping change in large networks</article-title>
+        <source>PloS one</source>
+        <year>2010</year>
+        <volume>5</volume>
+        <fpage>e8694</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0008694</pub-id>
+        <pub-id pub-id-type="pmid">20111700</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR14">
+      <label>14.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lancichinetti</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Radicchi</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Ramasco</surname>
+            <given-names>JJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Statistical significance of communities in networks</article-title>
+        <source>Physical Review E</source>
+        <year>2010</year>
+        <volume>81</volume>
+        <fpage>046110</fpage>
+        <pub-id pub-id-type="doi">10.1103/PhysRevE.81.046110</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR15">
+      <label>15.</label>
+      <mixed-citation publication-type="other">Brandes, U. <italic>et al</italic>. On finding graph clusterings with maximum modularity. In <italic>International Workshop on Graph-Theoretic Concepts in Computer Science</italic>, 121–132 (Springer, 2007).</mixed-citation>
+    </ref>
+    <ref id="CR16">
+      <label>16.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Good</surname>
+            <given-names>BH</given-names>
+          </name>
+          <name>
+            <surname>de Montjoye</surname>
+            <given-names>Y-A</given-names>
+          </name>
+          <name>
+            <surname>Clauset</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Performance of modularity maximization in practical contexts</article-title>
+        <source>Physical Review E</source>
+        <year>2010</year>
+        <volume>81</volume>
+        <fpage>046106</fpage>
+        <pub-id pub-id-type="doi">10.1103/PhysRevE.81.046106</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR17">
+      <label>17.</label>
+      <mixed-citation publication-type="other">Durak, N., Kolda, T. G., Pinar, A. &amp; Seshadhri, C. A scalable null model for directed graphs matching all degree distributions: In, out, and reciprocal. In <italic>Network Science Workshop (NSW)</italic>, <italic>2013 IEEE 2nd</italic>, 23–30 (IEEE, 2013).</mixed-citation>
+    </ref>
+    <ref id="CR18">
+      <label>18.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Blondel</surname>
+            <given-names>VD</given-names>
+          </name>
+          <name>
+            <surname>Guillaume</surname>
+            <given-names>J-L</given-names>
+          </name>
+          <name>
+            <surname>Lambiotte</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Lefebvre</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Fast unfolding of communities in large networks</article-title>
+        <source>Journal of statistical mechanics: theory and experiment</source>
+        <year>2008</year>
+        <volume>2008</volume>
+        <fpage>P10008</fpage>
+        <pub-id pub-id-type="doi">10.1088/1742-5468/2008/10/P10008</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR19">
+      <label>19.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lancichinetti</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Fortunato</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Radicchi</surname>
+            <given-names>F</given-names>
+          </name>
+        </person-group>
+        <article-title>Benchmark graphs for testing community detection algorithms</article-title>
+        <source>Physical Review E</source>
+        <year>2008</year>
+        <volume>78</volume>
+        <fpage>046110</fpage>
+        <pub-id pub-id-type="doi">10.1103/PhysRevE.78.046110</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR20">
+      <label>20.</label>
+      <mixed-citation publication-type="other">Kunegis, J. Konect: the koblenz network collection. In <italic>ACM Proceedings of the 22nd International Conference on World Wide Web</italic>, 1343–1350 (2013).</mixed-citation>
+    </ref>
+    <ref id="CR21">
+      <label>21.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Barber</surname>
+            <given-names>MJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Modularity and community detection in bipartite networks</article-title>
+        <source>Physical Review E</source>
+        <year>2007</year>
+        <volume>76</volume>
+        <fpage>066102</fpage>
+        <pub-id pub-id-type="doi">10.1103/PhysRevE.76.066102</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR22">
+      <label>22.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zachary</surname>
+            <given-names>WW</given-names>
+          </name>
+        </person-group>
+        <article-title>An information flow model for conflict and fission in small groups</article-title>
+        <source>Journal of anthropological research</source>
+        <year>1977</year>
+        <volume>33</volume>
+        <fpage>452</fpage>
+        <lpage>473</lpage>
+        <pub-id pub-id-type="doi">10.1086/jar.33.4.3629752</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR23">
+      <label>23.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lusseau</surname>
+            <given-names>D</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The bottlenose dolphin community of doubtful sound features a large proportion of long-lasting associations</article-title>
+        <source>Behavioral Ecology and Sociobiology</source>
+        <year>2003</year>
+        <volume>54</volume>
+        <fpage>396</fpage>
+        <lpage>405</lpage>
+        <pub-id pub-id-type="doi">10.1007/s00265-003-0651-y</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR24">
+      <label>24.</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Knuth</surname>
+            <given-names>DE</given-names>
+          </name>
+        </person-group>
+        <source>The Stanford GraphBase: a platform for combinatorial computing</source>
+        <year>1993</year>
+        <publisher-loc>New York</publisher-loc>
+        <publisher-name>AcM Press</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="CR25">
+      <label>25.</label>
+      <mixed-citation publication-type="other">Shetty, J. &amp; Adibi, J. Discovering important nodes through graph entropy the case of enron email database. In <italic>Proceedings of the 3rd international Workshop on Link Discovery</italic>, 74–81 (ACM, 2005).</mixed-citation>
+    </ref>
+    <ref id="CR26">
+      <label>26.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Newman</surname>
+            <given-names>ME</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding community structure in networks using the eigenvectors of matrices</article-title>
+        <source>Physical review E</source>
+        <year>2006</year>
+        <volume>74</volume>
+        <fpage>036104</fpage>
+        <pub-id pub-id-type="doi">10.1103/PhysRevE.74.036104</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR27">
+      <label>27.</label>
+      <mixed-citation publication-type="other">Adamic, L. A. &amp; Glance, N. The political blogosphere and the 2004 us election: divided they blog. In <italic>Proceedings of the 3rd international workshop on Link discovery</italic>, 36–43 (ACM, 2005).</mixed-citation>
+    </ref>
+    <ref id="CR28">
+      <label>28.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jeong</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Mason</surname>
+            <given-names>SP</given-names>
+          </name>
+          <name>
+            <surname>Barabási</surname>
+            <given-names>A-L</given-names>
+          </name>
+          <name>
+            <surname>Oltvai</surname>
+            <given-names>ZN</given-names>
+          </name>
+        </person-group>
+        <article-title>Lethality and centrality in protein networks</article-title>
+        <source>Nature</source>
+        <year>2001</year>
+        <volume>411</volume>
+        <fpage>41</fpage>
+        <pub-id pub-id-type="doi">10.1038/35075138</pub-id>
+        <pub-id pub-id-type="pmid">11333967</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR29">
+      <label>29.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Leskovec</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Kleinberg</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Faloutsos</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Graph evolution: Densification and shrinking diameters</article-title>
+        <source>ACM Transactions on Knowledge Discovery from Data (TKDD)</source>
+        <year>2007</year>
+        <volume>1</volume>
+        <fpage>2</fpage>
+        <pub-id pub-id-type="doi">10.1145/1217299.1217301</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

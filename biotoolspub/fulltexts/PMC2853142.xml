@@ -1,0 +1,763 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <?epub January-27-2010?>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">nar</journal-id>
+    <journal-id journal-id-type="hwp">nar</journal-id>
+    <journal-title-group>
+      <journal-title>Nucleic Acids Research</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2853142</article-id>
+    <article-id pub-id-type="pmid">20110255</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gkq010</article-id>
+    <article-id pub-id-type="publisher-id">gkq010</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Methods Online</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Incorporating sequence quality data into alignment improves DNA read mapping</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Frith</surname>
+          <given-names>Martin C.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="COR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Wan</surname>
+          <given-names>Raymond</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Horton</surname>
+          <given-names>Paul</given-names>
+        </name>
+      </contrib>
+    </contrib-group>
+    <aff>Computational Biology Research Center, Institute for Advanced Industrial Science and Technology, 2-4-7 Aomi, Koto-ku, Tokyo 135-0064, Japan</aff>
+    <author-notes>
+      <corresp id="COR1">*To whom correspondence should be addressed. Tel: <phone>+81 3 3599 8080</phone>; Fax: <fax>+81 3 3599 8081</fax>; Email: <email>martin@cbrc.jp</email></corresp>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <month>4</month>
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>27</day>
+      <month>1</month>
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>27</day>
+      <month>1</month>
+      <year>2010</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="epub"/>. -->
+    <volume>38</volume>
+    <issue>7</issue>
+    <fpage>e100</fpage>
+    <lpage>e100</lpage>
+    <history>
+      <date date-type="received">
+        <day>13</day>
+        <month>11</month>
+        <year>2009</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>5</day>
+        <month>1</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>6</day>
+        <month>1</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author(s) 2010. Published by Oxford University Press.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by-nc/2.5">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/2.5">http://creativecommons.org/licenses/by-nc/2.5</ext-link>), which permits unrestricted non-commercial use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p>New DNA sequencing technologies have achieved breakthroughs in throughput, at the expense of higher error rates. The primary way of interpreting biological sequences is via alignment, but standard alignment methods assume the sequences are accurate. Here, we describe how to incorporate the per-base error probabilities reported by sequencers into alignment. Unlike existing tools for DNA read mapping, our method models both sequencer errors and real sequence differences. This approach consistently improves mapping accuracy, even when the rate of real sequence difference is only 0.2%. Furthermore, when mapping <italic>Drosophila melanogaster</italic> reads to the <italic>Drosophila simulans</italic> genome, it increased the amount of correctly mapped reads from 49 to 66%. This approach enables more effective use of DNA reads from organisms that lack reference genomes, are extinct or are highly polymorphic.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>The major approach to interpreting biological sequences is to align them to other sequences. As a result, alignment algorithms such as <monospace>BLAST</monospace> are important and ubiquitous. Standard alignment algorithms assume that the sequences are accurate, and ignore per-base quality data that is typically available from DNA sequencing instruments. Recent sequencing technologies, however, have achieved breakthroughs in throughput, at the expense of higher error rates. It has thus become more important to consider the quality data during the initial analysis step, which is nearly always some form of alignment.</p>
+    <p>Surprisingly, we can find no previous method that systematically incorporates quality data into sequence alignment. Several methods for mapping DNA reads to genomes do use quality data, but they lack scoring matrices that model differences other than sequencing errors [e.g. (<xref ref-type="bibr" rid="B1">1</xref>,<xref ref-type="bibr" rid="B2">2</xref>)]. Instead, a limited form of alignment is employed, which assumes that the sequences are (almost) identical apart from sequencing errors. A publication by Malde describes alignment using quality data, but this also replaces the scoring matrix with quality-derived scores instead of combining the two (<xref ref-type="bibr" rid="B3">3</xref>). The work of Na <italic>et al.</italic> (<xref ref-type="bibr" rid="B4">4</xref>) does combine a standard score matrix with quality scores, but has some serious drawbacks that we describe later in this article.</p>
+    <p>In this article, we provide an effective solution for the task of <italic>xeno-mapping</italic>, the mapping of reads onto a reference genome which may differ from the genomic source of the reads. Xeno-mapping is important for several reasons. First, the vast majority of species currently lack reference genome sequences. If we obtained DNA reads from (say) zebra, the best way to interpret them would probably involve mapping them to the horse genome. It might take a decade before all 5000 mammal species are sequenced, and longer if ever for the millions of insect species, only a fraction of which have even been described. Second, sequencing extinct organisms is fascinating, but assembling genomes from their meager DNA is at best hard and at worst impossible, and so modern genomes are typically used as ‘scaffolds’, e.g. mammoth reads versus the elephant genome (<xref ref-type="bibr" rid="B5">5</xref>). Finally, many wild organisms are highly polymorphic–extreme examples being <italic>Ciona intestinalis</italic> (1.2%) and <italic>Ciona savignyi</italic> (4.6%) (<xref ref-type="bibr" rid="B6">6</xref>) – so that real sequence differences are frequent even when aligning sequences from the same organism.</p>
+    <sec>
+      <title>Traditional sequence alignment</title>
+      <p>Traditional sequence alignment methods (e.g. <monospace>BLAST</monospace>) allow for sequence differences by using a scoring scheme: matching bases in an alignment get positive scores, and mismatches and gaps receive negative scores. More generally, they use a scoring matrix <italic>S</italic>, where <italic>S</italic><sub><italic>xy</italic></sub> (<italic>x</italic>,<italic>y</italic>∈{a,c,g,t}) specifies the score for aligning the nucleotides <italic>x</italic> and <italic>y</italic>. The scoring matrix can be interpreted as a log likelihood ratio:
+<disp-formula id="M1"><label>(1)</label><graphic xlink:href="gkq010m1"/></disp-formula>
+where <italic>T</italic> is an arbitrary scaling factor, and <italic>R</italic><sub><italic>xy</italic></sub> is the likelihood ratio:
+<disp-formula id="M2"><label>(2)</label><graphic xlink:href="gkq010m2"/></disp-formula>
+Here, <italic>P</italic>(<italic>xy</italic>|A) is the probability of observing <italic>x</italic> aligned to <italic>y</italic> in a probabilistic model of aligned sequences, and <italic>P</italic>(<italic>x</italic>) and <italic>P</italic>(<italic>y</italic>) are the probabilities of observing <italic>x</italic> and <italic>y</italic> individually.</p>
+      <p>The probabilities <italic>P</italic>(<italic>xy</italic>|A) are called the ‘target frequencies’ of the scoring matrix (<xref ref-type="bibr" rid="B7">7</xref>). A scoring matrix is optimal for distinguishing related sequences from chance similarities when its target frequencies equal those in an accurate alignment of related sequences (<xref ref-type="bibr" rid="B7">7</xref>,<xref ref-type="bibr" rid="B8">8</xref>). For example, to construct an optimal scoring matrix for 90% identical sequences of uniform composition, we would set the match and mismatch frequencies to:
+<disp-formula id="M3"><label>(3)</label><graphic xlink:href="gkq010m3"/></disp-formula>
+</p>
+      <p>The 12 kinds of mutations are, however, not equally frequent: usually, the four types of transitions (A ⇔ G and T ⇔ C) occur more often than the eight types of transversions. If 60% of substitutions are transitions, we would use these mismatch frequencies:
+<disp-formula id="M4"><label>(4)</label><graphic xlink:href="gkq010m4"/></disp-formula>
+</p>
+      <p>In short, we know how to construct optimal scoring matrices for sequences with a known degree of divergence.</p>
+    </sec>
+    <sec>
+      <title>Sequencer error probabilities</title>
+      <p>DNA sequencing instruments can report a probability that each sequenced base is erroneous. These probabilities are usually reported in a log-transformed form, called ‘phred score’ or ‘quality score’:
+<disp-formula id="M5"><label>(5)</label><graphic xlink:href="gkq010m5"/></disp-formula>
+</p>
+      <p>Here, ε is the error probability. So, for example, an error probability of 0.01 is reported as a quality score of 20. The following variant is sometimes used instead:
+<disp-formula id="M6"><label>(6)</label><graphic xlink:href="gkq010m6"/></disp-formula>
+</p>
+      <p>Sometimes, four quality scores are reported per base, which reflect the probability that the base is a, c, g or t. There are a few common file formats for sequence qualities, including FASTQ (one quality score per base) and PRB (four quality scores per base).</p>
+      <p>Median and mean error probabilities for two sets of Illumina reads are shown in <xref ref-type="fig" rid="F1">Figure 1</xref>. They exhibit a typical pattern where error rates increase toward the end of the read. In the first data set, the median error probability is &lt;1% for all but the last six bases. The mean error rates tend to be much higher than the medians, due to the skewed distributions (i.e. most of the error probabilities are low, but a few are much higher). In the second data set, there was clearly a problem with the 32nd base, since the average reported error probability is exactly 1: this phenomenon is not unusual (<xref ref-type="bibr" rid="B1">1</xref>). These two data sets are not especially atypical (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Figure S1</ext-link>).
+<fig id="F1" position="float"><label>Figure 1.</label><caption><p>Estimated error rates for two DNA short-read data sets. (<bold>A</bold>) Error rates for a set of 36-bp reads from the Solexa 1G Genome Analyzer (the first 100 000 reads of SRR001981). (<bold>B</bold>) Error rates for a set of 51-bp reads from the Illumina Genome Analyzer II (the first 100 000 reads of SRR016157). For both panels, the error rates were obtained from FASTQ files in the NCBI Short Read Archive.</p></caption><graphic xlink:href="gkq010f1"/></fig></p>
+      <p>In this study, we describe a way to merge sequence quality data into the traditional sequence alignment framework. This means that we model both sequencer errors and real sequence differences at the same time. We apply the method to simulated DNA reads (where we know the correct mapping locations), and show that it improves mapping accuracy compared with modeling either only sequencer errors or only real sequence differences. Finally, we show a dramatic improvement in mapping of real <italic>Drosophila melanogaster</italic> reads to the <italic>Drosophila simulans</italic> genome (which simulates mapping mammoth reads to the elephant genome or the like).</p>
+    </sec>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>MATERIALS AND METHODS</title>
+    <p>In this section, we show how quality scores can be used for aligning sequences and mapping DNA reads to genomes. While these techniques are described in sufficient detail to be incorporated into any alignment software, we also give a brief summary of a publicly available system called <monospace>LAST</monospace> that includes these features.</p>
+    <sec>
+      <title>Incorporating sequence quality data into alignment</title>
+      <p>We wish to extend the standard scoring matrix derivation to take sequencing error probabilities into account. In our scenario, one sequence (the read) has per-base error probabilities, and the other sequence (the genome) does not. We assume that the sequencing instrument estimates <italic>P</italic>(<italic>y</italic>|<italic>d</italic>), the probability that a base is <italic>y</italic> (where <italic>y</italic>∈{a,c,g,t}) based on some observed data <italic>d</italic> (e.g. image intensities). Following the likelihood-ratio principle, we define a generalization of standard substitution scores:
+<disp-formula id="M7"><label>(7)</label><graphic xlink:href="gkq010m7"/></disp-formula>
+This formula can be rearranged by observing,
+<disp-formula id="M8"><label>(8)</label><graphic xlink:href="gkq010m8"/></disp-formula>
+and by Bayes formula,
+<disp-formula id="M9"><label>(9)</label><graphic xlink:href="gkq010m9"/></disp-formula>
+to obtain:
+<disp-formula id="M10"><label>(10)</label><graphic xlink:href="gkq010m10"/></disp-formula>
+Simplifying, we obtain:
+<disp-formula id="M11"><label>(11)</label><graphic xlink:href="gkq010m11"/></disp-formula>
+Finally, we define scores by the usual log transformation:
+<disp-formula id="M12"><label>(12)</label><graphic xlink:href="gkq010m12"/></disp-formula>
+</p>
+      <p>This scoring scheme can be implemented efficiently by converting each length <italic>n</italic> read to a 4 × <italic>n</italic> position-specific scoring matrix, which holds the scores for aligning a, c, g and t to each position in the read. Details of how our software performs these calculations are provided in the <ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Data</ext-link>.</p>
+    </sec>
+    <sec sec-type="methods">
+      <title>Comparison with expected score method</title>
+      <p>Na <italic>et al.</italic> (<xref ref-type="bibr" rid="B4">4</xref>) proposed a method for combining quality scores with traditional scoring matrices. Although presented in a more general form, which allows for mismatch and indel sequencing errors in both sequences, overall their method is similar to ours. They consider aligning two sequences, each one represented as a 4 × <italic>n</italic> matrix, holding the probability of each base at each position. Unfortunately, their method suffers from two problems. First, the computation is not well justified theoretically, and second, the method breaks down when very similar sequences are aligned.</p>
+      <p>In their notation, the score of an alignment column is defined as:
+<disp-formula id="M13"><label>(13)</label><graphic xlink:href="gkq010m13"/></disp-formula>
+where γ, δ and μ represent the traditional score matrix score for matches, mismatches and gaps, respectively, and <italic>P</italic><sub><italic>m</italic></sub>, <italic>P</italic><sub><italic>n</italic></sub> and <italic>P</italic><sub><italic>g</italic></sub> represent the probability, given the sequencer data, of each of those three cases. We submit that the following equation, which corresponds to our <italic>R</italic>′<sub><italic>xd</italic></sub> [equation (<xref ref-type="disp-formula" rid="M11">11</xref>)], would be more justified:
+<disp-formula id="M14"><label>(14)</label><graphic xlink:href="gkq010m14"/></disp-formula>
+</p>
+      <p>This follows from that fact that (i) <italic>P</italic><sub><italic>m</italic></sub>, <italic>P</italic><sub><italic>n</italic></sub> and <italic>P</italic><sub><italic>g</italic></sub> are the probabilities of disjoint events (indeed <italic>P</italic><sub><italic>m</italic></sub> + <italic>P</italic><sub><italic>n</italic></sub> + <italic>P</italic><sub><italic>g</italic></sub>≡1), (ii) as pointed out in equation (<xref ref-type="disp-formula" rid="M1">1</xref>), <italic>e</italic><sup>γ/<italic>T</italic></sup>, <italic>e</italic><sup>δ/<italic>T</italic></sup> and <italic>e</italic><sup>μ/<italic>T</italic></sup> are proportional to the probabilities of matches, mismatches and gaps in the ‘real’ sequences and (iii) the reasonable assumption that sequencer error is independent of real sequence differences.</p>
+      <p>This is not just a theoretical point, but makes a significant difference in practice. Consider the case of aligning two sequences expected to be identical except for sequencing error. In this case, the appropriate value for δ and μ would be <italic>T × ln</italic>(0) =−∞, and thus by equation (<xref ref-type="disp-formula" rid="M13">13</xref>), any column involving a non-zero sequencer error probability would be assigned the same score of −∞. On the other hand, equation (<xref ref-type="disp-formula" rid="M14">14</xref>), or equivalently <inline-formula><inline-graphic xlink:href="gkq010i1.jpg"/></inline-formula>, would assign a score proportional to <italic>P</italic><sub><italic>m</italic></sub>, which is the probability assigned by the sequencer that the two bases match each other.</p>
+    </sec>
+    <sec>
+      <title>Mapping probabilities</title>
+      <p>In traditional sequence alignment, we simply report alignments with significantly high scores, and it does not matter if one query sequence has more than one high-scoring alignment. For read mapping, on the other hand, we suppose that each read comes from just one place in the genome. Since genomes contain many duplications and simple repeats, though, it is common for one read to have multiple high-scoring alignments.</p>
+      <p>This problem can be addressed by calculating mapping probabilities (<xref ref-type="bibr" rid="B1">1</xref>,<xref ref-type="bibr" rid="B2">2</xref>). Suppose that one read has high-scoring alignments at several genome locations. The alignment score at location <italic>i</italic> is denoted as <italic>S</italic><sub><italic>i</italic></sub>. The mapping probability is:
+<disp-formula id="M15"><label>(15)</label><graphic xlink:href="gkq010m15"/></disp-formula>
+</p>
+      <p>This formula can be derived from probabilistic alignment models (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Data</ext-link>). Thus, if a read has a much higher alignment score at one location than any other, we can be confident that it comes from there. If it has nearly equal alignment scores at many locations, we cannot confidently map it.</p>
+      <p>This calculation assumes that the read certainly comes from one of the locations found by the alignment procedure. This is a very dubious assumption in practice, for several reasons:
+<list list-type="roman-lower"><list-item><p>The read might not come from the genome at all (i.e. it might be a contaminant).</p></list-item><list-item><p>The read might come from part of the genome that is not present in the reference sequence. (Many reference sequences are incomplete.)</p></list-item><list-item><p>The alignment algorithm might miss some high-scoring alignments. Because of the large size of the data sets, heuristic algorithms are normally used which may miss some alignments.</p></list-item></list>
+Therefore, these mapping probabilities should not be trusted absolutely. Nevertheless, they prove useful.</p>
+    </sec>
+    <sec>
+      <title>Implementation</title>
+      <p>We expect that many existing read-mapping tools could be modified to incorporate the scoring scheme defined above. To demonstrate our method, we have incorporated it into our own large-scale alignment tool, <monospace>LAST</monospace>.</p>
+      <p>Since we intend to describe <monospace>LAST</monospace> in detail in a separate publication, we only give a minimal description here. <monospace>LAST</monospace> follows the same three steps as <monospace>BLAST</monospace> (<xref ref-type="bibr" rid="B9">9</xref>). It finds seeds (exact matches), extends gapless alignments from the seeds and finally extends gapped alignments. We incorporated the new scoring scheme into the last two phases, since the seed-finding phase does not use scores at all.</p>
+      <p>The main innovation of <monospace>LAST</monospace> is its use of adaptive seeds whose length adapts to the repetitiveness of the sequence. This makes it much faster for genomic data. Specifically, it finds exact matches of any length that occur no more than (say) 10 times in the genome. These can be found efficiently using enhanced suffix arrays (<xref ref-type="bibr" rid="B10">10</xref>). <monospace>LAST</monospace> can also use spaced seeds (<xref ref-type="bibr" rid="B11">11</xref>). Finally, <monospace>LAST</monospace> can use seeds that are both spaced and adaptive: in fact, this is the default algorithm in this study (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Data</ext-link>). <monospace>LAST</monospace> is freely available at: <ext-link ext-link-type="uri" xlink:href="http://last.cbrc.jp/">http://last.cbrc.jp/</ext-link>.</p>
+    </sec>
+    <sec>
+      <title>Alignment parameter settings</title>
+      <p>In this study, the gapless and gapped score thresholds of <monospace>LAST</monospace> (-d and -e) were set to 120, and the gapless max-drop parameter (-y) was set to 99 999 (effectively infinite). Gapped alignment was used only when aligning reads to the <italic>D. simulans</italic> genome. When mapping 51-bp reads, a score threshold of 150 was used instead of 120. When modeling sequencer errors only, the mismatch cost (-q) was set to 1 million (effectively infinite). To clarify: despite the infinite mismatch cost, mismatches were tolerated due to the modeling of sequencer errors.</p>
+    </sec>
+    <sec>
+      <title>Finding all alignments with up to two mismatches</title>
+      <p>For part of our analysis, we wished to avoid using adaptive seeds, and instead guarantee to find all alignments with up to two mismatches (and score ≥120). We did this with <monospace>LAST</monospace> using spaced seeds. We first found all matches of length 26 between each read and the genome, requiring only 18 out of the 26 bases to match. The positions required to match are indicated by ‘1’s in the following pattern: <monospace>11111011000111110110001111</monospace>. Any length 36 read with up to two mismatches (and no gaps) is guaranteed to have a match using this pattern. Moreover, this pattern is optimal for this problem, in that no pattern with &gt;18 ‘1’s provides this guarantee. The <monospace>LAST</monospace> documentation includes a table of optimal spaced seeds for various read lengths and mismatch limits, obtained using algorithms from others (<xref ref-type="bibr" rid="B12">12</xref>,<xref ref-type="bibr" rid="B13">13</xref>). Finally, as usual, we extended alignments from every seed match, and reported those with alignment score <inline-formula><inline-graphic xlink:href="gkq010i2.jpg"/></inline-formula>120.</p>
+    </sec>
+    <sec>
+      <title>Mapping DNA reads to <italic>Drosophila</italic> genomes</title>
+      <p>We obtained the genome sequences of <italic>D. melanogaster</italic> (dm3 excluding chrUextra) and <italic>D. simulans</italic> (droSim1) from the UCSC genome database. We only tested reads that could be confidently mapped to the <italic>D. melanogaster</italic> genome (53 748 reads in default mapping mode; 51 898 reads in two-mismatch guarantee mode). We considered a read confidently mapped if it has alignment score <inline-formula><inline-graphic xlink:href="gkq010i3.jpg"/></inline-formula>150 and mapping probability <inline-formula><inline-graphic xlink:href="gkq010i4.jpg"/></inline-formula>0.99. (Alignments with score <inline-formula><inline-graphic xlink:href="gkq010i5.jpg"/></inline-formula>120 were used to calculate the mapping probabilities.) To cross-reference the mappings, we used the genome alignment file dm3.droSim1.all.chain from UCSC (<xref ref-type="bibr" rid="B14">14</xref>).</p>
+    </sec>
+  </sec>
+  <sec sec-type="results">
+    <title>RESULTS</title>
+    <p>Our results show the effectiveness of combining quality scores with sequence alignment by applying <monospace>LAST</monospace> within two experiment settings: the first with synthetic data and the second with real data based on cross-species mapping.</p>
+    <sec>
+      <title>Test with simulated DNA reads</title>
+      <p>In our first experiment, we employ simulated reads since we are able to know exactly where they should map to. We began by sampling 100 000 random 36-bp fragments from human chromosome 1 (hg19, both strands). To simulate real sequence differences, we made random substitutions at a low level (0.2, 0.5, 2 or 5%). These substitutions consisted of 60% transitions and 40% transversions: a realistic proportion (<xref ref-type="bibr" rid="B6">6</xref>). To keep this initial test simple, we did not introduce any insertions or deletions. Finally, we assigned 100 000 real quality score strings (those summarized in <xref ref-type="fig" rid="F1">Figure 1</xref>A) to the simulated reads, and randomly mutated each base according to the corresponding error probability.</p>
+      <p>We then aligned the reads to chromosome 1, and checked whether or not they mapped back to their original locations. The ‘real’ sequence differences were modeled by using suitable alignment score parameters for each level of divergence (<xref ref-type="table" rid="T1">Table 1</xref>). We obtained alignments with score <inline-formula><inline-graphic xlink:href="gkq010i6.jpg"/></inline-formula>120 (equivalent to 20 error-free matching bases), then calculated mapping probabilities, and kept alignments with mapping probability <inline-formula><inline-graphic xlink:href="gkq010i7.jpg"/></inline-formula>0.99. <xref ref-type="fig" rid="F2">Figure 2</xref> shows the relationship between the number of correctly and incorrectly mapped reads, as the score threshold is varied between 216 (the maximum possible) and 120. As the score threshold approaches 120, falsely mapped reads increase dramatically: this is because the mapping probabilities become less reliable since they fail to account for alignments with scores <inline-formula><inline-graphic xlink:href="gkq010i8.jpg"/></inline-formula>119. In all cases, however, mapping accuracy improves (i.e. we obtain more correctly mapped reads for a given number of incorrectly mapped ones) when we model both sequencer errors and ‘real’ substitutions. If we model only sequencer errors, there is the potential to do worse than traditional alignment, where only substitutions are modeled.
+<table-wrap id="T1" position="float"><label>Table 1.</label><caption><p>Alignment score parameters for DNA with various substitution rates</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th rowspan="2" colspan="1">Substitution Rate (%)</th><th rowspan="2" colspan="1">Match score</th><th rowspan="2" colspan="1">Mismatch cost<xref ref-type="table-fn" rid="TF1"><sup>a</sup></xref></th><th rowspan="2" colspan="1"><italic>T</italic><xref ref-type="table-fn" rid="TF1"><sup>a</sup></xref></th><th rowspan="2" colspan="1">Transition cost<xref ref-type="table-fn" rid="TF2"><sup>b</sup></xref></th><th rowspan="1" colspan="1">Transversion</th><th rowspan="2" colspan="1"><italic>T</italic><xref ref-type="table-fn" rid="TF2"><sup>b</sup></xref></th></tr><tr><th rowspan="1" colspan="1">cost<xref ref-type="table-fn" rid="TF2"><sup>b</sup></xref></th></tr></thead><tbody align="left"><tr><td rowspan="1" colspan="1">0</td><td rowspan="1" colspan="1">6</td><td rowspan="1" colspan="1">∞</td><td rowspan="1" colspan="1">4.32809</td><td rowspan="1" colspan="1">∞</td><td rowspan="1" colspan="1">∞</td><td rowspan="1" colspan="1">4.32809</td></tr><tr><td rowspan="1" colspan="1">0.2</td><td rowspan="1" colspan="1">6</td><td rowspan="1" colspan="1">26</td><td rowspan="1" colspan="1">4.33391</td><td rowspan="1" colspan="1">23</td><td rowspan="1" colspan="1">28</td><td rowspan="1" colspan="1">4.33441</td></tr><tr><td rowspan="1" colspan="1">0.5</td><td rowspan="1" colspan="1">6</td><td rowspan="1" colspan="1">22</td><td rowspan="1" colspan="1">4.34295</td><td rowspan="1" colspan="1">19</td><td rowspan="1" colspan="1">24</td><td rowspan="1" colspan="1">4.34425</td></tr><tr><td rowspan="1" colspan="1">1</td><td rowspan="1" colspan="1">6</td><td rowspan="1" colspan="1">19</td><td rowspan="1" colspan="1">4.35838</td><td rowspan="1" colspan="1">16</td><td rowspan="1" colspan="1">21</td><td rowspan="1" colspan="1">4.36106</td></tr><tr><td rowspan="1" colspan="1">2</td><td rowspan="1" colspan="1">6</td><td rowspan="1" colspan="1">16</td><td rowspan="1" colspan="1">4.39082</td><td rowspan="1" colspan="1">13</td><td rowspan="1" colspan="1">18</td><td rowspan="1" colspan="1">4.39646</td></tr><tr><td rowspan="1" colspan="1">5</td><td rowspan="1" colspan="1">6</td><td rowspan="1" colspan="1">12</td><td rowspan="1" colspan="1">4.50212</td><td rowspan="1" colspan="1">10</td><td rowspan="1" colspan="1">14</td><td rowspan="1" colspan="1">4.49125</td></tr><tr><td rowspan="1" colspan="1">10</td><td rowspan="1" colspan="1">6</td><td rowspan="1" colspan="1">9</td><td rowspan="1" colspan="1">4.73387</td><td rowspan="1" colspan="1">7</td><td rowspan="1" colspan="1">12</td><td rowspan="1" colspan="1">4.65864</td></tr><tr><td rowspan="1" colspan="1">15</td><td rowspan="1" colspan="1">6</td><td rowspan="1" colspan="1">8</td><td rowspan="1" colspan="1">4.88281</td><td rowspan="1" colspan="1">6<xref ref-type="table-fn" rid="TF3"><sup>c</sup></xref></td><td rowspan="1" colspan="1">9<xref ref-type="table-fn" rid="TF3"><sup>c</sup></xref></td><td rowspan="1" colspan="1">4.92305<xref ref-type="table-fn" rid="TF3"><sup>c</sup></xref></td></tr></tbody></table><table-wrap-foot><fn id="TF1"><p><sup>a</sup>Applies when there is no transition/transversion bias (i.e. one in three substitutions are transitions).</p></fn><fn id="TF2"><p><sup>b</sup>For the case where 60% of substitutions are transitions.</p></fn><fn id="TF3"><p><sup>c</sup>For the case where 45% of substitutions are transitions.</p></fn></table-wrap-foot></table-wrap>
+<fig id="F2" position="float"><label>Figure 2.</label><caption><p>Mapping accuracy for 100 000 simulated 36-bp reads. The reads differ from the genome by a certain rate of ‘real’ substitutions (0.2, 0.5, 1 or 2%) plus sequencer errors. Each line shows the relationship between the number of correctly and incorrectly mapped reads as the alignment score cutoff is varied. Circles indicate a score cutoff of 150. Dotted lines show the accuracy when we model the substitutions but not the sequencer errors. Dashed lines show the accuracy when we model the sequencer errors but not the substitutions. Solid lines show the accuracy when we model both.</p></caption><graphic xlink:href="gkq010f2"/></fig></p>
+      <p>To check whether these conclusions hold for a different read length and quality score distribution, we repeated the test using simulated reads of size 51 (<xref ref-type="fig" rid="F3">Figure 3</xref>). The main conclusion still applies: mapping accuracy is improved by modeling both sequencer errors and substitutions. This time, however, traditional alignment performs worse relative to modeling sequencer errors only. The reason, presumably, is that the error probabilities used here are higher on average than those used for the 36-bp reads (<xref ref-type="fig" rid="F1">Figure 1</xref>): so it becomes more important to model sequencing errors.
+<fig id="F3" position="float"><label>Figure 3.</label><caption><p>Mapping accuracy for 100 000 simulated 51-bp reads. See legend of <xref ref-type="fig" rid="F2">Figure 2</xref>. Circles indicate a score cutoff of 180.</p></caption><graphic xlink:href="gkq010f3"/></fig></p>
+      <p>It might be argued that, since we used a particular mapping algorithm (with adaptive seeds), the conclusions may not apply to other mapping techniques. To address this concern, we repeated the experiment using <monospace>LAST</monospace> in a different mode, where it guarantees to find all alignments with up to two mismatches (and score <inline-formula><inline-graphic xlink:href="gkq010i9.jpg"/></inline-formula>120). (Many alignments with more than two mismatches are also returned in this mode.) This resembles several popular mapping methods. The main conclusions are unchanged: mapping accuracy is improved by modeling both sequencer errors and substitutions, and in some cases modeling only sequencer errors is less accurate than traditional alignment (<xref ref-type="fig" rid="F4">Figure 4</xref>).
+<fig id="F4" position="float"><label>Figure 4.</label><caption><p>Mapping accuracy for 100 000 simulated 36-bp reads using a mapping procedure that guarantees to find all matches with up to two substitutions. This is identical to <xref ref-type="fig" rid="F2">Figure 2</xref>, except that a different mapping algorithm was used here.</p></caption><graphic xlink:href="gkq010f4"/></fig></p>
+      <p>The mapping algorithm does make a difference, though (<xref ref-type="fig" rid="F2">Figures 2</xref> and <xref ref-type="fig" rid="F4">4</xref>). The default adaptive seed method gives only a few hundred false mappings for 60 000–70 000 correctly mapped reads, but the two-mismatch guarantee method gives yet fewer false mappings – only a handful – for 50 000–60 000 correctly mapped reads. On the other hand, it ultimately gets fewer correctly mapped reads. In our simulation, all of the reads actually come from the reference sequence, and the two-mismatch guarantee method will never miss the correct alignment if the read has at most two differences: this is why there are so few false mappings. Real data is less clean than this, and we would expect more false mappings (see below).</p>
+      <p>In a further test, we mapped the simulated reads using a simple match/mismatch scoring matrix while also modeling the sequencer errors. This means that we accurately modeled the level of divergence, but ignored the difference between transitions and transversions. This approach works almost, but not quite as well as when we model transitions and transversions (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Figure S2</ext-link>). This is worth knowing, because match/mismatch scoring schemes are simpler to implement and slightly faster than general score matrices (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Data</ext-link>).</p>
+    </sec>
+    <sec>
+      <title>Test by xeno-mapping real DNA reads</title>
+      <p>We wished to test our approach with real (not simulated) reads, but we need a case where we can at least estimate whether the mappings are correct. To accomplish this, we mapped reads of <italic>D. melanogaster</italic> DNA (those in <xref ref-type="fig" rid="F1">Figure 1</xref>A) to the genome of <italic>D. simulans</italic>, a closely related organism. This cross-species mapping exemplifies xeno-mapping and mapping to highly polymorphic genomes.</p>
+      <p>To estimate correctness, we first mapped the reads to the <italic>D. melanogaster</italic> genome, which can presumably be done much more accurately, and then used the <italic>D. melanogaster</italic> / <italic>D. simulans</italic> genome alignment from the UCSC database to cross-reference the mappings. The genome alignment no doubt has errors, but it should be much more accurate than short-read mapping because it can leverage the context provided by long sequences.</p>
+      <p>In order to construct a suitable alignment scoring scheme, we examined the divergence between <italic>D. melanogaster</italic> and <italic>D. simulans</italic>. In the UCSC ‘net’ alignments, 15% of aligned bases are mismatches, and 45% of these are transitions. There is about one gap per 101 aligned bases, and the average gap size is 6.67. These statistics suffice to construct a scoring scheme (<xref ref-type="table" rid="T1">Table 1</xref>, <ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Data</ext-link>).</p>
+      <p>In this test, mapping accuracy was greatly improved by modeling real sequence differences in addition to sequencing errors (<xref ref-type="fig" rid="F4">Figure 4</xref>). At a score cutoff of 150, we get 35 667 correctly mapped reads (66% of the 53 748 that could be mapped confidently to <italic>D. melanogaster</italic>) and 197 falsely mapped reads. If we model sequencing errors only, we get 26 569 correctly mapped reads (49%) and 194 falsely mapped reads.</p>
+      <p>If we model real sequence differences without gaps, the accuracy is only slightly lower than when we do allow gaps (<xref ref-type="fig" rid="F5">Figure 5</xref>). So it is not important to model gaps for this data set. Gaps are likely to be more important for longer reads, since a longer read is more likely to cross a gap, and it is also more likely that the alignment can be extended across the gap.
+<fig id="F5" position="float"><label>Figure 5.</label><caption><p>Estimated mapping accuracy for 100 000 real 36-bp reads from <italic>D. melanogaster</italic>, mapped to the <italic>D. simulans</italic> genome. Circles indicate a score cutoff of 150. The dotted line shows the mapping accuracy when we model the sequencer errors but not the real differences. The solid line shows the accuracy when we model both. The dashed red line shows the accuracy when we model both but forbid insertions and deletions. Correctness was estimated by mapping the reads to the <italic>D. melanogaster</italic> genome (modeling sequencer errors only), and using the UCSC <italic>D. melanogaster</italic> / <italic>D. simulans</italic> pairwise genome alignment to cross-reference the mappings.</p></caption><graphic xlink:href="gkq010f5"/></fig></p>
+      <p>For completeness, we also tried mapping the reads to either or both <italic>Drosophila</italic> genomes in two-mismatch guarantee mode (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Figure S3</ext-link>). All combinations support the main conclusion that mapping accuracy increases significantly when we model real sequence differences in addition to sequencing errors. When we map to <italic>D. simulans</italic> in two-mismatch guarantee mode, the slight benefit of modeling gaps disappears, perhaps because this mode requires finding large (26 bp) gapless matches (see ‘Materials and Methods’ section). As expected, two-mismatch guarantee mode does not reduce false mappings as dramatically as it did for simulated data. Finally, two-mismatch guarantee mode gives fewer correctly mapped reads (as it did for simulated reads), perhaps because it requires seeds with 18 matches (see ‘Materials and Methods’ section), making it less sensitive in general than adaptive seeds.</p>
+    </sec>
+  </sec>
+  <sec sec-type="discussion">
+    <title>DISCUSSION</title>
+    <p>We have described a general approach for incorporating sequence quality data into alignment. The method is straightforward, and it can be implemented with little additional computational cost over standard alignment (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Table S1</ext-link>). This approach noticeably improves DNA read mapping for substitution rates <inline-formula><inline-graphic xlink:href="gkq010i10.jpg"/></inline-formula>0.2%, corresponding to a moderate rate of polymorphism. It also greatly increased the amount of correctly mapped reads when mapping <italic>D. melanogaster</italic> DNA to the <italic>D. simulans</italic> genome, and is likely to be beneficial for xeno-mapping in general. As explained above, xeno-mapping is especially crucial for extinct genomes.</p>
+    <p>On the other hand, the human polymorphism rate is only ∼0.1%, and many agricultural and laboratory organisms are even less polymorphic. So it is less important to allow for real sequence differences in these cases, although there is no harm in doing so. If we are specifically looking for polymorphisms, however, it seems wise to model them during read mapping even for these organisms. Another consideration is that sequence quality data is not necessarily accurate: high quality scores can be over-optimistic (<xref ref-type="bibr" rid="B15">15</xref>). Although explicit recalibration of quality scores is sometimes possible (<xref ref-type="bibr" rid="B16">16</xref>) our method can also roughly compensate for over-optimistic quality scores by assuming a real substitution rate of, say, 1%.</p>
+    <p>To make best use of our mapping approach we need good estimates of the real substitution and indel rates, as we calculated for <italic>D. simulans</italic> versus <italic>D. melanogaster</italic>. Such estimates can be obtained by first aligning the sequences with naive parameters and then measuring the substitution and indel rates in these alignments (and perhaps iterating).</p>
+    <p>One possibly useful generalization would be to incorporate quality data from both sequences being aligned, not just one. This could be relevant for mapping reads to low-quality draft genomes, for example. It is straightforward to generalize equations (<xref ref-type="bibr" rid="B7 B8 B9 B10 B11 B12">7–12</xref>) to this case, but the resulting calculations seem to require much more time and/or memory. Some previous methods do consider quality scores in both sequences, but they do not use general score matrices (<xref ref-type="bibr" rid="B1">1</xref>,<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B4">4</xref>).</p>
+    <p>It is worth remarking that we can map DNA reads efficiently using a general purpose, <monospace>BLAST</monospace>-like aligner (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Table S1</ext-link>). While the current trend is specialized algorithms for mapping short sequences allowing few differences, we have shown that this is not essential.</p>
+    <p>There is one very different approach to using sequence quality data that we should mention. If we obtain DNA reads from a small number of abundant sequences, then sequencing errors will manifest as low-frequency reads that are very similar to high-frequency reads. So we can infer the true frequency of each read, and correct sequencing errors, by comparing the reads to each other (<xref ref-type="bibr" rid="B16">16</xref>,<xref ref-type="bibr" rid="B17">17</xref>). This approach seems most relevant for certain transcriptome and metagenome data sets, where a few sequences are highly abundant. It is not straightforward to combine this approach with use of quality data during read mapping, because we must avoid double counting the quality data.</p>
+    <p>A major limitation of modern sequencing systems is their short read lengths. One cause of this is that the error rate increases along the read until it becomes too high (<xref ref-type="fig" rid="F1">Figure 1</xref>). By incorporating quality data into alignment, we can more sensibly use lower quality sequences than standard alignment techniques can. This should allow read lengths to increase ‘for free’ without improving the sequencing hardware, because the alignment software can profitably use lower quality bases.</p>
+  </sec>
+  <sec>
+    <title>SUPPLEMENTARY DATA</title>
+    <p><ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkq010/DC1">Supplementary Data</ext-link> are available at NAR Online.</p>
+  </sec>
+  <sec>
+    <title>FUNDING</title>
+    <p>INTEC Systems Institute, Inc. (to R.W.); Japanese Ministry of Education, Culture, Sport, Science and Technology [Grant-in-Aid for Scientific Research (B) to P.H.]. Funding for open access charge: AIST internal budget.</p>
+    <p><italic>Conflict of interest statement</italic>. None declared.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material id="PMC_1" content-type="local-data">
+      <caption>
+        <title>[Supplementary Data]</title>
+      </caption>
+      <media mimetype="text" mime-subtype="html" xlink:href="gkq010_index.html"/>
+      <media xlink:role="associated-file" mimetype="application" mime-subtype="pdf" xlink:href="gkq010_1.pdf"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>We are grateful to Michiaki Hamada for incorporating the calculation of <italic>T</italic> into <monospace>LAST</monospace> and commenting on the manuscript. M.C.F. thanks Shashank Bujimal and Peter Waddell for motivation to work on this project.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="B1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cokus</surname>
+            <given-names>SJ</given-names>
+          </name>
+          <name>
+            <surname>Feng</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Merriman</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Haudenschild</surname>
+            <given-names>CD</given-names>
+          </name>
+          <name>
+            <surname>Pradhan</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Nelson</surname>
+            <given-names>SF</given-names>
+          </name>
+          <name>
+            <surname>Pellegrini</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Jacobsen</surname>
+            <given-names>SE</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Shotgun bisulphite sequencing of the Arabidopsis genome reveals DNA methylation patterning</article-title>
+        <source>Nature</source>
+        <year>2008</year>
+        <volume>452</volume>
+        <fpage>215</fpage>
+        <lpage>219</lpage>
+        <pub-id pub-id-type="pmid">18278030</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B2">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Ruan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Mapping short DNA sequencing reads and calling variants using mapping quality scores</article-title>
+        <source>Genome Res.</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>1851</fpage>
+        <lpage>1858</lpage>
+        <pub-id pub-id-type="pmid">18714091</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Malde</surname>
+            <given-names>K</given-names>
+          </name>
+        </person-group>
+        <article-title>The effect of sequence quality on sequence alignment</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <fpage>897</fpage>
+        <lpage>900</lpage>
+        <pub-id pub-id-type="pmid">18296747</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Na</surname>
+            <given-names>JC</given-names>
+          </name>
+          <name>
+            <surname>Roh</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Apostolico</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Park</surname>
+            <given-names>K</given-names>
+          </name>
+        </person-group>
+        <article-title>Alignment of biological sequences with quality scores</article-title>
+        <source>Int. J. Bioinformatics Res. Appl.</source>
+        <year>2009</year>
+        <volume>5</volume>
+        <fpage>97</fpage>
+        <lpage>113</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Millar</surname>
+            <given-names>CD</given-names>
+          </name>
+          <name>
+            <surname>Huynen</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Subramanian</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Mohandesan</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Lambert</surname>
+            <given-names>DM</given-names>
+          </name>
+        </person-group>
+        <article-title>New developments in ancient genomics</article-title>
+        <source>Trends Ecol. Evol.</source>
+        <year>2008</year>
+        <volume>23</volume>
+        <fpage>386</fpage>
+        <lpage>393</lpage>
+        <pub-id pub-id-type="pmid">18501471</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>JH</given-names>
+          </name>
+          <name>
+            <surname>Waterman</surname>
+            <given-names>MS</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>LM</given-names>
+          </name>
+        </person-group>
+        <article-title>Diploid genome reconstruction of Ciona intestinalis and comparative analysis with Ciona savignyi</article-title>
+        <source>Genome Res.</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <fpage>1101</fpage>
+        <lpage>1110</lpage>
+        <pub-id pub-id-type="pmid">17567986</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Karlin</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Altschul</surname>
+            <given-names>SF</given-names>
+          </name>
+        </person-group>
+        <article-title>Methods for assessing the statistical significance of molecular sequence features by using general scoring schemes</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>1990</year>
+        <volume>87</volume>
+        <fpage>2264</fpage>
+        <lpage>2268</lpage>
+        <pub-id pub-id-type="pmid">2315319</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B8">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>States</surname>
+            <given-names>DJ</given-names>
+          </name>
+          <name>
+            <surname>Gish</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Altschul</surname>
+            <given-names>SF</given-names>
+          </name>
+        </person-group>
+        <article-title>Improved sensitivity of nucleic acid database searches using application-specific scoring matrices</article-title>
+        <source>Methods Companion to Methods Enzymol.</source>
+        <year>1991</year>
+        <volume>3</volume>
+        <fpage>66</fpage>
+        <lpage>70</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>SF</given-names>
+          </name>
+          <name>
+            <surname>Madden</surname>
+            <given-names>TL</given-names>
+          </name>
+          <name>
+            <surname>Schäffer</surname>
+            <given-names>AA</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Lipman</surname>
+            <given-names>DJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Gapped BLAST and PSI-BLAST: a new generation of protein database search programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3389</fpage>
+        <lpage>3402</lpage>
+        <pub-id pub-id-type="pmid">9254694</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Abouelhoda</surname>
+            <given-names>MI</given-names>
+          </name>
+          <name>
+            <surname>Kurtz</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Ohlebusch</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Replacing suffix trees with enhanced suffix arrays</article-title>
+        <source>J. Discrete Algorithms</source>
+        <year>2004</year>
+        <volume>2</volume>
+        <fpage>53</fpage>
+        <lpage>86</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ma</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Tromp</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>PatternHunter: faster and more sensitive homology search</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>440</fpage>
+        <lpage>445</lpage>
+        <pub-id pub-id-type="pmid">11934743</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B12">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Burkhardt</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Kärkkäinen</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Better filtering with gapped q-grams</article-title>
+        <source>Fundam. Inform.</source>
+        <year>2003</year>
+        <volume>XXIII</volume>
+        <fpage>1001</fpage>
+        <lpage>1018</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kucherov</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Noé</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Roytberg</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Multiseed lossless filtration</article-title>
+        <source>IEEE/ACM Trans. Comput. Biol. Bioinformatics</source>
+        <year>2005</year>
+        <volume>2</volume>
+      </element-citation>
+    </ref>
+    <ref id="B14">
+      <label>14</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kent</surname>
+            <given-names>WJ</given-names>
+          </name>
+          <name>
+            <surname>Baertsch</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Hinrichs</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Haussler</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Evolution's; cauldron: duplication, deletion, and rearrangement in the mouse and human genomes</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>2003</year>
+        <volume>100</volume>
+        <fpage>11484</fpage>
+        <lpage>11489</lpage>
+        <pub-id pub-id-type="pmid">14500911</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dohm</surname>
+            <given-names>JC</given-names>
+          </name>
+          <name>
+            <surname>Lottaz</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Borodina</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Himmelbauer</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Substantial biases in ultra-short read data sets from high-throughput DNA sequencing</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2008</year>
+        <volume>36</volume>
+        <fpage>e105</fpage>
+        <pub-id pub-id-type="pmid">18660515</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B16">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Qu</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Hashimoto</surname>
+            <given-names>S.-I</given-names>
+          </name>
+          <name>
+            <surname>Morishita</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Efficient frequency-based de novo short-read clustering for error trimming in next-generation sequencing</article-title>
+        <source>Genome Res.</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1309</fpage>
+        <lpage>1315</lpage>
+        <pub-id pub-id-type="pmid">19439514</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wijaya</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Frith</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Suzuki</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Horton</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Recount: Expectation maximization based error correction tool for next generation sequencing data</article-title>
+        <source>Genome Inform.</source>
+        <year>2009</year>
+        <volume>23</volume>
+        <fpage>189</fpage>
+        <lpage>201</lpage>
+        <pub-id pub-id-type="pmid">20180274</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

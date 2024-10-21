@@ -1,0 +1,1686 @@
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title>BMC Bioinformatics</journal-title>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">421630</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-5-59</article-id>
+    <article-id pub-id-type="pmid">15144565</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-5-59</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Gene finding in novel genomes</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib id="A1" corresp="yes" contrib-type="author">
+        <name>
+          <surname>Korf</surname>
+          <given-names>Ian</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>ik1@sanger.ac.uk</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Wellcome Trust Sanger Institute, Wellcome Trust Genome Campus, Hinxton, Cambridgeshire, CB10 1SA, UK</aff>
+    <pub-date pub-type="collection">
+      <year>2004</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>14</day>
+      <month>5</month>
+      <year>2004</year>
+    </pub-date>
+    <volume>5</volume>
+    <fpage>59</fpage>
+    <lpage>59</lpage>
+    <ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/1471-2105/5/59"/>
+    <history>
+      <date date-type="received">
+        <day>19</day>
+        <month>1</month>
+        <year>2004</year>
+      </date>
+      <date date-type="accepted">
+        <day>14</day>
+        <month>5</month>
+        <year>2004</year>
+      </date>
+    </history>
+    <copyright-statement>Copyright © 2004 Korf; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL.</copyright-statement>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Computational gene prediction continues to be an important problem, especially for genomes with little experimental data.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>I introduce the SNAP gene finder which has been designed to be easily adaptable to a variety of genomes. In novel genomes without an appropriate gene finder, I demonstrate that employing a foreign gene finder can produce highly inaccurate results, and that the most compatible parameters may not come from the nearest phylogenetic neighbor. I find that foreign gene finders are more usefully employed to bootstrap parameter estimation and that the resulting parameters can be highly accurate.</p>
+      </sec>
+      <sec>
+        <title>Conclusion</title>
+        <p>Since gene prediction is sensitive to species-specific parameters, every genome needs a dedicated gene finder.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Complete genomic sequences are becoming more and more abundant. Given a new genome, one of the first and most important tasks is determining the structure of its protein-coding genes. <italic>Ab initio </italic>gene prediction plays a critical role because it produces gene structures quickly, inexpensively, and in some cases reliably. The accuracy of a gene finder depends on many factors. Chief among these is proper training. Training a gene finder can be a laborious task. In the past, genome projects moved rather slowly, and the trickle of data meant that parameters could be estimated before the genome was complete. Today, sequencing and assembly are so rapid that genomes can appear well in advance of proper training material. This leaves some new genome annotation projects without an appropriate gene finder.</p>
+    <p>When new genomic sequence emerges, it must be annotated with something, and frequently this is a gene finder for a completely different genome. A particularly good example of this is Genscan [<xref ref-type="bibr" rid="B1">1</xref>], which was trained primarily for the human genome, but has been used to annotate genes in worms, flies, fish, fungi, amphioxus, and others [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B6">6</xref>]. Since sequence features such as codon bias [<xref ref-type="bibr" rid="B7">7</xref>] and splicing signals [<xref ref-type="bibr" rid="B8">8</xref>] vary from organism to organism, it is expected that gene finders may not perform optimally in a foreign genome. While the practice of annotating a genome with a foreign gene finder is commonplace, its consequences are not widely understood.</p>
+    <p>In this paper, I introduce a new <italic>ab initio </italic>gene finding program called SNAP. SNAP is similar to Genscan and other generalized hidden Markov model (HMM) gene finders [<xref ref-type="bibr" rid="B9">9</xref>-<xref ref-type="bibr" rid="B13">13</xref>], but unlike many, it is easily adaptable to a number of organisms and its source code is freely available. I train and evaluate SNAP in the <italic>Arabidopsis thaliana </italic>(thale cress), <italic>Caenorhabditis elegans </italic>(nematode), <italic>Drosophila melanogaster </italic>(fruit fly), and <italic>Oryza sativa </italic>(rice) genomes, and demonstrate that SNAP is an accurate <italic>ab initio </italic>gene finder. For newly sequenced genomes without a specific gene finder, I show that annotating with a foreign gene finder may be highly inaccurate and I introduce a bootstrapping procedure that allows one to estimate species-specific parameters <italic>de novo</italic>.</p>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <sec>
+      <title>SNAP is a high-performance <italic>ab initio </italic>gene finder</title>
+      <p>I trained and evaluated SNAP in four genomes (see Methods) and compared its performance to Genscan in all genomes, to HMMGene [<xref ref-type="bibr" rid="B12">12</xref>] and Genefinder [<xref ref-type="bibr" rid="B14">14</xref>] in <italic>C. elegans</italic>, and to Augustus [<xref ref-type="bibr" rid="B15">15</xref>] in <italic>D. melanogaster</italic>. Genscan performs as well as recent gene finders designed specifically for <italic>Arabidopsis </italic>[<xref ref-type="bibr" rid="B16">16</xref>], was considered one of the standards for the <italic>Drosophila </italic>GASP experiments [<xref ref-type="bibr" rid="B3">3</xref>], and is one of the gene finders used by the International Rice Genome Sequencing Project [<xref ref-type="bibr" rid="B17">17</xref>]. HMMGene and Genefinder are well-established gene prediction programs for <italic>C. elegans</italic>. Augustus is one of the latest gene prediction programs and has been shown to outperform Genscan, GENIE, and GENEID in <italic>Drosophila</italic>.</p>
+      <p>As shown in table <xref ref-type="table" rid="T2">2</xref>, SNAP is more accurate than Genscan in every genome. In <italic>C. elegans</italic>, SNAP performs better than HMMGene and almost as well as Genefinder. In <italic>D. melanogaster</italic>, SNAP is similar to Augustus. The HMMs employed by SNAP in this study have a minimal genome model without a promoter, poly-A signal, or UTRs, and the reason why SNAP outperforms Genscan is simply that it is trained for each genome. When compared to gene finders tuned for a particular genome, SNAP performs about equally. It may be possible to increase the accuracy of SNAP by including more states in the HMM to model additional genomic features or by using more sophisticated statistical techniques such as interpolated Markov models, maximum dependence decomposition trees or isochore segmentation. Fine-tuning SNAP to particular genomes is not the subject of this study however.</p>
+    </sec>
+    <sec>
+      <title>Gene prediction in novel genomes can be highly inaccurate</title>
+      <p>A newly sequenced genome may not have much training material and little experimental data to anchor gene predictions. How can one find genes in such uncharted territory? The common procedure is to use a gene finder from some other genome, perhaps the one that is most phylogenetically similar. To determine the consequences of this practice I evaluated the difference between the intra- and inter-species performance of SNAP. The results are displayed in table <xref ref-type="table" rid="T3">3</xref>.</p>
+      <p>Gene prediction accuracy with foreign parameters appears to follow GC content more than phylogenetic relationships. For example, <italic>Oryza </italic>parameters perform reasonably well in <italic>Drosophila </italic>sequence (&gt;25% genes correct) but very poorly in <italic>A. thaliana </italic>(5% genes correct). Similarly, for finding <italic>C. elegans </italic>genes, one is better off with parameters from <italic>A. thaliana </italic>than <italic>D. melanogaster</italic>. Choosing the best foreign gene finder is therefore not simply a matter of using parameters from the closest relative.</p>
+    </sec>
+    <sec>
+      <title>Genomes have significant compositional differences</title>
+      <p>To look more closely at the reasons behind the inaccuracy of foreign parameters, I have examined compositional differences in coding sequence, splice sites, and the translation start. Figure <xref ref-type="fig" rid="F2">2</xref> displays the codon frequencies of degenerate codons for each of the four genomes. In general, codon preference is reflected by GC composition. That is, the GC-rich genomes prefer G and C in the 3rd position and the AT-rich genomes prefer A or T. This helps to explain the results of the previous experiment. But even between genomes with similar GC-content there are significant differences among equivalent codons. For example, <italic>Oryza </italic>prefers CTC for Leucine while <italic>Drosophila </italic>prefers CTG.</p>
+      <p>Pictograms [<xref ref-type="bibr" rid="B18">18</xref>] for splice sites and the translation start are shown in figure <xref ref-type="fig" rid="F3">3</xref>. The two plant genomes (<italic>Arabidopsis </italic>and <italic>Oryza</italic>) have very similar acceptor sites, but the two animal genomes (<italic>Caenorhabditis </italic>and <italic>Drosophila</italic>) each have unique features. The upstream region from -7 to -27, frequently known as the poly-pyrimidine tract is T-rich in plants, AT-rich in <italic>Caenorhabditis</italic>, and pyrimidine-rich (proximally) in <italic>Drosophila</italic>. T is the most common nucleotide at positions at -5 and -6 in all genomes, but in <italic>Caenorhabditis </italic>these are almost invariant. At -4, the plants prefer G while <italic>Caenorhabditis </italic>prefers T and <italic>Drosophila </italic>is unbiased. The splice donor sites appear to be similar among all the genomes. However, there may be species-specific higher-order contexts that contribute to some specificity since the tuned architectures (see Methods) are slightly different for each genome. The translation start site appears to have some genome specificity. Given the compositional differences in the various signals, it is not surprising that gene prediction with foreign gene finders can be highly inaccurate.</p>
+    </sec>
+    <sec>
+      <title>Parameter estimation in novel genomes</title>
+      <p>Even though foreign gene finders may perform sub-optimally, their predictions may display compositional properties of the novel genome. For example, when annotating the <italic>A. thaliana </italic>genome with a <italic>C. elegans </italic>gene finder, the predictions appeared very much like real <italic>A. thaliana </italic>genes. Figure <xref ref-type="fig" rid="F3">3d</xref> shows a splice acceptor pictogram derived from these predictions. Note that the sequence composition broadly resembles true <italic>A. thaliana </italic>splice acceptors, including a preference for G at -3 and a T-rich upstream sequence. It also retains some <italic>C. elegans </italic>qualities such as a greater proportion of Ts at -5 and -6.</p>
+      <p>If predicted genes have compositional properties similar to real genes, it should be possible to train a gene finder for a novel genome in the absence of any data. One simply runs a foreign gene finder (or more than one) to create a virtual training set and estimates parameters for the novel genome from the virtual data. So rather than use foreign gene finders to identify genes, one uses them to bootstrap parameter estimation. To determine if this procedure works, I assumed one of the genomes was novel and evaluated the gene prediction accuracy of bootstrapped parameters derived from one, two, or three foreign gene finders. The results are displayed in table <xref ref-type="table" rid="T4">4</xref>.</p>
+      <p>Bootstrapped parameters work very well in many cases. In <italic>A. thaliana</italic>, the best foreign parameters come from <italic>C. elegans</italic>. But if the gene predictions are used for training rather than the final annotation, the prediction accuracy rises from 86.3/91.0 (nucleotide sensitivity/nucleotide specificity) to 96.6/93.2. The worst foreign performance (<italic>D. melanogaster </italic>parameters) changes from an abysmal 26.0/96.0 to a respectable 75.2/95.5. Bootstrapped parameters also appear to work very well in <italic>C. elegans </italic>and <italic>D. melanogaster</italic>. In <italic>C. elegans</italic>, the highest performing sets, 96.7/91.1 and 95.8/91.9, come from mixing two or three gene finders. In <italic>Drosophila</italic>, the best parameters are derived from <italic>O. sativa </italic>predictions. In general, bootstrapped parameters in these genomes can rival actual data, and even the worst bootstrapped parameters are reasonably accurate.</p>
+      <p>In <italic>O. sativa</italic>, bootstrapped parameters are only somewhat helpful. The <italic>Arabidopsis </italic>and <italic>Caenorhabditis </italic>parameters improve in both sensitivity and specificity, but the <italic>Drosophila </italic>foreign parameters are actually better than any of the bootstrapped ones. The reason why <italic>O. sativa </italic>behaves differently from the others is unclear at this time. In general, however, estimating parameters from gene predictions appears to be a simple and convenient way to train a gene finder for a novel genome. It is important to note that the genomes studied in this paper are all relatively compact. The techniques here may not work well in mammalian genomes or other genomes where exons account for a small fraction of the total sequence. I am currently investigating methods to improve gene finding accuracy and to quickly estimate gene prediction parameters in large genomes.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>In this paper, I demonstrated that SNAP is a high performance gene finding program in several genomes. For new genomes without an appropriate gene finder, I showed that one can bootstrap parameter estimation from foreign gene finders.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>Data sets</title>
+      <p>Genomic data and annotation were retrieved from two sources. The <italic>A. thaliana </italic>(Release 4.0) and <italic>O. sativa </italic>(OSA1) data were downloaded from TIGR [<xref ref-type="bibr" rid="B19">19</xref>]. Data for <italic>C. elegans </italic>(version 14.98.1) and <italic>D. melanogaster </italic>(version 14.3.1) were downloaded from Ensembl [<xref ref-type="bibr" rid="B20">20</xref>] via the Ensmart interface. Full-length mRNAs were retrieved using SRS from the Sanger Institute [<xref ref-type="bibr" rid="B21">21</xref>] by using the keyword 'complete' in the <italic>Description </italic>field, selecting 'mrna' for <italic>Molecule</italic>, and using the specific taxon in the <italic>Organism </italic>field.</p>
+      <p>The genomic sequence and annotation were subjected to a battery of tests to select for complete genes with no obvious errors such as overlapping exons, exons out of bounds, exons on the wrong strand, in-frame stop codons, or introns &lt;30 bp. In addition to these "sanity checks", every gene was confirmed by an end-to-end, gap-free alignment between the <italic>in silico </italic>predicted transcript and a full-length cDNA. This requirement ensures that there are no extra/missed exons and that predicted splice sites are consistent with the actual transcript. Genes with unusual features such as non-canonical splice sites, internal stops, or split start/stop codons were removed. To simplify evaluation, genes with known alternate forms or genes overlapping other genes have been removed. To limit redundancy, all encoded proteins within a genome were aligned to each other, and in cases where there was a BLASTP [<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B23">23</xref>] alignment of &gt;90% identity, one of the sequences was removed. The version of BLAST used was 2.0MP-WashU [10-Sep-2003] and the parameters were the defaults plus -wordmask = seg + xnu. Bioperl [<xref ref-type="bibr" rid="B24">24</xref>] libraries were used for processing BLAST reports. For the <italic>A. thaliana </italic>set there were a large number of genes that passed all criteria, so the final set was trimmed by random selection to make it similar to the others.</p>
+      <p>The amount of sequence upstream and downstream of each gene is variable; the distance is half way to the nearest annotated gene up to a maximum of 1 kb. The average intergenic length in the four genomes is 2.9 kb, 2.7 kb, 6.6 kb, and 4.1 kb for <italic>Arabidopsis</italic>, <italic>Ceanorhabditis</italic>, <italic>Drosophila</italic>, and <italic>Oryza</italic>. 1 kb was chosen because at longer lengths some unannotated genes were clearly present (data not shown). The GC content, proportion of single-exon genes, and average exon and intron lengths are all similar to the downloaded data for each genome (data not shown).</p>
+      <p>The gene sets used in this study are summarized in table <xref ref-type="table" rid="T1">1</xref>. The <italic>Arabidopsis </italic>and <italic>Caenorhabditis </italic>genomes are very AT-rich while the <italic>Drosophila </italic>and <italic>Oryza </italic>genomes have a more balanced nucleotide composition. Some genomes have unique features when compared to the others: <italic>Caenorhabditis </italic>has very few single-exon genes, <italic>Drosophila </italic>has much longer exons and introns, and <italic>Arabidopsis </italic>has the shortest introns on average.</p>
+    </sec>
+    <sec>
+      <title>Gene model</title>
+      <p>SNAP models protein coding sequences in genomic DNA via a specialized hidden Markov model similar to the one used in Genscan [<xref ref-type="bibr" rid="B1">1</xref>]. There are a few key differences:</p>
+      <p>1. Genscan is described as having three intron states but SNAP uses six to prevent stop codons at splice junctions (Genscan does not predict genes with stop codons, but its method to prevent stop codons is not described).</p>
+      <p>2. Genscan models both strands simultaneously while SNAP treats each strand independently. Decoding the strands independently allows genes on opposite strands to overlap. The advantage this is that it allows genes within introns of other genes, which is relatively common in some genomes. The disadvantage is that it also allows overlapping exons, which is not common.</p>
+      <p>3. The state diagram is fixed in Genscan but is read from a parameter file in SNAP. This allows one to change the HMM to describe a variety of genomic features. The simplest state diagram for predicting single- and multi-exon genes is shown in figure <xref ref-type="fig" rid="F1">1</xref>.</p>
+      <p>4. The sequence feature model architectures in Genscan are fixed but SNAP allows one to employ any length weight matrix and any order Markov model and to embed these models within an array, decision tree, or 3-periodic (coding sequence) framework.</p>
+      <p>5. Introns may have explicit length distributions over a fixed distance followed by a geometric tail. Using explicit lengths increases the computational load by an amount that depends on the length of the explicit distribution and on exon density. The total runtime is approximately 1.5 times as long for these genomes with a fixed distance of 250 bp.</p>
+    </sec>
+    <sec>
+      <title>Parameter estimation</title>
+      <p>In gene prediction algorithms it is common to employ weight matrices (WM), weight array matrices (WAM), and Markov models (MM) to model compositional features such as the translation start site, splice sites and codon bias [<xref ref-type="bibr" rid="B1">1</xref>]. The choice of architectures is partly limited by the amount of data in the training set, but is ultimately determined by what works best in practice. To find a useful combination of models I began with simple weight matrices for the splice acceptor, splice donor, translation start, and translation stop sites, and 4<sup>th </sup>order Markov models for coding, intron, and intergenic sequence. I did not include models for promoter, poly-A site, UTRs or trans-splicing. These features are often not annotated and I therefore used only the features which could be unambiguously defined in the training data.</p>
+      <p>The "default" models are as follows: the acceptor WM is 30 bp long with 3 exonic nucleotides, the donor WM is 9 bp with 3 exonic nucleotides, the start WM is 12 bp with 6 coding nucleotides, and the stop WM is 9 bp with 3 bp on either side of the stop codons. The WMs (except the stop which is not shown) are therefore accurately represented by the pictograms in figure <xref ref-type="fig" rid="F3">3</xref>. These default architectures were used in the gene prediction experiments corresponding to table <xref ref-type="table" rid="T4">4</xref>. For the experiments corresponding to tables <xref ref-type="table" rid="T2">2</xref> and <xref ref-type="table" rid="T3">3</xref>, the architectures were tuned to find those that work best in each organism. The number of possible combinations of architectures is very large and was not fully explored. Tuned architectures differ from the default by changing the length of the WMs (exonic portions are kept constant) or by adding context to each position (which changes a WM to a WAM). The changes from the aforementioned default architectures are as follows: In <italic>A. thaliana</italic>, the acceptor is a 20 bp 1<sup>st </sup>order WAM, the donor is a 9 bp 1<sup>st </sup>order WAM, and the start is a 12 bp 1<sup>st </sup>order WAM. In <italic>C. elegans</italic>, the acceptor is a 15 bp WM, the donor is a 9 bp 2<sup>nd </sup>order WAM, and the start is a 18 bp 2<sup>nd </sup>order WAM. In <italic>D. melanogaster</italic>, the acceptor is a 40 bp 2<sup>nd </sup>order WAM, the donor is a 15 bp 2<sup>nd </sup>order WAM, and the start is a 18 bp 1<sup>st </sup>order WAM. In <italic>O. sativa</italic>, the acceptor is a 40 bp WM. In addition, the intron models in <italic>A. thaliana </italic>and <italic>C. elegans </italic>used explicit durations for a length of 250 bp.</p>
+    </sec>
+    <sec>
+      <title>Performance evaluation</title>
+      <p>All intra-species performance figures were calculated using a 5-fold cross-validation strategy (non-overlapping sets were trained on 4/5 of the data, gene prediction was evaluated on 1/5 of the data, and the performance figures were averaged over the 5 sets). Inter-species performance did not employ 5-fold cross-validation since the training and testing sets are from different genomes. Prior to gene prediction, all sequences were masked with RepeatMasker [<xref ref-type="bibr" rid="B25">25</xref>] with appropriate libraries using the MaskerAid [<xref ref-type="bibr" rid="B26">26</xref>] enhancement. The repeat library for <italic>O. sativa </italic>was obtained from TIGR [<xref ref-type="bibr" rid="B19">19</xref>]. Other repeat libraries were part of the RepeatMasker distribution.</p>
+      <p>Genscan was run with the <italic>A. thaliana </italic>parameter file for <italic>A. thaliana </italic>sequences and the human parameter file for the others. Genefinder and HMMGene were run with <italic>C. elegans </italic>parameters. Augustus was run with the "fly_singlestrand_partial.cfg" parameter file. Sensitivity [true positives/(true positives + false negatives)] and specificity [true positives/(true positives + false positives)] were calculated at the nucleotide, exon, and gene levels. Gene sensitivity (fraction of genes predicted exactly correct) is also reported as gene accuracy.</p>
+    </sec>
+    <sec>
+      <title>SNAP implementation</title>
+      <p>SNAP is written in ANSI C as a command line Unix program. The source code is covered by the GNU General Public License and is freely available from the author. SNAP is a relatively efficient program in both memory and time; it requires about 100 megabytes of memory and 30 cpu seconds to decode a 1 Mbp sequence on a 1 Ghz machine. CPU time and memory scale linearly with sequence length.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>The work in this paper is completely my own.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional File 1</title>
+        <p>1. The sequences and annotation are in a compressed archive named datasets.tar.gz 2. The SNAP source code is in a compressed archive named snap.tar.gz</p>
+      </caption>
+      <media xlink:href="1471-2105-5-59-S1.gz" mimetype="application" mime-subtype="x-zip-compressed">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <sec>
+      <title>Acknowledgements</title>
+      <p>This work was funded by NIH grant K22-00064-01 and by the Wellcome Trust Sanger Institute. Thanks to Richard Durbin and David Carter for comments on the manuscript and especially to the referees for making many useful suggestions.</p>
+    </sec>
+  </ack>
+  <ref-list>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Burge</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Karlin</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Prediction of complete gene structures in human genomic DNA</article-title>
+        <source>J Mol Biol</source>
+        <year>1997</year>
+        <volume>268</volume>
+        <fpage>78</fpage>
+        <lpage>94</lpage>
+        <pub-id pub-id-type="pmid">9149143</pub-id>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1997.0951</pub-id>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Webb</surname>
+            <given-names>CT</given-names>
+          </name>
+          <name>
+            <surname>Shabalina</surname>
+            <given-names>SA</given-names>
+          </name>
+          <name>
+            <surname>Ogurtsov</surname>
+            <given-names>AY</given-names>
+          </name>
+          <name>
+            <surname>Kondrashov</surname>
+            <given-names>AS</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis of similarity within 142 pairs of orthologous intergenic regions of Caenorhabditis elegans and Caenorhabditis briggsae</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>1233</fpage>
+        <lpage>1239</lpage>
+        <pub-id pub-id-type="pmid">11861916</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/30.5.1233</pub-id>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Reese</surname>
+            <given-names>MG</given-names>
+          </name>
+          <name>
+            <surname>Hartzell</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Harris</surname>
+            <given-names>NL</given-names>
+          </name>
+          <name>
+            <surname>Ohler</surname>
+            <given-names>U</given-names>
+          </name>
+          <name>
+            <surname>Abril</surname>
+            <given-names>JF</given-names>
+          </name>
+          <name>
+            <surname>Lewis</surname>
+            <given-names>SE</given-names>
+          </name>
+        </person-group>
+        <article-title>Genome annotation assessment in Drosophila melanogaster</article-title>
+        <source>Genome Res</source>
+        <year>2000</year>
+        <volume>10</volume>
+        <fpage>483</fpage>
+        <lpage>501</lpage>
+        <pub-id pub-id-type="pmid">10779488</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.10.4.483</pub-id>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Riboldi Tunnicliffe</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Gloeckner</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Elgar</surname>
+            <given-names>GS</given-names>
+          </name>
+          <name>
+            <surname>Brenner</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Rosenthal</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Comparative analysis of the PCOLCE region in Fugu rubripes using a new automated annotation tool</article-title>
+        <source>Mamm Genome</source>
+        <year>2000</year>
+        <volume>11</volume>
+        <fpage>213</fpage>
+        <lpage>219</lpage>
+        <pub-id pub-id-type="pmid">10723726</pub-id>
+        <pub-id pub-id-type="doi">10.1007/s003350010039</pub-id>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kraemer</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Guo</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Hopkins</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Arnold</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>An analysis of gene-finding programs for Neurospora crassa</article-title>
+        <source>Bioinformatics</source>
+        <year>2001</year>
+        <volume>17</volume>
+        <fpage>901</fpage>
+        <lpage>912</lpage>
+        <pub-id pub-id-type="pmid">11673234</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/17.10.901</pub-id>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Boeddrich</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Burgtorf</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Francis</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Hennig</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Panopoulou</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Steffens</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Borzym</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Lehrach</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Sequence analysis of an amphioxus cosmid containing a gene homologous to members of the aldo-keto reductase gene superfamily</article-title>
+        <source>Gene</source>
+        <year>1999</year>
+        <volume>16</volume>
+        <fpage>207</fpage>
+        <lpage>214</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0378-1119(99)00079-7</pub-id>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Akashi</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Gene expression and molecular evolution</article-title>
+        <source>Curr Opin Genet Dev</source>
+        <year>2001</year>
+        <volume>11</volume>
+        <fpage>660</fpage>
+        <lpage>666</lpage>
+        <pub-id pub-id-type="pmid">11682310</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0959-437X(00)00250-1</pub-id>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lim</surname>
+            <given-names>LP</given-names>
+          </name>
+          <name>
+            <surname>Burge</surname>
+            <given-names>CB</given-names>
+          </name>
+        </person-group>
+        <article-title>A computational analysis of sequence features involved in recognition of short introns</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <fpage>11193</fpage>
+        <lpage>11198</lpage>
+        <pub-id pub-id-type="pmid">11572975</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.201407298</pub-id>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Solovyev</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Salamov</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>The Gene-Finder computer tools for analysis of human and model organisms genome sequences</article-title>
+        <source>Proc Int Conf Intell Syst Mol Biol</source>
+        <year>1997</year>
+        <volume>5</volume>
+        <fpage>294</fpage>
+        <lpage>302</lpage>
+        <pub-id pub-id-type="pmid">9322052</pub-id>
+      </citation>
+    </ref>
+    <ref id="B10">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kulp</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Haussler</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Reese</surname>
+            <given-names>MG</given-names>
+          </name>
+          <name>
+            <surname>Eeckman</surname>
+            <given-names>FH</given-names>
+          </name>
+        </person-group>
+        <article-title>A generalized hidden Markov model for the recognition of human genes in DNA</article-title>
+        <source>Proc Int Conf Intell Syst Mol Biol</source>
+        <year>1996</year>
+        <volume>4</volume>
+        <fpage>134</fpage>
+        <lpage>142</lpage>
+        <pub-id pub-id-type="pmid">8877513</pub-id>
+      </citation>
+    </ref>
+    <ref id="B11">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Parra</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Blanco</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Guigo</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>GeneID in Drosophila</article-title>
+        <source>Genome Res</source>
+        <year>2000</year>
+        <volume>10</volume>
+        <fpage>511</fpage>
+        <lpage>515</lpage>
+        <pub-id pub-id-type="pmid">10779490</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.10.4.511</pub-id>
+      </citation>
+    </ref>
+    <ref id="B12">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Krogh</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Two methods for improving performance of an HMM and their application for gene finding</article-title>
+        <source>Proc Int Conf Intell Syst Mol Biol</source>
+        <year>1997</year>
+        <volume>5</volume>
+        <fpage>179</fpage>
+        <lpage>186</lpage>
+        <pub-id pub-id-type="pmid">9322033</pub-id>
+      </citation>
+    </ref>
+    <ref id="B13">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cawley</surname>
+            <given-names>SE</given-names>
+          </name>
+          <name>
+            <surname>Wirth</surname>
+            <given-names>AI</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>TP</given-names>
+          </name>
+        </person-group>
+        <article-title>Phat – a gene finding program for Plasmodium falciparum</article-title>
+        <source>Mol Biochem Parasitol</source>
+        <year>2001</year>
+        <volume>118</volume>
+        <fpage>167</fpage>
+        <lpage>174</lpage>
+        <pub-id pub-id-type="pmid">11738707</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0166-6851(01)00363-2</pub-id>
+      </citation>
+    </ref>
+    <ref id="B14">
+      <citation citation-type="other">
+        <article-title>Genefinder (Green P.)</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://ftp.genome.washington.edu/cgi-bin/genefinder_req.pl"/>
+      </citation>
+    </ref>
+    <ref id="B15">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Stanke</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Waack</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Gene prediction with a hidden Markov model and a new intron submodel</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <fpage>II215</fpage>
+        <lpage>II225</lpage>
+        <pub-id pub-id-type="pmid">14534192</pub-id>
+      </citation>
+    </ref>
+    <ref id="B16">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Majoros</surname>
+            <given-names>WH</given-names>
+          </name>
+          <name>
+            <surname>Pertea</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Antonescu</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>SL</given-names>
+          </name>
+        </person-group>
+        <article-title>GlimmerM, Exonomy and Unveil: three ab initio eukaryotic genefinders</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>3601</fpage>
+        <lpage>3604</lpage>
+        <pub-id pub-id-type="pmid">12824375</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/gkg527</pub-id>
+      </citation>
+    </ref>
+    <ref id="B17">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sakata</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Nagamura</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Numa</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Antonio</surname>
+            <given-names>BA</given-names>
+          </name>
+          <name>
+            <surname>Nagasaki</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Idonuma</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Watanabe</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Shimizu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Horiuchi</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Matsumoto</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Sasaki</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Higo</surname>
+            <given-names>K</given-names>
+          </name>
+        </person-group>
+        <article-title>RiceGAAS: an automated annotation system and database for rice genome sequence</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>98</fpage>
+        <lpage>102</lpage>
+        <pub-id pub-id-type="pmid">11752265</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/30.1.98</pub-id>
+      </citation>
+    </ref>
+    <ref id="B18">
+      <citation citation-type="other">
+        <article-title>Pictogram (Burge C)</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://genes.mit.edu/pictogram.html"/>
+      </citation>
+    </ref>
+    <ref id="B19">
+      <citation citation-type="other">
+        <article-title>The Institute for Genomic Research</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.tigr.org"/>
+      </citation>
+    </ref>
+    <ref id="B20">
+      <citation citation-type="other">
+        <article-title>Ensembl Genome Browser</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.ensembl.org"/>
+      </citation>
+    </ref>
+    <ref id="B21">
+      <citation citation-type="other">
+        <article-title>SRS7 at the Sanger Institute</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://srs.sanger.ac.uk"/>
+      </citation>
+    </ref>
+    <ref id="B22">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>SF</given-names>
+          </name>
+          <name>
+            <surname>Gish</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Myers</surname>
+            <given-names>EW</given-names>
+          </name>
+          <name>
+            <surname>Lipman</surname>
+            <given-names>DJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Basic local alignment search tool</article-title>
+        <source>J Mol Biol</source>
+        <year>1990</year>
+        <volume>215</volume>
+        <fpage>403</fpage>
+        <lpage>410</lpage>
+        <pub-id pub-id-type="pmid">2231712</pub-id>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1990.9999</pub-id>
+      </citation>
+    </ref>
+    <ref id="B23">
+      <citation citation-type="other">
+        <article-title>WU-BLAST (Gish W)</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://blast.wustl.edu"/>
+      </citation>
+    </ref>
+    <ref id="B24">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <collab>Bioperl</collab>
+          <name>
+            <surname>Stajich</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Block</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Boulez</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Brenner</surname>
+            <given-names>SE</given-names>
+          </name>
+          <name>
+            <surname>Chervitz</surname>
+            <given-names>SA</given-names>
+          </name>
+          <name>
+            <surname>Dagdigian</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Fuellen</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Gilbert</surname>
+            <given-names>JG</given-names>
+          </name>
+          <name>
+            <surname>Korf</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Lapp</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Lehvaslaiho</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Matsalla</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Mungall</surname>
+            <given-names>CJ</given-names>
+          </name>
+          <name>
+            <surname>Osborne</surname>
+            <given-names>BI</given-names>
+          </name>
+          <name>
+            <surname>Pocock</surname>
+            <given-names>MR</given-names>
+          </name>
+          <name>
+            <surname>Schattner</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Senger</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Stein</surname>
+            <given-names>LD</given-names>
+          </name>
+          <name>
+            <surname>Stupka</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Wilkinson</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Birney</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>The Bioperl toolkit: Perl modules for the life sciences</article-title>
+        <source>Genome Res</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>1611</fpage>
+        <lpage>1618</lpage>
+        <pub-id pub-id-type="pmid">12368254</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.361602</pub-id>
+      </citation>
+    </ref>
+    <ref id="B25">
+      <citation citation-type="other">
+        <article-title>RepeatMasker (Smit, AFA, Green P.)</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://repeatmasker.genome.washington.edu"/>
+      </citation>
+    </ref>
+    <ref id="B26">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bedell</surname>
+            <given-names>JA</given-names>
+          </name>
+          <name>
+            <surname>Korf</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Gish</surname>
+            <given-names>W</given-names>
+          </name>
+        </person-group>
+        <article-title>MaskerAid: a performance enhancement to RepeatMasker</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>1040</fpage>
+        <lpage>1041</lpage>
+        <pub-id pub-id-type="pmid">11159316</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/16.11.1040</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig position="float" id="F1">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>SNAP HMM state diagram </bold>Each state of the HMM is represented by a shape and transitions between the states are represented by arrows. States include N: intergenic, Es: single-exon gene, Ei: initial exon, Et terminal exon, E0–E2: exons in phase 0–2, I0–I2: introns in phases 0–2 (subscript of T, TA, or TG denotes the last bp or two bp of the intron – this is used to prevent in-frame stop codons across splice junctions).</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-59-1"/>
+    </fig>
+    <fig position="float" id="F2">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Codon frequency </bold>The frequency of each degenerate codon is indicated in a species-specific color (At <italic>Arabidopsis thaliana</italic>, Ce <italic>Caenorhabditis elegans</italic>, Dm <italic>Drosophila melanogaster</italic>, Os <italic>Oryza sativa</italic>). Codons are grouped by their parent amino acid.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-59-2"/>
+    </fig>
+    <fig position="float" id="F3">
+      <label>Figure 3</label>
+      <caption>
+        <p><bold>Pictograms of splice sites and translation start </bold>The height of each letter is proportional to its frequency. At <italic>Arabidopsis thaliana</italic>, Ce <italic>Caenorhabditis elegans</italic>, Dm <italic>Drosophila melanogaster</italic>, Os <italic>Oryza sativa</italic>. (a) splice acceptor site – canonical AG is at positions -2 and -1, (b) splice donor site – canonical GT is at +1 and +2, (c) translation start site – canonical ATG is at +1 to +3, (d) splice acceptor site consensus derived from gene predictions in <italic>A. thaliana </italic>with <italic>C. elegans </italic>parameters.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-59-3"/>
+    </fig>
+    <table-wrap position="float" id="T1">
+      <label>Table 1</label>
+      <caption>
+        <p>Data set characteristics At <italic>Arabidopsis thaliana</italic>, Ce <italic>Caenorhabditis elegans</italic>, Dm <italic>Drosophila melanogaster</italic>, Os <italic>Oryza sativa</italic>.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td align="left">
+              <bold>Genome</bold>
+            </td>
+            <td align="center">
+              <bold>Sequence</bold>
+            </td>
+            <td align="center">
+              <bold>Genes</bold>
+            </td>
+            <td align="center">
+              <bold>GC</bold>
+            </td>
+            <td align="center">
+              <bold>Single-exon Genes</bold>
+            </td>
+            <td align="center">
+              <bold>Mean Exon</bold>
+            </td>
+            <td align="center">
+              <bold>Mean Intron</bold>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left">At</td>
+            <td align="center">1.89 Mb</td>
+            <td align="center">631</td>
+            <td align="center">37.3%</td>
+            <td align="center">19.8%</td>
+            <td align="center">230 bp</td>
+            <td align="center">157 bp</td>
+          </tr>
+          <tr>
+            <td align="left">Ce</td>
+            <td align="center">3.02 Mb</td>
+            <td align="center">626</td>
+            <td align="center">36.1%</td>
+            <td align="center">2.2%</td>
+            <td align="center">220 bp</td>
+            <td align="center">334 bp</td>
+          </tr>
+          <tr>
+            <td align="left">Dm</td>
+            <td align="center">3.66 Mb</td>
+            <td align="center">602</td>
+            <td align="center">43.6%</td>
+            <td align="center">24.9%</td>
+            <td align="center">394 bp</td>
+            <td align="center">948 bp</td>
+          </tr>
+          <tr>
+            <td align="left">Os</td>
+            <td align="center">1.55 Mb</td>
+            <td align="center">424</td>
+            <td align="center">44.5%</td>
+            <td align="center">22.9%</td>
+            <td align="center">237 bp</td>
+            <td align="center">350 bp</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+    <table-wrap position="float" id="T2">
+      <label>Table 2</label>
+      <caption>
+        <p>Gene prediction performance Performance figures for SNAP are derived from 5-fold cross-validation. At <italic>Arabidopsis thaliana</italic>, Ce <italic>Caenorhabditis elegans</italic>, Dm <italic>Drosophila melanogaster</italic>, Os <italic>Oryza sativa</italic>. SN and SP correspond to sensitivity and specificity.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td/>
+            <td/>
+            <td align="center" colspan="2">
+              <bold>Nucleotide</bold>
+            </td>
+            <td align="center" colspan="2">
+              <bold>Exon</bold>
+            </td>
+            <td align="center" colspan="2">
+              <bold>Gene</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>Genome</bold>
+            </td>
+            <td align="left">
+              <bold>Gene finder</bold>
+            </td>
+            <td align="center">
+              <bold>SN</bold>
+            </td>
+            <td align="center">
+              <bold>SP</bold>
+            </td>
+            <td align="center">
+              <bold>SN</bold>
+            </td>
+            <td align="center">
+              <bold>SP</bold>
+            </td>
+            <td align="center">
+              <bold>SN</bold>
+            </td>
+            <td align="center">
+              <bold>SP</bold>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left">At</td>
+            <td align="left">SNAP</td>
+            <td align="center">97.1</td>
+            <td align="center">95.2</td>
+            <td align="center">82.9</td>
+            <td align="center">81.2</td>
+            <td align="center">54.3</td>
+            <td align="center">46.8</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Genscan</td>
+            <td align="center">79.9</td>
+            <td align="center">92.9</td>
+            <td align="center">65.3</td>
+            <td align="center">71.2</td>
+            <td align="center">19.5</td>
+            <td align="center">21.3</td>
+          </tr>
+          <tr>
+            <td align="left">Ce</td>
+            <td align="left">SNAP</td>
+            <td align="center">97.6</td>
+            <td align="center">94.2</td>
+            <td align="center">85.5</td>
+            <td align="center">79.3</td>
+            <td align="center">46.0</td>
+            <td align="center">32.5</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Genefinder</td>
+            <td align="center">98.1</td>
+            <td align="center">95.3</td>
+            <td align="center">89.2</td>
+            <td align="center">86.1</td>
+            <td align="center">51.6</td>
+            <td align="center">48.0</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Genscan</td>
+            <td align="center">81.3</td>
+            <td align="center">91.6</td>
+            <td align="center">48.6</td>
+            <td align="center">66.4</td>
+            <td align="center">10.2</td>
+            <td align="center">9.6</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">HMMGene</td>
+            <td align="center">84.1</td>
+            <td align="center">97.0</td>
+            <td align="center">58.9</td>
+            <td align="center">71.7</td>
+            <td align="center">20.9</td>
+            <td align="center">19.6</td>
+          </tr>
+          <tr>
+            <td align="left">Dm</td>
+            <td align="left">SNAP</td>
+            <td align="center">94.3</td>
+            <td align="center">86.5</td>
+            <td align="center">78.6</td>
+            <td align="center">67.2</td>
+            <td align="center">50.8</td>
+            <td align="center">37.5</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Augustus</td>
+            <td align="center">92.4</td>
+            <td align="center">88.6</td>
+            <td align="center">77.2</td>
+            <td align="center">68.2</td>
+            <td align="center">50.7</td>
+            <td align="center">31.9</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Genscan</td>
+            <td align="center">84.5</td>
+            <td align="center">81.1</td>
+            <td align="center">68.7</td>
+            <td align="center">62.9</td>
+            <td align="center">22.1</td>
+            <td align="center">20.0</td>
+          </tr>
+          <tr>
+            <td align="left">Os</td>
+            <td align="left">SNAP</td>
+            <td align="center">86.2</td>
+            <td align="center">94.0</td>
+            <td align="center">70.2</td>
+            <td align="center">72.4</td>
+            <td align="center">51.2</td>
+            <td align="center">37.0</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Genscan</td>
+            <td align="center">70.3</td>
+            <td align="center">89.8</td>
+            <td align="center">58.2</td>
+            <td align="center">74.8</td>
+            <td align="center">25.9</td>
+            <td align="center">32.0</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+    <table-wrap position="float" id="T3">
+      <label>Table 3</label>
+      <caption>
+        <p>Intra- and inter-species gene prediction accuracy Intra-species performance figures derived from 5-fold cross-validation are along the major diagonal in bold. At <italic>Arabidopsis thaliana</italic>, Ce <italic>Caenorhabditis elegans</italic>, Dm <italic>Drosophila melanogaster</italic>, Os <italic>Oryza sativa</italic>. SN and SP correspond to sensitivity and specificity.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td/>
+            <td/>
+            <td align="center" colspan="8">
+              <bold>Genomic DNA</bold>
+            </td>
+          </tr>
+          <tr>
+            <td/>
+            <td/>
+            <td align="center" colspan="2">
+              <bold>At</bold>
+            </td>
+            <td align="center" colspan="2">
+              <bold>Ce</bold>
+            </td>
+            <td align="center" colspan="2">
+              <bold>Dm</bold>
+            </td>
+            <td align="center" colspan="2">
+              <bold>Os</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="center">
+              <bold>Parameters</bold>
+            </td>
+            <td align="center">
+              <bold>Measure</bold>
+            </td>
+            <td align="center">
+              <bold>SN</bold>
+            </td>
+            <td align="center">
+              <bold>SP</bold>
+            </td>
+            <td align="center">
+              <bold>SN</bold>
+            </td>
+            <td align="center">
+              <bold>SP</bold>
+            </td>
+            <td align="center">
+              <bold>SN</bold>
+            </td>
+            <td align="center">
+              <bold>SP</bold>
+            </td>
+            <td align="center">
+              <bold>SN</bold>
+            </td>
+            <td align="center">
+              <bold>SP</bold>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">At</td>
+            <td align="center">Nuc</td>
+            <td align="center">
+              <bold>97.1</bold>
+            </td>
+            <td align="center">
+              <bold>95.2</bold>
+            </td>
+            <td align="center">78.7</td>
+            <td align="center">91.3</td>
+            <td align="center">77.7</td>
+            <td align="center">68.0</td>
+            <td align="center">90.7</td>
+            <td align="center">71.8</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Exon</td>
+            <td align="center">
+              <bold>82.9</bold>
+            </td>
+            <td align="center">
+              <bold>81.2</bold>
+            </td>
+            <td align="center">44.3</td>
+            <td align="center">52.8</td>
+            <td align="center">38.6</td>
+            <td align="center">24.0</td>
+            <td align="center">57.1</td>
+            <td align="center">42.3</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Gene</td>
+            <td align="center">
+              <bold>54.3</bold>
+            </td>
+            <td align="center">
+              <bold>46.8</bold>
+            </td>
+            <td align="center">20.9</td>
+            <td align="center">11.3</td>
+            <td align="center">18.8</td>
+            <td align="center">5.7</td>
+            <td align="center">20.5</td>
+            <td align="center">9.7</td>
+          </tr>
+          <tr>
+            <td align="center">Ce</td>
+            <td align="center">Nuc</td>
+            <td align="center">83.5</td>
+            <td align="center">91.5</td>
+            <td align="center">
+              <bold>97.6</bold>
+            </td>
+            <td align="center">
+              <bold>94.2</bold>
+            </td>
+            <td align="center">81.3</td>
+            <td align="center">73.6</td>
+            <td align="center">79.7</td>
+            <td align="center">74.5</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Exon</td>
+            <td align="center">40.5</td>
+            <td align="center">49.9</td>
+            <td align="center">
+              <bold>85.5</bold>
+            </td>
+            <td align="center">
+              <bold>79.3</bold>
+            </td>
+            <td align="center">42.2</td>
+            <td align="center">29.8</td>
+            <td align="center">27.5</td>
+            <td align="center">26.0</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Gene</td>
+            <td align="center">25.7</td>
+            <td align="center">18.1</td>
+            <td align="center">
+              <bold>46.0</bold>
+            </td>
+            <td align="center">
+              <bold>32.5</bold>
+            </td>
+            <td align="center">21.9</td>
+            <td align="center">8.8</td>
+            <td align="center">13.9</td>
+            <td align="center">7.3</td>
+          </tr>
+          <tr>
+            <td align="center">Dm</td>
+            <td align="center">Nuc</td>
+            <td align="center">30.0</td>
+            <td align="center">95.3</td>
+            <td align="center">45.9</td>
+            <td align="center">95.0</td>
+            <td align="center">
+              <bold>94.3</bold>
+            </td>
+            <td align="center">
+              <bold>86.5</bold>
+            </td>
+            <td align="center">78.4</td>
+            <td align="center">89.8</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Exon</td>
+            <td align="center">16.5</td>
+            <td align="center">41.3</td>
+            <td align="center">29.9</td>
+            <td align="center">47.2</td>
+            <td align="center">
+              <bold>78.6</bold>
+            </td>
+            <td align="center">
+              <bold>67.2</bold>
+            </td>
+            <td align="center">50.0</td>
+            <td align="center">58.4</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Gene</td>
+            <td align="center">3.2</td>
+            <td align="center">4.3</td>
+            <td align="center">7.8</td>
+            <td align="center">6.9</td>
+            <td align="center">
+              <bold>50.8</bold>
+            </td>
+            <td align="center">
+              <bold>37.5</bold>
+            </td>
+            <td align="center">36.3</td>
+            <td align="center">28.9</td>
+          </tr>
+          <tr>
+            <td align="center">Os</td>
+            <td align="center">Nuc</td>
+            <td align="center">39.3</td>
+            <td align="center">96.3</td>
+            <td align="center">24.9</td>
+            <td align="center">95.5</td>
+            <td align="center">79.8</td>
+            <td align="center">88.7</td>
+            <td align="center">
+              <bold>86.2</bold>
+            </td>
+            <td align="center">
+              <bold>94.0</bold>
+            </td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Exon</td>
+            <td align="center">30.7</td>
+            <td align="center">47.6</td>
+            <td align="center">11.1</td>
+            <td align="center">36.6</td>
+            <td align="center">47.4</td>
+            <td align="center">44.4</td>
+            <td align="center">
+              <bold>70.2</bold>
+            </td>
+            <td align="center">
+              <bold>72.4</bold>
+            </td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Gene</td>
+            <td align="center">5.1</td>
+            <td align="center">6.1</td>
+            <td align="center">5.3</td>
+            <td align="center">7.8</td>
+            <td align="center">27.2</td>
+            <td align="center">17.2</td>
+            <td align="center">
+              <bold>51.2</bold>
+            </td>
+            <td align="center">
+              <bold>37.0</bold>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+    <table-wrap position="float" id="T4">
+      <label>Table 4</label>
+      <caption>
+        <p>Performance of foreign and bootstrapped parameters The foreign parameter data (top part of the table) is similar to table <xref ref-type="table" rid="T4">4</xref> but use the default rather than tuned architectures (see Methods). The bold face values are determined by 5-fold cross-validation within the same species. At <italic>Arabidopsis thaliana</italic>, Ce <italic>Caenorhabditis elegans</italic>, Dm <italic>Drosophila melanogaster</italic>, Os <italic>Oryza sativa</italic>. Sensitivity (NSN) and specificity (NSP) are reported at the nucleotide level. The bootstrapped values (bottom part of the table) are derived from parameter estimates based on gene predictions and no actual data. In these experiments, only inter-species gene parameters were used; dashes represent cells that would contain intra-species predictions.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td/>
+            <td/>
+            <td align="center" colspan="8">
+              <bold>Genomic DNA</bold>
+            </td>
+          </tr>
+          <tr>
+            <td/>
+            <td/>
+            <td align="center" colspan="2">
+              <bold>At</bold>
+            </td>
+            <td align="center" colspan="2">
+              <bold>Ce</bold>
+            </td>
+            <td align="center" colspan="2">
+              <bold>Dm</bold>
+            </td>
+            <td align="center" colspan="2">
+              <bold>Os</bold>
+            </td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">
+              <bold>Parameters</bold>
+            </td>
+            <td align="center">
+              <bold>NSN</bold>
+            </td>
+            <td align="center">
+              <bold>NSP</bold>
+            </td>
+            <td align="center">
+              <bold>NSN</bold>
+            </td>
+            <td align="center">
+              <bold>NSP</bold>
+            </td>
+            <td align="center">
+              <bold>NSN</bold>
+            </td>
+            <td align="center">
+              <bold>NSP</bold>
+            </td>
+            <td align="center">
+              <bold>NSN</bold>
+            </td>
+            <td align="center">
+              <bold>NSP</bold>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left">
+              <bold>Actual</bold>
+            </td>
+            <td align="left">At</td>
+            <td align="center">
+              <bold>97.6</bold>
+            </td>
+            <td align="center">
+              <bold>94.3</bold>
+            </td>
+            <td align="center">81.0</td>
+            <td align="center">90.1</td>
+            <td align="center">75.3</td>
+            <td align="center">63.6</td>
+            <td align="center">90.7</td>
+            <td align="center">68.5</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Ce</td>
+            <td align="center">86.3</td>
+            <td align="center">91.0</td>
+            <td align="center">
+              <bold>98.1</bold>
+            </td>
+            <td align="center">
+              <bold>92.5</bold>
+            </td>
+            <td align="center">85.1</td>
+            <td align="center">72.4</td>
+            <td align="center">79.8</td>
+            <td align="center">73.0</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Dm</td>
+            <td align="center">26.0</td>
+            <td align="center">96.0</td>
+            <td align="center">38.6</td>
+            <td align="center">96.0</td>
+            <td align="center">
+              <bold>93.8</bold>
+            </td>
+            <td align="center">
+              <bold>87.0</bold>
+            </td>
+            <td align="center">76.1</td>
+            <td align="center">89.8</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Os</td>
+            <td align="center">36.0</td>
+            <td align="center">96.9</td>
+            <td align="center">21.7</td>
+            <td align="center">96.1</td>
+            <td align="center">78.5</td>
+            <td align="center">88.7</td>
+            <td align="center">
+              <bold>85.1</bold>
+            </td>
+            <td align="center">
+              <bold>94.2</bold>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="10">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>Bootstrapped</bold>
+            </td>
+            <td align="left">At</td>
+            <td align="center">
+              <bold>-</bold>
+            </td>
+            <td align="center">
+              <bold>-</bold>
+            </td>
+            <td align="center">95.8</td>
+            <td align="center">88.2</td>
+            <td align="center">94.7</td>
+            <td align="center">76.0</td>
+            <td align="center">92.1</td>
+            <td align="center">76.0</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Ce</td>
+            <td align="center">96.6</td>
+            <td align="center">93.2</td>
+            <td align="center">
+              <bold>-</bold>
+            </td>
+            <td align="center">
+              <bold>-</bold>
+            </td>
+            <td align="center">95.7</td>
+            <td align="center">80.3</td>
+            <td align="center">91.0</td>
+            <td align="center">79.2</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Dm</td>
+            <td align="center">75.2</td>
+            <td align="center">95.5</td>
+            <td align="center">90.0</td>
+            <td align="center">94.9</td>
+            <td align="center">
+              <bold>-</bold>
+            </td>
+            <td align="center">
+              <bold>-</bold>
+            </td>
+            <td align="center">74.1</td>
+            <td align="center">88.7</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Os</td>
+            <td align="center">85.6</td>
+            <td align="center">95.8</td>
+            <td align="center">76.5</td>
+            <td align="center">94.3</td>
+            <td align="center">92.5</td>
+            <td align="center">86.6</td>
+            <td align="center">
+              <bold>-</bold>
+            </td>
+            <td align="center">
+              <bold>-</bold>
+            </td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">At Ce</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">95.7</td>
+            <td align="center">78.3</td>
+            <td align="center">92.8</td>
+            <td align="center">77.8</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">At Dm</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">96.7</td>
+            <td align="center">91.1</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">85.4</td>
+            <td align="center">80.9</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">At Os</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">95.5</td>
+            <td align="center">90.3</td>
+            <td align="center">94.0</td>
+            <td align="center">81.2</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Ce Dm</td>
+            <td align="center">94.3</td>
+            <td align="center">94.4</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">84.0</td>
+            <td align="center">83.0</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Ce Os</td>
+            <td align="center">94.5</td>
+            <td align="center">94.6</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">94.7</td>
+            <td align="center">83.3</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Dm Os</td>
+            <td align="center">84.9</td>
+            <td align="center">95.8</td>
+            <td align="center">88.4</td>
+            <td align="center">94.9</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">At Ce Dm</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">88.1</td>
+            <td align="center">80.2</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">At Ce Os</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">95.2</td>
+            <td align="center">80.9</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">At Dm Os</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">95.8</td>
+            <td align="center">91.9</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="left">Ce Dm Os</td>
+            <td align="center">93.4</td>
+            <td align="center">95.1</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+  </sec>
+</back>

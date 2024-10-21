@@ -1,0 +1,2416 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Evol Bioinform Online</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Evol. Bioinform. Online</journal-id>
+    <journal-id journal-id-type="publisher-id">101256319</journal-id>
+    <journal-title-group>
+      <journal-title>Evolutionary Bioinformatics Online</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1176-9343</issn>
+    <publisher>
+      <publisher-name>Libertas Academica</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3767577</article-id>
+    <article-id pub-id-type="doi">10.4137/EBO.S12751</article-id>
+    <article-id pub-id-type="publisher-id">ebo-9-2013-343</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Original Research</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>POPBAM: Tools for Evolutionary Analysis of Short Read Sequence Alignments</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Garrigan</surname>
+          <given-names>Daniel</given-names>
+        </name>
+        <xref ref-type="corresp" rid="c1-ebo-9-2013-343"/>
+      </contrib>
+      <aff id="af1-ebo-9-2013-343">Department of Biology, University of Rochester, Rochester, New York 14627 USA.</aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="c1-ebo-9-2013-343">Corresponding author email: <email>dgarriga@bio.rochester.edu</email></corresp>
+    </author-notes>
+    <pub-date pub-type="collection">
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>01</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <volume>9</volume>
+    <fpage>343</fpage>
+    <lpage>353</lpage>
+    <permissions>
+      <copyright-statement>© 2013 the author(s), publisher and licensee Libertas Academica Ltd.</copyright-statement>
+      <copyright-year>2013</copyright-year>
+      <license license-type="open-access">
+        <license-p>This is an open access article published under the Creative Commons CC-BY-NC 3.0 license.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>While many bioinformatics tools currently exist for assembling and discovering variants from next-generation sequence data, there are very few tools available for performing evolutionary analyses from these data. Evolutionary and population genomics studies hold great promise for providing valuable insights into natural selection, the effect of mutations on phenotypes, and the origin of species. Thus, there is a need for an extensible and flexible computational tool that can function into a growing number of evolutionary bioinformatics pipelines.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>This paper describes the POPBAM software, which is a comprehensive set of computational tools for evolutionary analysis of whole-genome alignments consisting of multiple individuals, from multiple populations or species. POPBAM works directly from BAM-formatted assembly files, calls variant sites, and calculates a variety of commonly used evolutionary sequence statistics. POPBAM is designed primarily to perform analyses in sliding windows across chromosomes or scaffolds. POPBAM accurately measures nucleotide diversity, population divergence, linkage disequilibrium, and the frequency spectrum of mutations from two or more populations. POPBAM can also produce phylogenetic trees of all samples in a BAM file. Finally, I demonstrate that the implementation of POPBAM is both fast and memory-efficient, and also can feasibly scale to the analysis of large BAM files with many individuals and populations.</p>
+        <p><bold>Software:</bold> The POPBAM program is written in C/C++ and is available from <ext-link ext-link-type="uri" xlink:href="http://dgarriga.github.io/POPBAM">http://dgarriga.github.io/POPBAM</ext-link>. The program has few dependencies and can be built on a variety of Linux platforms. The program is open-source and users are encouraged to participate in the development of this resource.</p>
+      </sec>
+    </abstract>
+    <kwd-group>
+      <kwd>divergence</kwd>
+      <kwd>linkage disequilibrium</kwd>
+      <kwd>polymorphism</kwd>
+      <kwd>natural selection</kwd>
+      <kwd>next-generation sequencing</kwd>
+    </kwd-group>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Introduction</title>
+    <p>Evolutionary genetics research routinely capitalizes on the vast amount of data made available by next-generation sequencing technologies. It is now possible to generate high-quality, high-coverage sequence of genomes from conspecific samples or samples from closely related species. These new whole-genome evolutionary analyses are yielding remarkable insights into the nature of adaptive evolution, the genetic basis of quantitative traits, and the origin of species.<xref ref-type="bibr" rid="b1-ebo-9-2013-343">1</xref>–<xref ref-type="bibr" rid="b5-ebo-9-2013-343">5</xref> Many of these new studies employ chromosome-level spatial scans to identify regions of potential interest. For example, Ellegren et al<xref ref-type="bibr" rid="b2-ebo-9-2013-343">2</xref> scanned the genomes of two closely related species of <italic>Ficedula</italic> flycatcher to identify genomic regions with elevated levels of sequence divergence to aid in the identification of genomic regions involved in the evolution of reproductive isolation. Similarly, Jones et al<xref ref-type="bibr" rid="b4-ebo-9-2013-343">4</xref> scanned the genomes of freshwater and marine sticklebacks to identify the genetic basis for adaptation to freshwater and marine environments. Finally, Garrigan et al<xref ref-type="bibr" rid="b3-ebo-9-2013-343">3</xref> used whole-genome scans to discover regions of gene flow between species of <italic>Drosophila</italic> that have already evolved post-zygotic reproductive isolation.</p>
+    <p>There is a rapidly increasing number of computational tools for performing either reference-based or <italic>de novo</italic> genome assembly from short-read next-generation sequence data. For reference-based assembly, much of the research has concentrated on developing efficient algorithms for indexing either the reference sequence, the short-read sequences, or both (see Li and Homer<xref ref-type="bibr" rid="b6-ebo-9-2013-343">6</xref> for a review). Similarly, the development of algorithms for <italic>de novo</italic> sequence assembly is also an active field of research and many methods seek to optimize the resolution of the large de Bruijn (or related) graphs into contigs and scaffolds (see Miller et al<xref ref-type="bibr" rid="b7-ebo-9-2013-343">7</xref> for a review). However, tools for sequence assembly are not the only areas of active research. Significant progress is being made on improving algorithms for many downstream tasks, such as improving scaffold construction,<xref ref-type="bibr" rid="b8-ebo-9-2013-343">8</xref> dealing with repetitive sequence,<xref ref-type="bibr" rid="b9-ebo-9-2013-343">9</xref> calling single nucleotide polymorphisms (SNPs),<xref ref-type="bibr" rid="b10-ebo-9-2013-343">10</xref> and phasing of haplotypes.<xref ref-type="bibr" rid="b11-ebo-9-2013-343">11</xref></p>
+    <p>Current research should be directed towards the development of computational tools for assembling and refining high-quality alignments from next-generation sequence data. However, much less development has been directed towards downstream evolutionary-based analyses, such as measuring levels of nucleotide diversity and linkage disequilibrium (LD), fitting models of population divergence, and testing for natural selection. It is evident that the analysis tools that evolutionary geneticists have relied on for so long do not feasibly scale to the level of whole-genome analysis.<xref ref-type="bibr" rid="b12-ebo-9-2013-343">12</xref> Most evolutionary investigators working with large whole-genome alignments are forced to cobble together a custom bioinformatics pipeline and develop their own tools to parse the needed information. In this paper, I describe an effort to provide a publicly available solution for the evolutionary analysis portion of a next-generation sequencing pipeline. The POPBAM program is a comprehensive suite of evolutionary genomics tools that can be used to analyze whole-genome alignments from multiple individuals, from multiple populations. POPBAM is ideally designed to work in sliding windows across chromosomes or scaffolds. POPBAM has been in continuous development since 2010 and is currently in its third beta release. This paper describes the basic functionality, usage, and performance of the program. POPBAM is also open-source and the community is encouraged to request and help develop needed functionality.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>Overview of the POPBAM program</title>
+      <p>The POPBAM program is written in a mixture of the C and C++ languages. POPBAM is provided as open-source software under the MIT license. POPBAM is currently in its third beta release. The source code is freely available through the GitHub website (<ext-link ext-link-type="uri" xlink:href="http://dgarriga.github.io/POPBAM">http://dgarriga.github.io/POPBAM</ext-link>). The only dependency for compiling POPBAM is the zlib compression library (<ext-link ext-link-type="uri" xlink:href="http://zlib.net">http://zlib.net</ext-link>). POPBAM successfully compiles with the GCC compiler (versions 4.4.6 up to 4.7.2 have been tested with the current POPBAM source) and was successfully built with the Microsoft Visual C++ compiler (version 11.0.60315). However, successful compilation requires the C++ 11 standard library.<xref ref-type="bibr" rid="b13-ebo-9-2013-343">13</xref> Currently, POPBAM comprises more than 17,000 lines of source code. The majority of the source code for reading BAM files and constructing pileups was forked from SAMtools version 0.1.18 (<ext-link ext-link-type="uri" xlink:href="https://github.com/samtools/htslib">https://github.com/samtools/htslib</ext-link>), which also includes code for the klib library for constructing generic hash tables (<ext-link ext-link-type="uri" xlink:href="https://github.com/attractivechaos/klib">https://github.com/attractivechaos/klib</ext-link>). Furthermore, source code from the PHYLIP version 3.69<xref ref-type="bibr" rid="b14-ebo-9-2013-343">14</xref> program was incorporated and modified to construct neighbor-joining trees.</p>
+    </sec>
+    <sec sec-type="methods">
+      <title>Inputting data into POPBAM</title>
+      <p>The sequence alignment/map (SAM) format and the compressed version (BAM) are the <italic>de facto</italic> standard for storing reference-based next-generation sequence assemblies. BAM files include a header containing metadata, the sequence reads, mapping and base qualities, and alignment information in an efficiently compressed format.<xref ref-type="bibr" rid="b15-ebo-9-2013-343">15</xref> While POPBAM is capable of reading any BAM file, it is specifically designed to work with merged BAM files that contain reads from multiple samples (individuals). Furthermore, POPBAM is able to group the individual samples according to the population from which it was taken. How POPBAM deals with assigning reads to populations depends upon the information in the header of the BAM file itself. A BAM file header will typically include a sequence dictionary with information about the reference sequence used to generate the assembly and additional information about each read group. A read group typically represents the set of short read sequences generated from a single lane in an Illumina sequencer. In the BAM header, individual read groups can be annotated as coming from a particular sample, or individual (denoted with the standard tag “SM” in the “@RG” line in the BAM header). Therefore, individual samples can be represented by multiple lanes from a sequencer. As an additional layer of hierarchical grouping, POPBAM allows samples to be grouped according to population; this is achieved by the user inserting a modified “@RG” header line that includes the new “PO” tag. The “PO” tag can be any string, as long as the string is identical between samples from the same population.</p>
+      <p>As an example of how POPBAM assigns reads to samples and populations, consider a BAM file that has three read groups, which are labeled R21, R22, and R25. In this hypothetical example, the R22 and R25 read groups are from two different individuals of the fruit fly species <italic>Drosophila melanogaster</italic> called “MEL001” and “MEL002”, respectively. The third read group, R21, is from a single individual of the related species <italic>D. mauritiana</italic> labeled “MAU001”. Thus, the above read group information from the header of this example BAM file would appear as the following three lines:</p>
+      <table-wrap id="t3-ebo-9-2013-343" position="anchor">
+        <table frame="void" rules="none">
+          <tbody>
+            <tr>
+              <td align="left" valign="top" rowspan="1" colspan="1">@RG</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">ID:R21</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">SM:MAU001</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">PO:MAU</td>
+            </tr>
+            <tr>
+              <td align="left" valign="top" rowspan="1" colspan="1">@RG</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">ID:R22</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">SM:MEL001</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">PO:MEL</td>
+            </tr>
+            <tr>
+              <td align="left" valign="top" rowspan="1" colspan="1">@RG</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">ID:R25</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">SM:MEL002</td>
+              <td align="left" valign="top" rowspan="1" colspan="1">PO:MEL</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p>POPBAM will analyze the above example as two populations, “MAU” and “MEL”, with the “MEL” population having two samples, each represented by a single read group and the “MAU” population represented by only one sample and one read group. The non-standard “PO” tag has to be added manually by the user by editing the text of the BAM header and then re-headering the BAM file with programs such as SAMtools<xref ref-type="bibr" rid="b15-ebo-9-2013-343">15</xref> or PICARD (<ext-link ext-link-type="uri" xlink:href="http://picard.sourceforge.net">http://picard.sourceforge.net</ext-link>). Alternatively, POPBAM has an option to allow the user to input the BAM header as a separate text file. When adding the “PO” tag, please be advised that the fields of the read group entry must be tab-delimited.</p>
+    </sec>
+    <sec>
+      <title>SNP calling</title>
+      <p>POPBAM will call the consensus genotype for each individual included in a BAM file. POPBAM has the option of calling either a haploid or diploid genotype. The method that POPBAM uses for calling genotypes follows the method outlined in Section 3 of the Supplementary Text of Li et al.<xref ref-type="bibr" rid="b16-ebo-9-2013-343">16</xref> Briefly, let <italic>α</italic><italic><sub>nk</sub></italic> be the probability that exactly <italic>k</italic> reads have errors out of a total of <italic>n</italic> reads covering a given genomic position. If the sequences of all reads are assumed to be generated independently, then we might expect that</p>
+      <disp-formula id="FD1">
+        <label>(1)</label>
+        <mml:math id="mm1">
+          <mml:mrow>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>α</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mi>k</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:mrow>
+              <mml:mo>(</mml:mo>
+              <mml:mrow>
+                <mml:mtable>
+                  <mml:mtr>
+                    <mml:mtd>
+                      <mml:mi>n</mml:mi>
+                    </mml:mtd>
+                  </mml:mtr>
+                  <mml:mtr>
+                    <mml:mtd>
+                      <mml:mi>k</mml:mi>
+                    </mml:mtd>
+                  </mml:mtr>
+                </mml:mtable>
+              </mml:mrow>
+              <mml:mo>)</mml:mo>
+            </mml:mrow>
+            <mml:munderover>
+              <mml:mo>∏</mml:mo>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+              <mml:mi>k</mml:mi>
+            </mml:munderover>
+            <mml:mrow>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>ɛ</mml:mi>
+                </mml:mrow>
+                <mml:mi>i</mml:mi>
+              </mml:msub>
+            </mml:mrow>
+            <mml:munderover>
+              <mml:mo>∏</mml:mo>
+              <mml:mrow>
+                <mml:mi>j</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mi>k</mml:mi>
+                <mml:mo>+</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+              <mml:mi>n</mml:mi>
+            </mml:munderover>
+            <mml:mrow>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mn>1</mml:mn>
+              <mml:mo>-</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>ɛ</mml:mi>
+                </mml:mrow>
+                <mml:mi>j</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+            </mml:mrow>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>where <italic>ɛ</italic><italic><sub>x</sub></italic> is the probability that the base in read <italic>x</italic> is incorrectly called. Empirically, the values of <italic>ɛ</italic> are the error probabilities generated during sequencing. However, if errors can be correlated, then we can re-write <italic>α</italic><italic><sub>nk</sub></italic> as</p>
+      <disp-formula id="FD2">
+        <label>(2)</label>
+        <mml:math id="mm2">
+          <mml:mrow>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>α</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mi>k</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>≈</mml:mo>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>c</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mi>k</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:munderover>
+              <mml:mo>∏</mml:mo>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+              <mml:mi>k</mml:mi>
+            </mml:munderover>
+            <mml:mrow>
+              <mml:msubsup>
+                <mml:mrow>
+                  <mml:mi>ɛ</mml:mi>
+                </mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mi>λ</mml:mi>
+              </mml:msubsup>
+            </mml:mrow>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>in which <italic>c</italic><italic><sub>nk</sub></italic> is the probability of <italic>k</italic> errors, given <italic>k</italic> − 1 errors, and λ is a parameter that controls the error dependency. POPBAM assumes that λ = 0.85.<xref ref-type="bibr" rid="b16-ebo-9-2013-343">16</xref> Furthermore, POPBAM improves the accuracy of the consensus genotype call by calculating the probability in <xref rid="FD2" ref-type="disp-formula">Equation 2</xref> separately for reads coming from different strands since errors are expected to be independent between reads for the forward and reverse strands.</p>
+      <p>POPBAM has a number of options for filtering sites based on different assessments of data quality. All POPBAM commands have global options for filtering reads on quality. For example, the user can set a minimum base quality score for POPBAM to consider individuals sites. Similarly, the user can set minimum mapping qualities for individual reads to be considered, a minimum root mean square mapping score for a consensus base to be called, or a minimum SNP quality score to consider a variant as valid. All quality scores are implemented as Phred scores.<xref ref-type="bibr" rid="b17-ebo-9-2013-343">17</xref> Quality scores are assumed to be on the Sanger scale; however, POPBAM can also convert quality scores from the Illumina 1.3+ format.<xref ref-type="bibr" rid="b18-ebo-9-2013-343">18</xref> Lastly, users may also exclude sites that either do not have a minimum number of reads aligned for an individual sample or exceed a maximum number of mapped reads. Sites with insertions or deletions are detected by POPBAM, but not considered for further analysis.</p>
+    </sec>
+    <sec>
+      <title>Evolutionary analyses</title>
+      <p><xref ref-type="table" rid="t1-ebo-9-2013-343">Table 1</xref> lists the seven main command options for the POPBAM program. The first command is called <bold>snp</bold> and it is used to output the raw genotype calls to a formatted output file, as described above. The default output for SNP calls is native POPBAM format, which is a tab-delimited text file. However, the <bold>snp</bold> function will also output SNP calls to a format that can be read by the SweepFinder program<xref ref-type="bibr" rid="b19-ebo-9-2013-343">19</xref> and in the output format of the ms program,<xref ref-type="bibr" rid="b20-ebo-9-2013-343">20</xref> which can be post-processed by programs using the libsequence library.<xref ref-type="bibr" rid="b21-ebo-9-2013-343">21</xref></p>
+      <p>POPBAM provides a range of options for analyzing haplotype structure and diversity. Most haplotype- based options are implemented in the <bold>haplo</bold> and <bold>ld</bold> commands and focus on statistics that are useful for detecting natural selection or population structure. Please note that POPBAM does not have the functionality to reconstruct haplotypes from unphased diploid data. There are three analysis options accessible via the <bold>haplo</bold> command. The first option is simply calculating the number of distinct haplotypes spanning the entire length of a window and the corresponding haplotype diversity<xref ref-type="bibr" rid="b22-ebo-9-2013-343">22</xref> for each population. The second option calculates the site-specific extended haplotype homozygosity (<italic>EHHS</italic>) statistic for detecting partial selective sweeps.<xref ref-type="bibr" rid="b23-ebo-9-2013-343">23</xref> The POPBAM implementation of the <italic>EHHS</italic> statistic works by first scanning each polymorphic site in a window and recording the partition induced by the site within each population (the site type). For a given variable site, if the ancestral allele is denoted as <italic>A</italic> and the derived allele as <italic>V</italic>, the site type at SNP <italic>i</italic> can be represented as the bit array <bold><italic>T</italic></bold><italic><sub>i</sub></italic> = {[<italic>T</italic><italic><sub>i</sub></italic><sub>,1</sub> = <italic>V</italic>], [<italic>T</italic><italic><sub>i</sub></italic><sub>,2</sub> = <italic>V</italic>], …, [<italic>T</italic><italic><sub>i</sub></italic><sub>,</sub><italic><sub>n</sub></italic> = <italic>V</italic>]} (square brackets indicate Iverson bracket). Thus, an individual is represented by a zero at the site when the sample has a consensus base identical to the reference (or outgroup) allele and a one when that individual carries the derived allele. POPBAM then calculates <italic>EHHS</italic> using the vector <bold><italic>T</italic></bold><italic><sub>i</sub></italic> (and its complement <bold><italic>T</italic></bold><italic><sub>i</sub></italic> ′) that appears the most frequently in the window; this site is considered the “core SNP”. If all site types are singletons, then there is no strong LD and the statistic has negligible biological meaning; in this case POPBAM will simply use the last site type that it recorded. Let <italic>h</italic><italic><sub>s</sub></italic> be the unbiased estimate of homozygosity at the core SNP,</p>
+      <disp-formula id="FD3">
+        <label>(3)</label>
+        <mml:math id="mm3">
+          <mml:mrow>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>h</mml:mi>
+              </mml:mrow>
+              <mml:mi>s</mml:mi>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+                <mml:mo>+</mml:mo>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+                <mml:mo>-</mml:mo>
+                <mml:mi>n</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:mi>n</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mn>1</mml:mn>
+                <mml:mo stretchy="false">)</mml:mo>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>where <italic>j</italic> is the count of the derived allele and <italic>n</italic> is the total sample size.<xref ref-type="bibr" rid="b24-ebo-9-2013-343">24</xref> Similarly, define <italic>h</italic><italic><sub>k</sub></italic> as an unbiased estimate of extended haplotype homozygosity over the entire genomic interval,</p>
+      <disp-formula id="FD4">
+        <label>(4)</label>
+        <mml:math id="mm4">
+          <mml:mrow>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>h</mml:mi>
+              </mml:mrow>
+              <mml:mi>k</mml:mi>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:mstyle displaystyle="true">
+                  <mml:munderover>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>K</mml:mi>
+                  </mml:munderover>
+                </mml:mstyle>
+                <mml:mrow>
+                  <mml:msubsup>
+                    <mml:mrow>
+                      <mml:mi>k</mml:mi>
+                    </mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mn>2</mml:mn>
+                  </mml:msubsup>
+                  <mml:mo>-</mml:mo>
+                  <mml:mi>n</mml:mi>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:mi>n</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mn>1</mml:mn>
+                <mml:mo stretchy="false">)</mml:mo>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>in which <italic>k</italic><italic><sub>i</sub></italic> is the count of extended haplotype <italic>i</italic> and <italic>K</italic> is the total number of unique extended haplotypes. Then,</p>
+      <disp-formula id="FD5">
+        <label>(5)</label>
+        <mml:math id="mm5">
+          <mml:mrow>
+            <mml:mi>E</mml:mi>
+            <mml:mi>H</mml:mi>
+            <mml:mi>H</mml:mi>
+            <mml:mi>S</mml:mi>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>h</mml:mi>
+                  </mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:msub>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>h</mml:mi>
+                  </mml:mrow>
+                  <mml:mi>s</mml:mi>
+                </mml:msub>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:mstyle displaystyle="true">
+                  <mml:munderover>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>K</mml:mi>
+                  </mml:munderover>
+                </mml:mstyle>
+                <mml:mrow>
+                  <mml:msubsup>
+                    <mml:mrow>
+                      <mml:mi>k</mml:mi>
+                    </mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mn>2</mml:mn>
+                  </mml:msubsup>
+                  <mml:mo>-</mml:mo>
+                  <mml:mi>n</mml:mi>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+                <mml:mo>+</mml:mo>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+                <mml:mo>-</mml:mo>
+                <mml:mi>n</mml:mi>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:mo>.</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>It is expected that <italic>EHHS</italic> = 0 when each individual in the sample carries a unique haplotype, while <italic>EHHS</italic> = 1 when the haplotype homozygosity is identical to the site homozygosity at the core SNP. The POPBAM <bold>haplo</bold> command also implements a measure of relative between-population haplotype sequence identity</p>
+      <disp-formula id="FD6">
+        <label>(6)</label>
+        <mml:math id="mm6">
+          <mml:mrow>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>G</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mtext>min</mml:mtext>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:mtext>min</mml:mtext>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>d</mml:mi>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>x</mml:mi>
+                    <mml:mi>y</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo stretchy="false">)</mml:mo>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mover accent="true">
+                      <mml:mi>d</mml:mi>
+                      <mml:mo>¯</mml:mo>
+                    </mml:mover>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>x</mml:mi>
+                    <mml:mi>y</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+              </mml:mrow>
+            </mml:mfrac>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>(see below for definitions of <italic>d̄</italic><italic><sub>xy</sub></italic> and <italic>d</italic><italic><sub>xy</sub></italic>), which is particularly sensitive to the effects of recent gene flow.<xref ref-type="bibr" rid="b25-ebo-9-2013-343">25</xref></p>
+      <p>The POPBAM <bold>ld</bold> command includes options to calculate Kelly’s <italic>Z</italic><italic><sub>nS</sub></italic> statistic,<xref ref-type="bibr" rid="b26-ebo-9-2013-343">26</xref> the <italic>ω</italic><sub>max</sub> statistic for detecting recent selective sweeps,<xref ref-type="bibr" rid="b27-ebo-9-2013-343">27</xref> and two site congruency statistics, Wall’s <italic>B</italic> and <italic>Q</italic>.<xref ref-type="bibr" rid="b28-ebo-9-2013-343">28</xref> The <italic>Z</italic><italic><sub>nS</sub></italic> statistic is simply defined as the average pairwise <italic>r</italic><sup>2</sup> value,</p>
+      <disp-formula id="FD7">
+        <label>(7)</label>
+        <mml:math id="mm7">
+          <mml:mrow>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>Z</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mi>S</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mn>2</mml:mn>
+              <mml:mrow>
+                <mml:mi>S</mml:mi>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:mi>S</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mn>1</mml:mn>
+                <mml:mo stretchy="false">)</mml:mo>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:munderover>
+              <mml:mo>∑</mml:mo>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>S</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+            </mml:munderover>
+            <mml:mrow>
+              <mml:munderover>
+                <mml:mo>∑</mml:mo>
+                <mml:mrow>
+                  <mml:mi>j</mml:mi>
+                  <mml:mo>=</mml:mo>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>+</mml:mo>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mi>S</mml:mi>
+              </mml:munderover>
+              <mml:mrow>
+                <mml:msubsup>
+                  <mml:mrow>
+                    <mml:mi>r</mml:mi>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msubsup>
+              </mml:mrow>
+            </mml:mrow>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>in which <italic>r</italic><italic><sub>ij</sub></italic> is the correlation coefficient of allele frequencies at SNPs <italic>i</italic> and <italic>j</italic> and <italic>S</italic> is the number of segregating sites in a window.<xref ref-type="bibr" rid="b26-ebo-9-2013-343">26</xref> POPBAM has the option of excluding singleton sites when calculating the pairwise values of <italic>r</italic><sup>2</sup>. Similarly, for each segregating site, LD can be partitioned on either side of the site to calculate ω:</p>
+      <disp-formula id="FD8">
+        <label>(8)</label>
+        <mml:math id="mm8">
+          <mml:mrow>
+            <mml:mi>ω</mml:mi>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mrow>
+                        <mml:mo>(</mml:mo>
+                        <mml:mrow>
+                          <mml:mrow>
+                            <mml:mo>(</mml:mo>
+                            <mml:mrow>
+                              <mml:mtable>
+                                <mml:mtr>
+                                  <mml:mtd>
+                                    <mml:mi>l</mml:mi>
+                                  </mml:mtd>
+                                </mml:mtr>
+                                <mml:mtr>
+                                  <mml:mtd>
+                                    <mml:mn>2</mml:mn>
+                                  </mml:mtd>
+                                </mml:mtr>
+                              </mml:mtable>
+                            </mml:mrow>
+                            <mml:mo>)</mml:mo>
+                          </mml:mrow>
+                          <mml:mo>+</mml:mo>
+                          <mml:mrow>
+                            <mml:mo>(</mml:mo>
+                            <mml:mrow>
+                              <mml:mtable columnalign="left">
+                                <mml:mtr columnalign="left">
+                                  <mml:mtd columnalign="left">
+                                    <mml:mrow>
+                                      <mml:mi>S</mml:mi>
+                                      <mml:mo>-</mml:mo>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:mtd>
+                                </mml:mtr>
+                                <mml:mtr columnalign="left">
+                                  <mml:mtd columnalign="left">
+                                    <mml:mn>2</mml:mn>
+                                  </mml:mtd>
+                                </mml:mtr>
+                              </mml:mtable>
+                            </mml:mrow>
+                            <mml:mo>)</mml:mo>
+                          </mml:mrow>
+                        </mml:mrow>
+                        <mml:mo>)</mml:mo>
+                      </mml:mrow>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mo>-</mml:mo>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                </mml:msup>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:munder>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mo>,</mml:mo>
+                          <mml:mi>j</mml:mi>
+                          <mml:mo>∈</mml:mo>
+                          <mml:mi>L</mml:mi>
+                        </mml:mrow>
+                      </mml:munder>
+                    </mml:mstyle>
+                    <mml:mrow>
+                      <mml:msubsup>
+                        <mml:mrow>
+                          <mml:mi>r</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mi>j</mml:mi>
+                        </mml:mrow>
+                        <mml:mn>2</mml:mn>
+                      </mml:msubsup>
+                    </mml:mrow>
+                    <mml:mo>+</mml:mo>
+                    <mml:mstyle displaystyle="true">
+                      <mml:munder>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mo>,</mml:mo>
+                          <mml:mi>j</mml:mi>
+                          <mml:mo>∈</mml:mo>
+                          <mml:mi>R</mml:mi>
+                        </mml:mrow>
+                      </mml:munder>
+                    </mml:mstyle>
+                    <mml:mrow>
+                      <mml:msubsup>
+                        <mml:mrow>
+                          <mml:mi>r</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mi>j</mml:mi>
+                        </mml:mrow>
+                        <mml:mn>2</mml:mn>
+                      </mml:msubsup>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:mn>1</mml:mn>
+                <mml:mo>/</mml:mo>
+                <mml:mi>l</mml:mi>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:mi>s</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mi>l</mml:mi>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:munder>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>∈</mml:mo>
+                      <mml:mi>L</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>∈</mml:mo>
+                      <mml:mi>R</mml:mi>
+                    </mml:mrow>
+                  </mml:munder>
+                </mml:mstyle>
+                <mml:mrow>
+                  <mml:msubsup>
+                    <mml:mrow>
+                      <mml:mi>r</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                    <mml:mn>2</mml:mn>
+                  </mml:msubsup>
+                </mml:mrow>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:mo>.</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>Then, <italic>ω</italic><sub>max</sub> is derived from the site in the window that yields the maximum value of <italic>ω</italic>.<xref ref-type="bibr" rid="b27-ebo-9-2013-343">27</xref> Lastly, Wall’s <italic>B</italic> and <italic>Q</italic> statistics focus on runs of segregating sites that partition the data in an identical pattern. If site type <bold><italic>T</italic></bold><italic><sub>i</sub></italic> = <bold><italic>T</italic></bold><italic><sub>i</sub></italic><sub>+1</sub> or <bold><italic>T</italic></bold><italic><sub>i</sub></italic><bold><italic>= T</italic></bold><italic><sub>i</sub></italic><sub>+1</sub>′ (its complement), then one is added to variable <bold><italic>B</italic></bold>′. Wall’s <italic>B</italic> statistic is then,</p>
+      <disp-formula id="FD9">
+        <label>(9)</label>
+        <mml:math id="mm9">
+          <mml:mrow>
+            <mml:mi>B</mml:mi>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:msup>
+                <mml:mi>B</mml:mi>
+                <mml:mo>′</mml:mo>
+              </mml:msup>
+              <mml:mrow>
+                <mml:mi>S</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+            </mml:mfrac>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>and similarly, for Wall’s <italic>Q</italic>,</p>
+      <disp-formula id="FD10">
+        <label>(10)</label>
+        <mml:math id="mm10">
+          <mml:mrow>
+            <mml:mi>Q</mml:mi>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:msup>
+                  <mml:mi>B</mml:mi>
+                  <mml:mo>′</mml:mo>
+                </mml:msup>
+                <mml:mo>+</mml:mo>
+                <mml:mo>|</mml:mo>
+                <mml:mi>M</mml:mi>
+                <mml:mo>|</mml:mo>
+                <mml:mo stretchy="false">)</mml:mo>
+              </mml:mrow>
+              <mml:mi>S</mml:mi>
+            </mml:mfrac>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>in which |<italic>M</italic> | is the number of distinct partitions induced by congruent pairs of segregating sites.<xref ref-type="bibr" rid="b28-ebo-9-2013-343">28</xref></p>
+      <p>In addition to the haplotype-based statistics, POPBAM provides functionality for calculating nucleotide diversity within populations and the average number of nucleotide differences between populations. The POPBAM <bold>nucdiv</bold> command will produce unbiased estimates of nucleotide diversity (<italic>π</italic>) within each population as</p>
+      <disp-formula id="FD11">
+        <label>(11)</label>
+        <mml:math id="mm11">
+          <mml:mrow>
+            <mml:mi>π</mml:mi>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mn>2</mml:mn>
+              <mml:mrow>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mn>1</mml:mn>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:munderover>
+              <mml:mo>∑</mml:mo>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+            </mml:munderover>
+            <mml:mrow>
+              <mml:munderover>
+                <mml:mo>∑</mml:mo>
+                <mml:mrow>
+                  <mml:mi>j</mml:mi>
+                  <mml:mo>=</mml:mo>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>+</mml:mo>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mi>n</mml:mi>
+              </mml:munderover>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>d</mml:mi>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+              </mml:mrow>
+            </mml:mrow>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>in which <italic>d</italic><italic><sub>ij</sub></italic> is the Hamming distance between sequences <italic>i</italic> and <italic>j</italic>, as well as the average number of nucleotide differences between populations,</p>
+      <disp-formula id="FD12">
+        <label>(12)</label>
+        <mml:math id="mm12">
+          <mml:mrow>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mover accent="true">
+                  <mml:mi>d</mml:mi>
+                  <mml:mo>¯</mml:mo>
+                </mml:mover>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>x</mml:mi>
+                <mml:mi>y</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mn>1</mml:mn>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>n</mml:mi>
+                  </mml:mrow>
+                  <mml:mi>x</mml:mi>
+                </mml:msub>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>n</mml:mi>
+                  </mml:mrow>
+                  <mml:mi>y</mml:mi>
+                </mml:msub>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:munderover>
+              <mml:mo>∑</mml:mo>
+              <mml:mrow>
+                <mml:mi>x</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>n</mml:mi>
+                  </mml:mrow>
+                  <mml:mi>x</mml:mi>
+                </mml:msub>
+              </mml:mrow>
+            </mml:munderover>
+            <mml:mrow>
+              <mml:munderover>
+                <mml:mo>∑</mml:mo>
+                <mml:mrow>
+                  <mml:mi>y</mml:mi>
+                  <mml:mo>=</mml:mo>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>n</mml:mi>
+                    </mml:mrow>
+                    <mml:mi>y</mml:mi>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:munderover>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>d</mml:mi>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>x</mml:mi>
+                    <mml:mi>y</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+              </mml:mrow>
+            </mml:mrow>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>in which <italic>d</italic><italic><sub>xy</sub></italic> is the Hamming distance between all sequences from population <italic>x</italic> with sample size <italic>n</italic><italic><sub>x</sub></italic> and population <italic>y</italic> with sample size <italic>n</italic><italic><sub>y</sub></italic>.<xref ref-type="bibr" rid="b29-ebo-9-2013-343">29</xref> POPBAM reports both <italic>π</italic> and <italic>d̄</italic><italic><sub>xy</sub></italic> per aligned nucleotide site. From these two quantities, it is straightforward to calculate a widely-used formulation of <italic>F</italic><italic><sub>ST</sub></italic><xref ref-type="bibr" rid="b30-ebo-9-2013-343">30</xref> in a post-processing step as,</p>
+      <disp-formula id="FD13">
+        <label>(13)</label>
+        <mml:math id="mm13">
+          <mml:mrow>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>F</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>S</mml:mi>
+                <mml:mi>T</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo stretchy="false">(</mml:mo>
+            <mml:mi>x</mml:mi>
+            <mml:mo>,</mml:mo>
+            <mml:mi>y</mml:mi>
+            <mml:mo stretchy="false">)</mml:mo>
+            <mml:mo>=</mml:mo>
+            <mml:mn>1</mml:mn>
+            <mml:mo>-</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>π</mml:mi>
+                  </mml:mrow>
+                  <mml:mi>x</mml:mi>
+                </mml:msub>
+                <mml:mo>+</mml:mo>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>π</mml:mi>
+                  </mml:mrow>
+                  <mml:mi>y</mml:mi>
+                </mml:msub>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mn>2</mml:mn>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mover accent="true">
+                      <mml:mi>d</mml:mi>
+                      <mml:mo>¯</mml:mo>
+                    </mml:mover>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>x</mml:mi>
+                    <mml:mi>y</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+              </mml:mrow>
+            </mml:mfrac>
+            <mml:mo>.</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>The <bold>nucdiv</bold> command also allows the user to specify the minimum number of samples required to calculate the diversity statistics, thus not requiring complete coverage across all samples.</p>
+      <p>The <bold>diverge</bold> command allows the user to calculate the divergence of the samples with either the reference sequence, or a specified outgroup sequence, using either a Hamming distance or a Jukes-Cantor corrected distance.<xref ref-type="bibr" rid="b31-ebo-9-2013-343">31</xref> The <bold>diverge</bold> command can output either the divergence of each sample from the outgroup/reference genome or the mean divergence of each population. Since the <bold>diverge</bold> command is intended for calculating local substitution rates, the user may also specify whether only sites that are fixed substitutions should be used in the calculation. The output of the <bold>diverge</bold> command also outputs information that can be used to perform the HKA test<xref ref-type="bibr" rid="b32-ebo-9-2013-343">32</xref> in a post-processing step.</p>
+      <p>The POPBAM <bold>tree</bold> command builds neighbor-joining<xref ref-type="bibr" rid="b33-ebo-9-2013-343">33</xref> (NJ) trees of all samples present in the BAM file and outputs the newick-formatted trees for each genomic window. The NJ algorithm was selected over other tree-building methods to avoid the computational cost of using a heuristic tree-building algorithm on a potentially large number of genomic intervals. The <bold>tree</bold> command will only consider sites for which every individual is represented in the alignment. NJ trees can be calculated using either a Hamming distance or the Jukes-Cantor sequence distance.<xref ref-type="bibr" rid="b31-ebo-9-2013-343">31</xref></p>
+      <p>Finally, the <bold>sfs</bold> command calculates statistics that summarize the site frequency spectrum within populations. For each window in each population the count of mutations with frequency <italic>i</italic> in the sample is given by <italic>ξ</italic><italic><sub>i</sub></italic>, for which the total number of segregating sites is <italic>S</italic> = ∑<italic><sub>i</sub></italic><sub>=1</sub><italic><sup>n</sup></italic><sup>−1</sup><italic>ξ</italic><italic><sub>i</sub></italic>. The first site frequency spectrum measure output by POPBAM is Tajima’s <italic>D</italic> statistic.<xref ref-type="bibr" rid="b34-ebo-9-2013-343">34</xref> Tajima’s <italic>D</italic> contrasts low- and intermediate-frequency variants and can be calculated as:</p>
+      <disp-formula id="FD14">
+        <label>(14)</label>
+        <mml:math id="mm14">
+          <mml:mrow>
+            <mml:mi>D</mml:mi>
+            <mml:mo>=</mml:mo>
+            <mml:munderover>
+              <mml:mo>∑</mml:mo>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+            </mml:munderover>
+            <mml:mrow>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>ξ</mml:mi>
+                </mml:mrow>
+                <mml:mi>i</mml:mi>
+              </mml:msub>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mfrac>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mn>1</mml:mn>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:mfrac>
+                  <mml:mo>-</mml:mo>
+                  <mml:mfrac>
+                    <mml:mn>1</mml:mn>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>a</mml:mi>
+                        </mml:mrow>
+                        <mml:mn>1</mml:mn>
+                      </mml:msub>
+                    </mml:mrow>
+                  </mml:mfrac>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msqrt>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>e</mml:mi>
+                        </mml:mrow>
+                        <mml:mn>1</mml:mn>
+                      </mml:msub>
+                      <mml:mi>S</mml:mi>
+                      <mml:mo>+</mml:mo>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>e</mml:mi>
+                        </mml:mrow>
+                        <mml:mn>2</mml:mn>
+                      </mml:msub>
+                      <mml:mi>S</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>S</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mn>1</mml:mn>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:msqrt>
+                </mml:mrow>
+              </mml:mfrac>
+            </mml:mrow>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>in which <italic>a</italic><sub>1</sub> = ∑<italic><sub>i</sub></italic><sub>=1</sub><italic><sup>n</sup></italic><sup>−1</sup>1/<italic>i</italic> and <italic>e</italic><sub>1</sub> and <italic>e</italic><sub>2</sub> are given by Tajima.<xref ref-type="bibr" rid="b34-ebo-9-2013-343">34</xref>,<xref ref-type="bibr" rid="b35-ebo-9-2013-343">35</xref> The second site frequency spectrum measure is a standardized analog of Fay and Wu’s <italic>H</italic> statistic.<xref ref-type="bibr" rid="b36-ebo-9-2013-343">36</xref>,<xref ref-type="bibr" rid="b37-ebo-9-2013-343">37</xref> The <italic>H</italic> statistic contrasts high- and intermediate- frequency variants and can be calculated as:</p>
+      <disp-formula id="FD15">
+        <label>(15)</label>
+        <mml:math id="mm15">
+          <mml:mrow>
+            <mml:mi>H</mml:mi>
+            <mml:mo>=</mml:mo>
+            <mml:munderover>
+              <mml:mo>∑</mml:mo>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>n</mml:mi>
+                <mml:mo>-</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+            </mml:munderover>
+            <mml:mrow>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>ξ</mml:mi>
+                </mml:mrow>
+                <mml:mi>i</mml:mi>
+              </mml:msub>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mfrac>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mn>1</mml:mn>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:mfrac>
+                  <mml:mo>-</mml:mo>
+                  <mml:mfrac>
+                    <mml:mi>i</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>n</mml:mi>
+                      <mml:mo>-</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                  </mml:mfrac>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msqrt>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>g</mml:mi>
+                        </mml:mrow>
+                        <mml:mn>1</mml:mn>
+                      </mml:msub>
+                      <mml:mi>θ</mml:mi>
+                      <mml:mo>+</mml:mo>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>g</mml:mi>
+                        </mml:mrow>
+                        <mml:mn>2</mml:mn>
+                      </mml:msub>
+                      <mml:msup>
+                        <mml:mrow>
+                          <mml:mi>θ</mml:mi>
+                        </mml:mrow>
+                        <mml:mn>2</mml:mn>
+                      </mml:msup>
+                    </mml:mrow>
+                  </mml:msqrt>
+                </mml:mrow>
+              </mml:mfrac>
+            </mml:mrow>
+            <mml:mo>,</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+      <p>in which <italic>g</italic><sub>1</sub> and <italic>g</italic><sub>2</sub> are given in Zeng et al<xref ref-type="bibr" rid="b37-ebo-9-2013-343">37</xref> and POPBAM estimates <italic>θ</italic> as Watterson’s moment estimator of the population mutation rate.<xref ref-type="bibr" rid="b38-ebo-9-2013-343">38</xref> Tajima’s <italic>D</italic> and Fay and Wu’s <italic>H</italic> were chosen because they consider both the folded and unfolded site frequency spectra, respectively. For the unfolded site frequency spectrum, POPBAM assigns ancestral and derived alleles using the reference sequence; however, the user can also manually specify which sequence should be used as an outgroup to polarize the directionality of a given mutation. The raw count of derived mutation frequencies can be obtained using the <bold>snp</bold> command with SweepFinder formatted output.</p>
+    </sec>
+    <sec>
+      <title>Output and post-processing</title>
+      <p>POPBAM is designed to calculate a variety of evolutionary- based statistics in non-overlapping genomic windows. The windows are uniformly sized relative to the reference genome coordinates and the size of the windows can be specified by the user at run time. All POPBAM output is formatted as text and is tab-delimited. The output of POPBAM is specifically tailored to be input seamlessly into the R statistical environment.<xref ref-type="bibr" rid="b39-ebo-9-2013-343">39</xref> Each of the POPBAM commands produces differing output fields; however, the first four fields are identical across commands: the first column always prints the scaffold/chromosome name, the second column prints the position in the reference sequence where a window starts, the third column prints the reference position of the end of the window, and the fourth column is the total number of aligned sites in the window that was used in the analysis (this includes invariant sites). The columns that follow the fourth column depend upon the POPBAM command and the output options being used. Typically, statistics will be output grouped by populations in the order in which the populations are defined in the BAM header. Exceptions to this output format are limited to the <bold>snp</bold> function, which generates output formatted as input for a different program or as a list of consensus genotype calls, which also give the SNP quality score and the read depth for each individual in the BAM file. If a particular calculation is not possible in a given window, POPBAM will output the string “NA”, which will be read by the R statistical environment as a missing value.</p>
+      <p>I provide an example case of using POPBAM to scan the major chromosome arms of ten lines of <italic>Drosophila melanogaster</italic><xref ref-type="bibr" rid="b40-ebo-9-2013-343">40</xref> and a single line of <italic>D. mauritiana</italic><xref ref-type="bibr" rid="b3-ebo-9-2013-343">3</xref> for the signature of recent positive natural selection. The <italic>D. melanogaster</italic> sample comprises nine lines from sub-Saharan Africa and a single line from France. Furthermore, each <italic>D. melanogaster</italic> individual is represented by a single read group of paired-end 76 bp Illumina reads. The <italic>D. mauritiana</italic> outgroup is from a single individual with a single read group of paired-end 86 bp Illumina reads. First, the POPBAM <bold>nucdiv</bold> command was run in 10 kb windows on all major chromosome arms to identify regions of low nucleotide diversity. Genomic windows appearing the the lowest 1% quantile were considered candidates for recent positive natural selection. The POPBAM <bold>ld</bold> command in 10 kb windows with the <italic>ω</italic><sub>max</sub> option was then run on chromosome <italic>3R</italic> to identify patterns of linkage disequilibrium that are consistent with a model of a recent selective sweep. Lastly, the POPBAM <bold>tree</bold> command was used in 1 kb windows in candidate sweep regions to visualize the patterns of polymorphism.</p>
+    </sec>
+    <sec>
+      <title>Assessing performance</title>
+      <p>The performance of the POPBAM program was assessed using a BAM file created from the <italic>Drosophila melanogaster</italic> short read data described in the previous subsection. However, only the X chromosome was considered for the purposes of measuring the execution time and memory usage of the POPBAM program. The length of the reference sequence for chromosome <italic>X</italic> is 22,422,827 bp and the input BAM file is 6.8 Gb consisting of a total of 103,464,508 mapped reads. The POPBAM program was tested on server running the Red Hat<sup>®</sup> Enterprise Linux<sup>®</sup> 6.4 operating system with dual Intel<sup>®</sup> Xeon<sup>®</sup> L5630 processors running at 2.13 GHz with 144 Gb of RAM. POPBAM was compiled using GCC version 4.4.7-3.</p>
+      <p>Program execution time was assessed using the GNU time program (version 1.7) for the seven different POPBAM commands. Additionally, program execution time as a function of the total alignment length, number of individuals, and the window size was also measured. Furthermore, a profile of POPBAM was created using the GNU profiling tool gprof and the memory heap was profiled using the massif module of the program valgrind.</p>
+    </sec>
+  </sec>
+  <sec sec-type="results">
+    <title>Results</title>
+    <sec>
+      <title>Performance</title>
+      <p><xref ref-type="table" rid="t2-ebo-9-2013-343">Table 2</xref> shows the execution time and peak memory usage trials for each of the major evolutionary analyses performed by POPBAM. In this case, the window size is 10 kb and there is a small amount of variation in both execution time and peak memory usage among the different POPBAM functions. The <bold>snp</bold> and <bold>sfs</bold> commands tend to have longer execution times, while the <bold>tree</bold> function tends to have the shortest execution times. <xref ref-type="fig" rid="f1-ebo-9-2013-343">Figure 1</xref> shows execution times and peak memory usage for different window sizes, different total alignment lengths, and different numbers of individual samples in the BAM file. The execution time of POPBAM increases linearly with the total alignment length and the number of individuals. The execution time is greater for small windows compared to large windows because of the increased number of disk input/output operations and the number of times memory blocks are allocated and freed from the heap. Peak memory usage increases with larger window sizes because there are more SNPs to be retained in memory with larger windows. This increase in peak memory usage is greater than linear for POPBAM functions that perform pairwise calculations between sites (ie, functions in the <bold>ld</bold> command). Finally, the peak memory usage is not strongly influenced by the total alignment length and it increases linearly with the number of samples in a merged BAM file.</p>
+      <p>The profiling of POPBAM indicates that the program spends nearly two-thirds of its execution time parsing the auxiliary data associated with each read and assigning individual reads to samples and populations. Over 15% of POPBAM execution time is spent generating consensus genotypes. Slightly less than 10% of the execution time is spend processing the pileup from the BAM file. Approximately 8% of the total time is spent implementing the error model. All other functions take less than 1.5% of POPBAM’s total execution time. This suggests that POPBAM’s run time could be shortened considerably by allowing the program to operate on an input file that consists only of previously called consensus genotypes, such as the VCF format.<xref ref-type="bibr" rid="b41-ebo-9-2013-343">41</xref> However, most analyses performed by POPBAM would require a VCF file that also includes all invariant sites as well as variant sites.</p>
+    </sec>
+    <sec>
+      <title>Example output</title>
+      <p><xref ref-type="fig" rid="f2-ebo-9-2013-343">Figure 2A</xref> plots the output of the POPBAM <bold>nucdiv</bold> command over all major chromosome arms of <italic>Drosophila melanogaster</italic> in non-overlapping 10 kb windows. The reduced levels of nucleotide diversity in regions extending away from centromeres and telomeres accords well with the known reduction in crossing-over rates in these regions.<xref ref-type="bibr" rid="b5-ebo-9-2013-343">5</xref> However, unlike non-African <italic>D. melanogaster</italic>, the POPBAM analysis shows that, for the autosomes, the mean <italic>π</italic><italic><sub>A</sub></italic> = 0.0064, while for the X chromosome, the mean <italic>π</italic><italic><sub>X</sub></italic> = 0.0060. The ratio of <italic>π</italic><italic><sub>X</sub></italic>/<italic>π</italic><italic><sub>A</sub></italic> = 0.934, which is much less that the value of 3/4 expected under an equal breeding sex-ratio.<xref ref-type="bibr" rid="b40-ebo-9-2013-343">40</xref>
+<xref ref-type="fig" rid="f2-ebo-9-2013-343">Figure 2B</xref> shows the distribution of the <italic>ω</italic><sub>max</sub> statistic in 10 kb intervals across chromosome 3<italic>R</italic>. POPBAM identifies an outlier window that spans positions 17,250,000–17,260,000 and has a pattern of linkage disequilibrium consistent with the recent action of positive natural selection (<italic>ω</italic><sub>max</sub> = 9.55; <italic>P</italic> &lt; 0.05 of randomly selecting a window with a higher, or equal, value of <italic>ω</italic><sub>max</sub>). POPBAM was then used to examine more fine-scale patterns of nucleotide diversity and linkage disequilibrium in between genome coordinates 17,240,000 and 17,260,000 to attempt to localize a putative signal of positive selection (<xref ref-type="fig" rid="f2-ebo-9-2013-343">Fig. 2C</xref>). This fine-scale scan shows a 1 kb window with elevated <italic>ω</italic><sub>max</sub> and depressed <italic>π</italic> between positions 17,250,000 and 17,251,000. POPBAM was then used to build neighbor-joining trees in 1 kb windows across the candidate region. <xref ref-type="fig" rid="f2-ebo-9-2013-343">Figure 2D</xref> shows the shape of the putatively selected genealogy for the 17,250,000–17,251,000 interval. The above example is intended to illustrate the use of POPBAM to scan for and explore regions of genomes that have putatively experienced recent positive natural selection.</p>
+      <p>It is worth noting that, during its years of development, the numerical accuracy of the statistics calculated by POPBAM have been verified by comparing them with calculations from other programs, such as those built with the libsequence package<xref ref-type="bibr" rid="b21-ebo-9-2013-343">21</xref> and the DnaSP program.<xref ref-type="bibr" rid="b42-ebo-9-2013-343">42</xref></p>
+    </sec>
+  </sec>
+  <sec sec-type="conclusions">
+    <title>Conclusions</title>
+    <p>The POPBAM program is a flexible and extensible tool for conducting studies of population and evolutionary genomics. Although the current beta release of POPBAM has some necessary limitations, goals for the release candidate version of POPBAM include the ability to read and write VCF files and to incorporate genome features, such as those stored in GFF3 files (<ext-link ext-link-type="uri" xlink:href="http://www.sequenceontology.org/resources/gff3.html">http://www.sequenceontology.org/resources/gff3.html</ext-link>), to measure levels of nonsynonymous and synonymous polymorphism and divergence, and to analyze polymorphism and divergence by site type (eg, exon, intron, 5′ untranslated regions, etc.). It is important to note that POPBAM is not intended to perform higher-order functions, such as multi-locus or composite likelihood types of analyses. Rather, POPBAM is intended to be used as the penultimate step in any evolutionary bioinformatics pipeline, to fill the void between the genome assembly steps and the final, integrative whole-genome statistical analyses. It fulfills this role by providing an efficient means to measure many aspects of genome polymorphism and divergence. By making POPBAM open-source, I hope that additional functionality and improvements will be suggested by the community of evolutionary investigators working with large next-generation sequence data sets.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>Acknowledgments</title>
+    <p>Thanks to J. Fuller, A. Geneva, S. Kingan, L. Lovato, and J. Vedanayagam for thorough alpha testing of the POPBAM program. Special thanks to Carlos Machado and the Oryza Genome Evolution project for extensive beta testing of POPBAM. Thanks to Sarah Kingan for comments on an earlier draft of this manuscript and helping run the analysis on the <italic>Drosophila melanogaster</italic> data. Thanks also to three anonymous reviewers for constructive comments on an earlier draft of the manuscript.</p>
+  </ack>
+  <fn-group>
+    <fn id="fn1-ebo-9-2013-343">
+      <p>
+        <bold>Author Contributions</bold>
+      </p>
+      <p>Conceived and designed the experiments: DG. Analyzed the data: DG. Wrote the first draft of the manuscript: DG. Contributed to the writing of the manuscript: DG. Agree with manuscript results and conclusions: DG. Jointly developed the structure and arguments for the paper: DG. Made critical revisions and approved final version: DG. All authors reviewed and approved of the final manuscript.</p>
+    </fn>
+    <fn id="fn2-ebo-9-2013-343">
+      <p>
+        <bold>Competing Interests</bold>
+      </p>
+      <p>Author(s) disclose no potential conflicts of interest.</p>
+    </fn>
+    <fn id="fn3-ebo-9-2013-343">
+      <p>
+        <bold>Disclosures and Ethics</bold>
+      </p>
+      <p>As a requirement of publication the authors have provided signed confirmation of their compliance with ethical and legal obligations including but not limited to compliance with ICMJE authorship and competing interests guidelines, that the article is neither under consideration for publication nor published elsewhere, of their compliance with legal and ethical guidelines concerning human and animal research participants (if applicable), and that permission has been obtained for reproduction of any copyrighted material. This article was subject to blind, independent, expert peer review. The reviewers reported no competing interests.</p>
+    </fn>
+    <fn id="fn4-ebo-9-2013-343">
+      <p>
+        <bold>Funding</bold>
+      </p>
+      <p>This work was made possible by funds from the University of Rochester and the a grant from the National Institutes of Health (R01OD010548).</p>
+    </fn>
+  </fn-group>
+  <ref-list>
+    <title>References</title>
+    <ref id="b1-ebo-9-2013-343">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cao</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Schneeberger</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Ossowski</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>Whole-genome sequencing of multiple <italic>Arabidopsis thaliana</italic> populations</article-title>
+        <source>Nat Genet</source>
+        <year>2011</year>
+        <volume>43</volume>
+        <fpage>956</fpage>
+        <lpage>63</lpage>
+        <pub-id pub-id-type="pmid">21874002</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b2-ebo-9-2013-343">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ellegren</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Smeds</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Burri</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>The genomic landscape of species divergence in <italic>Ficedula</italic> flycatchers</article-title>
+        <source>Nature</source>
+        <year>2012</year>
+        <volume>491</volume>
+        <fpage>756</fpage>
+        <lpage>60</lpage>
+        <pub-id pub-id-type="pmid">23103876</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b3-ebo-9-2013-343">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Garrigan</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Kingan</surname>
+            <given-names>SB</given-names>
+          </name>
+          <name>
+            <surname>Geneva</surname>
+            <given-names>AJ</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>Genome sequencing reveals complex speciation in the <italic>Drosophila simulans</italic> clade</article-title>
+        <source>Genome Res</source>
+        <year>2012</year>
+        <volume>22</volume>
+        <fpage>1499</fpage>
+        <lpage>511</lpage>
+        <pub-id pub-id-type="pmid">22534282</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b4-ebo-9-2013-343">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jones</surname>
+            <given-names>FC</given-names>
+          </name>
+          <name>
+            <surname>Grabherr</surname>
+            <given-names>MG</given-names>
+          </name>
+          <name>
+            <surname>Chan</surname>
+            <given-names>YF</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>The genomic basis of adaptive evolution in threespine sticklebacks</article-title>
+        <source>Nature</source>
+        <year>2012</year>
+        <volume>484</volume>
+        <fpage>55</fpage>
+        <lpage>61</lpage>
+        <pub-id pub-id-type="pmid">22481358</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b5-ebo-9-2013-343">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mackay</surname>
+            <given-names>TFC</given-names>
+          </name>
+          <name>
+            <surname>Richards</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Stone</surname>
+            <given-names>EA</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>The <italic>Drosophila melanogaster</italic> genetic reference panel</article-title>
+        <source>Nature</source>
+        <year>2012</year>
+        <volume>482</volume>
+        <fpage>173</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="pmid">22318601</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b6-ebo-9-2013-343">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Homer</surname>
+            <given-names>N</given-names>
+          </name>
+        </person-group>
+        <article-title>A survey of sequence alignment algorithms for next-generation sequencing</article-title>
+        <source>Brief Bioinform</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>473</fpage>
+        <lpage>83</lpage>
+        <pub-id pub-id-type="pmid">20460430</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b7-ebo-9-2013-343">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Miller</surname>
+            <given-names>JR</given-names>
+          </name>
+          <name>
+            <surname>Koren</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Sutton</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>Assembly algorithms for next-generation sequencing data</article-title>
+        <source>Genomics</source>
+        <year>2010</year>
+        <volume>95</volume>
+        <fpage>315</fpage>
+        <lpage>27</lpage>
+        <pub-id pub-id-type="pmid">20211242</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b8-ebo-9-2013-343">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Larkin</surname>
+            <given-names>DM</given-names>
+          </name>
+          <name>
+            <surname>Cai</surname>
+            <given-names>Q</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>Reference-assisted chromosome assembly</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>2013</year>
+        <volume>110</volume>
+        <fpage>1785</fpage>
+        <lpage>90</lpage>
+        <pub-id pub-id-type="pmid">23307812</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b9-ebo-9-2013-343">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Treangen</surname>
+            <given-names>TJ</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>SL</given-names>
+          </name>
+        </person-group>
+        <article-title>Repetitive DNA and next-generation sequencing: computational challenges and solutions</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2012</year>
+        <volume>13</volume>
+        <fpage>36</fpage>
+        <lpage>46</lpage>
+        <pub-id pub-id-type="pmid">22124482</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b10-ebo-9-2013-343">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nielsen</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Paul</surname>
+            <given-names>JS</given-names>
+          </name>
+          <name>
+            <surname>Albrechsten</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Song</surname>
+            <given-names>YS</given-names>
+          </name>
+        </person-group>
+        <article-title>Genotype and SNP calling from next-generation sequencing data</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>443</fpage>
+        <lpage>51</lpage>
+        <pub-id pub-id-type="pmid">21587300</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b11-ebo-9-2013-343">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Aguiar</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Istrail</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>HapCompass: a fast cycle basis algorithm for accurate haplotype assembly of sequence data</article-title>
+        <source>J Comput Biol</source>
+        <year>2012</year>
+        <volume>19</volume>
+        <fpage>577</fpage>
+        <lpage>90</lpage>
+        <pub-id pub-id-type="pmid">22697235</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b12-ebo-9-2013-343">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sousa</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Hey</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Understanding the origin of species with genome-scale data: modelling gene flow</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2013</year>
+        <volume>14</volume>
+        <fpage>404</fpage>
+        <lpage>14</lpage>
+        <pub-id pub-id-type="pmid">23657479</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b13-ebo-9-2013-343">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <collab>International Organization for Standardization</collab>
+        <article-title>Information technology— Programming languages—C++</article-title>
+        <source>ISO/IEC 14882:20112011</source>
+      </element-citation>
+    </ref>
+    <ref id="b14-ebo-9-2013-343">
+      <label>14</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Felsenstein</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <source>PHYLIP (Phylogeny Inference Package) version 3.6</source>
+        <year>2005</year>
+        <comment>Distributed by the author</comment>
+        <publisher-name>Department of Genome Sciences, University of Washington</publisher-name>
+        <publisher-loc>Seattle</publisher-loc>
+      </element-citation>
+    </ref>
+    <ref id="b15-ebo-9-2013-343">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Handsaker</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Wysoker</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>The Sequence Alignment/Map format and SAMtools</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2078</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="pmid">19505943</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b16-ebo-9-2013-343">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Ruan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Mapping short DNA sequencing reads and calling variants using mapping quality scores</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>1851</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="pmid">18714091</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b17-ebo-9-2013-343">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ewing</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Green</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Base-calling of automated sequencer traces using Phred. II. Error probabilities</article-title>
+        <source>Genome Res</source>
+        <year>1998</year>
+        <volume>8</volume>
+        <fpage>186</fpage>
+        <lpage>94</lpage>
+        <pub-id pub-id-type="pmid">9521922</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b18-ebo-9-2013-343">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cock</surname>
+            <given-names>PJ</given-names>
+          </name>
+          <name>
+            <surname>Fields</surname>
+            <given-names>CJ</given-names>
+          </name>
+          <name>
+            <surname>Goto</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Heuer</surname>
+            <given-names>ML</given-names>
+          </name>
+          <name>
+            <surname>Rice</surname>
+            <given-names>PM</given-names>
+          </name>
+        </person-group>
+        <article-title>The Sanger FASTQ file format for sequences with quality scores, and the Solexa/Illumina FASTQ variants</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2010</year>
+        <volume>38</volume>
+        <fpage>1767</fpage>
+        <lpage>71</lpage>
+        <pub-id pub-id-type="pmid">20015970</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b19-ebo-9-2013-343">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nielsen</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Williamson</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Hubisz</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Clark</surname>
+            <given-names>AG</given-names>
+          </name>
+          <name>
+            <surname>Bustamante</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Genomic scans for selective sweeps using SNP data</article-title>
+        <source>Genome Res</source>
+        <year>2005</year>
+        <volume>15</volume>
+        <fpage>1566</fpage>
+        <lpage>75</lpage>
+        <pub-id pub-id-type="pmid">16251466</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b20-ebo-9-2013-343">
+      <label>20</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hudson</surname>
+            <given-names>RR</given-names>
+          </name>
+        </person-group>
+        <article-title>Generating samples under a Wright-Fisher neutral model of genetic variation</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>337</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="pmid">11847089</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b21-ebo-9-2013-343">
+      <label>21</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Thornton</surname>
+            <given-names>K</given-names>
+          </name>
+        </person-group>
+        <article-title>Libsequence: a C++ class library for evolutionary genetic analysis</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <fpage>2325</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="pmid">14630667</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b22-ebo-9-2013-343">
+      <label>22</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nei</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Tajima</surname>
+            <given-names>F</given-names>
+          </name>
+        </person-group>
+        <article-title>DNA polymorphism detectable by restriction endonucleases</article-title>
+        <source>Genetics</source>
+        <year>1981</year>
+        <volume>97</volume>
+        <fpage>145</fpage>
+        <lpage>63</lpage>
+        <pub-id pub-id-type="pmid">6266912</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b23-ebo-9-2013-343">
+      <label>23</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tang</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Thornton</surname>
+            <given-names>KR</given-names>
+          </name>
+          <name>
+            <surname>Stoneking</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>A new approach for using genome scans to detect recent positive selection in the human genome</article-title>
+        <source>PLoS Biol</source>
+        <year>2007</year>
+        <volume>5</volume>
+        <fpage>e171</fpage>
+        <pub-id pub-id-type="pmid">17579516</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b24-ebo-9-2013-343">
+      <label>24</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nei</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Roychoudhury</surname>
+            <given-names>AK</given-names>
+          </name>
+        </person-group>
+        <article-title>Sampling variance of heterozygosity and genetic distance</article-title>
+        <source>Genetics</source>
+        <year>1974</year>
+        <volume>74</volume>
+        <fpage>371</fpage>
+        <lpage>80</lpage>
+        <pub-id pub-id-type="pmid">4721737</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b25-ebo-9-2013-343">
+      <label>25</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Geneva</surname>
+            <given-names>AJ</given-names>
+          </name>
+          <name>
+            <surname>Muirhead</surname>
+            <given-names>CA</given-names>
+          </name>
+          <name>
+            <surname>Lovato</surname>
+            <given-names>LM</given-names>
+          </name>
+          <name>
+            <surname>Kingan</surname>
+            <given-names>SB</given-names>
+          </name>
+          <name>
+            <surname>Garrigan</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>A simple statistic to detect recent gene flow from whole-genome data</article-title>
+        <source>Genetics</source>
+        <year>2013</year>
+      </element-citation>
+    </ref>
+    <ref id="b26-ebo-9-2013-343">
+      <label>26</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kelly</surname>
+            <given-names>JK</given-names>
+          </name>
+        </person-group>
+        <article-title>A test of neutrality based on interlocus associations</article-title>
+        <source>Genetics</source>
+        <year>1997</year>
+        <volume>146</volume>
+        <fpage>1197</fpage>
+        <lpage>206</lpage>
+        <pub-id pub-id-type="pmid">9215920</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b27-ebo-9-2013-343">
+      <label>27</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Nielsen</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Linkage disequilibrium as a signature of selective sweeps</article-title>
+        <source>Genetics</source>
+        <year>2004</year>
+        <volume>167</volume>
+        <fpage>1513</fpage>
+        <lpage>24</lpage>
+        <pub-id pub-id-type="pmid">15280259</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b28-ebo-9-2013-343">
+      <label>28</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wall</surname>
+            <given-names>JD</given-names>
+          </name>
+        </person-group>
+        <article-title>Recombination and the power of statistical tests of neutrality</article-title>
+        <source>Genet Res</source>
+        <year>1999</year>
+        <volume>74</volume>
+        <fpage>65</fpage>
+        <lpage>79</lpage>
+      </element-citation>
+    </ref>
+    <ref id="b29-ebo-9-2013-343">
+      <label>29</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nei</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>W-H</given-names>
+          </name>
+        </person-group>
+        <article-title>Mathematical model for studying genetic variation in terms of restriction endonucleases</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>1979</year>
+        <volume>76</volume>
+        <fpage>5269</fpage>
+        <lpage>73</lpage>
+        <pub-id pub-id-type="pmid">291943</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b30-ebo-9-2013-343">
+      <label>30</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hudson</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Slatkin</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Maddison</surname>
+            <given-names>WP</given-names>
+          </name>
+        </person-group>
+        <article-title>Estimation of levels of gene flow from DNA sequence data</article-title>
+        <source>Genetics</source>
+        <year>1992</year>
+        <volume>132</volume>
+        <fpage>583</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="pmid">1427045</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b31-ebo-9-2013-343">
+      <label>31</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jukes</surname>
+            <given-names>TH</given-names>
+          </name>
+          <name>
+            <surname>Cantor</surname>
+            <given-names>CR</given-names>
+          </name>
+        </person-group>
+        <article-title>Evolution of protein molecules</article-title>
+        <source>Mammalian Protein Metabolism, III</source>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Munro</surname>
+            <given-names>HN</given-names>
+          </name>
+        </person-group>
+        <publisher-loc>New York</publisher-loc>
+        <publisher-name>Academy Press</publisher-name>
+        <year>1969</year>
+      </element-citation>
+    </ref>
+    <ref id="b32-ebo-9-2013-343">
+      <label>32</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hudson</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Kreitman</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Aguadé</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>A test of neutral molecular evolution based on nucleotide data</article-title>
+        <source>Genetics</source>
+        <year>1987</year>
+        <volume>116</volume>
+        <fpage>153</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="pmid">3110004</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b33-ebo-9-2013-343">
+      <label>33</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Saitou</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Nei</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>The neighbor-joining method: a new method for reconstructing phylogenetic trees</article-title>
+        <source>Mol Biol Evol</source>
+        <year>1987</year>
+        <volume>4</volume>
+        <fpage>406</fpage>
+        <lpage>25</lpage>
+        <pub-id pub-id-type="pmid">3447015</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b34-ebo-9-2013-343">
+      <label>34</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tajima</surname>
+            <given-names>F</given-names>
+          </name>
+        </person-group>
+        <article-title>Statistical method for testing the neutral mutation hypothesis by DNA polymorphism</article-title>
+        <source>Genetics</source>
+        <year>1989</year>
+        <volume>123</volume>
+        <fpage>585</fpage>
+        <lpage>95</lpage>
+        <pub-id pub-id-type="pmid">2513255</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b35-ebo-9-2013-343">
+      <label>35</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tajima</surname>
+            <given-names>F</given-names>
+          </name>
+        </person-group>
+        <article-title>Estimation of the amount of DNA polymorphism and statistical tests of the neutral mutation hypothesis based on DNA polymorphism</article-title>
+        <source>Progress in Population Genetics and Human Evolution</source>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Donnelly</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Tavaré</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <publisher-loc>New York</publisher-loc>
+        <publisher-name>Springer</publisher-name>
+        <year>1997</year>
+      </element-citation>
+    </ref>
+    <ref id="b36-ebo-9-2013-343">
+      <label>36</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fay</surname>
+            <given-names>JC</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>C-I</given-names>
+          </name>
+        </person-group>
+        <article-title>Hitchhiking under positive Darwinian selection</article-title>
+        <source>Genetics</source>
+        <year>2000</year>
+        <volume>155</volume>
+        <fpage>1405</fpage>
+        <lpage>13</lpage>
+        <pub-id pub-id-type="pmid">10880498</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b37-ebo-9-2013-343">
+      <label>37</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zeng</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Fu</surname>
+            <given-names>Y-X</given-names>
+          </name>
+          <name>
+            <surname>Shi</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>C-I</surname>
+            <given-names>Wu</given-names>
+          </name>
+        </person-group>
+        <article-title>Statistical tests for detecting positive selection by utilizing high-frequency variants</article-title>
+        <source>Genetics</source>
+        <year>2006</year>
+        <volume>174</volume>
+        <fpage>1431</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="pmid">16951063</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b38-ebo-9-2013-343">
+      <label>38</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Watterson</surname>
+            <given-names>GA</given-names>
+          </name>
+        </person-group>
+        <article-title>On the number of segregating sites in genetical models without recombination</article-title>
+        <source>Theor Popul Biol</source>
+        <year>1975</year>
+        <volume>7</volume>
+        <fpage>256</fpage>
+        <lpage>76</lpage>
+        <pub-id pub-id-type="pmid">1145509</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b39-ebo-9-2013-343">
+      <label>39</label>
+      <element-citation publication-type="book">
+        <collab>R Core Team</collab>
+        <source>R: A Language and Environment for Statistical Computing</source>
+        <publisher-name>R Foundation for Statistical Computing</publisher-name>
+        <publisher-loc>Vienna, Austria</publisher-loc>
+        <fpage>2013</fpage>
+      </element-citation>
+    </ref>
+    <ref id="b40-ebo-9-2013-343">
+      <label>40</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pool</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Corbett-Detig</surname>
+            <given-names>RB</given-names>
+          </name>
+          <name>
+            <surname>Sugino</surname>
+            <given-names>RP</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>Population genomics of sub-Saharan <italic>Drosophila melanogaster</italic>: African diversity and non-African admixture</article-title>
+        <source>PLoS Genet</source>
+        <year>2012</year>
+        <volume>8</volume>
+        <fpage>e1003080</fpage>
+        <pub-id pub-id-type="pmid">23284287</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b41-ebo-9-2013-343">
+      <label>41</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Danecek</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Auton</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Abecasis</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>al</surname>
+            <given-names>et</given-names>
+          </name>
+        </person-group>
+        <article-title>The variant call format and VCFtools</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <fpage>2156</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="pmid">21653522</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="b42-ebo-9-2013-343">
+      <label>42</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Librado</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Rozas</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>DnaSP v5: a software for comprehensive analysis of DNA polymorphism data</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1451</fpage>
+        <lpage>2</lpage>
+        <pub-id pub-id-type="pmid">19346325</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<floats-group>
+  <fig id="f1-ebo-9-2013-343" position="float">
+    <label>Figure 1</label>
+    <caption>
+      <p>Time and memory trials for the <bold>nucdiv</bold> command (top row) and the <bold>ld</bold> command using the ω<sub>max</sub> option (bottom row). In all graphs, the filled bars show the execution time (in seconds) and the line shows the peak memory usage in megabytes (note that megabytes are shown on the secondary vertical axis, while megabases are shown on the horizontal axis). The first column of graphs shows results for various window sizes. The second column shows results for different total alignment length. Finally, the third column of graphs shows the results for BAM files consisting of either five or ten ingroup individuals (not including one outgroup individual).</p>
+    </caption>
+    <graphic xlink:href="ebo-9-2013-343f1"/>
+  </fig>
+  <fig id="f2-ebo-9-2013-343" position="float">
+    <label>Figure 2</label>
+    <caption>
+      <p>Panel (<bold>A</bold>) shows the spatial distribution of nucleotide diversity (<italic>π</italic>) in 10 kb windows across each of the major chromosome arms in ten lines of <italic>Drosophila melanogaster</italic>. Panel (<bold>B</bold>) shows the distribution of 10 kb windows on chromosome 3<italic>R</italic> for the linkage disequilibrium statistic, <italic>ω</italic><sub>max</sub>, which is sensitive to patterns caused by recent selective sweeps. The window beginning at position 17,250,000 has a significant outlier for ω<sub>max</sub> (see text). Panel (<bold>C</bold>) shows 1 kb windows of ω<sub>max</sub> (top) and <italic>π</italic> (bottom) in the outlier region of chromosome 3<italic>R</italic>. Finally, panel (<bold>D</bold>) shows the neighbor-joining tree for the 1 kb window spanning positions 17,250,000–17,251,000 on chromosome 3<italic>R</italic> with the highest <italic>ω</italic><sub>max</sub> statistic. <italic>D. melanogaster</italic> sequences are labeled with the prefix “Dmel” and the <italic>D. mauritiana</italic> sequence is labeled with the prefix “Dmau”.</p>
+    </caption>
+    <graphic xlink:href="ebo-9-2013-343f2"/>
+  </fig>
+  <table-wrap id="t1-ebo-9-2013-343" position="float">
+    <label>Table 1</label>
+    <caption>
+      <p>A description of the seven analysis commands that are available in the current version of the POPBAM software.</p>
+    </caption>
+    <table frame="hsides" rules="groups">
+      <thead>
+        <tr>
+          <th align="left" valign="top" rowspan="1" colspan="1">Command</th>
+          <th align="left" valign="top" rowspan="1" colspan="1">Description of analysis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>snp</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Generates consensus base calls for each sample in the alignment that passes user-specified quality filters.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>haplo</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Computes a variety of haplotype-based statistics.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>diverge</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Calculates divergence of samples or populations from the reference sequence.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>tree</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Outputs newick-formatted neighbor-joining trees of all samples in the file.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>nucdiv</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Estimates nucleotide diversity within each population and mean number of nucleotide differences between all pairs of populations.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>ld</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Computes several measures of linkage disequilibrium.</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>sfs</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Calculates the site frequency spectrum statistics Tajima’s <italic>D</italic> and the standardized Fay and Wu’s <italic>H</italic> for each population.</td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+  <table-wrap id="t2-ebo-9-2013-343" position="float">
+    <label>Table 2</label>
+    <caption>
+      <p>Time and memory trials reported separately for the main components of POPBAM functionality. The circumstances of the trials are provided in the text.</p>
+    </caption>
+    <table frame="hsides" rules="groups">
+      <thead>
+        <tr>
+          <th align="left" valign="top" rowspan="1" colspan="1">Command</th>
+          <th align="left" valign="top" rowspan="1" colspan="1">Analysis</th>
+          <th align="left" valign="top" rowspan="1" colspan="1">Time (seconds)</th>
+          <th align="left" valign="top" rowspan="1" colspan="1">Memory (Mb)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>snp</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Call and output SNPs</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">5074.14</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.546</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>haplo</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Calculate number of haplotypes</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4998.22</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.386</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1"/>
+          <td align="left" valign="top" rowspan="1" colspan="1">Site-specific extended haplotype homozygosity</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4727.29</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.386</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1"/>
+          <td align="left" valign="top" rowspan="1" colspan="1">Minimum between-population distance</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4592.35</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.386</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>diverge</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Calculate number of substitutions</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4587.08</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.567</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>tree</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Compute neighbor-joining trees</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4497.68</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.388</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>nucdiv</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Within and between population differences</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4762.05</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.546</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>Ld</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Calculate mean <italic>r</italic><sup>2</sup></td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4553.11</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.385</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1"/>
+          <td align="left" valign="top" rowspan="1" colspan="1">Calculate <italic>ω</italic><sub>max</sub></td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4763.04</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">66.095</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1"/>
+          <td align="left" valign="top" rowspan="1" colspan="1">Calculate Wall’s congruency statistics</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">4902.55</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.386</td>
+        </tr>
+        <tr>
+          <td align="left" valign="top" rowspan="1" colspan="1">
+            <bold>sfs</bold>
+          </td>
+          <td align="left" valign="top" rowspan="1" colspan="1">Tajima’s <italic>D</italic> and Fay and Wu’s <italic>H</italic></td>
+          <td align="left" valign="top" rowspan="1" colspan="1">5024.26</td>
+          <td align="left" valign="top" rowspan="1" colspan="1">65.386</td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+</floats-group>

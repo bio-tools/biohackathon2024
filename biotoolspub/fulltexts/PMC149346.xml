@@ -1,0 +1,2265 @@
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title>BMC Bioinformatics</journal-title>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">149346</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-4-2</article-id>
+    <article-id pub-id-type="pmid">12525261</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-4-2</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Methodology Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>An automated method for finding molecular complexes in large protein interaction networks</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib id="A1" contrib-type="author">
+        <name>
+          <surname>Bader</surname>
+          <given-names>Gary D</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>gary.bader@utoronto.ca</email>
+      </contrib>
+      <contrib id="A2" corresp="yes" contrib-type="author">
+        <name>
+          <surname>Hogue</surname>
+          <given-names>Christopher WV</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>hogue@mshri.on.ca</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Samuel Lunenfeld Research Institute, Mt. Sinai Hospital, Toronto ON Canada M5G 1X5, Dept. of Biochemistry, University of Toronto, Toronto ON Canada M5S 1A8</aff>
+    <aff id="I2"><label>2</label>Current address: Memorial Sloan-Kettering Cancer Center 1275 York Avenue, Box 460, New York, NY, 10021, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2003</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>13</day>
+      <month>1</month>
+      <year>2003</year>
+    </pub-date>
+    <volume>4</volume>
+    <fpage>2</fpage>
+    <lpage>2</lpage>
+    <ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/1471-2105/4/2"/>
+    <history>
+      <date date-type="received">
+        <day>4</day>
+        <month>9</month>
+        <year>2002</year>
+      </date>
+      <date date-type="accepted">
+        <day>13</day>
+        <month>1</month>
+        <year>2003</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2003 Bader and Hogue; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL.</copyright-statement>
+      <copyright-year>2003</copyright-year>
+      <copyright-holder>Bader and Hogue; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL.</copyright-holder>
+    </permissions>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Recent advances in proteomics technologies such as two-hybrid, phage display and mass spectrometry have enabled us to create a detailed map of biomolecular interaction networks. Initial mapping efforts have already produced a wealth of data. As the size of the interaction set increases, databases and computational methods will be required to store, visualize and analyze the information in order to effectively aid in knowledge discovery.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>This paper describes a novel graph theoretic clustering algorithm, "Molecular Complex Detection" (MCODE), that detects densely connected regions in large protein-protein interaction networks that may represent molecular complexes. The method is based on vertex weighting by local neighborhood density and outward traversal from a locally dense seed protein to isolate the dense regions according to given parameters. The algorithm has the advantage over other graph clustering methods of having a directed mode that allows fine-tuning of clusters of interest without considering the rest of the network and allows examination of cluster interconnectivity, which is relevant for protein networks. Protein interaction and complex information from the yeast <italic>Saccharomyces cerevisiae </italic>was used for evaluation.</p>
+      </sec>
+      <sec>
+        <title>Conclusion</title>
+        <p>Dense regions of protein interaction networks can be found, based solely on connectivity data, many of which correspond to known protein complexes. The algorithm is not affected by a known high rate of false positives in data from high-throughput interaction techniques. The program is available from <ext-link ext-link-type="ftp" xlink:href="ftp://ftp.mshri.on.ca/pub/BIND/Tools/MCODE"/>.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Recent papers published in <italic>Science </italic>and <italic>Nature </italic>among others describe large-scale proteomics experiments that have generated large data sets of protein-protein interactions and molecular complexes [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B7">7</xref>]. Protein structure [<xref ref-type="bibr" rid="B8">8</xref>] and gene expression data [<xref ref-type="bibr" rid="B9">9</xref>] is also accumulating at a rapid rate. Bioinformatics systems for storage, management, visualization and analysis of this new wealth of data must keep pace. We previously published a simple graph theory method that identified a functional protein complex around the yeast protein Las17 that is involved in actin cytoskeleton rearrangement [<xref ref-type="bibr" rid="B10">10</xref>]. Here we extend the method to better apply it to the accumulating information in protein networks.</p>
+    <p>Currently, most proteomics data is available for the model organism <italic>Saccharomyces cerevisiae</italic>, by virtue of the availability of a defined and relatively stable proteome, full genome clone libraries [<xref ref-type="bibr" rid="B11">11</xref>], established molecular biology experimental techniques and an assortment of well designed genomics databases [<xref ref-type="bibr" rid="B12">12</xref>-<xref ref-type="bibr" rid="B14">14</xref>]. Using the Biomolecular Interaction Network Database (BIND – <ext-link ext-link-type="uri" xlink:href="http://www.bind.ca"/>) [<xref ref-type="bibr" rid="B15">15</xref>] as an integration platform, we have collected 15,143 yeast protein-protein interactions among 4,825 proteins (about 75% of the yeast proteome). Much larger data sets than this will eventually be available for other well studied model organisms as well as for the human proteome. These complex data sets present a formidable challenge for computational biology to develop automated data mining analyses for knowledge discovery.</p>
+    <p>Here we present the first report that uses a clustering algorithm to identify molecular complexes in a large protein interaction network derived from heterogeneous experimental sources. Based on our previous observation that highly interconnected, or dense, regions of the network may represent complexes [<xref ref-type="bibr" rid="B10">10</xref>], the "Molecular Complex Detection" (MCODE) algorithm has been implemented and evaluated on our yeast protein interaction compilation using known molecular complex data from a recent systematic mass spectrometry study of the proteome [<xref ref-type="bibr" rid="B7">7</xref>] and from the MIPS database [<xref ref-type="bibr" rid="B13">13</xref>].</p>
+    <p>Predicting molecular complexes from protein interaction data is important because it provides another level of functional annotation above other guilt-by-association methods. Since sub-units of a molecular complex generally function towards the same biological goal, prediction of an unknown protein as part of a complex also allows increased confidence in the annotation of that protein.</p>
+    <p>MCODE also makes the visualization of large networks manageable by extracting the dense regions around a protein of interest. This is important, as it is now obvious that the current visualization tools present on many interaction databases [<xref ref-type="bibr" rid="B15">15</xref>], originally based on the Sun Microsystems embedded spring graph layout Java applet do not scale well to large networks (<ext-link ext-link-type="uri" xlink:href="http://java.sun.com/applets/jdk/1.1/demo/GraphLayout/example1.html"/>).</p>
+    <sec>
+      <title>Algorithm</title>
+      <p>The MCODE algorithm operates in three stages, vertex weighting, complex prediction and optionally post-processing to filter or add proteins in the resulting complexes by certain connectivity criteria.</p>
+      <p>A network of interacting molecules can be intuitively modeled as a graph, where vertices are molecules and edges are molecular interactions. If temporal pathway or cell signalling information is known, it is possible to create a directed graph with arcs representing direction of chemical action or direction of information flow, otherwise an undirected graph is used. Using this graph representation of a biological system allows graph theoretic methods to be applied to aid in analysis and solve biological problems. This graph theory approach has been used by other biomolecular interaction database projects such as DIP [<xref ref-type="bibr" rid="B16">16</xref>], CSNDB [<xref ref-type="bibr" rid="B17">17</xref>], TRANSPATH [<xref ref-type="bibr" rid="B18">18</xref>], EcoCyc [<xref ref-type="bibr" rid="B19">19</xref>] and WIT [<xref ref-type="bibr" rid="B20">20</xref>] and is discussed by Wagner and Fell [<xref ref-type="bibr" rid="B21">21</xref>].</p>
+      <p>Algorithms for finding clusters, or locally dense regions, of a graph are an ongoing research topic in computer science and are often based on network flow/minimum cut theory [<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B23">23</xref>] or more recently, spectral clustering [<xref ref-type="bibr" rid="B24">24</xref>]. To find locally dense regions of a graph, MCODE instead uses a vertex-weighting scheme based on the clustering coefficient, C<sub>i</sub>, which measures 'cliquishness' of the neighborhood of a vertex [<xref ref-type="bibr" rid="B25">25</xref>]. C<sub>i </sub>= 2<italic>n</italic>/<italic>k</italic><sub><italic>i</italic></sub>(<italic>k</italic><sub><italic>i</italic></sub>-1) where <italic>k</italic><sub><italic>i </italic></sub>is the vertex size of the neighborhood of vertex <italic>i </italic>and <italic>n </italic>is the number of edges in the neighborhood (the immediate neighborhood density of <italic>v </italic>not including <italic>v</italic>). A clique is defined as a maximally connected graph. There is no standard graph theory definition of density, but definitions are normally based on the connectivity level of a graph. Density of a graph, G = (V,E), with number of vertices, |V|, and number of edges, |E|, is defined here as |E|; divided by the theoretical maximum number of edges possible for the graph, |E|<sub>max</sub>. For a graph with loops (an edge connecting back to its originating vertex), |E|<sub>max </sub>= |V| (|V|+1)/2 and for a graph with no loops, |E|<sub>max </sub>= |V| (|V|-1)/2. So, density of G, D<sub>G </sub>= |E|/|E|<sub>max </sub>and is thus a real number ranging from 0.0 to 1.0.</p>
+      <p>The first stage of MCODE, vertex weighting, weights all vertices based on their local network density using the highest <italic>k</italic>-core of the vertex neighborhood. A <italic>k</italic>-core is a graph of minimal degree <italic>k </italic>(graph G, for all <italic>v </italic>in G, deg(<italic>v</italic>) &gt;= <italic>k</italic>). The highest <italic>k</italic>-core of a graph is the central most densely connected subgraph. We define here the term core-clustering coefficient of a vertex, <italic>v</italic>, to be the density of the highest <italic>k</italic>-core of the immediate neighborhood of <italic>v </italic>(vertices connected directly to <italic>v</italic>) including <italic>v </italic>(note that C<sub>i </sub>does not include <italic>v</italic>). The core-clustering coefficient is used here instead of the clustering coefficient because it amplifies the weighting of heavily interconnected graph regions while removing the many less connected vertices that are usually part of a biomolecular interaction network, known to be scale-free [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B21">21</xref>,<xref ref-type="bibr" rid="B26">26</xref>-<xref ref-type="bibr" rid="B29">29</xref>]. A scale-free network has a vertex connectivity distribution that follows a power law, with relatively few highly connected vertices (high degree) and many vertices having a low degree. A given highly connected vertex, <italic>v</italic>, in a dense region of a graph may be connected to many vertices of degree one (singly linked vertex). These low degree vertices do not interconnect within the neighborhood of <italic>v </italic>and thus would reduce the clustering coefficient, but not the core-clustering coefficient. The final weight given to a vertex is the product of the vertex core-clustering coefficient and the highest <italic>k</italic>-core level, <italic>k</italic><sub>max</sub>, of the immediate neighborhood of the vertex. This weighting scheme further boosts the weight of densely connected vertices. This specific weighting function is based on local network density. Many other functions are possible and some may have better performance for this algorithm but these are not evaluated here.</p>
+      <p>The second stage, molecular complex prediction, takes as input the vertex weighted graph, seeds a complex with the highest weighted vertex and recursively moves outward from the seed vertex, including vertices in the complex whose weight is above a given threshold, which is a given percentage away from the weight of the seed vertex. This is the vertex weight percentage (VWP) parameter. If a vertex is included, its neighbours are recursively checked in the same manner to see if they are part of the complex. A vertex is not checked more than once, since complexes cannot overlap in this stage of the algorithm (see below for a possible overlap condition). This process stops once no more vertices can be added to the complex based on the given threshold and is repeated for the next highest unseen weighted vertex in the network. In this way, the densest regions of the network are identified. The vertex weight threshold parameter defines the density of the resulting complex. A threshold that is closer to the weight of the seed vertex identifies a smaller, denser network region around the seed vertex.</p>
+      <p>The third stage is post-processing. Complexes are filtered if they do not contain at least a 2-core (graph of minimum degree 2). The algorithm may be run with the 'fluff' option, which increases the size of the complex according to a given 'fluff' parameter between 0.0 and 1.0. For every vertex in the complex, <italic>v</italic>, its neighbors are added to the complex if they have not yet been seen and if the neighborhood density (including <italic>v</italic>) is higher than the given fluff parameter. Vertices that are added by the fluff parameter are not marked as seen, so there can be overlap among predicted complexes with the fluff parameter set. If the algorithm is run using the 'haircut' option, the resulting complexes are 2-cored, thereby removing the vertices that are singly connected to the core complex. If both options are specified, fluff is run first, then haircut.</p>
+      <p>Resulting complexes from the algorithm are scored and ranked. The complex score is defined as the product of the complex subgraph, C = (V,E), density and the number of vertices in the complex subgraph (D<sub>C </sub>× |V|). This ranks larger more dense complexes higher in the results. Other scoring schemes are possible, but are not evaluated here.</p>
+      <p>MCODE may also be run in a directed mode where a seed vertex is specified as a parameter. In this mode, MCODE only runs once to predict the single complex that the specified seed is a part of. Typically, when analyzing complexes in a given network, one would find all complexes present (undirected mode) and then switch to the directed mode for the complexes of interest. The directed mode allows one to experiment with MCODE parameters to fine tune the size of the resulting complex according to existing biological knowledge of the system. In directed mode, MCODE will first pre-process the input network to ignore all vertices with higher vertex weight than the seed vertex. If this were not done, MCODE would preferentially branch out to denser regions of the graph, if they exist, which could belong to separate, but denser complexes. Thus, a seed vertex for directed mode should always be the highest density vertex among the suspected complex. There is an option to turn this pre-processing step off, which will allow seeded complexes to branch out into denser regions of the graph, if desired.</p>
+      <p>The time complexity of the entire algorithm is polynomial O(<italic>nmh</italic><sup>3</sup>) where <italic>n </italic>is the number of vertices, <italic>m </italic>is the number of edges and <italic>h </italic>is the vertex size of the average vertex neighbourhood in the input graph, G. This comes from the vertex-weighting step. Finding a k-core in a graph proceeds by progressively removing vertices of degree &lt; k until all remaining vertices are connected to each other by degree k or more, and is thus O(<italic>n</italic><sup>2</sup>). The highest k-core is found by trying to find k-cores from one up until all vertices have been found and cannot go beyond a number of steps equal to the highest degree in the graph. Thus, the highest k-core step is O(<italic>n</italic><sup>3</sup>). Since this k-core step operates only on the neighbourhood of a vertex, the <italic>n </italic>in this case is the number of vertices in the average neighbourhood of a vertex, <italic>h</italic>. The inner loop of the algorithm only operates twice for every edge in the input graph, thus is O(2<italic>mh</italic><sup>3</sup>). The outer loop operates once on all vertices in the input graph, thus the entire time complexity of the weighting stage is O(<italic>n</italic>2<italic>mh</italic><sup>3</sup>) = O(<italic>nmh</italic><sup>3</sup>). The complex prediction stage is O(<italic>n</italic>) and the optional post-processing step can be up to O(<italic>cs</italic><sup>2</sup>), where <italic>c </italic>is the number of complexes that were found in the previous step and <italic>s </italic>is the number of vertices in the largest complex - O(<italic>cs</italic><sup>2</sup>) to find the 2-core once for each complex.</p>
+      <p>Even though the fastest min-cut graph clustering algorithms are faster, at O(<italic>n</italic><sup>2</sup>log<italic>n</italic>) [<xref ref-type="bibr" rid="B30">30</xref>], MCODE has a number of advantages. Since weighting is done once and comprises most of the time complexity, many algorithm parameters can be tried, in O(<italic>n</italic>), once weighting is complete. This is useful when evaluating many different parameters. MCODE is relatively easy to implement and since it is local density based, has the advantage of a directed mode and a complex connectivity mode. These two modes are generally not useful in typical clustering applications, but are useful for examining molecular interaction networks. Additionally, only those proteins above a given local density threshold are assigned to complexes. This is in contrast to many clustering applications that force all data points to be part of clusters, whether they truly should be part of a cluster or not.</p>
+    </sec>
+    <sec>
+      <title>Pseudocode</title>
+      <sec>
+        <title>Stage 1: Vertex Weighting</title>
+        <p><bold>procedure </bold>MCODE-VERTEX-WEIGHTING</p>
+        <p>   <bold>input</bold>: <bold>graph</bold>: G = (V,E)</p>
+        <p>   <bold>for all </bold><italic>v </italic>in G <bold>do</bold></p>
+        <p>      N = find neighbors of <italic>v </italic>to depth 1</p>
+        <p>      K = Get highest <italic>k</italic>-core graph from N</p>
+        <p>      <italic>k </italic>= Get highest <italic>k</italic>-core number from N</p>
+        <p>      <italic>d </italic>= Get density of K</p>
+        <p>      Set weight of <italic>v </italic>= <italic>k </italic>× <italic>d</italic></p>
+        <p>   <bold>end for</bold></p>
+        <p>end procedure</p>
+      </sec>
+      <sec>
+        <title>Stage 2: Molecular Complex Prediction</title>
+        <p><bold>procedure </bold>MCODE-FIND-COMPLEX</p>
+        <p>   <bold>input</bold>: <bold>graph</bold>: G = (V,E); <bold>vertex weights</bold>: W;</p>
+        <p>      <bold>vertex weight percentage</bold>: <italic>d</italic>; <bold>seed vertex</bold>: <italic>s</italic></p>
+        <p>   <bold>if </bold><italic>s </italic>already seen <bold>then return</bold></p>
+        <p>   <bold>for all </bold><italic>v </italic>neighbors of <italic>s </italic><bold>do</bold></p>
+        <p>      <bold>if </bold>weight of <italic>v </italic>&gt; (weight of <italic>s</italic>)(1 - <italic>d</italic>) <bold>then </bold>add <italic>v </italic>to complex C</p>
+        <p>      <bold>call</bold>: MCODE-FIND-COMPLEX (G, W, <italic>d</italic>, <italic>v</italic>)</p>
+        <p>   <bold>end for</bold></p>
+        <p>end procedure</p>
+        <p><bold>procedure </bold>MCODE-FIND-COMPLEXES</p>
+        <p>   <bold>input</bold>: <bold>graph</bold>: G = (V,E); <bold>vertex weights</bold>: W;</p>
+        <p>      <bold>vertex weight percentage</bold>: <italic>d</italic></p>
+        <p>   <bold>for all </bold><italic>v </italic>in G <bold>do</bold></p>
+        <p>      <bold>if </bold>not already seen v <bold>then call</bold>: MCODE-FIND-COMPLEX(G, W, <italic>d</italic>, <italic>v</italic>)</p>
+        <p>   <bold>end for</bold></p>
+        <p>end procedure</p>
+      </sec>
+      <sec>
+        <title>Stage 3: Post-Processing (optional)</title>
+        <p><bold>procedure </bold>MCODE-FLUFF-COMPLEX</p>
+        <p>   <bold>input</bold>: <bold>graph</bold>: G = (V,E); <bold>vertex weights</bold>: W;</p>
+        <p>      <bold>fluff density threshold</bold>: <italic>d</italic>; <bold>complex graph</bold>: C = (U,F)</p>
+        <p>   <bold>for all </bold><italic>u </italic>in C <bold>do</bold></p>
+        <p>      <bold>if </bold>weight of <italic>u </italic>&gt;<italic>d </italic><bold>then </bold>add <italic>u </italic>to complex C</p>
+        <p>   <bold>end for</bold></p>
+        <p>end procedure</p>
+        <p><bold>procedure </bold>MCODE-POST-PROCESS</p>
+        <p>   <bold>input</bold>: <bold>graph</bold>: G = (V,E); <bold>vertex weights</bold>: W; <bold>haircut flag</bold>: <italic>h</italic>; <bold>fluff flag</bold>: <italic>f</italic>;</p>
+        <p>      <bold>fluff density threshold</bold>: <italic>t</italic>; <bold>set of predicted complex graphs</bold>: C</p>
+        <p>   <bold>for all </bold><italic>c </italic>in C <bold>do</bold></p>
+        <p>      <bold>if </bold><italic>c </italic>not 2-core <bold>then </bold>filter</p>
+        <p>      <bold>if </bold><italic>h </italic>is TRUE <bold>then </bold>2-core complex</p>
+        <p>      <bold>if </bold><italic>f </italic>is TRUE <bold>then call</bold>: MCODE-FLUFF-COMPLEX(G, W, <italic>t</italic>, <italic>c</italic>)</p>
+        <p>   <bold>end for</bold></p>
+        <p>end procedure</p>
+      </sec>
+      <sec>
+        <title>Overall Process</title>
+        <p><bold>procedure </bold>MCODE</p>
+        <p>   <bold>input</bold>: <bold>graph</bold>: G = (V,E); <bold>vertex weight percentage</bold>: <italic>d</italic>;</p>
+        <p>      <bold>haircut flag</bold>: <italic>h</italic>; <bold>fluff flag</bold>: <italic>f</italic>; <bold>fluff density threshold</bold>: <italic>t</italic>;</p>
+        <p>      <bold>set of predicted complex graphs</bold>: C</p>
+        <p>   <bold>call</bold>: W = MCODE-VERTEX-WEIGHTING (G)</p>
+        <p>   <bold>call</bold>: C = MCODE-FIND-COMPLEXES (G, W, <italic>d</italic>)</p>
+        <p>   <bold>call</bold>: MCODE-POST-PROCESS (G, W, <italic>h</italic>, <italic>f</italic>, <italic>t</italic>, C)</p>
+        <p>end procedure</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Implementation</title>
+      <p>MCODE has been implemented in ANSI C using the cross-platform NCBI Toolkit; <ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/IEB"/> and the BIND graph library in the SLRI Toolkit; <ext-link ext-link-type="uri" xlink:href="http://sourceforge.net/projects/slritools"/>. Both of these source code libraries are freely available. The actual MCODE source code is not yet freely available. The MCODE program has been compiled and tested on UNIX, Mac OS X and Windows. Because a yeast gene name dictionary is used to recognize input and generate output, the MCODE executable currently only works for yeast proteins in a user friendly manner. The algorithm, however is completely general, via the graph theory abstraction, to any graph and thus to any biomolecular interaction network. MCODE binaries are available from <ext-link ext-link-type="ftp" xlink:href="ftp://ftp.mshri.on.ca/pub/BIND/Tools/MCODE"/>.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <sec>
+      <title>Evaluation of MCODE</title>
+      <p>The evaluation of MCODE requires a set of experimentally determined biomolecular interactions and a set of associated experimentally determined molecular complexes. Currently, the largest source for such data is for proteins from the budding yeast, <italic>Saccharomyces cerevisiae</italic>. Recently, a large-scale mass spectrometry study by Gavin et al [<xref ref-type="bibr" rid="B7">7</xref>] provided a large data set of protein interactions with manually annotated molecular complexes. Also available are the protein interaction and complex tables of MIPS [<xref ref-type="bibr" rid="B13">13</xref>] and YPD [<xref ref-type="bibr" rid="B14">14</xref>]. MCODE was used to automatically predict protein complexes in our collected protein-protein interaction data sets. Resulting complexes were then matched to known molecular complexes from Gavin et al. (the Gavin benchmark) and the MIPS benchmark using an overlap score. Parameter optimization was then used to maximize the biological relevance of predicted complexes according to the given benchmarks. YPD was not used as a current version could not be acquired.</p>
+      <p>To ensure that MCODE is not unduly affected by the expected high false-positive rate in large-scale interaction data sets, large-scale and literature derived MCODE predictions were compared. MCODE was then used to predict complexes in the entire set of machine readable protein-protein interactions that we could collect for yeast. Complexes of interest were then further examined using the directed mode and complex connectivity mode of MCODE.</p>
+    </sec>
+    <sec>
+      <title>Evaluation of MCODE using the Gavin data set of protein interactions and complexes</title>
+      <p>In this study, we wanted to use all forms of protein interaction data available, which requires mixing of different types of experiments, such as yeast two-hybrid and co-immunoprecipitation. Two-hybrid results are inherently pairwise, whereas copurification results are sets of one or more identified proteins. For a copurification result, only a set of size 2 can be directly considered a pairwise interaction, otherwise it must be modeled as a set of hypothetical interactions. Biochemical copurifications can be thought of as populations of complexes with some underlying pairwise protein interaction topology that is unknown from the experiment. In the general case of the purification used by Gavin et al., one affinity tagged protein was used as bait to pull associated proteins out of a yeast cell lysate. The two extreme cases for the topology underlying the population of complexes from a single purification experiment are a minimally connected 'spoke' model, where the data are modeled as direct bait-associated protein pairwise interactions, and a maximally connected 'matrix' model, where the data are modeled as all proteins connected to all others in the set. The real topology of the set of proteins must lie somewhere between these two extremes.</p>
+      <p>Population of complexes: <italic>C </italic>= {<italic>b, c, d, e</italic>} (<italic>b </italic>= bait)</p>
+      <p>Spoke model hypothetical interactions: <italic>i</italic><sub><italic>S </italic></sub>= {<italic>b-c, b-d, b-e</italic>}</p>
+      <p>Matrix model hypothetical interactions; <italic>i</italic><sub><italic>M </italic></sub>= {<italic>b-b, b-c, b-d, b-e, c-c, c-d, c-e, d-d, d-e, e-e</italic>}</p>
+      <p>Advantages of the spoke model are that it is biologically intuitive, biologists often represent their copurification results in this manner, and is about 3 times more accurate than the matrix model [<xref ref-type="bibr" rid="B31">31</xref>]. Disadvantages are that it could misrepresent interactions. The matrix model, alternatively, cannot misrepresent interactions, as all possible interactions are generated, but this is at the cost of generating a large number of false interactions. Matrix topologies are also physically implausible for larger complexes because of increased possibility of steric clash if all subunits are interacting with all others. Ultimately, the spoke model should be reasonable for use in evaluating MCODE.</p>
+      <p>Gavin et al. raw data from 588 biochemical purifications were represented using the spoke model, described above, to get 3,225 hypothetical protein-protein interactions among 1,363 proteins for input to MCODE. A list of 232 manually annotated protein complexes based on the original purification data reported by Gavin et al. was filtered to remove five reported 'complexes' each composed of a single protein and six complexes of two or three proteins that were already in the data set as part of a larger complex. This yielded a filtered set of 221 complexes that were used to evaluate MCODE, although some of these complexes have significant overlap to other complexes in the set.</p>
+      <p>To evaluate which parameter choice would allow automatic prediction of protein complexes from the spoke modeled Gavin et al. interaction set that best matched the manually annotated complexes, MCODE was run using all four possible combinations of the two Boolean parameters (haircut: true/false, fluff: true/false) over a full range of 20 vertex weight percentage (VWP) and fluff parameters (0 to 0.95 in 0.05 increments). During this parameter optimization process, MCODE was limited to find complexes of size two or higher.</p>
+      <p>A scoring scheme was developed to determine how effectively an MCODE predicted complex matched a complex from the benchmark set of complexes. In this case, the benchmark complex set was the Gavin et al. hand-annotated complex set. The overlap score was defined as ω = <italic>i</italic><sup>2</sup>/<italic>a</italic>*<italic>b</italic>, where <italic>i </italic>is the size of the intersection set of a predicted complex with a known complex, <italic>a </italic>is the size of the predicted complex and <italic>b </italic>is the size of the known complex. A protein is part of the intersection set only if it is present in both predicted and known complexes. Thus, a predicted complex that has no proteins in a known complex has ω = 0 and a predicted complex that perfectly matches a known complex has ω = 1. Also, predicted complexes that fully overlap, but are much larger or much smaller than any known complexes will get a low ω. The overlap score of a predicted complex vs. a benchmark complex is then a measure of biological significance of the prediction, assuming that the benchmark set of complexes is biologically relevant. The best parameter choice for MCODE on this protein interaction data set is one that predicts the largest set of complexes that match the largest number of benchmark complexes above a threshold ω. Since there is overlap in the Gavin benchmark complex database, a predicted complex may match more than one known complex with a high ω.</p>
+      <p>To choose an overlap score that maximizes biological relevance of the predicted complexes without filtering away too many predictions, each of the 840 parameter combinations tested during the parameter optimization stage. The number of MCODE predicted complexes was plotted against the number of matched known complexes over a range of ω thresholds from 'no threshold' to 0.1 to 0.9 (in 0.1 increments). If no ω threshold is used, a predicted complex only needs at least one protein in common with a known complex to be considered a match. If predicted and known complexes are only counted as a match when their ω is above a specific threshold, the number of matched complexes declines with increasing ω threshold, as shown in Figure <xref ref-type="fig" rid="F1">1</xref>. Interestingly, the average and maximum number of matched known complexes drops more quickly from zero until a ω threshold of 0.2 than from 0.2 to 0.9 indicating that many predicted complexes only have one or a few proteins that overlap with known complexes. A ω threshold of 0.2 to 0.3 thus seems to filter out most predicted complexes that have insignificant overlap with known complexes.</p>
+      <fig position="float" id="F1">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Effect of Overlap Score Threshold on Number of Predicted and Matched Known Complexes for the Gavin Evaluation</bold> Figure legend: Average and maximum number of predicted and matched known complexes seen during MCODE parameter optimization (840 parameter combinations) plotted as a function of overlap score threshold. As the stringency for the closeness that a predicted complex must match a known complex is increased (increase in overlap score), fewer predicted complexes match known complexes. Note that these curves do not correspond to the best parameter set, but rather are an average of results from all tried parameter combinations.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-1"/>
+      </fig>
+      <p>Figure <xref ref-type="fig" rid="F2">2</xref> shows the range of number of complexes predicted and number of known complexes matched for the 0.2 ω threshold over all tried MCODE parameters. A y = x line is also plotted to show that data points tend to be skewed towards a higher number of matched known complexes than predicted complexes because of the redundancy in the Gavin complex benchmark. Data points closest to the upper right portion of the graph maximize both number of matched known complexes and number of predicted complexes. MCODE parameter combinations that result in these data points therefore optimize MCODE on this data set (according to the overlap score threshold). This result shows that the number of predicted complexes should be similar to the number of matched known complexes for a parameter choice to be reasonable, although the number of matched known complexes may be larger, again, because of some commonality among complexes in the benchmark set. The parameter combination corresponding to the best data point (63,88) at an overlap score threshold of 0.2 is haircut = FALSE, fluff = TRUE, VWP = 0.05 and a fluff density threshold between 0 and 0.1. These parameter optimization results for MCODE over this data set were stable over a range of ω thresholds up to 0.5. Above 0.5, the result was not stable as there were generally too few predicted complexes with high overlap scores (Figure <xref ref-type="fig" rid="F1">1</xref>).</p>
+      <fig position="float" id="F2">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Number of Predicted and Matched Known Complexes at Overlap Score Threshold of 0.2 </bold>Figure legend: Number of known complexes matched to MCODE predicted complexes plotted against number of MCODE predicted complexes, both with an overlap score above 0.2.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-2"/>
+      </fig>
+      <p>A specificity versus sensitivity analysis [<xref ref-type="bibr" rid="B32">32</xref>] was also performed. Defining the number of true positives (TP) as the number of MCODE predicted complexes with ω over a threshold value and the number of false positives (FP) as the total number of predicted MCODE complexes minus TP. The number of false negatives (FN) equals the number of known benchmark complexes not matched by predicted complexes. Sensitivity was defined as [TP/(TP+FN)] and specificity was defined as [TP/(TP+FP)]. The MCODE parameter choice that optimizes both specificity and sensitivity is the same as from the above analysis. The optimal sensitivity of this analysis was ~0.31 and the corresponding specificity was ~0.79.</p>
+      <p>The 63 MCODE predicted complexes only matched 88 of the 221 complexes in the known data set indicating that MCODE could not recapitulate the majority of the Gavin complex benchmark solely using protein connectivity information. As mentioned above, there are more matched complexes than predicted because of some redundancy in the benchmark. This low sensitivity is not surprising, since many of the hand-annotated complexes were created directly from single co-immunoprecipitation results, which are not highly interconnected in the spoke model. For example, Cdc3 was used as a bait to co-immunoprecipitate Cdc10, Cdc11, Cdc12 and Ydl225w. A complex was annotated as containing these five proteins, but only Cdc3 was used as bait. If more elements of a complex are used as baits, the proteins become more interconnected and more readily predicted by MCODE. A good example of this is the Arp2/3 complex, which is highly conserved in eukaryotes and is involved in actin cytoskeleton rearrangement. The structure of this complex is known by X-ray crystallography [<xref ref-type="bibr" rid="B33">33</xref>] thus actual protein-protein interactions from the structure can be matched up to the co-immunoprecipitation results. MCODE predicted all seven components of the Arp2/3 complex crystal structure and five extra proteins using the optimized parameters. Six out of the seven Arp2/3 subunits were used as baits by Gavin et al. and the resulting benchmark complex included the five extra proteins that MCODE also predicted (Nog2, Pfk1, Prt1, Cct8 and Cct5) that are not in the crystal structure. Cct5 and Cct8 are known to be involved in actin assembly, but Nog2, Pfk1 and Prt1 are not. These extra proteins likely represent non-specific binding in the experimental approach. These two cases are shown diagrammatically in Figure <xref ref-type="fig" rid="F3">3</xref>. Interestingly, using the haircut parameter would remove all five extra proteins that are not in the crystal structure, leaving only the seven that are present. This shows that while the parameter optimization allows maximum matching of the hand-annotated known complexes, these complexes may not all be physiologically relevant and thus another parameter set may better predict 'real' complexes.</p>
+      <fig position="float" id="F3">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Examples of Gavin Benchmark Complexes Missed and Hit by MCODE </bold>Figure legend: Protein complexes are represented as graphs using the spoke model. Vertices represent proteins and edges represent experimentally determined interactions. Blue vertices are baits in the Gavin et al. study. A) A Cdc3 complex hand-annotated by Gavin et al. that was missed by MCODE because of a lack of connectivity information among sub-components. This complex annotation was the result of a single co-immunoprecipitation experiment. B) The Arp2/3 complex as annotated by Gavin et al. and as found by MCODE with parameters optimized to the data set. Note the five extra proteins that have minimal connectivity to main cluster. C) The protein connection map seen from the crystal structure of the Arp2/3 complex. The crystal structure is from <italic>Bos taurus </italic>(cow), but is assumed to be very similar to yeast based on very high similarity between cow and yeast Arp2/3 subunits.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-3"/>
+      </fig>
+      <p>To explore the effect of certain MCODE parameters on resulting predicted complexes, various features of these complexes were examined while changing specific parameters and keeping all else constant. Linearly increasing the VWP parameter increased the size of the predicted complexes exponentially while reducing the number of complexes predicted in a linear fashion. Figure <xref ref-type="fig" rid="F4">4</xref> shows this effect with both fluff and haircut parameters turned off. At high VWP values, very large complexes were predicted and these encompassed most of the data set, thus were not very useful.</p>
+      <fig position="float" id="F4">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Effect of Vertex Weight Percentage Parameter on Predicted Complex Size </bold>Figure legend: As the vertex weight percentage (VWP) parameter of MCODE is increased, the number of predicted complexes steadily decreases and the average and largest size of predicted complexes increases exponentially. The y-axis follows a logarithmic scale. For reference, the average and maximum size of the MIPS benchmark complexes are 6 and 81, respectively and of the Gavin benchmark complexes are 11.8 and 88, respectively.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-4"/>
+      </fig>
+      <p>Because using haircut = TRUE would have led MCODE to predict the Arp2/3 complex perfectly (according to the crystal structure as discussed above), we examined if the haircut parameter has any general effect on the number of matched predicted complexes. Setting haircut = TRUE had no significant effect on the number of complexes predicted at high ω thresholds, but generally reduced the number of matched known complexes at low ω thresholds (0 to 0.1) compared to haircut = FALSE. Since the haircut = TRUE option removes less-connected proteins on the fringe of a predicted complex and this reduces the number of predicted complexes with low overlap scores, these fringe proteins likely contribute to low-level overlap (&lt;0.2 ω) of the known complexes.</p>
+      <p>We also investigated the effect of changing the fluff density threshold when setting fluff = TRUE on the number of matched benchmark complexes. Linearly increasing the fluff density threshold in the MCODE post-processing step linearly decreased the number of matched complexes above an overlap score of 0.2.</p>
+    </sec>
+    <sec>
+      <title>Evaluation of MCODE using MIPS data set of protein interactions and complexes</title>
+      <p>Since the Gavin et al. data set was developed by only one group using a single experimental method, it may not accurately represent protein complex knowledge for yeast. The MIPS protein complex catalogue <ext-link ext-link-type="uri" xlink:href="http://mips.gsf.de/proj/yeast/catalogues/complexes/"/> is a curated set of 260 protein complexes for yeast that was compiled from the literature and is thus a more realistic data set comprised of varied experiments from many labs using different techniques. After filtering away 50 'complexes' each composed of a single protein and 2 highly similar complexes, we were left with 208 complexes for the MIPS known set. This set did not include information from the recent large-scale mass spectrometry studies [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B7">7</xref>]. While the MIPS complex catalogue may be incomplete, it is currently the best available public resource for yeast protein complexes that we are aware of.</p>
+      <p>MCODE was run again with a full combination of parameters, this time over a set of 9088 protein-protein interactions among 4379 proteins which did not include the recent large-scale mass spectrometry studies but included all interactions from the MIPS, YPD and PreBIND databases as well as from the majority of large-scale yeast two-hybrid experiments to date [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B4">4</xref>,<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B34">34</xref>]. This interaction set is termed 'Pre HTMS'. All of the interactions in this set were published before the last update specified on the MIPS protein complex catalogue and many are included in the MIPS protein interaction table, thus we assumed that the MIPS complex catalogue took into account the information in the known interaction table. Protein complexes found by MCODE in this set were compared to the MIPS protein complex catalogue to evaluate how well MCODE performed at locating protein complexes <italic>ab initio</italic>.</p>
+      <p>The same evaluation of MCODE that was done using the Gavin et al. data set was performed with the MIPS data set. From this analysis, including specificity versus sensitivity plots (optimized sensitivity = ~0.27 and specificity = ~0.31), the MIPS complex benchmark optimized parameters were haircut = TRUE, fluff = TRUE, VWP = 0.1 and a fluff density threshold of 0.2. This result was stable up to a ω threshold of 0.6 after which it was difficult to evaluate the results, as there were generally too few predicted complexes above the high ω thresholds. This parameter combination led MCODE to predict 166 complexes of which 52 matched 64 MIPS complexes with a ω of at least 0.2. Examining the ω distribution for this parameter set reveals that, even though this prediction is optimized, most of the predicted complexes don't show overlap to those in the known MIPS set (Figure <xref ref-type="fig" rid="F5">5</xref>). The complexes predicted here are also different from those predicted from the Gavin interaction data. Nine complexes have an overlap score above 0.2 between these two sets, with the highest overlap score being 0.43 and all the rest being below 0.27. This might signify that either the MIPS complex catalogue is not complete, that there is not enough data in the dataset that MCODE was run on, or a human annotated definition of a complex does not perfectly match with a graph density based definition.</p>
+      <fig position="float" id="F5">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Overlap Score Distributions of Pre HTMS and AllYeast interaction sets with MIPS Complex Benchmark Optimized MCODE Parameter Sets </bold>Figure legend: The number of MCODE predicted complexes in the pre-large scale mass spectrometry (Pre HTMS) and AllYeast protein-protein interaction sets with a given overlap score threshold compared to the MIPS benchmark complex set is shown. The majority of predicted complexes have an overlap score of zero meaning that they had no overlap with the catalogue of known MIPS protein complexes.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-5"/>
+      </fig>
+      <p>The effect of the VWP parameter on complex size and of the haircut and fluff parameters on number of matched complexes was very similar to that seen when evaluating MCODE on the Gavin complex benchmark.</p>
+    </sec>
+    <sec>
+      <title>Effect of data set properties on MCODE</title>
+      <p>Since many large-scale protein interaction data sets from yeast are known to contain a high level of false positives [<xref ref-type="bibr" rid="B35">35</xref>], we examined the effect these might have on MCODE predictions. Sensitivity vs. specificity was plotted for MCODE predictions, with parameters chosen to maximize these values at ω threshold of 0.2 against the MIPS and Gavin complex benchmarks for the various data sets (Figure <xref ref-type="fig" rid="F6">6</xref>).</p>
+      <fig position="float" id="F6">
+        <label>Figure 6</label>
+        <caption>
+          <p><bold>Sensitivity vs. Specificity Plots of MCODE Results Among Various Data Sets </bold>Figure legend: Specificity is plotted versus sensitivity of the best MCODE results at an overlap score above 0.2 against both the MIPS (Panel A) and Gavin (Panel B) complex benchmarks. Panel A shows that there are no large inherent differences among interaction data sets resulting from significantly different experimental methods (data set: sensitivity, specificity; Y2H:0.10,0.27; Benchmark:0.29,0.36; HTP Only:0.14;0.24; Pre HTMS:0.27,0.31; AllYeast:0.27,0.26; Gavin Spoke:0.10,0.38). Panel B shows that the Gavin benchmark is expectedly biased towards the Gavin interaction data set and thus should not be used as a general benchmark (data set: sensitivity, specificity; Y2H:0.03,0.10; Benchmark:0.11,0.16; HTP Only:0.24;0.33; Pre HTMS:0.10,0.13; AllYeast:0.27,0.26; Gavin Spoke:0.31,0.79).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-6"/>
+      </fig>
+      <p>MCODE predictions on the high-throughput data sets, termed 'Gavin Spoke', 'Y2H' and 'HTP only' (see Methods), are about as specific as the literature derived interaction data set, but not as sensitive (Figure <xref ref-type="fig" rid="F6">6A</xref>). MCODE predictions on interaction data sets containing the literature derived benchmark, labelled 'Benchmark', 'Pre HTMS' and 'AllYeast', are generally more sensitive and specific than those containing just the large-scale interaction sets. Since the specificity drops from Benchmark to Pre HTMS to AllYeast, with increasing amounts of large-scale data, it could be argued that addition of this data negatively affects MCODE. However, large-scale data is known to contain a high number of false positives, so it should be expected that these false-positives would not randomly contribute to the formation of dense regions, which are highly unlikely to occur by chance (see below). More complexes should be predicted with the addition of the large-scale data, assuming this data explores previously unseen regions of the interactome, but the high number of false-positives should limit the amount of new complexes compared to the amount of added interactions. The MIPS complex benchmark used here is not expected to contain complexes newly found in large-scale studies, explaining the decrease in specificity. This is exactly what occurs in our analysis. In an effort to further test the effect of large-scale data on MCODE prediction performance, the Benchmark interaction data set was augmented with the addition of interactions from large-scale experiments that only connect proteins in the Benchmark set with each other. Over 3100 interactions were added to the Benchmark data set to create a set of over 6400 interactions. MIPS complex benchmark optimised MCODE predicted 52 complexes matching 66 MIPS benchmark complexes, almost exactly the same number of complexes found using the Benchmark set by itself (Table <xref ref-type="table" rid="T1">1</xref>). These analyses strongly suggest the addition of large-scale experimentally derived interactions does not unduly affect the prediction of complexes by MCODE.</p>
+      <table-wrap position="float" id="T1">
+        <label>Table 1</label>
+        <caption>
+          <p>Summary of MCODE Results with Best Parameters on Various Data Sets. </p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <td align="center">Data Set</td>
+              <td align="center">Number of Proteins</td>
+              <td align="center">Number of Interact-ions</td>
+              <td align="center">Number of Predicted Complexes</td>
+              <td align="center">MCODE Complexes Predicted Above ω = 0.2</td>
+              <td align="center">Matched Benchmark Complexes</td>
+              <td align="center">Complex Benchmark</td>
+              <td align="center">Best MCODE Parameters</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">Gavin Spoke</td>
+              <td align="center">1363</td>
+              <td align="center">3225</td>
+              <td align="center">82</td>
+              <td align="center">63</td>
+              <td align="center">88</td>
+              <td align="center">Gavin</td>
+              <td align="center">hFfT\0.05\0.05</td>
+            </tr>
+            <tr>
+              <td align="center">Gavin Spoke</td>
+              <td align="center">1363</td>
+              <td align="center">3225</td>
+              <td align="center">53</td>
+              <td align="center">20</td>
+              <td align="center">20</td>
+              <td align="center">MIPS</td>
+              <td align="center">hTfT\0.1\0.35</td>
+            </tr>
+            <tr>
+              <td align="center">Pre HTMS</td>
+              <td align="center">4379</td>
+              <td align="center">9088</td>
+              <td align="center">158</td>
+              <td align="center">21</td>
+              <td align="center">28</td>
+              <td align="center">Gavin</td>
+              <td align="center">hTfT\0\0.2\</td>
+            </tr>
+            <tr>
+              <td align="center">Pre HTMS</td>
+              <td align="center">4379</td>
+              <td align="center">9088</td>
+              <td align="center">166</td>
+              <td align="center">52</td>
+              <td align="center">64</td>
+              <td align="center">MIPS</td>
+              <td align="center">hTfT\0.1\0.2</td>
+            </tr>
+            <tr>
+              <td align="center">AllYeast</td>
+              <td align="center">4825</td>
+              <td align="center">15143</td>
+              <td align="center">209</td>
+              <td align="center">52</td>
+              <td align="center">76</td>
+              <td align="center">Gavin</td>
+              <td align="center">hFfT\0\0.1</td>
+            </tr>
+            <tr>
+              <td align="center">AllYeast</td>
+              <td align="center">4825</td>
+              <td align="center">15143</td>
+              <td align="center">209</td>
+              <td align="center">54</td>
+              <td align="center">63</td>
+              <td align="center">MIPS</td>
+              <td align="center">hTfT\0\0.1</td>
+            </tr>
+            <tr>
+              <td align="center">AllYeast</td>
+              <td align="center">4825</td>
+              <td align="center">15143</td>
+              <td align="center">203</td>
+              <td align="center">80</td>
+              <td align="center">150</td>
+              <td align="center">MIPS+Gavin</td>
+              <td align="center">hTfT\0\0.15\</td>
+            </tr>
+            <tr>
+              <td align="center">Benchmark</td>
+              <td align="center">1762</td>
+              <td align="center">3310</td>
+              <td align="center">141</td>
+              <td align="center">23</td>
+              <td align="center">30</td>
+              <td align="center">Gavin</td>
+              <td align="center">hTfT\0\0.3</td>
+            </tr>
+            <tr>
+              <td align="center">Benchmark</td>
+              <td align="center">1762</td>
+              <td align="center">3310</td>
+              <td align="center">163</td>
+              <td align="center">58</td>
+              <td align="center">67</td>
+              <td align="center">MIPS</td>
+              <td align="center">hTfT\0.1\0.05</td>
+            </tr>
+            <tr>
+              <td align="center">HTP Only</td>
+              <td align="center">4557</td>
+              <td align="center">12249</td>
+              <td align="center">138</td>
+              <td align="center">46</td>
+              <td align="center">77</td>
+              <td align="center">Gavin</td>
+              <td align="center">hTfT\0.05\0.1</td>
+            </tr>
+            <tr>
+              <td align="center">HTP Only</td>
+              <td align="center">4557</td>
+              <td align="center">12249</td>
+              <td align="center">122</td>
+              <td align="center">29</td>
+              <td align="center">35</td>
+              <td align="center">MIPS</td>
+              <td align="center">hTfT\0.05\0.15</td>
+            </tr>
+            <tr>
+              <td align="center">Y2H</td>
+              <td align="center">3847</td>
+              <td align="center">6133</td>
+              <td align="center">73</td>
+              <td align="center">7</td>
+              <td align="center">7</td>
+              <td align="center">Gavin</td>
+              <td align="center">hTfT\0.2\0.1</td>
+            </tr>
+            <tr>
+              <td align="center">Y2H</td>
+              <td align="center">3847</td>
+              <td align="center">6133</td>
+              <td align="center">78</td>
+              <td align="center">21</td>
+              <td align="center">26</td>
+              <td align="center">MIPS</td>
+              <td align="center">hTfT\0\0.1</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Statistics and a summary of results are shown for the various data sets used to evaluate MCODE. 'Gavin Spoke' is the Gavin et al. data set represented as binary interactions using the spoke model; 'Pre HTMS' is the set of all yeast interaction not including the recent high-throughput mass spectrometry studies [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B7">7</xref>].; 'AllYeast' is the set of all yeast interactions that we could collect; 'Benchmark' is a set of interactions found in the literature from YPD, MIPS and PreBIND; 'HTP Only' is the combination of all large-scale and high-throughput yeast two-hybrid and mass spectrometry data sets; 'Y2H' is the set of all yeast two-hybrid results from large-scale and literature sources. See Methods for full explanation of data sets. The 'Best MCODE Parameters' are formatted as haircut True of False, fluff True or False\VWP\Fluff Density Threshold Parameter.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>It can be seen from Figure <xref ref-type="fig" rid="F6">6B</xref> that the Gavin complex benchmark set is biased towards the Gavin et al. spoke modeled interaction data. This is expected and is the main reason why the less biased MIPS complex set is used throughout this work as a benchmark instead of the Gavin set.</p>
+      <p>Since the result of a co-immunoprecipitation experiment is a set of proteins, which we model as binary interactions using the spoke method, we wished to evaluate whether this affects complex prediction compared to an experimental system that generates purely binary interaction results, such as yeast two-hybrid. As can be seen in Table <xref ref-type="table" rid="T1">1</xref>, MCODE does find known complexes in the 'Y2H' set of only yeast two-hybrid results, thus this set does contain dense regions that are known protein complexes. This being said, the Y2H set is the least dense of all data sets examined here so is expected to have less dense regions of the network and thus less MCODE predictable complexes per protein present in the set. MCODE predicts a similar amount of complexes as well as finding a similar amount of known complexes in the Y2H and Gavin Spoke data sets indicating that these data sets are not significantly different from each other in the amount of dense network regions that they contain, even though they are different sizes. Taken together, the latter results and those in Figure <xref ref-type="fig" rid="F6">6B</xref> show that the spoke model is a reasonable representation of the Gavin et al. tandem affinity purification data.</p>
+    </sec>
+    <sec>
+      <title>Predicting complexes in the Yeast interactome</title>
+      <p>Given that MCODE performed reasonably well on test data, we decided to predict complexes in a much larger network. All machine-readable protein-protein interaction data from various data sets [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B7">7</xref>,<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>]. were collected and integrated to form a non-redundant set of 15,143 experimentally determined yeast protein interactions encompassing 4,825 proteins, or approximately three quarters of the proteome. This set was termed 'AllYeast'. MCODE was parameter optimized, as above, using the MIPS benchmark. The best resulting parameter set was haircut = TRUE, fluff = TRUE, VWP = 0 and a fluff density threshold of 0.1. With these parameters, MCODE predicted 209 complexes, of which 54 matched 63 MIPS benchmark complexes above an overlap score of 0.2 (see <xref ref-type="supplementary-material" rid="S1">Additional file 1</xref>). Complexes found in this manner should be further studied using MCODE in directed mode by specifying a seed vertex and trying different parameters to examine how large a complex can get before seemingly biologically irrelevant proteins are added (see below).</p>
+      <p>Figure <xref ref-type="fig" rid="F5">5</xref> shows that even when a large set of interactions is used as input to MCODE, most of the MCODE predicted complexes do not match well with known complexes in MIPS. The complex size distribution of MCODE predicted complexes matches the shape of the MIPS set, but the MCODE complexes are on average larger (Average MIPS size = 6.0, Average MCODE Predicted size = 9.7). The average number of YPD and GO functional annotation terms per protein in an MCODE predicted complex is similar to that of MIPS complexes (Table <xref ref-type="table" rid="T2">2</xref>). This seems to indicate that MCODE is predicting complexes that are functionally relevant. Also, closer examination of the top, middle and bottom five scoring MCODE complexes shows that MCODE can predict biologically relevant complexes (Table <xref ref-type="table" rid="T3">3</xref>).</p>
+      <table-wrap position="float" id="T2">
+        <label>Table 2</label>
+        <caption>
+          <p>Average Number of YPD and GO Annotation Terms in Complex Sets.</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <td align="center">Data Set</td>
+              <td align="center">YPD Functions</td>
+              <td align="center">YPD Roles</td>
+              <td align="center">GO Components</td>
+              <td align="center">GO Processes</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">MCODE on All Yeast Interactions</td>
+              <td align="center">0.58</td>
+              <td align="center">0.89</td>
+              <td align="center">0.39</td>
+              <td align="center">0.59</td>
+            </tr>
+            <tr>
+              <td align="center">MIPS Complex Database</td>
+              <td align="center">0.50</td>
+              <td align="center">0.75</td>
+              <td align="center">0.39</td>
+              <td align="center">0.48</td>
+            </tr>
+            <tr>
+              <td align="center">MCODE Random Model (100 AllYeast network permutations)</td>
+              <td align="center">0.72</td>
+              <td align="center">1.24</td>
+              <td align="center">0.52</td>
+              <td align="center">0.85</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>The average number of YPD and GO functional annotation terms per protein in an MCODE predicted complex is shown for MCODE predicted complexes on the AllYeast set, the MIPS complex database and the MCODE random model. A lower number indicates that the complexes from a set contain more functionally related proteins (or unannotated proteins). In the cases of multiple annotation, all terms are taken into account. Even though there are multiple annotation terms per protein and a variable amount of unannotated proteins per complex, these numbers should perform well in relative comparisons based on the assumption that the distribution of the latter two factors is similar in each data set.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <table-wrap position="float" id="T3">
+        <label>Table 3</label>
+        <caption>
+          <p>Statistics for Top, Middle and Bottom Five Scoring Optimized MCODE Predicted Complexes Found in All Known Yeast Protein Interaction Data Set</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <td align="center">
+                <bold>Complex Rank</bold>
+              </td>
+              <td align="center">
+                <bold>Score</bold>
+              </td>
+              <td align="center">
+                <bold>Proteins</bold>
+              </td>
+              <td align="center">
+                <bold>Interactions</bold>
+              </td>
+              <td align="center">
+                <bold>Density</bold>
+              </td>
+              <td align="left">
+                <bold>Cell Role</bold>
+              </td>
+              <td align="left">
+                <bold>Cell Localization</bold>
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">1</td>
+              <td align="center">10.04</td>
+              <td align="center">46</td>
+              <td align="center">236</td>
+              <td align="center">0.22</td>
+              <td align="left">RNA processing/modification and protein degradation (26S Proteasome)</td>
+              <td align="left">Nuclear</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Dbf2,Ecm29,Gcn4,Hsm3,Hyp2,Lhs1,Mkt1,Nas6,Pre1,Pre2,Pre4,Pre5,Pre6,<break/>Pre7,Pre8,Pre9,Pup3,Rad23,Rad24,Rad50,Rfc3,Rfc4,Rpn1,Rpn10,Rpn11,<break/>Rpn12,Rpn13,Rpn3,Rpn4,Rpn5,Rpn6,Rpn7,Rpn8,Rpn9,Rpt1,Rpt2,Rpt3,Rpt4,<break/>
+Rpt5,Rpt6,Scl1,Ubp6,Ura7,Ygl004c,Yku70,Ypl070w</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">2</td>
+              <td align="center">9</td>
+              <td align="center">19</td>
+              <td align="center">90</td>
+              <td align="center">0.51</td>
+              <td align="left">RNA processing/modification</td>
+              <td align="left">Nuclear</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Cft1,Cft2,Fip1,Fir1,Hca4,Mpe1,Pap1,Pcf11,Pfs2,Pta1,Pti1,Ref2,Rna14,Ssu72,<break/>Uba2,Ufd1,Yor179c,Ysh1,Yth1</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">3</td>
+              <td align="center">7.72</td>
+              <td align="center">56</td>
+              <td align="center">220</td>
+              <td align="center">0.14</td>
+              <td align="left">Pol II transcription</td>
+              <td align="left">Nuclear</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Ada2,Adr1,Ahc1,Cdc23,Cdc36,Epl1,Esa1,Fet4,Fun19,Gal4,Gcn5,Hac1,Hfi1,<break/> Hhf2,Hht1,Hht2,Ire1,Luc7,Med7,Myo4,Ngg1,Pcf11,Pdr1,Prp40,Rna14,Rpb2,<break/>Rpo21,Sap185,Sgf29,Sgf73,Spt15,Spt20,Spt3,Spt7,Spt8,Srb6,Swi5,Taf1,Taf10,<break/>Taf11,Taf12,Taf13,Taf14,Taf2,Taf3,Taf5,Taf6,Taf7,Taf8,Taf9,Tra1,Ubp8,<break/>Yap1,Yap6,Ybr270c,Yng2</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">4</td>
+              <td align="center">7.58</td>
+              <td align="center">18</td>
+              <td align="center">72</td>
+              <td align="center">0.44</td>
+              <td align="left">Cell cycle control, protein degradation, mitosis (Anaphase Promoting Complex)</td>
+              <td align="left">Nuclear</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Apc1,Apc11,Apc2,Apc4,Apc5,Apc9,Cdc16,Cdc23,Cdc26,Cdc27,Dmc1,Doc1,<break/> Leu3,Rpt1,Sic1,Spc29,Spt2,Ybr270c</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">5</td>
+              <td align="center">7</td>
+              <td align="center">15</td>
+              <td align="center">56</td>
+              <td align="center">0.52</td>
+              <td align="left">Vesicular transport (TRAPP Complex)</td>
+              <td align="left">Golgi</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Bet1,Bet3,Bet5,Fks1,Gsg1,Gyp6,Kre11,Sec22,Trs120,Trs130,Trs20,Trs23,<break/>Trs31,Trs33,Uso1</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">102</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">1</td>
+              <td align="left">RNA splicing</td>
+              <td align="left">Nuclear</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Msl5,Mud2,Smy2</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">103</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">1</td>
+              <td align="left">Signal transduction, Cell cycle control, DNA repair, DNA synthesis</td>
+              <td align="left">Nuclear</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Ptc2,Rad53,Ydr071c</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">104</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">1</td>
+              <td align="left">Cell cycle control, mating response</td>
+              <td align="left">Uknown</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Far3,Vps64,Ynl127w</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">105</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">1</td>
+              <td align="left">Chromatin/chromosome structure</td>
+              <td align="left">Nuclear</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Gbp2,Hpr1,Mft1</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">106</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">3</td>
+              <td align="center">1</td>
+              <td align="left">Pol II transcription</td>
+              <td align="left">Nuclear</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Ctk1,Ctk2,Ctk3</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">205</td>
+              <td align="center">2</td>
+              <td align="center">3</td>
+              <td align="center">4</td>
+              <td align="center">1</td>
+              <td align="left">Vesicular transport</td>
+              <td align="left">ER</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Rim20,Snf7,Vps4</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">206</td>
+              <td align="center">2</td>
+              <td align="center">3</td>
+              <td align="center">4</td>
+              <td align="center">1</td>
+              <td align="left">Protein translocation</td>
+              <td align="left">Cytoplasmic</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Srp14,Srp21,Srp54</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">207</td>
+              <td align="center">2</td>
+              <td align="center">3</td>
+              <td align="center">4</td>
+              <td align="center">1</td>
+              <td align="left">Protein translocation</td>
+              <td align="left">Cytoplasmic</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Srp54,Srp68,Srp72</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">208</td>
+              <td align="center">2</td>
+              <td align="center">3</td>
+              <td align="center">4</td>
+              <td align="center">1</td>
+              <td align="left">Energy generation</td>
+              <td align="left">Mitochondrial</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Atp1,Atp11,Atp2</td>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">209</td>
+              <td align="center">2</td>
+              <td align="center">4</td>
+              <td align="center">5</td>
+              <td align="center">0.67</td>
+              <td align="left">Nuclear-cytoplasmic and vesicular transport</td>
+              <td align="left">Varied</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="2">
+                <bold>Protein names</bold>
+              </td>
+              <td align="left" colspan="5">Kap123,Nup145,Sec7,Slc1</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Score is defined as the product of the complex subgraph density and the number of vertices (proteins) in the complex subgraph (DC × |V|). This ranks larger more dense complexes higher in the results. Density is calculated using the "loop" formula if homodimers exist in the complex, otherwise the "no loop" formula is used. The cell role column is a manual combination of annotation terms for the proteins reported in the complex.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Many of the 209 predicted complexes are of size 2 (9 predicted complexes) or 3 (54 predicted complexes). Complexes of this size may not be significant since it is easy to create high density subgraphs of size 2 or 3, but becomes combinatorially more difficult to randomly create high density subgraphs as the size of the subgraph increases. To examine the relevance of these small predicted complexes of size 2 or 3, we calculated the sensitivity and specificity of the optimized MCODE predictions against the MIPS complex benchmark while disregarding the small complexes. First, complexes of size 2, then of size 3, were removed from the optimized MCODE predicted complex set. Removing each of these sets independently resulted in only small sensitivity and specificity changes. Because both sets overlap the MIPS benchmark, small complexes have been reported as predictions. Also, because MCODE found these small complexes in regions of high local density, they may be good cores for further examination with MCODE in directed mode, especially since the haircut option was turned on here to produce them.</p>
+      <p>Complexes that are larger and denser are ranked higher by MCODE and these generally correspond to known complexes (see below). Interestingly, some MCODE complexes contain unknown proteins that are highly connected to known complex subunits. For example, the second highest ranked MCODE complex is involved in RNA processing/modification and contains the known polyadenylation factor I complex (Cft1, Cft2, Fip1, Pap1, Pfs2, Pta1, Ysh1, Yth1 and Ykl059c). Seven other proteins involved in mainly RNA processing/modification (Fir1, Hca4, Pcf11, Pti1, Ref2, Rna14, Ssu72) and protein degradation (Uba2 and Ufd1) are highly connected within this predicted complex. Two unknown proteins Pti1 and Yor179c are highly connected to RNA processing/modification proteins and are therefore likely involved in the same process (Figure <xref ref-type="fig" rid="F7">7</xref>). Pti1 may be an unknown component of the polyadenylation factor I complex. The 23<sup>rd </sup>highest ranked predicted complex is interesting in that it is involved in cell polarity and cytokinesis and contains two proteins of unknown function, Yhr033w and Yal027w. Yal027w interacts with two kinases, Gin4 and Kcc4, which in turn interact with the components of the Septin complex (Cdc3, Cdc10, Cdc11 and Cdc12) (Figure <xref ref-type="fig" rid="F8">8</xref>).</p>
+      <fig position="float" id="F7">
+        <label>Figure 7</label>
+        <caption>
+          <p><bold>The Second Highest Ranked MCODE Predicted Complex is Involved in RNA Processing and Modification </bold>. Figure legend: This complex incorporates the known polyadenylation factor I complex (Cft1, Cft2, Fip1, Pap1, Pfs2, Pta1, Ysh1, Yth1 and Ykl059c) and contains other proteins highly connected to this complex, some of unknown function. The fact that the unknown proteins (Yor179c and Pti1) connect more to known RNA processing/modification proteins than to other proteins in the larger data set likely indicates that these proteins function in RNA processing/modification. This complex was ranked second by MCODE from the predicted complexes in the AllYeast interaction set.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-7"/>
+      </fig>
+      <fig position="float" id="F8">
+        <label>Figure 8</label>
+        <caption>
+          <p><bold>An MCODE Predicted Complex Involved in Cytokinesis </bold>Figure legend: This predicted complex incorporates the known Septin complex (Cdc3, Cdc10, Cdc11 and Cdc12) involved in cytokinesis and other cytokinesis related proteins. The Yal027w protein is of unknown function, but likely functions in cell cycle control according to this figure, possibly in cytokinesis. This complex was ranked 23<sup>rd </sup>by MCODE from the predicted complexes in the AllYeast interaction set.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-8"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Significance of MCODE predictions</title>
+      <p>Naïvely, the chance of randomly picking a known protein complex from a protein interaction network depends on the size of the complex and the network. It is easier to pick out a smaller known complex by chance from a smaller network. For instance, in our network of 15,143 interactions among 4,825 proteins, the chance of picking a specific known complex of size three is about one in 1.9 × 10<sup>10 </sup>(4,825 choose 3). A more realistic model would assume that the proteins are connected and thus would only consider complex choices of size three where all three proteins are connected. The number of choices now depends on the topology of the network. In our large network, there are 6,799 fully connected subnetworks of size three and 313,057 subnetworks of size three with only two interactions (from the triadic census feature of Pajek). Thus now our chance of picking a more realistic complex is one out of 319,856 (1/(6,799 + 313,057) = 3.1 × 10<sup>-6</sup>). As the size of the complex increases, the number of possible complex topologies increases exponentially and, in a connected network of some reasonable density, so does the number of possible subgraphs that could represent a complex. The density of our large protein interaction network is 0.0013 and is mostly connected (4,689 proteins are in one connected component). Thus, it is expected that if a complex is found in a network with MCODE that matches a known complex, that the result would be highly significant. To understand the significance of complex prediction further, the topology of the protein interaction network would have to be understood in general, in order to build a null model to compare against.</p>
+      <p>Recent research on modeling complex systems [<xref ref-type="bibr" rid="B21">21</xref>,<xref ref-type="bibr" rid="B25">25</xref>,<xref ref-type="bibr" rid="B27">27</xref>] has found that networks such as the world wide web, metabolic networks [<xref ref-type="bibr" rid="B26">26</xref>] and protein-protein interaction networks [<xref ref-type="bibr" rid="B36">36</xref>] are scale-free. That is, the connectivity distribution of the vertices of the graph follows a power law, with many vertices of low degree and few vertices of high degree. Scale-free networks are known to have large clustering coefficients, or clustered regions of the graph. In biological networks, at least in yeast, these clustered regions seem to correspond to molecular complexes and these subgraphs are what MCODE is designed to find.</p>
+      <p>To test the significance of clustered regions in biological networks, 100 random permutations of the large set of all 15,143 yeast interactions were made. If the graph to be randomised is considered as a set of edges between two vertices (<italic>v</italic><sub>1</sub>, <italic>v</italic><sub>2</sub>), a network permutation is made by randomly permuting the set of all <italic>v</italic><sub>2 </sub>vertices. The random networks have the same number of edges and vertices as the original network and follow a power-law connectivity distribution, as do the original data sets [<xref ref-type="bibr" rid="B37">37</xref>]. Running MCODE with the same parameters as the original network (haircut = TRUE, fluff = TRUE, VWP = 0 and a fluff density threshold of 0.1) on the 100 random networks resulted in an average of 27.4 (SD = 4.4) complexes per network. The size distribution of complexes found by MCODE did not match that of the complexes found in the original network, as some complexes found in the random networks were composed of &gt;1500 proteins. One random network that had an approximately average number of predicted complexes (27) was parameter optimized using the MIPS benchmark to see how parameter choice affects the size distribution and number of predicted complexes. Parameters of haircut = TRUE, fluff = TRUE, VWP = 0.1 and a fluff density threshold of zero produced the maximal number of 81 complexes for this network, but these complexes were composed of on average 27 proteins (without counting an outlier complex of size 1961), which is much larger than normal (e.g. larger than the MIPS set average of 6.0). None of these predicted complexes matched any MIPS complexes above an overlap score of 0.1. Also, the random network complexes had a much higher average number of YPD and GO annotation terms per protein per complex than for MIPS or MCODE on the original network (Table <xref ref-type="table" rid="T2">2</xref>). This indicates, as expected, that the random network complexes are composed of a higher level of unrelated proteins than complexes in the original network. Thus, the number, size and functional composition of complexes that MCODE predicts in the large set of all yeast interactions are highly unlikely to occur by chance.</p>
+      <p>To evaluate the effectiveness of our scoring scheme, which scores larger, more dense complexes higher than smaller, more sparse complexes, we examined the accuracy of MCODE predictions at various score thresholds. As the score threshold for inclusion of complexes is increased, less complexes are included, but a higher percentage of the included complexes match complexes in the benchmark. This is at the expense of sensitivity as many benchmark matching complexes are not included at higher score thresholds (Figure <xref ref-type="fig" rid="F9">9</xref>). For example, of the ten predicted complexes with MCODE score greater or equal to six, nine match a known complex in either the MIPS or Gavin benchmark above a 0.2 threshold overlap score, yielding an accuracy of 90%. 100% of the five complexes that had an MCODE score better or equal to seven matched known complexes. Thus, complexes that score highly on our simple density based scoring scheme are very likely to be real.</p>
+      <fig position="float" id="F9">
+        <label>Figure 9</label>
+        <caption>
+          <p><bold>Effect of Complex Score Threshold on MCODE Prediction Accuracy </bold>Figure legend: MCODE complexes equal to or greater than a specific score were compared to a benchmark comprising the combined MIPS and Gavin benchmarks. Accuracy was calculated as the number of known complexes better or equal to the threshold score divided by the total number of predicted complexes (matching and non-matching) at that threshold. A complex was deemed to match a known complex if it had an overlap score above 0.2. The number of predicted complexes that matched known complexes at each score threshold is shown as labels on the plot.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-9"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Directed mode of MCODE</title>
+      <p>To simulate an obvious example where the directed mode of MCODE would be useful, MCODE was run with relaxed parameters (haircut = TRUE, fluff = TRUE, VWP = 0.05 and a fluff density threshold of 0.2) compared to the best parameters on the AllYeast network. The resulting fourth highest ranked complex, when visualized, shows two clustered components and represents two protein complexes, the proteasome and an RNA processing complex, both found in the nucleus (Figure <xref ref-type="fig" rid="F10">10</xref>). This is an example of where a lower VWP parameter would have been superior since it would have divided this large complex into two more functionally related complexes. The highest weighted vertices in the center of each of the two dense regions in Figure <xref ref-type="fig" rid="F10">10</xref> are the Rpt1 and Lsm4 proteins. MCODE was run in directed mode starting with these two proteins over a range of VWP parameters from 0 to 0.2, at 0.05 increments. For Lsm4, the parameter set of haircut = TRUE, fluff = FALSE, VWP = 0 was used to find a core complex, which contained 9 proteins fully connected to each other (Dcp1, Kem1, Lsm2, Lsm3, Lsm4, Lsm5, Lsm6, Lsm7 and Pat1). Above this VWP parameter, the core complex branched out into proteasome subunit proteins, which are not part of the Lsm complex (see Figure <xref ref-type="fig" rid="F11">11A</xref>). Using this VWP parameter, combinations of haircut and fluff parameters were used to further expand the core complex. This process was stopped when the predicted complexes began to include proteins of sufficiently different known biological function to the seed vertex. Proteins, such as Vam6 and Yor320c were included in the complex at moderate fluff parameters (0.4–0.6), but not at higher fluff parameters, and these are known to be localized in membranes outside of the nucleus, thus are likely not functionally related to the Lsm complex proteins. Therefore, the 9 proteins listed above were decided to be the final complex (Figure <xref ref-type="fig" rid="F11">11B</xref>). This is intuitive because of their maximal density (a 9-clique).</p>
+      <fig position="float" id="F10">
+        <label>Figure 10</label>
+        <caption>
+          <p><bold>An MCODE Predicted Complex That is Too Large (Relaxed Parameters) </bold>Figure legend: An example of a predicted complex that incorporates two complexes, proteasome (left) and an RNA processing complex (right). These should probably be predicted as separate complexes as can be seen by the clear distinction of biological role annotation on one side of this layout compared to the other (purple versus blue). This figure, however, shows the large amount of overall connectivity between these two complexes. This complex was ranked fourth by MCODE from the predicted complexes in the AllYeast interaction set with slightly relaxed parameters compared to the optimized prediction.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-10"/>
+      </fig>
+      <fig position="float" id="F11">
+        <label>Figure 11</label>
+        <caption>
+          <p><bold>MCODE in Directed Mode </bold>Figure legend: MCODE was used in directed mode to further study the complex in Figure <xref ref-type="fig" rid="F10">10</xref> by using seed vertices from high density regions of the two parts of this complex. A) The result of examining the Lsm complex using MCODE parameters that are too relaxed (haircut = TRUE, fluff = FALSE, VWP = 0.05). B) The final Lsm complex using MCODE parameters of haircut = TRUE, fluff = FALSE and VWP = 0 seeded with Lsm4. C) The final 26S proteasome complex seeded with Rpt1 using MCODE parameters haircut = TRUE, fluff = TRUE and VWP = 0.2. Visible here are two regions of density in this complex corresponding to the 20S proteolytic subunit (left side – mainly Pre proteins) and the 19S regulatory subunit (right side – mainly Rpt and Rpn proteins).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-11"/>
+      </fig>
+      <p>Using this same method of known biological role "titration" on Rpt1 found a complex of 34 proteins (Gal4, Gcn4, Hsm3, Lhs1, Nas6, Pre1, Pre2, Pre3, Pre4, Pre5, Pre6, Pre7, Pre9, Pup3, Rpn10, Rpn11, Rpn13, Rpn3, Rpn5, Rpn6, Rpn7, Rpn8, Rpn9, Rpt1, Rpt2, Rpt3, Rpt4, Rpt6, Rri1, Scl1, Sts1, Ubp6, Ydr179c, Ygl004c) and 160 interactions using the parameter set haircut = TRUE, fluff = TRUE, VWP = 0.2 and a fluff density threshold of 0.3. Two regions of density can be seen here corresponding to the two known subunits of the 26S proteasome. The 20S proteolytic subunit of the proteasome is comprised of 15 proteins (Pre1 to Pre10, Pup1, Pup2, Pup3, Scl1 and Ump1) of which Pre7, Pre8, Pre10, Pup1, Pup2 and Ump1 are not found with MCODE. The 19S regulatory subunit of the proteasome is known to have 21 subunits (Nas6, Rpn1 to Rpn13, Rpt1 to Rpt6 and Ubp6) of which Rpn1, Rpn2, Rpn4, Rpn12 and Rpt5 are not found with MCODE. Known complex components not found by MCODE are not present at a high enough local density regions of the interaction network, possibly because not enough experiments involving these proteins are present in our data set. Figure <xref ref-type="fig" rid="F11">11C</xref> shows the final Rpt1 seeded complex. Of note, Ygl004c is unknown and binds to almost every Rpt and Rpn protein in the complex although all of these interactions were from a single immunoprecipitation experiment [<xref ref-type="bibr" rid="B6">6</xref>]. As well, Rri1 and Ydr179c have unknown function and both bind to each other and to Rpn5. Thus one would predict that these three unknown proteins function with or as part of the 26S proteasome. The protein Hsm3 binds to eight other 19S subunits and is involved in DNA mismatch repair pathways, but is not known to be part of the proteasome, although all of these Hsm3 interactions are from a particular large-scale experiment [<xref ref-type="bibr" rid="B7">7</xref>]. Interestingly, Gal4, a transcription factor involved in galactose metabolism, is found to be part of the proteasome complex. While this metabolic functionality seems unrelated to protein degradation, it has recently been shown that the binding is physiologically relevant [<xref ref-type="bibr" rid="B38">38</xref>]. These cases illustrate the possible unreliability of both functional annotation and interaction data, but also that seemingly unrelated proteins should not be immediately discounted if found to be part of a complex by MCODE.</p>
+      <p>Of note, the known topology of the 26S proteasome [<xref ref-type="bibr" rid="B39">39</xref>] compares favourably with the complex visualization of Figure <xref ref-type="fig" rid="F11">11C</xref> without considering stoichiometry. Thus, if enough interactions are known, visualizing complexes may reveal the rough structural outline of large complexes. This should be expected when dealing with actual physical protein-protein interactions since there are few allowed topologies for large complexes considering the specific set of defining interactions and steric clashes between protein subunits.</p>
+    </sec>
+    <sec>
+      <title>Complex connectivity</title>
+      <p>MCODE may also be used to examine the connectivity and relationships between molecular complexes. Once a complex is known using the directed mode, the MCODE parameters can be relaxed to allow branching out into other complexes. The MCODE directed mode preprocessing step must also be turned off to allow MCODE to branch into other connected complexes, which may reside in denser regions of the graph than the seed vertex. As an example, this was done with the Lsm4 seeded complex (Figure <xref ref-type="fig" rid="F12">12</xref>). MCODE parameters were relaxed to haircut = TRUE, fluff = FALSE, VWP = 0.2 although they could be further relaxed for greater extension out into the network.</p>
+      <fig position="float" id="F12">
+        <label>Figure 12</label>
+        <caption>
+          <p><bold>Examining Complex Connectivity with MCODE </bold>Figure legend: The complexes shown here are known to be nuclear localized and are involved in protein degradation (19S proteasome subunit), mRNA processing (Lsm complex and mRNA Cleavage/Polyadenylation complex), cell cycle (anaphase promoting complex) and transcription (SAGA transcriptional activation complex).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-4-2-12"/>
+      </fig>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <p>This method represents an initial step in taking advantage of the protein function data being generated by many large-scale protein interaction studies. As the experimental methods are further developed, an increasing amount of data will be produced which will require computational methods for efficient interpretation. The algorithm described here allows the automated prediction of protein complexes from qualitative protein-protein interaction data and is thus able to help predict the function of unknown proteins and aid in the understanding of the functional connectivity of molecular complexes in the cell. The general nature of this method may allow complex prediction for molecules other than proteins as well, for example metabolic complexes that include small molecules.</p>
+    <p>MCODE cannot stand alone in this task; it must be combined with a graph visualization system to ease the understanding of the relationships among molecules in the data set. We use the Pajek program for large network analysis  [<xref ref-type="bibr" rid="B40">40</xref>] with the Kamada-Kawai graph layout algorithm [<xref ref-type="bibr" rid="B41">41</xref>]. Kamada-Kawai models the edges in the graph as springs, randomly places the vertices in a high energy state and then attempts to minimize the energy of the system over a number of time steps. The result is that the Euclidean distance, here in a plane, is close to the graph-theoretic or path distance between the vertices. The vertices are visually clustered based on connectivity. Biologically, this visualization can allow one to see the rough structural outline of large complexes, if enough interactions are known, as evidenced in the proteasome complex analysis above (Figure <xref ref-type="fig" rid="F11">11C</xref>).</p>
+    <p>It is important to note and understand the limitations of the current experimental methods (e.g. yeast two-hybrid and co-immunoprecipitation) and the protein interaction networks that these techniques generate when analyzing the resulting data. One common class of false-positive interactions arising from many different kinds of experimental methods is that of indirect interactions. For instance, an interaction may be seen between two proteins using a specific experimental method, but in reality, those proteins do not physically bind each other, and one or more other molecules that are generally part of the same complex mediate the observed interaction. As can be seen for the Arp2/3 complex shown in Figure <xref ref-type="fig" rid="F3">3</xref>, when pairwise interactions between all combinations of proteins in a complex are studied, this creates a very dense graph. Interestingly, this false-positive effect is normally considered a disadvantage, but is an advantage with MCODE as it increases the density in the region of the graph containing a complex, which can then be more easily predicted.</p>
+    <p>Apart from the experimental factors that lead to false-positive and false-negative interactions, representational limitations also exist computationally. Temporal and spatial information is not currently described in interaction networks. A complex found by the MCODE approach may not actually exist even though all of the component proteins bind each other <italic>in vitro</italic>. Those proteins may never be present at the same time and place. For example, molecular complexes that perform different functions sometimes have common subunits as with the three types of eukaryotic RNA polymerases.</p>
+    <p>Complex stoichiometry, another important aspect of biological data, is not represented either. While it is possible to include full stoichiometry in a graph representation of a biomolecular interaction network, many experimental methods do not provide this information, so a homo-multimeric complex is normally represented as a simple homodimer. When an experiment does provide stoichiometry information, it is not stored in most current databases, such as MIPS and YPD. Thus, one is forced to return to the primary literature to extract the data, an extremely time-consuming task for large data sets.</p>
+    <p>Some quantitative and statistical information is present when integrating results of large-scale approaches and this is not used in our current graph model. For instance, the number of different types of experiments that find the same interaction, the quality of the experiment, the date the experiment was conducted (newer methods may be superior in certain aspects) and other factors that pertain to the reliability of the interaction could all be considered to determine a reliability index or p-value on edges in the graph. For instance, one may wish to rank results published in high-impact journals above other journals (or vice versa) and rank classical purification methods above high-throughput yeast two-hybrid techniques when determining the quality of the interaction data. It may also be possible to weight vertices on the graph by other quality criteria, such as whether a protein is hypothetical from a gene prediction or not or whether a protein is expressed at a particular time and place in the cell. For example, if one were interested in a certain stage of the cell cycle, proteins that are known to be absent at that stage could be reduced in weight (VWP in the case of MCODE) compared to proteins that are present. It should be noted that any weighting scheme that tries to assess the quality of an interaction might make false assumptions that would prevent the discovery of new and interesting data.</p>
+    <p>This paper shows that the structure of a biological network can define complexes, which can be seen as dense regions. This may be attributed to indirect interactions accumulating in the literature. Thus, interaction data taken out of context may be erroneous. For instance, if one has a collection of protein interactions from various different experiments done at different times in different labs from a specific complex that form a clique, and if one chooses an interaction from this clique, then how can one verify if it is indirect or not. We would only begin to know if we had a very detailed description of the experiment from the original papers where we could tell the amount of work and quality of work that went into measuring each interaction. Thus with only a qualitative view of interactions, in reference to Dobzhansky [<xref ref-type="bibr" rid="B42">42</xref>], nothing in the biomolecular interaction network would make sense except in light of molecular complexes and the functional connections between them. If one had a highly detailed representation of each interaction including time, place, experimental condition, number of experiments, binding sites, chemical actions and chemical state information, one would be able to computationally delve into molecular complexes to resolve topology, structure, function and mechanism down to the atomic level. This information would also help to judge the biological relevance of an interaction. Thus, we require databases like BIND [<xref ref-type="bibr" rid="B15">15</xref>] to store this information. The integration of known qualitative and quantitative molecular interaction data in a machine-readable format should allow increasingly accurate protein interaction, molecular complex and pathway prediction, including actual binding site and mechanism information in a sequence and structural context.</p>
+    <p>Based on our scale-free network analysis, it would seem that real biological networks are organized differently than random models of scale-free networks in that they have higher clustering coefficients around specific regions (complexes) and the vertices in these regions are related to each other, by biological function. Thus, attempts to model biological networks and their evolution in a global way solely using the statistics of scale-free networks may not work, rather modeling should take into account as much extant biological knowledge as possible.</p>
+    <p>Future work on MCODE could include researching different, possibly adaptive, vertex scoring functions to take into account, for example, the local density of the network past the immediate neighborhood of a vertex and the inclusion of functional annotation and p-values on edges. Time, space and stoichiometry should also be represented on networks and in visualization systems. The process of 'functional annotation titration' in the directed mode of MCODE could be automated.</p>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>MCODE effectively finds densely connected regions of a molecular interaction network, many of which correspond to known molecular complexes, based solely on connectivity data. Given that this approach to analyzing protein interaction networks performs well using minimal qualitative information implies that large amounts of available knowledge is buried in large protein interaction networks. More accurate data mining algorithms and systems models could be constructed to understand and predict interactions, complexes and pathways by taking into account more existing biological knowledge. Structured molecular interaction data resources such as BIND will be vital in creating these resources.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>Data sources</title>
+      <p>All protein interaction data sets from MIPS [<xref ref-type="bibr" rid="B13">13</xref>], Gene Ontology  [<xref ref-type="bibr" rid="B43">43</xref>] and PreBIND <ext-link ext-link-type="uri" xlink:href="http://bioinfo.mshri.on.ca/prebind/"/> were collected as described previously [<xref ref-type="bibr" rid="B6">6</xref>]. The YPD protein interaction data are from March 2001 and were originally requested from Proteome, Inc. <ext-link ext-link-type="uri" xlink:href="http://www.proteome.com"/>. Other interaction data sets are from BIND <ext-link ext-link-type="uri" xlink:href="http://www.bind.ca"/>. A BIND yeast import utility was developed to integrate data from SGD [<xref ref-type="bibr" rid="B12">12</xref>], RefSeq [<xref ref-type="bibr" rid="B44">44</xref>], Gene Registry <ext-link ext-link-type="uri" xlink:href="http://genome-www.stanford.edu/Saccharomyces/registry.html"/>, the list of essential genes from the yeast deletion consortium  [<xref ref-type="bibr" rid="B11">11</xref>] and GO terms [<xref ref-type="bibr" rid="B43">43</xref>]. This database ensures proper matching of yeast gene names among the multiple data sets that may use different names for the same genes. The yeast proteome used here is defined by SGD and RefSeq and contains 6,334 ORFs including the mitochondrial chromosome. Before performing comparisons, the various interaction data sets were entered into a local instance of BIND as pairwise protein interaction records. The MIPS complex catalogue was downloaded in February 2002.</p>
+      <p>The protein interaction data sets used here were composed as follows. 'Gavin Spoke' is the spoke model of the raw purifications from Gavin et al [<xref ref-type="bibr" rid="B7">7</xref>]. 'Y2H' is all known large-scale [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B5">5</xref>,<xref ref-type="bibr" rid="B10">10</xref>] combined with normal yeast two-hybrid results from MIPS. 'HTP Only' is only high-throughput or large-scale data [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B7">7</xref>,<xref ref-type="bibr" rid="B10">10</xref>] The 'Benchmark' set was constructed from MIPS, YPD and PreBIND as previously described [<xref ref-type="bibr" rid="B6">6</xref>]. 'Pre HTMS' was composed of all yeast sets except the recent large-scale mass spectrometry data sets [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B7">7</xref>]. 'AllYeast' was the combination of all above data sets. All data sets are non-redundant.</p>
+    </sec>
+    <sec>
+      <title>Network visualization</title>
+      <p>Visualization of networks was performed using the Pajek program for large network analysis [<xref ref-type="bibr" rid="B40">40</xref>]<ext-link ext-link-type="uri" xlink:href="http://vlado.fmf.uni-lj.si/pub/networks/pajek/"/> as described previously [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B10">10</xref>]. using the Kamada-Kawai graph layout algorithm followed by manual vertex adjustments and was formatted using CorelDraw 10. Power law analysis was also accomplished as previously described [<xref ref-type="bibr" rid="B6">6</xref>].</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>GB conceived of the study and carried out all programming and analyses as a Ph.D. student in the lab of CH. CH supervised the study and provided valuable input for the evaluation analyses.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional File 1</title>
+        <p>AllYeastPredictedComplexes.zip Zip file containing Pajek .net and annotation files for all 209 complexes found using MCODE on the set of all yeast interactions reported here. Various report files from MCODE are also included as well as basic instructions for using Pajek.</p>
+      </caption>
+      <media xlink:href="1471-2105-4-2-S1.zip" mimetype="application" mime-subtype="x-zip-compressed">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <sec>
+      <title>Acknowledgements</title>
+      <p>Michel Dumontier, Sherrie Kelly, Katerina Michalickova, Tony Pawson and Mike Tyers provided helpful discussion. This work was supported in part from grants from the Canadian Institutes of Health Research (CIHR), the Ontario Research and Development Challenge Fund and MDS-Sciex to C.H. G.D.B. is supported by an Ontario Graduate Scholarship (OGS).</p>
+    </sec>
+  </ack>
+  <ref-list>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fields</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Proteomics. Proteomics in genomeland.</article-title>
+        <source>Science</source>
+        <year>2001</year>
+        <volume>291</volume>
+        <fpage>1221</fpage>
+        <lpage>1224</lpage>
+        <pub-id pub-id-type="pmid">11233445</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.291.5507.1221</pub-id>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Uetz</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Giot</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Cagney</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Mansfield</surname>
+            <given-names>TA</given-names>
+          </name>
+          <name>
+            <surname>Judson</surname>
+            <given-names>RS</given-names>
+          </name>
+          <name>
+            <surname>Knight</surname>
+            <given-names>JR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A comprehensive analysis of protein-protein interactions in Saccharomyces cerevisiae.</article-title>
+        <source>Nature</source>
+        <year>2000</year>
+        <volume>403</volume>
+        <fpage>623</fpage>
+        <lpage>627</lpage>
+        <pub-id pub-id-type="pmid">10688190</pub-id>
+        <pub-id pub-id-type="doi">10.1038/35001009</pub-id>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ito</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Chiba</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Ozawa</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Yoshida</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Hattori</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Sakaki</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>A comprehensive two-hybrid analysis to explore the yeast protein interactome.</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <fpage>4569</fpage>
+        <lpage>4574</lpage>
+        <pub-id pub-id-type="pmid">11283351</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.061034498</pub-id>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Drees</surname>
+            <given-names>BL</given-names>
+          </name>
+          <name>
+            <surname>Sundin</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Brazeau</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Caviston</surname>
+            <given-names>JP</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>GC</given-names>
+          </name>
+          <name>
+            <surname>Guo</surname>
+            <given-names>W</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A protein interaction map for cell polarity development.</article-title>
+        <source>J Cell Biol</source>
+        <year>2001</year>
+        <volume>154</volume>
+        <fpage>549</fpage>
+        <lpage>571</lpage>
+        <pub-id pub-id-type="pmid">11489916</pub-id>
+        <pub-id pub-id-type="doi">10.1083/jcb.200104057</pub-id>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fromont-Racine</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Mayes</surname>
+            <given-names>AE</given-names>
+          </name>
+          <name>
+            <surname>Brunet-Simon</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Rain</surname>
+            <given-names>JC</given-names>
+          </name>
+          <name>
+            <surname>Colley</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Dix</surname>
+            <given-names>I</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genome-wide protein interaction screens reveal functional networks involving Sm-like proteins.</article-title>
+        <source>Yeast</source>
+        <year>2000</year>
+        <volume>17</volume>
+        <fpage>95</fpage>
+        <lpage>110</lpage>
+        <pub-id pub-id-type="pmid">10900456</pub-id>
+        <pub-id pub-id-type="doi">10.1002/1097-0061(20000630)17:2&lt;95::AID-YEA16&gt;3.0.CO;2-H</pub-id>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ho</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Gruhler</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Heilbut</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Bader</surname>
+            <given-names>GD</given-names>
+          </name>
+          <name>
+            <surname>Moore</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Adams</surname>
+            <given-names>SL</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Systematic identification of protein complexes in Saccharomyces cerevisiae by mass spectrometry.</article-title>
+        <source>Nature</source>
+        <year>2002</year>
+        <volume>415</volume>
+        <fpage>180</fpage>
+        <lpage>183</lpage>
+        <pub-id pub-id-type="pmid">11805837</pub-id>
+        <pub-id pub-id-type="doi">10.1038/415180a</pub-id>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gavin</surname>
+            <given-names>AC</given-names>
+          </name>
+          <name>
+            <surname>Bosche</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Krause</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Grandi</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Marzioch</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Bauer</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Functional organization of the yeast proteome by systematic analysis of protein complexes.</article-title>
+        <source>Nature</source>
+        <year>2002</year>
+        <volume>415</volume>
+        <fpage>141</fpage>
+        <lpage>147</lpage>
+        <pub-id pub-id-type="pmid">11805826</pub-id>
+        <pub-id pub-id-type="doi">10.1038/415141a</pub-id>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Christendat</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Yee</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Dharamsi</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Kluger</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Savchenko</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Cort</surname>
+            <given-names>JR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Structural proteomics of an archaeon.</article-title>
+        <source>Nat Struct Biol</source>
+        <year>2000</year>
+        <volume>7</volume>
+        <fpage>903</fpage>
+        <lpage>909</lpage>
+        <pub-id pub-id-type="pmid">11017201</pub-id>
+        <pub-id pub-id-type="doi">10.1038/82823</pub-id>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>SK</given-names>
+          </name>
+          <name>
+            <surname>Lund</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Kiraly</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Duke</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Jiang</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Stuart</surname>
+            <given-names>JM</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A gene expression map for Caenorhabditis elegans.</article-title>
+        <source>Science</source>
+        <year>2001</year>
+        <volume>293</volume>
+        <fpage>2087</fpage>
+        <lpage>2092</lpage>
+        <pub-id pub-id-type="pmid">11557892</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.1061603</pub-id>
+      </citation>
+    </ref>
+    <ref id="B10">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tong</surname>
+            <given-names>AH</given-names>
+          </name>
+          <name>
+            <surname>Drees</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Nardelli</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Bader</surname>
+            <given-names>GD</given-names>
+          </name>
+          <name>
+            <surname>Brannetti</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Castagnoli</surname>
+            <given-names>L</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A combined experimental and computational strategy to define protein interaction networks for peptide recognition modules.</article-title>
+        <source>Science</source>
+        <year>2002</year>
+        <volume>295</volume>
+        <fpage>321</fpage>
+        <lpage>324</lpage>
+        <pub-id pub-id-type="pmid">11743162</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.1064987</pub-id>
+      </citation>
+    </ref>
+    <ref id="B11">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Winzeler</surname>
+            <given-names>EA</given-names>
+          </name>
+          <name>
+            <surname>Shoemaker</surname>
+            <given-names>DD</given-names>
+          </name>
+          <name>
+            <surname>Astromoff</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Liang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Anderson</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Andre</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Functional characterization of the S. cerevisiae genome by gene deletion and parallel analysis.</article-title>
+        <source>Science</source>
+        <year>1999</year>
+        <volume>285</volume>
+        <fpage>901</fpage>
+        <lpage>906</lpage>
+        <pub-id pub-id-type="pmid">10436161</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.285.5429.901</pub-id>
+      </citation>
+    </ref>
+    <ref id="B12">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chervitz</surname>
+            <given-names>SA</given-names>
+          </name>
+          <name>
+            <surname>Hester</surname>
+            <given-names>ET</given-names>
+          </name>
+          <name>
+            <surname>Ball</surname>
+            <given-names>CA</given-names>
+          </name>
+          <name>
+            <surname>Dolinski</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Dwight</surname>
+            <given-names>SS</given-names>
+          </name>
+          <name>
+            <surname>Harris</surname>
+            <given-names>MA</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Using the Saccharomyces Genome Database (SGD) for analysis of protein similarities and structure.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <fpage>74</fpage>
+        <lpage>78</lpage>
+        <pub-id pub-id-type="pmid">9847146</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/27.1.74</pub-id>
+      </citation>
+    </ref>
+    <ref id="B13">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mewes</surname>
+            <given-names>HW</given-names>
+          </name>
+          <name>
+            <surname>Frishman</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Gruber</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Geier</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Haase</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Kaps</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>MIPS: a database for genomes and protein sequences.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2000</year>
+        <volume>28</volume>
+        <fpage>37</fpage>
+        <lpage>40</lpage>
+        <pub-id pub-id-type="pmid">10592176</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/28.1.37</pub-id>
+      </citation>
+    </ref>
+    <ref id="B14">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Costanzo</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Crawford</surname>
+            <given-names>ME</given-names>
+          </name>
+          <name>
+            <surname>Hirschman</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Kranz</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Olsen</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Robertson</surname>
+            <given-names>LS</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>YPD, PombePD and WormPD: model organism volumes of the BioKnowledge library, an integrated resource for protein information.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>75</fpage>
+        <lpage>79</lpage>
+        <pub-id pub-id-type="pmid">11125054</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/29.1.75</pub-id>
+      </citation>
+    </ref>
+    <ref id="B15">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bader</surname>
+            <given-names>GD</given-names>
+          </name>
+          <name>
+            <surname>Donaldson</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Wolting</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Ouellette</surname>
+            <given-names>BF</given-names>
+          </name>
+          <name>
+            <surname>Pawson</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Hogue</surname>
+            <given-names>CW</given-names>
+          </name>
+        </person-group>
+        <article-title>BIND-The biomolecular interaction network database.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>242</fpage>
+        <lpage>245</lpage>
+        <pub-id pub-id-type="pmid">11125103</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/29.1.242</pub-id>
+      </citation>
+    </ref>
+    <ref id="B16">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Xenarios</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Salwinski</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Duan</surname>
+            <given-names>XJ</given-names>
+          </name>
+          <name>
+            <surname>Higney</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>SM</given-names>
+          </name>
+          <name>
+            <surname>Eisenberg</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>DIP, the Database of Interacting Proteins: a research tool for studying cellular networks of protein interactions.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>303</fpage>
+        <lpage>305</lpage>
+        <pub-id pub-id-type="pmid">11752321</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/30.1.303</pub-id>
+      </citation>
+    </ref>
+    <ref id="B17">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Takai-Igarashi</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Nadaoka</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Kaminuma</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>A database for cell signaling networks.</article-title>
+        <source>J Comput Biol</source>
+        <year>1998</year>
+        <volume>5</volume>
+        <fpage>747</fpage>
+        <lpage>754</lpage>
+        <pub-id pub-id-type="pmid">10072089</pub-id>
+      </citation>
+    </ref>
+    <ref id="B18">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wingender</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Hehl</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Karas</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Liebich</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Matys</surname>
+            <given-names>V</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>TRANSFAC: an integrated system for gene expression regulation.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2000</year>
+        <volume>28</volume>
+        <fpage>316</fpage>
+        <lpage>319</lpage>
+        <pub-id pub-id-type="pmid">10592259</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/28.1.316</pub-id>
+      </citation>
+    </ref>
+    <ref id="B19">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Karp</surname>
+            <given-names>PD</given-names>
+          </name>
+          <name>
+            <surname>Riley</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Saier</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Paulsen</surname>
+            <given-names>IT</given-names>
+          </name>
+          <name>
+            <surname>Paley</surname>
+            <given-names>SM</given-names>
+          </name>
+          <name>
+            <surname>Pellegrini-Toole</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>The EcoCyc and MetaCyc databases.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2000</year>
+        <volume>28</volume>
+        <fpage>56</fpage>
+        <lpage>59</lpage>
+        <pub-id pub-id-type="pmid">10592180</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/28.1.56</pub-id>
+      </citation>
+    </ref>
+    <ref id="B20">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Overbeek</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Larsen</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Pusch</surname>
+            <given-names>GD</given-names>
+          </name>
+          <name>
+            <surname>D'Souza</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Selkov</surname>
+            <given-names>EJ</given-names>
+          </name>
+          <name>
+            <surname>Kyrpides</surname>
+            <given-names>N</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>WIT: integrated system for high-throughput genome sequence analysis and metabolic reconstruction.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2000</year>
+        <volume>28</volume>
+        <fpage>123</fpage>
+        <lpage>125</lpage>
+        <pub-id pub-id-type="pmid">10592199</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/28.1.123</pub-id>
+      </citation>
+    </ref>
+    <ref id="B21">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wagner</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Fell</surname>
+            <given-names>DA</given-names>
+          </name>
+        </person-group>
+        <article-title>The small world inside large metabolic networks.</article-title>
+        <source>Proc R Soc Lond B Biol Sci</source>
+        <year>2001</year>
+        <volume>268</volume>
+        <fpage>1803</fpage>
+        <lpage>1810</lpage>
+        <pub-id pub-id-type="pmid">11522199</pub-id>
+        <pub-id pub-id-type="doi">10.1098/rspb.2001.1711</pub-id>
+      </citation>
+    </ref>
+    <ref id="B22">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Flake</surname>
+            <given-names>GW</given-names>
+          </name>
+          <name>
+            <surname>Lawrence</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Giles</surname>
+            <given-names>CL</given-names>
+          </name>
+          <name>
+            <surname>Coetzee</surname>
+            <given-names>FM</given-names>
+          </name>
+        </person-group>
+        <article-title>Self-Organization of the Web and Identification of Communities.</article-title>
+        <source>IEEE Computer</source>
+        <year>2002</year>
+        <volume>35</volume>
+        <fpage>66</fpage>
+        <lpage>71</lpage>
+        <pub-id pub-id-type="doi">10.1109/2.989932</pub-id>
+      </citation>
+    </ref>
+    <ref id="B23">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Goldberg</surname>
+            <given-names>AV</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding a Maximum Density Subgraph.</article-title>
+        <source>Technical Report UCB/CSD University of California, Berkeley, CA</source>
+        <year>1984</year>
+        <volume>84</volume>
+      </citation>
+    </ref>
+    <ref id="B24">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ng</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Jordan</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Weiss</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>On spectral clustering: Analysis and an algorithm.</article-title>
+        <source>Advances in Neural Information Processing Systems 14: Proceedings of the 2001</source>
+        <year>2001</year>
+      </citation>
+    </ref>
+    <ref id="B25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Watts</surname>
+            <given-names>DJ</given-names>
+          </name>
+          <name>
+            <surname>Strogatz</surname>
+            <given-names>SH</given-names>
+          </name>
+        </person-group>
+        <article-title>Collective dynamics of 'small-world' networks.</article-title>
+        <source>Nature</source>
+        <year>1998</year>
+        <volume>393</volume>
+        <fpage>440</fpage>
+        <lpage>442</lpage>
+        <pub-id pub-id-type="pmid">9623998</pub-id>
+        <pub-id pub-id-type="doi">10.1038/30918</pub-id>
+      </citation>
+    </ref>
+    <ref id="B26">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jeong</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Tombor</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Albert</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Oltvai</surname>
+            <given-names>ZN</given-names>
+          </name>
+          <name>
+            <surname>Barabasi</surname>
+            <given-names>AL</given-names>
+          </name>
+        </person-group>
+        <article-title>The large-scale organization of metabolic networks.</article-title>
+        <source>Nature</source>
+        <year>2000</year>
+        <volume>407</volume>
+        <fpage>651</fpage>
+        <lpage>654</lpage>
+        <pub-id pub-id-type="pmid">11034217</pub-id>
+        <pub-id pub-id-type="doi">10.1038/35036627</pub-id>
+      </citation>
+    </ref>
+    <ref id="B27">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Albert</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Jeong</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Barabasi</surname>
+            <given-names>AL</given-names>
+          </name>
+        </person-group>
+        <article-title>Error and attack tolerance of complex networks.</article-title>
+        <source>Nature</source>
+        <year>2000</year>
+        <volume>406</volume>
+        <fpage>378</fpage>
+        <lpage>382</lpage>
+        <pub-id pub-id-type="pmid">10935628</pub-id>
+        <pub-id pub-id-type="doi">10.1038/35019019</pub-id>
+      </citation>
+    </ref>
+    <ref id="B28">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Barabasi</surname>
+            <given-names>AL</given-names>
+          </name>
+          <name>
+            <surname>Albert</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Emergence of scaling in random networks.</article-title>
+        <source>Science</source>
+        <year>1999</year>
+        <volume>286</volume>
+        <fpage>509</fpage>
+        <lpage>512</lpage>
+        <pub-id pub-id-type="pmid">10521342</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.286.5439.509</pub-id>
+      </citation>
+    </ref>
+    <ref id="B29">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fell</surname>
+            <given-names>DA</given-names>
+          </name>
+          <name>
+            <surname>Wagner</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>The small world of metabolism.</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2000</year>
+        <volume>18</volume>
+        <fpage>1121</fpage>
+        <lpage>1122</lpage>
+        <pub-id pub-id-type="pmid">11062388</pub-id>
+        <pub-id pub-id-type="doi">10.1038/81025</pub-id>
+      </citation>
+    </ref>
+    <ref id="B30">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hartuv</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Shamir</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>A clustering algorithm based on graph connectivity.</article-title>
+        <source>Information processing letters</source>
+        <year>1999</year>
+        <volume>76</volume>
+        <fpage>175</fpage>
+        <lpage>181</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0020-0190(00)00142-3</pub-id>
+      </citation>
+    </ref>
+    <ref id="B31">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bader</surname>
+            <given-names>GD</given-names>
+          </name>
+          <name>
+            <surname>Hogue</surname>
+            <given-names>CW</given-names>
+          </name>
+        </person-group>
+        <article-title>Analyzing yeast protein-protein interaction data obtained from different sources.</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2002</year>
+        <volume>20</volume>
+        <fpage>991</fpage>
+        <lpage>997</lpage>
+        <pub-id pub-id-type="pmid">12355115</pub-id>
+        <pub-id pub-id-type="doi">10.1038/nbt1002-991</pub-id>
+      </citation>
+    </ref>
+    <ref id="B32">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Baldi</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Brunak</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Chauvin</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Andersen</surname>
+            <given-names>CA</given-names>
+          </name>
+          <name>
+            <surname>Nielsen</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Assessing the accuracy of prediction algorithms for classification: an overview.</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>412</fpage>
+        <lpage>424</lpage>
+        <pub-id pub-id-type="pmid">10871264</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/16.5.412</pub-id>
+      </citation>
+    </ref>
+    <ref id="B33">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Robinson</surname>
+            <given-names>RC</given-names>
+          </name>
+          <name>
+            <surname>Turbedsky</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Kaiser</surname>
+            <given-names>DA</given-names>
+          </name>
+          <name>
+            <surname>Marchand</surname>
+            <given-names>JB</given-names>
+          </name>
+          <name>
+            <surname>Higgs</surname>
+            <given-names>HN</given-names>
+          </name>
+          <name>
+            <surname>Choe</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Crystal structure of Arp2/3 complex.</article-title>
+        <source>Science</source>
+        <year>2001</year>
+        <volume>294</volume>
+        <fpage>1679</fpage>
+        <lpage>1684</lpage>
+        <pub-id pub-id-type="pmid">11721045</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.1066333</pub-id>
+      </citation>
+    </ref>
+    <ref id="B34">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mayes</surname>
+            <given-names>AE</given-names>
+          </name>
+          <name>
+            <surname>Verdone</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Legrain</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Beggs</surname>
+            <given-names>JD</given-names>
+          </name>
+        </person-group>
+        <article-title>Characterization of Sm-like proteins in yeast and their association with U6 snRNA.</article-title>
+        <source>EMBO J</source>
+        <year>1999</year>
+        <volume>18</volume>
+        <fpage>4321</fpage>
+        <lpage>4331</lpage>
+        <pub-id pub-id-type="pmid">10428970</pub-id>
+        <pub-id pub-id-type="doi">10.1093/emboj/18.15.4321</pub-id>
+      </citation>
+    </ref>
+    <ref id="B35">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>von Mering</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Krause</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Snel</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Cornell</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Oliver</surname>
+            <given-names>SG</given-names>
+          </name>
+          <name>
+            <surname>Fields</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Comparative assessment of large-scale data sets of protein-protein interactions.</article-title>
+        <source>Nature</source>
+        <year>2002</year>
+        <volume>417</volume>
+        <fpage>399</fpage>
+        <lpage>403</lpage>
+        <pub-id pub-id-type="pmid">12000970</pub-id>
+        <pub-id pub-id-type="doi">10.1038/nature750</pub-id>
+      </citation>
+    </ref>
+    <ref id="B36">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jeong</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Mason</surname>
+            <given-names>SP</given-names>
+          </name>
+          <name>
+            <surname>Barabasi</surname>
+            <given-names>AL</given-names>
+          </name>
+          <name>
+            <surname>Oltvai</surname>
+            <given-names>ZN</given-names>
+          </name>
+        </person-group>
+        <article-title>Lethality and centrality in protein networks.</article-title>
+        <source>Nature</source>
+        <year>2001</year>
+        <volume>411</volume>
+        <fpage>41</fpage>
+        <lpage>42</lpage>
+        <pub-id pub-id-type="pmid">11333967</pub-id>
+        <pub-id pub-id-type="doi">10.1038/35075138</pub-id>
+      </citation>
+    </ref>
+    <ref id="B37">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Maslov</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Sneppen</surname>
+            <given-names>K</given-names>
+          </name>
+        </person-group>
+        <article-title>Specificity and stability in topology of protein networks.</article-title>
+        <source>Science</source>
+        <year>2002</year>
+        <volume>296</volume>
+        <fpage>910</fpage>
+        <lpage>913</lpage>
+        <pub-id pub-id-type="pmid">11988575</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.1065103</pub-id>
+      </citation>
+    </ref>
+    <ref id="B38">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gonzalez</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Delahodde</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Kodadek</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Johnston</surname>
+            <given-names>SA</given-names>
+          </name>
+        </person-group>
+        <article-title>Recruitment of a 19S proteasome subcomplex to an activated promoter.</article-title>
+        <source>Science</source>
+        <year>2002</year>
+        <volume>296</volume>
+        <fpage>548</fpage>
+        <lpage>550</lpage>
+        <pub-id pub-id-type="pmid">11964484</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.1069490</pub-id>
+      </citation>
+    </ref>
+    <ref id="B39">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bochtler</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Ditzel</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Groll</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Hartmann</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Huber</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>The proteasome.</article-title>
+        <source>Annu Rev Biophys Biomol Struct</source>
+        <year>1999</year>
+        <volume>28</volume>
+        <fpage>295</fpage>
+        <lpage>317</lpage>
+        <pub-id pub-id-type="pmid">10410804</pub-id>
+        <pub-id pub-id-type="doi">10.1146/annurev.biophys.28.1.295</pub-id>
+      </citation>
+    </ref>
+    <ref id="B40">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Batagelj</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Mrvar</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Pajek – Program for Large Network Analysis.</article-title>
+        <source>Connections</source>
+        <year>1998</year>
+        <volume>2</volume>
+        <fpage>47</fpage>
+        <lpage>57</lpage>
+      </citation>
+    </ref>
+    <ref id="B41">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kamada</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Kawai</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>An algorithm for drawing general indirect graphs.</article-title>
+        <source>Information processing letters</source>
+        <year>1989</year>
+        <volume>31</volume>
+        <fpage>7</fpage>
+        <lpage>15</lpage>
+        <pub-id pub-id-type="doi">10.1016/0020-0190(89)90102-6</pub-id>
+      </citation>
+    </ref>
+    <ref id="B42">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dobzhansky</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>Nothing in Biology Makes Sense Except in the Light of Evolution.</article-title>
+        <source>American Biology Teacher</source>
+        <year>1973</year>
+        <volume>35</volume>
+        <fpage>125</fpage>
+        <lpage>129</lpage>
+      </citation>
+    </ref>
+    <ref id="B43">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <collab>The Gene Ontology Consortium</collab>
+        </person-group>
+        <article-title>Gene ontology: tool for the unification of biology.</article-title>
+        <source>Nat Genet</source>
+        <year>2000</year>
+        <volume>25</volume>
+        <fpage>25</fpage>
+        <lpage>29</lpage>
+        <pub-id pub-id-type="pmid">10802651</pub-id>
+        <pub-id pub-id-type="doi">10.1038/75556</pub-id>
+      </citation>
+    </ref>
+    <ref id="B44">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pruitt</surname>
+            <given-names>KD</given-names>
+          </name>
+          <name>
+            <surname>Maglott</surname>
+            <given-names>DR</given-names>
+          </name>
+        </person-group>
+        <article-title>RefSeq and LocusLink: NCBI gene-centered resources.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>137</fpage>
+        <lpage>140</lpage>
+        <pub-id pub-id-type="pmid">11125071</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/29.1.137</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+</back>

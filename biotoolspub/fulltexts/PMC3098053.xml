@@ -1,0 +1,1695 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3098053</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-11-155</article-id>
+    <article-id pub-id-type="pmid">20338066</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-11-155</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Reduced representation of protein structure: implications on efficiency and scope of detection of structural similarity</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Zong Hong</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>Zhangzh@bii.a-star.edu.sg</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Lee</surname>
+          <given-names>Hwee Kuan</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>leehk@bii.a-star.edu.sg</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A3">
+        <name>
+          <surname>Mihalek</surname>
+          <given-names>Ivana</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>ivanam@bii.a-star.edu.sg</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Bioinformatics Institute, A*STAR, 30 Biopolis Street, #07-01 Matrix, Singapore 138671</aff>
+    <pub-date pub-type="collection">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>26</day>
+      <month>3</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <fpage>155</fpage>
+    <lpage>155</lpage>
+    <history>
+      <date date-type="received">
+        <day>27</day>
+        <month>10</month>
+        <year>2009</year>
+      </date>
+      <date date-type="accepted">
+        <day>26</day>
+        <month>3</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Zhang et al; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Zhang et al; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/11/155"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Computational comparison of two protein structures is the starting point of many methods that build on existing knowledge, such as structure modeling (including modeling of protein complexes and conformational changes), molecular replacement, or annotation by structural similarity. In a commonly used strategy, significant effort is invested in matching two sets of atoms. In a complementary approach, a global descriptor is assigned to the overall structure, thus losing track of the substructures within.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>Using a small set of geometric features, we define a reduced representation of protein structure, together with an optimizing function for matching two representations, to provide a pre-filtering stage in a database search. We show that, in a straightforward implementation, the representation performs well in terms of resolution in the space of protein structures, and its ability to make new predictions.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>Perhaps unexpectedly, a substantial discriminating power already exists at the level of main features of protein structure, such as directions of secondary structural elements, possibly constrained by their sequential order. This can be used toward efficient comparison of protein (sub)structures, allowing for various degrees of conformational flexibility within the compared pair, which in turn can be used for modeling by homology of protein structure and dynamics.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>The comparison of two protein structures is most efficiently handled as a hierarchical problem, more or less closely following the protocol laid out over a decade ago by Singh and Brutlag [<xref ref-type="bibr" rid="B1">1</xref>].</p>
+    <p>Its first step, fold recognition on the level of secondary structural element (SSE) correspondence, has been tackled repeatedly in the literature [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B14">14</xref>], building on the founding body of work related to aligning protein structures at the atomic-resolution level [<xref ref-type="bibr" rid="B15">15</xref>-<xref ref-type="bibr" rid="B19">19</xref>]. Most of the latter adopted an iterative resolution approach by starting from variously defined fragments of protein structure [<xref ref-type="bibr" rid="B20">20</xref>-<xref ref-type="bibr" rid="B23">23</xref>]. However, prominent methods capable of doing fast and conformationally tolerant search [<xref ref-type="bibr" rid="B4">4</xref>], such as SSM [<xref ref-type="bibr" rid="B12">12</xref>] and Fatcat [<xref ref-type="bibr" rid="B22">22</xref>] still take several tens of minutes of CPU time to perform a database search, doing a thorough but perhaps unnecessary job in order to eliminate bad candidates for a match. The development of complementary, ultra-fast methods for rigid structural comparison of proteins seems to have migrated to the realm of computer science, and typically relies on index or hash based database retrieval [<xref ref-type="bibr" rid="B24">24</xref>-<xref ref-type="bibr" rid="B29">29</xref>]. The algorithm from this family possibly the closest in spirit, if not in the scope, to the one we will propose below is <monospace>TableauSearch</monospace>[<xref ref-type="bibr" rid="B30">30</xref>]. With its high level of abstraction of protein structure, it indeed proves capable of searching databases approaching 10<sup>5 </sup>entries as a matter of minutes. The method records and then discretizes the relative angle between any two pairs of SSEs in a structure, and stores it as a tableau [<xref ref-type="bibr" rid="B31">31</xref>] to be used in the database search. The entries, however, in <monospace>TableauSearch</monospace> database are rigid domains, and the algorithm thus dispenses with conformationally flexible searches right at the outset. Looking for a substructural match in this approach is not a completely straightforward affair either [<xref ref-type="bibr" rid="B30">30</xref>].</p>
+    <p>From mathematical biology side, several global descriptors of protein structure have been proposed [<xref ref-type="bibr" rid="B24">24</xref>] (for statistical takes on the problem see [<xref ref-type="bibr" rid="B32">32</xref>,<xref ref-type="bibr" rid="B33">33</xref>]) with an eye on organizing our knowledge of protein (or fold) universe [<xref ref-type="bibr" rid="B34">34</xref>]. An example is provided by SGM [<xref ref-type="bibr" rid="B24">24</xref>,<xref ref-type="bibr" rid="B35">35</xref>], a method that relies on a set of measures from differential geometry to describe overall structure of a protein domain, and which we will use below as a representative of its class of methods.</p>
+    <p>Even though the idea of a pre-filter based on gross features of the protein structure is implicit in several methods that have undergone a steady development [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B12">12</xref>], it has seldom been discussed and documented as a computational problem on its own. We propose, therefore, to take a look specifically at the question of the smallest possible set of features needed to describe protein structure, and propose its intuitively motivated reduced representation, equipped with a scoring function capable of detecting both rigid matches at domain level, and conformational changes involving relative motion of structural domains.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <p>In the current literature there exists a broad selection of methods for pairwise structural comparison of proteins [<xref ref-type="bibr" rid="B36">36</xref>-<xref ref-type="bibr" rid="B38">38</xref>]. Typically centered on backbone atom matching [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B21">21</xref>,<xref ref-type="bibr" rid="B39">39</xref>,<xref ref-type="bibr" rid="B40">40</xref>], they take several seconds or even several minutes to compare two structures and decide that the match is <italic>not </italic>possible. Why is it, then, that a human observer can establish, after a single glance that two protein structures in cartoon representation are (dis)similar? Certainly we are not mentally matching the backbone atoms, nor the angles through which the secondary structural elements (SSEs) are joined. Rather, the human observer will try to orient the two structures so that the SSEs point roughly in the same direction, and then perhaps check if the two diagrams are showing the same sequential ordering of the SSEs.</p>
+    <p>In search for an algorithm which will emulate this efficient process, we propose reducing the protein structure to the bare bones of structural information: SSE direction and type (Fig. <xref ref-type="fig" rid="F1">1</xref>) and sequential order. Furthermore, we define a function to score the match between two proteins in this representation; the best match between the two structures can then be found by looking for the rotation in the representation space which optimizes this function. The resulting algorithm enables searching through a database of protein structures in a way which is fast, independent of the size of SSEs and enables detection of structures which are related, but correspond to two different conformations.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Reducing the protein representation</bold>. <bold>(A) </bold>Replacing the secondary structure elements (SSEs) by vectors retaining the information about the SSEs direction type (<italic>α</italic>-helix or <italic>β</italic>-sheet; indicated by red and blue colors). <bold>(B) </bold>Dispensing with the information about the SSE length and layout in space, leaves the representation consisting of unit vectors of two types, or, equivalently, points of two possible types on a unit sphere. The additional information missing from the illustration is the vectors' sequential order, carried over from the ordering of the SSEs on the protein sequence. All illustrations in this work were produced using PyMOL [DeLano, W.L. (2002) <ext-link ext-link-type="uri" xlink:href="http://pymol.org">http://pymol.org</ext-link>] and POV-Ray [Persistence of vision raytracer (version 3.6, 2004) <ext-link ext-link-type="uri" xlink:href="http://povray.org">http://povray.org</ext-link>].</p>
+      </caption>
+      <graphic xlink:href="1471-2105-11-155-1"/>
+    </fig>
+    <sec>
+      <title>Structure representation and match scoring function</title>
+      <p>To reduce the size of the representation of the protein structure, we replace SSEs by direction vectors in space, while keeping the information about the SSE type (<italic>α</italic>-helix or <italic>β</italic>-strand), as indicated by the two different colors in the illustration in Fig. <xref ref-type="fig" rid="F1">1A</xref>. Furthermore, we drop the information about the elements' relative placement in space, resulting in the representation shown schematically in Fig. <xref ref-type="fig" rid="F1">1B</xref>. This representation can then be written as an ordered set of three-dimensional unit vectors,<disp-formula id="bmcM1"><label>(1)</label><graphic xlink:href="1471-2105-11-155-i1.gif"/></disp-formula></p>
+      <p>for a protein structure of <italic>N</italic><sub><italic>x </italic></sub>SSEs. The order of the elements is determined by the order in which SSEs appear on the peptide sequence. Each vector represents one of the two types of structural elements that appear in protein structures: <italic>α</italic>-helix or <italic>β</italic>-strand. The information about the type is stored as a corresponding set of indicators<disp-formula><graphic xlink:href="1471-2105-11-155-i2.gif"/></disp-formula></p>
+      <p>When this object is rotated, the rotation applies to each vector <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i3.gif"/></inline-formula> equally: that is, the relative angles between the vectors stay the same. In this representation, the closeness of vector <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i3.gif"/></inline-formula> from the representation of one protein structure, <italic>X</italic>, and vector <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i4.gif"/></inline-formula>, from the representation of the other structure, <italic>Y</italic>,<disp-formula><graphic xlink:href="1471-2105-11-155-i5.gif"/></disp-formula></p>
+      <p>can be measured using the following matrix element, which falls off steeply as the angle between the two vectors increases:<disp-formula id="bmcM2"><label>(2)</label><graphic xlink:href="1471-2105-11-155-i6.gif"/></disp-formula></p>
+      <p>Here, <italic>δ </italic>is an adjustable parameter, and <italic>R </italic>is the rotation operator. The overall quality of the match is given by<disp-formula id="bmcM3"><label>(3)</label><graphic xlink:href="1471-2105-11-155-i7.gif"/></disp-formula></p>
+      <p>The negative sign here is arbitrary, indicating that <italic>F</italic>(<italic>R</italic>; <italic>X</italic>, <italic>Y</italic>) will be optimized through minimization with respect to rotation R. Choosing a small <italic>δ </italic>enables performing the double sum, while effectively summing only over the nearest matching pairs. In an ideal case of two exactly matching substructures, and <italic>δ </italic>tending to zero, the minimal value of <italic>F </italic>would be equal to the negative number of SSEs in the smaller structure. The distribution of values of <italic>F</italic>(<italic>R</italic>) in the rotation space will depend on the instance of the two sets, <italic>X </italic>and <italic>Y</italic>, under consideration. Depending on the orientation of vectors in <italic>X </italic>and <italic>Y</italic>, there may be a clear and isolated minimum in <italic>F</italic>(<italic>R</italic>), or there may be a region in <italic>R </italic>space densely populated with local minima of approximately equal depth. In particular, when comparing two structures with many nearly-parallel elements, covering a small solid angle in our reduced representation, a whole range of rotations <italic>R </italic>may conceivably result in false 'matches.' As an estimate of how easy it is to achieve a certain value of <italic>F</italic>, by a chance choice of rotation <italic>R</italic>, we evaluate the <italic>z</italic>-score:<disp-formula id="bmcM4"><label>(4)</label><graphic xlink:href="1471-2105-11-155-i8.gif"/></disp-formula></p>
+      <p>that is, the distance of the value <italic>F </italic>from the average over all rotations <italic>R</italic>, measured in units of standard deviation (the denominator in Eq. 4). The rotations resulting in near-zero (or even positive) <italic>z</italic><sub><italic>F </italic></sub>can then be dismissed as insignificant given the geometry of the problem. The estimate of the <italic>z</italic>-score requires evaluation of the first two moments of <italic>F</italic>(<italic>R</italic>; <italic>X</italic>, <italic>Y</italic>) over the set of all possible rotations <italic>R</italic>, which can be done explicitly in the case of the average, and numerically in the case of the average square [Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>].</p>
+      <p>To make possible a search through a database of realistic protein structures, we need a relaxed expectation of what is the best attainable match in the direction of SSEs [<xref ref-type="bibr" rid="B41">41</xref>], and therefore we need a finite sized <italic>d</italic>. This would lead to a number of false matches, were it not for the last requirement that we impose, which is that the sequential ordering of SSEs from the query is preserved in the set of their closest matching counterparts in the target. That is, we want the outcome of the algorithm to be a map <italic>M</italic><sub><italic>R </italic></sub>: <italic>i </italic>↦<italic>M</italic>(<italic>i</italic>), where <italic>i </italic>is the index over <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i3.gif"/></inline-formula> belonging to <italic>X</italic>, <italic>M</italic>(<italic>i</italic>) is the index over <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i9.gif"/></inline-formula> belonging to <italic>Y</italic>, and for any two pairs (<italic>i</italic><sub>1</sub>, <italic>M</italic>(<italic>i</italic><sub>1</sub>)), (<italic>i</italic><sub>2</sub>, <italic>M</italic>(<italic>i</italic><sub>2</sub>)) it is true that<disp-formula id="bmcM5"><label>(5)</label><graphic xlink:href="1471-2105-11-155-i10.gif"/></disp-formula></p>
+      <p>where ≺ indicates the precedence on the primary sequence of the protein.</p>
+      <p>To find a map which preserves the order, we reinterpret <italic>X </italic>and <italic>Y </italic>as two alignable sequences of elements ("letters") labeled <italic>i </italic>and <italic>j</italic>. The letters here are SSEs, and their the similarity is given by <italic>D</italic><sub><italic>ij</italic></sub>(<italic>R</italic><sub><italic>opt</italic></sub>). <italic>D</italic>(<italic>R</italic><sub><italic>opt</italic></sub>), Eq. 2, evaluated at <italic>R</italic><sub><italic>opt </italic></sub>that optimizes <italic>F</italic>(<italic>R</italic>; <italic>X</italic>, <italic>Y</italic>) thus becomes a similarity matrix, playing the role that BLOSUM matrices, for example, play in the more familiar context of the alignment of two primary protein sequences. With the similarity matrix at hand, we can use a pairwise sequence alignment algorithm [<xref ref-type="bibr" rid="B42">42</xref>], such as Needleman-Wunsch or Smith-Waterman. The alignment procedure optimizes the sum of <italic>D</italic><sub><italic>ij</italic></sub>(<italic>R</italic>) elements over the pairs (<italic>i</italic>, <italic>M</italic>(<italic>i</italic>)) matched in the pairwise matching algorithm<disp-formula id="bmcM6"><label>(6)</label><graphic xlink:href="1471-2105-11-155-i11.gif"/></disp-formula></p>
+      <p>Depending on the algorithm and parametrization, the alignment procedure may assign various gap penalties for the SSEs that do not map onto the other structure. <italic>T </italic>(<italic>D</italic>) ignores such SSEs. By retaining only the matched pairs which optimize <italic>T </italic>(<italic>D</italic>), we obtain a good orientation match between the pairs of SSEs, that at the same time complies with the sequential ordering in both structures.</p>
+      <p>A conformationally flexible match in this picture consists of two local minima in <italic>F</italic>(<italic>R</italic>; <italic>X</italic>, <italic>Y</italic>) for two different <italic>R</italic>'s, thus incorporating a model in which structural domains maintain their internal structural organization during conformational changes in a protein. In practice, it has to be verified that the two minima in <italic>R </italic>are different in a way that is statistically significant; the details may depend on the implementation.</p>
+      <p>Eq. 6 is the place to extend the formalism, if so desired, to include other quantities that can be ascribed to a pair of SSE, such as the length (mis)match between the two. In the numerical experiments we performed [Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>], enforcing the length mismatch penalty of the form<disp-formula id="bmcM7"><label>(7)</label><graphic xlink:href="1471-2105-11-155-i12.gif"/></disp-formula></p>
+      <p>(with <italic>ΔL</italic><sub><italic>iM</italic>(<italic>i</italic>) </sub>the absolute value of the length difference, and <italic>tol</italic><sub><italic>ΔL </italic></sub>an adjustable parameter) may improve the performance. The size of the improvement depends on the value used for <italic>δ </italic>and on the nature of the test the method is subjected to (i.e. do we count as a hit the cases of overall structural similarity allowing wide range of length mismatch in SSE, or not; how many levels of CATH classification we are trying to reproduce, etc.) [Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>].</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Implementation</title>
+    <p>To determine whether the reduced representation of the protein structure contains enough information for a reliable database search, we have implemented the above ideas in a preliminary way. In this implementation we choose to optimize <italic>F</italic>(<italic>R</italic>; <italic>X</italic>, <italic>Y</italic>) starting from a set of initial guesses. This set consists of rotations constructed by choosing all possible combinations of two vectors from <italic>X</italic>, and two vectors of the corresponding type and same sequential order in <italic>Y </italic>; the initial rotation, then, is the one which puts the first two vectors from each pair in the same direction, and overlaps the planes spanned by each pair (see also Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>). This is followed by the steepest descent search for a minimum in the space of quaternions representing <italic>R </italic>[<xref ref-type="bibr" rid="B43">43</xref>]. This loop is the central time consumer of the search. The number of pairs that need to be checked out is<disp-formula><graphic xlink:href="1471-2105-11-155-i13.gif"/></disp-formula></p>
+    <p>where <italic>s</italic><sub><italic>i </italic></sub>is the SSE type indicator, as in the previous section, and <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i14.gif"/></inline-formula> here is the Kronecker <italic>δ</italic>, not to be confused with the Gaussian width parameter used in the rest of the paper. This leads to the worse case scenario (when all SSEs in both structure are of the same type) of complexity of <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i15.gif"/></inline-formula>, where <italic>N</italic><sub><italic>x </italic></sub>and <italic>N</italic><sub><italic>y </italic></sub>are the number of the SSEs in the two structures. This number may be substantially smaller (down to 0) in the case of mixed <italic>α</italic>/<italic>β </italic>structures. It can also be alleviated by grouping the directions nearly parallel in space, in which case the complexity becomes <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i16.gif"/></inline-formula> where <italic>n</italic><sub><italic>x </italic></sub>and <italic>n</italic><sub><italic>y </italic></sub>are the numbers of distinct SSE directions in structures <italic>X </italic>and <italic>Y</italic>. (This compactification is later "unfolded" to do the pairwise alignment of SSEs.) In practice, the second and the fourth sum can be truncated at <italic>j </italic>= <italic>i </italic>+ <italic>m </italic>and <italic>k </italic>= <italic>l </italic>+ <italic>m</italic>, respectively, where <italic>m </italic>is a small number (2 or 3), without significant loss in performance. This makes the complexity <italic>O</italic>(<italic>N</italic><sub><italic>x</italic></sub><italic>N</italic><sub><italic>y</italic></sub>), or <italic>O</italic>(<italic>n</italic><sub><italic>x</italic></sub><italic>n</italic><sub><italic>y</italic></sub>) in the case of grouped directions.</p>
+    <p>In a pairwise comparison of two structures, the minima occurring at different <italic>R</italic>'s are stored if the <italic>z </italic>score is deemed statistically significant; later they are sorted in the order of the ascending <italic>z</italic>-score, and the best one is reported. A certain top number of suboptimal minima from this sorted list is checked for the complementarity of the match, and the complementary pair assigning the highest total score is reported as a flexible match. This part can be generalized to <italic>n</italic>, rather than only two complementary matches.</p>
+    <p>When doing a database scan, pairwise matches between the query and different target structures are scored and sorted using <italic>T</italic>(<italic>D</italic>) for a rigid search, Eq. 6, while the hits for a flexible search are sorted according to a heuristic score given by<disp-formula id="bmcM8"><label>(8)</label><graphic xlink:href="1471-2105-11-155-i17.gif"/></disp-formula></p>
+    <p>where <italic>z</italic><sub>1 </sub>and <italic>z</italic><sub>2 </sub>are the <italic>z</italic>-scores, Eq. 4, for <italic>F</italic>(<italic>R</italic>; <italic>X</italic>, <italic>Y</italic>) evaluated at two rotations, <italic>R</italic><sub>1 </sub>and <italic>R</italic><sub>2 </sub>which match two different structural domains, and <italic>T </italic>(<italic>D</italic><sup>max</sup>), given in Eq. 6, is the quantity optimized in the pairwise alignment. The two maps corresponding to the two rotations result in two different matrices <italic>D</italic><sub><italic>ij</italic></sub>(<italic>R</italic><sub>1</sub>) and <italic>D</italic><sub><italic>ij</italic></sub>(<italic>R</italic><sub>2</sub>); <italic>T </italic>is evaluated based on the larger of the two values of matrix elements <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i18.gif"/></inline-formula> = max [<italic>D</italic><sub><italic>ij</italic></sub>(<italic>R</italic><sub>1</sub>), <italic>D</italic><sub><italic>ij</italic></sub>(<italic>R</italic><sub>2</sub>)].</p>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <p>It is quite a strong claim that the three features we have selected (direction, type and sequential ordering of SSEs) provide enough information to distinguish two protein structures (and, conversely, to detect them as similar). While proving it may not be feasible, we may demonstrate that, statistically, it works quite reliably. Below we investigate the distinguishing and classifying power of the representation, and point out its two possible applications: annotation of novel structures and modeling of protein dynamics by homology. Parametrization, data sets, and related statistics can be found in Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>.</p>
+    <sec>
+      <title>Self-scoring in a large database of structures</title>
+      <p>As a necessary condition for the representation to be of practical value, it has to be unique, enabling the function F to find the query itself in a database of structures. To test this property, we ran an all against all search on 1000 structures from PDB25 [<xref ref-type="bibr" rid="B44">44</xref>] with more than three SSEs, using <italic>δ </italic>= 0.1 and <italic>δ </italic>= 0.3. For both choices of <italic>δ</italic>, the total aligned score, Eq. 6, is invariably highest for the self match. It is instructive to notice, though, that for the smaller value of <italic>δ</italic>, the geometric criterion, quantified by <italic>z</italic><sub><italic>F</italic></sub>, Eq. 4, is in itself sufficient to distinguish uniquely the protein structure (full line in Fig. <xref ref-type="fig" rid="F2">2</xref>). However, as we allow for more fuzziness in the geometric match, by setting <italic>δ </italic>= 0.3, this criterion becomes insufficient (dashed line in Fig. <xref ref-type="fig" rid="F2">2</xref>), and we have to resort to the preservation of sequential ordering to describe the structure uniquely. This has direct implication on the following experiment, in which detecting structures which belong to the same fold but are not identical forces us to relax the demands on the exactness of the geometric match.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Using the geometric criterion (Eq. 4) exclusively to detect the query in PDB25</bold>. The histogram shows the cumulative percentage of cases for which the self-match score is found within the top percentage shown on the x-axis. Full line: using <italic>δ </italic>= 0.1, and dashed line: using <italic>δ </italic>= 0.3. For both choices of <italic>δ </italic>self match is always the highest on the list if the sequential ordering (Eq. 6) is used as an additional requirement (i.e. the graph looks the same as <italic>δ </italic>= 0.1 case shown in red here). Thus in a general comparison strategy one cannot rely on matching directions alone - additional constraints are needed to reduce the number of false positives.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-155-2"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Classification of structural domains</title>
+      <sec>
+        <title>General performance characterization</title>
+        <p>To be of use, a method of the type we are presenting is expected to be able not only to find and rank highly all structures which are identical to the query, but also the structures which are, in some sense, similar to it. Using the test (and the test set, reduced by the number of structures with less than four SSEs) proposed by Kolodny <italic>et al</italic>. [<xref ref-type="bibr" rid="B38">38</xref>] we performed an all-against-all comparison of over 2000 structures from CATH v.2.4 [<xref ref-type="bibr" rid="B45">45</xref>], and measured the ability of the method to rank highly the pairs with the same class, architecture, and topology. The outcome is shown in Fig. <xref ref-type="fig" rid="F3">3</xref>, in the form of receiver operating characteristic (ROC) curve. The best methods climb steeply in the fraction of true positives for small values of false positives. To place the performance of our approach in the context of the existing methods, we show the results for several high-resolution methods (data in gray originally collected and discussed by Kolodny <italic>et al</italic>., [<xref ref-type="bibr" rid="B38">38</xref>]; green: data additionally collected in this work [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B9">9</xref>,<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>]), and one low resolution (SGM, [<xref ref-type="bibr" rid="B24">24</xref>]; green) method on the same graph. In all computational experiments in this paper the methods were considered in their pairwise mode - additional capabilities of the accompanying servers (such as hierarchical clustering in the target database, hash-based target retrieval etc) were not the subject of investigation. The method suggested here lies within the bounds of performance characteristics of methods with finer granularity (that is, methods that perform the actual alignment between two structures), indicating that direction, type, and order of SSEs represent a sizeable portion of the signal that the detailed methods are picking.</p>
+        <fig id="F3" position="float">
+          <label>Figure 3</label>
+          <caption>
+            <p><bold>Detecting structures from the same class, architecture and topology according to CATH classification</bold>. To obtain an idea about the scope and resolution of the prefiltering we are proposing (red), the results are shown on the same graph with representative full resolutions methods. It should be understood here that the prefiltering step we are proposing is some 40 to 1000 times faster than the full resolution methods. (The purpose of full resolution methods, of course, is achieving the high quality of the alignment, rather than the speed database scanning. The quality of pairwise alignment is not tested in this type of experiment.) The results are presented in terms of a ROC curve: for a sliding threshold in the quality score, the number of true positives (TP) above the threshold (y-axis) is shown as function of the fraction of false positives (FP) falling above the threshold (x-axis). Red line: the ROC curve using the total aligned score (Eq. 6) to rank the quality of the match, with <italic>δ </italic>= 0.5 (full red line) and with <italic>δ </italic>= 0.3 (dashed red line) and gap opening penalty of -1 in the alignment step. Gray: various high resolution methods (CE, [<xref ref-type="bibr" rid="B21">21</xref>]; STRUCTAL, [<xref ref-type="bibr" rid="B16">16</xref>]; LSQMAN, [<xref ref-type="bibr" rid="B58">58</xref>]; DALI, [<xref ref-type="bibr" rid="B17">17</xref>]; SSM, [<xref ref-type="bibr" rid="B12">12</xref>]; SSAP, [<xref ref-type="bibr" rid="B15">15</xref>]) scored using using SAS score [<xref ref-type="bibr" rid="B16">16</xref>]. For the original context, timings, and discussion see Kolodny <italic>et al</italic>. [<xref ref-type="bibr" rid="B38">38</xref>]. Green line: "generation 2000" high resolution methods, in the order of decreasing area under the ROC curve (and, roughly, the time taken for the task): 3Dhit [<xref ref-type="bibr" rid="B9">9</xref>](80 CPU hrs), TMalign [<xref ref-type="bibr" rid="B13">13</xref>](80 CPU hrs), SABERTOOTH [<xref ref-type="bibr" rid="B14">14</xref>](60 CPU hrs), MAMMOTH [<xref ref-type="bibr" rid="B8">8</xref>](40 CPU hrs). Green, dash-dotted: SGM [<xref ref-type="bibr" rid="B24">24</xref>] (several CPU minutes). Inset: comparison of the method discussed in the text with the pre-filters used in VAST and SSM, on a smaller data set, acceptable to all three methods [Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>]. Red line (full): the ROC curve using the total aligned score (Eq. 6); blue line (full) pre-filter used in VAST; orange line (full): SSM pre-filter optimized for performance on this type of a test; orange line (dashed): native SSM pre-filter.</p>
+          </caption>
+          <graphic xlink:href="1471-2105-11-155-3"/>
+        </fig>
+        <p>Consistent with the qualitative description underlying the CATH classification, in this experiment we obtained better sensitivity/specificity tradeoff by relaxing the criterion for the directional match by setting <italic>δ </italic>= 0.5. Together with the results for the exact match problem above, this suggests a possibility of simulated annealing approach with stepwise decreasing <italic>δ</italic>, to obtain a distribution of hits with varying strictness in structural similarity to the query. (For a remote structural similarity, no significant value of <italic>F </italic>may be obtainable for very small <italic>δ</italic>. Conversely, large <italic>F </italic>for small <italic>δ </italic>indicates a very small variation in direction of SSEs, typically related to strong overall similarity.)</p>
+        <p>The time taken for this computational experiment, of approximately 170 CPU minutes for <italic>δ </italic>= 0.5 (and 90 minutes for <italic>δ </italic>= 0.3) on a 3 GHZ processor, compares favorably with some 40 to 1000 CPU hours needed for the high resolution methods to complete the same task (see Fig. <xref ref-type="fig" rid="F3">3</xref> and experiments in [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B19">19</xref>,<xref ref-type="bibr" rid="B46">46</xref>]). It should be kept in mind, of course, that the approach we have laid out functions only as a pre-filter and classifier, and does not produce the actual structural alignment on the atomic level. Rather, we argue, a small subset of the structural features is responsible for the classification we are trying to reproduce, and this can be used to economize with computational resources.</p>
+      </sec>
+      <sec>
+        <title>Comparison with pre-filters used in other methods</title>
+        <p>Among the existing tools for structure comparison, the most proficient ones do include some way of pre-filtering (e.g. the difference in sum of rows and columns in the contact matrix used by DALI, [<xref ref-type="bibr" rid="B40">40</xref>]), discussed to a larger or smaller extent. Since most of such methods have been designed to pass the test like the domain classification discussed here, this is a reasonable place to point out the novel aspects of our reasoning, and their performance implications. Hence we conclude this section with a brief comparison with VAST and SSM, both well established methods with their own servers [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B12">12</xref>,<xref ref-type="bibr" rid="B47">47</xref>], and both using SSEs as the basic elements of protein structure.</p>
+      </sec>
+      <sec>
+        <title>SSM</title>
+        <p>In the course of development of SSM, the authors have devoted a whole publication [<xref ref-type="bibr" rid="B48">48</xref>] to the discussion of its preliminary step. In its pre-filtering stage, SSM constructs a graph for each structure. The vertices of the graph carry the information about each SSE (length, type), while the edges are associated with the attribute of each pair of vertices/SSEs they are connecting (distance, angles). The algorithm then looks for a common subgraph using a set of heuristic rules, divided into 5 levels, to decide on the "sameness" between vertices and edges from the two graphs. The necessity to introduce the cutoffs (in order to deduce the existence of common subgraph elements) enforces discretization of the scoring function, in contrast to the approach proposed in this work. An attempt to run the CATH experiment using the five discrete levels of similarity in SSM is shown in Fig. <xref ref-type="fig" rid="F3">3</xref>, dotted line in the inset.</p>
+        <p>Despite the comparatively small area under the ROC curve obtained this way, the information manipulated by SSM is actually quite seizable. In an attempt to extract more resolution from the SSM pre-filtering, we took the outcome from all five levels simultaneously, and treated the optimization of the ROC area as a machine learning problem [Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>]. The outcome is shown in Fig. <xref ref-type="fig" rid="F3">3</xref>, inset, blue line. It approaches the ROC achieved by the method we are proposing, but at the cost of introducing fifty parameters difficult to grasp intuitively.</p>
+      </sec>
+      <sec>
+        <title>VAST</title>
+        <p>VAST also relies on a graph matching tactics in its pre-filtering stage, but in a substantially different way ([<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B47">47</xref>]; also see [<xref ref-type="bibr" rid="B49">49</xref>]). In contrast to SSM, where one graph represents each structure, in VAST graph is constructed for a <italic>map </italic>between two structures, as follows.</p>
+        <p>In VAST, SSE elements are represented by direction vectors that, aside from the information about the type, explicitly retain the information about the SSE length (i.e. while our representation consists of unit vectors, VAST uses vectors of the length proportional to the length of the SSE). A discrete set of rotations acting on one of the structures/representations is attempted, each rotation satisfying the following: (i) the rotation maps one of the vectors from the rotated structure exactly onto one of the vectors from the fixed structure (defined to be the <italic>z </italic>direction), and (ii) it brings another vector from the rotated structure into the plane defined by <italic>z </italic>and some vector from the fixed structure. This contrasts with the continuous space of rotations our algorithm is exploring. In both (i) and (ii) the vectors mapped between the two structures have to be of the same type.</p>
+        <p>For each of the rotations from this set, a structure termed "digraph" is constructed: the vertices correspond to <italic>pairs </italic>of vectors, one from each structure, that fall within certain cutoffs regarding the angle between the two and the allowed distance between their endpoints. Digraph's edges exist if the two pairings involved respect the sequential ordering on the input structures, and if they carry the weight inversely proportional to the difference in the angles between two vectors corresponding to the same structure. The cutoffs and the weight are parametrized and the parameters optimized for a typical search. In our comparison runs we used the default set of parameters. The digraph can be traversed quickly to find the best alignment for a given rotation, and consequently the best scoring alignment over all rotations chosen.</p>
+        <p>This algorithm is similar to certain extent to the one proposed in this work, in the limit of small Gaussian width <italic>δ </italic>(which does not allow for much exploration of rotational space away from the initial guess), and with the length penalty (Eq. 7) included. The digraph traversal is an alternative to the dynamic programming approach we are taking.</p>
+        <p>The crucial difference here, however, is that VAST operates on the level of <italic>pairs </italic>of SSEs, somewhat analogous to the possibility of using <italic>F</italic><sup>2 </sup>as a scoring function in our approach. The requirements this imposes are stricter, explaining the somewhat higher sensitivity of VAST in the low false positive region (Fig. <xref ref-type="fig" rid="F3">3</xref>; it might be worth re-iterating here that in considering Fig. <xref ref-type="fig" rid="F3">3</xref> one should keep in mind that the method in question is not VAST proper, but, rather, its pre-filtering stage only.) The rotations, furthermore, that are tested are not optimized to match the rest of the structure (only the pair of pairs defining the rotation) and thus are not readily applicable to further refinement of the matching transformation, an extension that our approach is in principle amenable to. Also, insisting on the length match (something that we do not do necessarily), in order to get rid of false positive matches, is a strategy which might backfire in the attempts to extend the search to a more distant structural similarity.</p>
+        <p>As is, however, this method of pre-filtering is very fast (the initial guess for a rotation is not further optimized, a major time consuming step in our approach), and slightly better in the small FP region than our best take on the CATH test, (Fig. <xref ref-type="fig" rid="F3">3</xref>; inset; full blue line). Nevertheless, our ROC does show signs of greater robustness and higher resolution capability, as indicated by the larger area under the curve.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Detecting a substructure in a set of larger structures</title>
+      <p>What is the resolution with which this approach can detect a smaller query structure within a larger target structure? To obtain an estimate we took the test set from the previous experiment (see "Classification of structural domains" subsection) and required for each domain to be matched to the target domain with the same CAT number from CATH classification, but this time with the target domain embedded in the original full-protein structure. The results are shown in Fig. <xref ref-type="fig" rid="F4">4</xref>. Again, we try to place the performance of this rough comparison method in the context of what is achievable by methods performing the full structural alignment. In this we choose to stick with the methods that are fast enough to perform the test in a reasonably short time. For their performance in comparison with slower full-alignment methods see Fig. <xref ref-type="fig" rid="F3">3</xref>.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>ROC for finding a domain in the full protein structure</bold>. Full red line: the method discussed in the text, with <italic>δ </italic>= 0.5 (15 CPU min). Dotted orange line: SSM [<xref ref-type="bibr" rid="B12">12</xref>](several tens of CPU), dash-dot, green: SGM ([<xref ref-type="bibr" rid="B24">24</xref>], Full green line: "generation 2000" high resolution methods, in the same order of appearance as in Fig. 3 (by descending size of the area under the ROC curve): 3dhit [<xref ref-type="bibr" rid="B9">9</xref>](6 CPU hrs), TMalign [<xref ref-type="bibr" rid="B13">13</xref>](8 CPU hrs), SABERTOOTH [<xref ref-type="bibr" rid="B14">14</xref>](5.5 CPU hrs), MAMMOTH [<xref ref-type="bibr" rid="B8">8</xref>](3.5 CPU hrs). These methods, as well as SSM, do the high resolution alignment, which both makes them more reliable in the high specificity (small FP) region of the graph, and slows them down.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-155-4"/>
+      </fig>
+      <p>To indicate an <italic>im</italic>possibility first, methods which assign a set of global descriptors to the structure (such as SGM, dash-dotted line in Fig. <xref ref-type="fig" rid="F4">4</xref>) cannot tackle this problem. SGM is used as an example here: this is equally true for all methods relying on assigning a hash function to a predefined structural domain.</p>
+      <p>In the following, we choose not to reinterpret the methods used, and refer the reader to the original publications. Instead, we would like to highlight the specific algorithmic choices, which, we believe, give these methods advantage over other approaches, in particular the one proposed in this work. Notably here, MAMMOTH [<xref ref-type="bibr" rid="B8">8</xref>] and SABERTOOTH [<xref ref-type="bibr" rid="B14">14</xref>] were never designed with large database scanning primarily in mind (even though they perform well in that respect), but rather with the goal of comparing a model structure to a template (MAMMOTH) or obtaining a precise structural alignment between two structures (SABERTOOTH).</p>
+      <p>The basic unit of structure being compared in MAMMOTH [<xref ref-type="bibr" rid="B8">8</xref>] is a heptapeptide. Compared to our current implementation, which enforces an SSE as an elementary unit, irrespective of its length (see "Discussion"), the heptapeptide approach enables better resolution in the high specificity region.</p>
+      <p>Sabertooth [<xref ref-type="bibr" rid="B14">14</xref>] uses the idea that the correct alignment may be, among other things, recognized by the similar environment ("connectivity pattern") seen by the aligned structural motifs. This approach also results in strong performance in the small FP regime, and something that our approach hardly generalizes to.</p>
+      <p>TMalign [<xref ref-type="bibr" rid="B13">13</xref>] uses SSE alignment, before trying SSE mapping which would be a nonsense from the sequence point of view. This is an opportunity our implementation misses (see the the first paragraph in "Implementation" section). Otherwise, TMalign manipulates very similar input information to the approach proposed here, and is therefore encouraging to see it trace out a practically identical ROC curve, both in this test (Fig. <xref ref-type="fig" rid="F4">4</xref>), and in the test shown in Fig. <xref ref-type="fig" rid="F3">3</xref>.</p>
+      <p>3Dhit [<xref ref-type="bibr" rid="B9">9</xref>] shows the most robust ROC curve in this test. It dissects the peptide into 13-residue fragments, which first conveys the same advantage over our approach as discussed for MAMMOTH above. The algorithm then chops up the fragment into clusters. In mapping clusters the identity of amino acid (types, presumably) is enforced [<xref ref-type="bibr" rid="B50">50</xref>], an algorithmic move that speeds up the search substantially, but we would like to stay away from as long as possible in development of our algorithm. Further on, however, the fact is exploited that for similar structures a transformation that matches two subsets will match larger regions of protein structure, the fact that our approach also builds on, and that can be used to increase resolution of the match toward a full backbone match.</p>
+      <p>SSM [<xref ref-type="bibr" rid="B12">12</xref>], a veteran high resolution method, does the best in the small FP region, but at the cost of CPU time two orders of magnitude longer than required to do the rough comparison we are proposing here. The high resolution is achieved by imposing a series of geometric requirements on matched <italic>pairs </italic>of SSE from the two structures (see the sections "Comparison with pre-filters used in other methods," and "Discussion," as well as the original publication, of course).</p>
+      <p>The overall message seems to be that judging by the speed of our prefiltering and quite competitive sensitivity/specificity tradeoff it achieves it provides a good base for protein comparison engine.</p>
+    </sec>
+    <sec>
+      <title>Finding conformationally related structures</title>
+      <p>Next, we need to establish that the representation allows detection of conformationally related structures. As an easier sub-problem, we first consider the task of finding the same protein in two different conformations, thus taking the noise brought in by the evolutionary divergence out of the equation. This is analogous to the first test ("Self-scoring in a large database of structures") in that the primary sequences of the query and the target are the same, but this time their structures correspond to two different conformations. The test set consists of 677 structures selected from the database created by the users of Dyndom [<xref ref-type="bibr" rid="B51">51</xref>,<xref ref-type="bibr" rid="B52">52</xref>] server. A similar set of of pairs of conformations of the same chain could have, of course, been created from other sources, for example MolMovDB [<xref ref-type="bibr" rid="B53">53</xref>]. The results are shown in Fig. <xref ref-type="fig" rid="F5">5</xref>, together with the performance on the same test for one slow, high resolution (SSM, [<xref ref-type="bibr" rid="B12">12</xref>]) and one fast, low resolution method (SGM, [<xref ref-type="bibr" rid="B24">24</xref>]). The reduced representation shows reasonably high resolution, even though for this particular problem there are better suited approaches. SSM and SGM, for instance, both perform exceptionally well. In particular, the total time requirement for SGM is several minutes to produce the results shown. (SSM, being a high resolution method, takes several CPU days.) The harder problem in the same category is finding conformationally related pairs of protein structures, distantly related (or unrelated) in the primary sequence. This problem is compounded by the problem of finding the test set itself (finding such pairs actually being one of the original motivations for the algorithm development). To illustrate an application for a computational tool which can successfully handle such cases, we briefly comment on an example marked as a flexible match in an all-against-all experiment on PDB25. Fig. <xref ref-type="fig" rid="F6">6</xref> shows a structural match between enolase and signal recognition 54 kDa protein. Signal recognition protein bears in its C-terminal apparently so far undescribed similarity to Pfam [<xref ref-type="bibr" rid="B54">54</xref>] N-terminal enolase domain. The smaller domain in this protein also bears some similarity to the C-terminal enolase domain, at least in its <italic>α</italic>-helical part. The four domains, however, have been classified in CATH as 3.30.390.10 and 3.20.20.120 (enolase N- and C-terminal domains respectively) and 1.20.120.140 and 3.40.50.300 (signal recognition particle, N- and C-terminal domains). Taking into account no more than 8% in sequence identity in the aligned regions in both domains, it means that this example would be difficult to construct either by a search though homologous sequence space or by inspection of CATH database. The aligned core domain in C-terminal domains, however, shows striking structural similarity (see the related movie in Additional Documentation [Additional File <xref ref-type="supplementary-material" rid="S2">2</xref>]).</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Ranking of the conformationally related partner, with the same primary sequence, for 361 queries in "Dyndom" experiment</bold>. Dotted orange line: SSM [<xref ref-type="bibr" rid="B12">12</xref>], dash-dot, green: SGM [<xref ref-type="bibr" rid="B24">24</xref>], full, red: the method discussed in the text, with <italic>δ </italic>= 0.3 and length mismatch penalty.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-155-5"/>
+      </fig>
+      <p>The larger and the smaller domain appear rearranged with respect to each other in the two structures, as can be seen by using a linear coordinate transformation that overlaps the larger domain (Fig. <xref ref-type="fig" rid="F6">6</xref>). One structure, this suggests, could then be used as a scaffolding to model conformational change of the other. Could this conformational change appear as part of physiological functioning of either of the two proteins? Is it at all physically possible to get from one conformation to another at room temperature? Finding examples with structural similarity in two structural domains, rearranged in space, may indicate a possibility of conformational change in one or both proteins. The reasonableness of such conjecture is, of course, subject to further testing through targeted molecular dynamics, or some related approach. The type of structural comparison we are advocating, however, should produce more examples for this type of study.</p>
+      <fig id="F6" position="float">
+        <label>Figure 6</label>
+        <caption>
+          <p><bold>A conformational transformation candidate, as modeled by structural matching</bold>. Enolase (PDB [<xref ref-type="bibr" rid="B59">59</xref>] identifier 1pdy; white) and signal recognition 54 kda protein (1j8yF; N-terminal red, C-terminal blue). Hypothetical use of enolase as the scaffolding to model conformational change in the signal recognition particle. <bold>(A) </bold>Applying the linear coordinate transformation which overlaps the larger (C-terminal) domain of the two proteins to both domains in the signal recognition particle. <bold>(B)</bold> Transforming both the larger and the smaller domain separately to obtain the maximal overlap with enolase structure. <bold>(C) </bold>The model for conformational change in the signal recognition particle, based on (A) and (B). Note that the structural match in itself does not in itself imply functional relatedness nor common evolutionary descent.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-155-6"/>
+      </fig>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <p>We have suggested in the Methods section that after dispensing with translation and the length of the SSEs, the structure is effectively represented by a set of points on a unit sphere. With these points we associated information about underlying SSE type and sequential order. By settling on the minimal representation of the protein structure, we set out to analyze its sufficiency for structure description and retrieval.</p>
+    <p>As noted in subsection "Self-scoring in a large database of structures", Fig. <xref ref-type="fig" rid="F2">2</xref> and the related discussion, the directions themselves, except when taken very narrowly (<italic>δ </italic>= 0.1 in our formulation), may be matched by quite diverse protein structures. To get rid of false positive matches that arise that way, we have suggested imposing the requirement that the matched SSEs follow the same sequential order in the two structures. This, however is not the only possible way around the problem: as discussed in Mizuguchi and Go [<xref ref-type="bibr" rid="B5">5</xref>], and later elaborated by Krissinel and Henrick [<xref ref-type="bibr" rid="B12">12</xref>] in development of SSM (discussed above), the directions of SSEs can be supplemented by various other pieces of information: the length of SSEs, the distance and torsion angle between all possible <italic>pairs </italic>of SSEs in a structure and/or the angles between their directions and the direction of the line passing through their geometric centers. The advantage of using this type of information, rather than requiring the common sequential order of the SSEs, then is in the ability to look for pairs of proteins with different connectivity between SSEs, that still result in the overall comparable structures. On the flip-side, the set of requirements might end up being too restrictive in the search of similar (but non-identical) structures, as we have illustrated in the inset of Fig. <xref ref-type="fig" rid="F4">4</xref>.</p>
+    <p>Contrary to the model of similarity adopted here, where similar structures are assumed to share to certain extent the underlying SSE arrangement, it is conceivable that two proteins might share a common function as long as they offer a common geometry of the surface to their common (or similar) interacting partners [<xref ref-type="bibr" rid="B55">55</xref>]. In that case one might be interested in a method for detection and retrieval of proteins sharing the same shape, irrespective of the underlying secondary structure. It is a possibility not explored here. Methods for retrieval by global shape similarity have been discussed in literature (see [<xref ref-type="bibr" rid="B29">29</xref>] and references therein) and extremely short retrieval times (~10<sup>-4</sup><italic>s </italic>on a 3 GHz CPU) reported [<xref ref-type="bibr" rid="B29">29</xref>]). Some questions remain outside the scope of these methods, such as detection of a common substructure or structural motif.</p>
+    <p>Sticking to a more conservative model of shared protein structure, the problem which ultimately needs to be resolved is the correspondence: which SSEs (and later, on a finer detail level, which backbone atoms) on two structures correspond to one another. Function <italic>F</italic>(<italic>R</italic>; <italic>X</italic>, <italic>Y</italic>) enables us to initially sidestep this problem, in principle at least, because the fast fall-off of the closeness measure <italic>D</italic><sub><italic>ij</italic></sub>(<italic>R</italic>) (Eq. 2) makes possible the double sum over all elements without the danger of obtaining as the optimal a solution where no actual match exists, but the sum over many distant neighbors artificially increases the score. By starting the protein structure comparison by minimization of <italic>F</italic>(<italic>R</italic>; <italic>X</italic>, <italic>Y</italic>), we are effectively adopting, on the SSE level, the match-first-align-later approach, popularized by Gerstein and Levitt [<xref ref-type="bibr" rid="B18">18</xref>] (see also [<xref ref-type="bibr" rid="B56">56</xref>] for a further development of the idea).</p>
+    <p>Ideally, the scoring function <italic>F </italic>would quantify, in a single expression, the geometric match under the constraint of sequential ordering of the pairs, a problem which we leave open. On the high-resolution end of the spectrum of related ideas lies the URMS-RMS hybrid algorithm [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B23">23</xref>,<xref ref-type="bibr" rid="B57">57</xref>]. There, a set of directions in space is also considered, however not along the SSEs, but along the lines connecting neighboring <italic>C</italic><sub><italic>α </italic></sub>atoms within a heptapeptide. Being a high-resolution method, it comes with the computational burden comparable to the other backbone-matching approaches (and, of course, with the final reward of the actual detailed matching of two backbone traces). The match scoring function used in that work is different from the one suggested here, but it runs into a similar difficulty of estimating the statistical significance for a match of different structures. A solution offered there is comparison with an empirically derived background distribution of match probabilities using existing, unrelated protein structures.</p>
+    <p>Instead, we opted for a solution which separates the geometric match from the alignment. The fuzziest point in the algorithm we have outlined, therefore, is that the averages in Eq. 4 should properly be evaluated not over the set of all rotations <italic>R</italic>, but only over those rotations which allow, through the matrix <italic>D</italic><sub><italic>ij</italic></sub>(<italic>R</italic>), the alignment of subsequences of the two proteins of substantial length. Numerical evaluation of these proper averages would effectively grind the search to a halt, so in our prototype evaluation we keep the averages over all <italic>R </italic>as an approximation. The approximation works well for the rigid search, where it is used to dispense with bad solutions, rather than score good ones. In the case of the flexible search we resort to the total assigned score as a scoring function, coupled with the requirement that both maps have a high rotational <italic>z</italic>-score on their own.</p>
+    <p>In terms of the implementation, the room for improvement is certainly ample. The relatively large number of false positives is attributable, at least in part, to parallel beta sheets and helix bundles, which can be amended by more careful grouping of the representation vectors. Also, in the implementation used here, each <italic>β </italic>strand is represented by a single vector <inline-formula><inline-graphic xlink:href="1471-2105-11-155-i3.gif"/></inline-formula> - a rather crude approximation for most <italic>β </italic>strands, which are often bent.</p>
+    <p>Perhaps stating the obvious, the ultimate degree of success of an approach will depend on the choices made in the implementation, as much so as on the underlying idea. In this work, the available implementations (steepest descent and Needleman-Wunsch) decided the way in which the three features we selected to describe a protein were used. Even though a faster, or more robust, implementation could perhaps be achieved by a different choice of optimization or alignment algorithm, these are replaceable components, and the main points of improvement are in the representation itself, in the distance (or match scoring) function, and in its statistical evaluation.</p>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>In an attempt to build a pre-filtering tool for a search through a database of protein structures, we proposed (i) reducing the representation of protein structure to an ordered set of unit vectors carrying the information about the direction and the type of the secondary structure element they represent, Eq. 1, (ii) measuring the distance between two elements of the same type in terms of a quantity falling off exponentially with the increasing angle between the two, Eq. 2, (iii) measuring the distance between the two representations as sum over pairwise distances between their elements, Eq. 3, and (iv) ordering the near matches by their total aligned score, Eq. 6.</p>
+    <p>The representation is easily extendable to other descriptors of protein geometry by generalization of the type, currently restricted to <italic>α</italic>-helix or <italic>β</italic>-strand, and interesting statistics may result from allowing the Gaussian width <italic>δ </italic>to be type dependent.</p>
+    <p>We have shown that an implementation which minimizes the distance defined in Eq. 3 through a steepest descent calculation, and subsequently enforces the sequential order between the matched SSEs using standard sequence alignment approach, performs well in terms of the resolution in the structure space. Notable, also, is the speed that can be achieved in structure comparison without tying up the information in the form of a single index - it is precisely this feature which enables us to generalize the search to flexible and multidomain cases, and makes this idea uniquely versatile among structural comparison algorithms. The main concern addressed in this work has been whether this minimalist description of protein structure contains enough information to uniquely describe protein (sub)structures, and structural classes. The conclusion is that the information is certainly sufficient for a unique self match of each protein structure studied (Fig. <xref ref-type="fig" rid="F2">2</xref>), and represents the large chunk of the signal detected by the high resolution methods.</p>
+    <p>(Fig. <xref ref-type="fig" rid="F3">3</xref>). When extended to detection of distant structural similarity, the approach starts to suffer from "false positive" matches (note that the information about the translational degrees of freedom is absent), but it stays within the acceptable limits of accuracy set by high resolution methods, and its speed certainly allows for an improvement by extending the number of elements and types in the description.</p>
+    <p>The straightforward motivation for this description of protein structure makes clear what the pitfalls and directions of improvement are, but even the existing implementation indicates that the approach may prove valuable in making novel predictions, in terms of both rigid and flexible structural comparison. The server to accompany this paper, as well as the code used in the analysis presented in the text is available a <ext-link ext-link-type="uri" xlink:href="http://epsf.bmad.bii.a-star.edu.sg">http://epsf.bmad.bii.a-star.edu.sg</ext-link>.</p>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>SSE: secondary structural element; ROC: receiver operating characteristic; FP: false positive; TP: true positive.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>ZHZ contributed to the code development and data analysis and presentation; HKL and IM developed the algorithms and drafted the manuscript; IM designed the study and the code implementation. All authors read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>Additional Documentation</bold>. A pdf document, containing details of algebraic manipulations, and description of data sets and parametrization.</p>
+      </caption>
+      <media xlink:href="1471-2105-11-155-S1.PDF" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S2">
+      <caption>
+        <title>Additional file 2</title>
+        <p><bold>core region.mov</bold>. A short movie in mov format, showing the overlap of core regions of of larger domains of enolase and signal recognition 54 kDa protein, discussed in "Finding conformationally related structures" section.</p>
+      </caption>
+      <media xlink:href="1471-2105-11-155-S2.MOV" mimetype="video" mime-subtype="quicktime">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>The authors thank E. Krissinel, P. Roegen, T. Madej, M. Porto and D. Plewczynski for tips and explanations regarding their implementations of SMM, SGM, VAST, SABERTOOTH and 3Dhit respectively, and S. Hayward and Guoying Qi for providing the geometric descriptors for the user-created Dyndom database. Special thanks to R. Kolodny for letting us use the data originally collected for [<xref ref-type="bibr" rid="B38">38</xref>], and R. Robinson and I. Reš for encouragement and critical reading of the manuscript. Funding by Biomedical Research Council of A*STAR Singapore is gratefully acknowledged.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Singh</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Brutlag</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Hierarchical protein structure superposition using both secondary structure and atomic representations</article-title>
+        <source>Proc Intelligent Systems for Molecular Biology</source>
+        <year>1997</year>
+        <volume>5</volume>
+        <fpage>284</fpage>
+        <lpage>293</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Madej</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Gibrat</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Bryant</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Threading a database of protein cores</article-title>
+        <source>Protein Struct Funct Genet</source>
+        <year>1995</year>
+        <volume>23</volume>
+        <issue>3</issue>
+        <fpage>356</fpage>
+        <lpage>369</lpage>
+        <ext-link ext-link-type="uri" xlink:href="Http://www.ncbi.nlm.nih.gov/Structure/VAST/vast.shtml">Http://www.ncbi.nlm.nih.gov/Structure/VAST/vast.shtml</ext-link>
+        <pub-id pub-id-type="doi">10.1002/prot.340230309</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Shapiro</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Brutlag</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>FoldMiner and LOCK 2: protein structure comparison and motif discovery on the web</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2004</year>
+        <volume>32</volume>
+        <fpage>W536</fpage>
+        <lpage>W541</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkh389</pub-id>
+        <pub-id pub-id-type="pmid">15215444</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Boutonnet</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Rooman</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Wodak</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Automatic Analysis of Protein Conformational Changes by Multiple Linkage Clustering</article-title>
+        <source>Journal of Molecular Biology</source>
+        <year>1995</year>
+        <volume>253</volume>
+        <issue>4</issue>
+        <fpage>633</fpage>
+        <lpage>647</lpage>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1995.0578</pub-id>
+        <pub-id pub-id-type="pmid">7473739</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mizuguchi</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Go</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>Comparison of spatial arrangements of secondary structural elements in proteins</article-title>
+        <source>Protein Engineering Design and Selection</source>
+        <year>1995</year>
+        <volume>8</volume>
+        <issue>4</issue>
+        <fpage>353</fpage>
+        <pub-id pub-id-type="doi">10.1093/protein/8.4.353</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gilbert</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Westhead</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Nagano</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Thornton</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Motif-based searching in TOPS protein topology databases</article-title>
+        <source>Bioinformatics</source>
+        <year>1999</year>
+        <volume>15</volume>
+        <issue>4</issue>
+        <fpage>317</fpage>
+        <lpage>326</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/15.4.317</pub-id>
+        <pub-id pub-id-type="pmid">10320400</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Martin</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>The ups and downs of protein topology; rapid comparison of protein structure</article-title>
+        <source>Protein Engineering Design and Selection</source>
+        <year>2000</year>
+        <volume>13</volume>
+        <issue>12</issue>
+        <fpage>829</fpage>
+        <lpage>837</lpage>
+        <pub-id pub-id-type="doi">10.1093/protein/13.12.829</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ortiz</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Strauss</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Olmea</surname>
+          <given-names>O</given-names>
+        </name>
+        <article-title>MAMMOTH (matching molecular models obtained from theory): an automated method for model comparison</article-title>
+        <source>Protein Science: A Publication of the Protein Society</source>
+        <year>2002</year>
+        <volume>11</volume>
+        <issue>11</issue>
+        <fpage>2606</fpage>
+        <ext-link ext-link-type="uri" xlink:href="Http://ub.cbm.uam.es/mammoth/pair/index3.php">Http://ub.cbm.uam.es/mammoth/pair/index3.php</ext-link>
+        <pub-id pub-id-type="pmid">12381844</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Plewczynski</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Pas</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>von Grotthuss</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Rychlewski</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>3D-Hit, Fast Structural Comparison of Proteins</article-title>
+        <source>Applied Bioinformatics</source>
+        <year>2002</year>
+        <volume>1</volume>
+        <issue>4</issue>
+        <fpage>2</fpage>
+        <ext-link ext-link-type="uri" xlink:href="Http://3dhit.bioinfo.pl">Http://3dhit.bioinfo.pl</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kawabata</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Nishikawa</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Protein structure comparison using the Markov transition model of evolution</article-title>
+        <source>Proteins</source>
+        <year>2000</year>
+        <volume>41</volume>
+        <fpage>108</fpage>
+        <lpage>122</lpage>
+        <pub-id pub-id-type="doi">10.1002/1097-0134(20001001)41:1&lt;108::AID-PROT130&gt;3.0.CO;2-S</pub-id>
+        <pub-id pub-id-type="pmid">10944398</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Harrison</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Pearl</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Sillitoe</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Slidel</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Mott</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Thornton</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Orengo</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Recognizing the fold of a protein structure</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>14</issue>
+        <fpage>1748</fpage>
+        <lpage>1759</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg240</pub-id>
+        <pub-id pub-id-type="pmid">14512345</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Krissinel</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Henrick</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Secondary-structure matching (SSM), a new tool for fast protein structure alignment in three dimensions</article-title>
+        <source>Acta Crystallographica Section D</source>
+        <year>2004</year>
+        <volume>60</volume>
+        <fpage>2256</fpage>
+        <lpage>2268</lpage>
+        <ext-link ext-link-type="uri" xlink:href="Http://www.ebi.ac.uk/msd-srv/ssm">Http://www.ebi.ac.uk/msd-srv/ssm</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Skolnick</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>TM-align: a protein structure alignment algorithm based on the TM-score</article-title>
+        <source>Nucleic acids research</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <issue>7</issue>
+        <fpage>2302</fpage>
+        <ext-link ext-link-type="uri" xlink:href="http://zhanglab.ccmb.med.umich.edu/TM-align">http://zhanglab.ccmb.med.umich.edu/TM-align</ext-link>
+        <pub-id pub-id-type="doi">10.1093/nar/gki524</pub-id>
+        <pub-id pub-id-type="pmid">15849316</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Teichert</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Bastolla</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Porto</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>SABERTOOTH: protein structural alignment based on a vectorial structure representation</article-title>
+        <source>BMC bioinformatics</source>
+        <year>2007</year>
+        <volume>8</volume>
+        <fpage>425</fpage>
+        <ext-link ext-link-type="uri" xlink:href="Http://www2.fkp.tu-darmstadt.de/bioinf/sabertooth">Http://www2.fkp.tu-darmstadt.de/bioinf/sabertooth</ext-link>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-8-425</pub-id>
+        <pub-id pub-id-type="pmid">17974011</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Taylor</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Orengo</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Protein structure alignment</article-title>
+        <source>J Mol Biol</source>
+        <year>1989</year>
+        <volume>208</volume>
+        <fpage>1</fpage>
+        <lpage>22</lpage>
+        <pub-id pub-id-type="doi">10.1016/0022-2836(89)90084-3</pub-id>
+        <pub-id pub-id-type="pmid">2769748</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Subbiah</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Laurents</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Levitt</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Structural similarity of DNA-binding domains of bacteriophage repressors and the globin core</article-title>
+        <source>Curr Biol</source>
+        <year>1993</year>
+        <volume>3</volume>
+        <issue>3</issue>
+        <fpage>141</fpage>
+        <lpage>148</lpage>
+        <pub-id pub-id-type="doi">10.1016/0960-9822(93)90255-M</pub-id>
+        <pub-id pub-id-type="pmid">15335781</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Holm</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Sander</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Protein structure comparison by alignment of distance matrices</article-title>
+        <source>J Mol Biol</source>
+        <year>1993</year>
+        <volume>233</volume>
+        <fpage>123</fpage>
+        <lpage>128</lpage>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1993.1489</pub-id>
+        <pub-id pub-id-type="pmid">8377180</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gerstein</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Levitt</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Comprehensive assessment of automatic structural alignment against a manual standard, the SCOP classification of proteins</article-title>
+        <source>Protein Science</source>
+        <year>1998</year>
+        <volume>7</volume>
+        <issue>2</issue>
+        <fpage>445</fpage>
+        <pub-id pub-id-type="pmid">9521122</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kolodny</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Linial</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>Approximate protein structural alignment in polynomial time</article-title>
+        <source>Proceedings of the National Academy of Sciences</source>
+        <year>2004</year>
+        <volume>101</volume>
+        <issue>33</issue>
+        <fpage>12201</fpage>
+        <lpage>12206</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.0404383101</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Alexandrov</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Takahashi</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Go</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>Common spatial arrangements of backbone fragments in homologous and non-homologous proteins</article-title>
+        <source>Journal of molecular biology</source>
+        <year>1992</year>
+        <volume>225</volume>
+        <fpage>5</fpage>
+        <pub-id pub-id-type="doi">10.1016/0022-2836(92)91021-G</pub-id>
+        <pub-id pub-id-type="pmid">1583693</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Shindyalov</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Bourne</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Protein structure alignment by incremental combinatorial extension (CE) of the optimal path</article-title>
+        <source>Protein Engineering</source>
+        <year>1998</year>
+        <volume>11</volume>
+        <fpage>739</fpage>
+        <lpage>747</lpage>
+        <pub-id pub-id-type="doi">10.1093/protein/11.9.739</pub-id>
+        <pub-id pub-id-type="pmid">9796821</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ye</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Godzik</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Flexible structure alignment by chaining aligned fragment pairs allowing twists</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>90002</issue>
+        <fpage>246</fpage>
+        <lpage>255</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg1086</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yona</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Kedem</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>The URMS-RMS Hybrid Algorithm for Fast and Sensitive Local Protein Structure Alignment</article-title>
+        <source>Journal of Computational Biology</source>
+        <year>2005</year>
+        <volume>12</volume>
+        <fpage>12</fpage>
+        <lpage>32</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.2005.12.12</pub-id>
+        <pub-id pub-id-type="pmid">15725731</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Roegen</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Fain</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Automatic classification of protein structure by using Gauss integrals</article-title>
+        <source>Proceedings of the National Academy of Sciences</source>
+        <year>2003</year>
+        <volume>100</volume>
+        <fpage>119</fpage>
+        <lpage>124</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.2636460100</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Aung</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Tan</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Rapid 3D protein structure database searching using information retrieval techniques</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <issue>7</issue>
+        <fpage>1045</fpage>
+        <lpage>1052</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bth036</pub-id>
+        <pub-id pub-id-type="pmid">14962928</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Comin</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Guerra</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Zanotti</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>PROuST: A Comparison Method of Three-Dimensional Structures of Proteins Using Indexing Techniques</article-title>
+        <source>Journal of Computational Biology</source>
+        <year>2004</year>
+        <volume>11</volume>
+        <issue>6</issue>
+        <fpage>1061</fpage>
+        <lpage>1072</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.2004.11.1061</pub-id>
+        <pub-id pub-id-type="pmid">15662198</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Carpentier</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Brouillet</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Pothier</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>YAKUSA: a fast structural database scanning method</article-title>
+        <source>Proteins</source>
+        <year>2005</year>
+        <volume>61</volume>
+        <fpage>137</fpage>
+        <lpage>151</lpage>
+        <pub-id pub-id-type="doi">10.1002/prot.20517</pub-id>
+        <pub-id pub-id-type="pmid">16049912</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yang</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Tung</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Protein structure database search and evolutionary classification</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2006</year>
+        <volume>34</volume>
+        <issue>13</issue>
+        <fpage>3646</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkl395</pub-id>
+        <pub-id pub-id-type="pmid">16885238</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sael</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>La</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Fang</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Ramani</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Rustamov</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Kihara</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Fast protein tertiary structure retrieval based on global surface shape similarity</article-title>
+        <source>Proteins</source>
+        <year>2008</year>
+        <volume>72</volume>
+        <issue>4</issue>
+        <fpage>1259</fpage>
+        <lpage>1273</lpage>
+        <pub-id pub-id-type="doi">10.1002/prot.22030</pub-id>
+        <pub-id pub-id-type="pmid">18361455</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Konagurthu</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Stuckey</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Lesk</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Structural search and retrieval using a tableau representation of protein folding patterns</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <issue>5</issue>
+        <fpage>645</fpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btm641</pub-id>
+        <pub-id pub-id-type="pmid">18175768</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lesk</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Systematic representation of protein folding patterns</article-title>
+        <source>Journal of Molecular Graphics</source>
+        <year>1995</year>
+        <volume>13</volume>
+        <issue>3</issue>
+        <fpage>159</fpage>
+        <lpage>164</lpage>
+        <pub-id pub-id-type="doi">10.1016/0263-7855(95)00037-7</pub-id>
+        <pub-id pub-id-type="pmid">7577843</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gaspari</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Vlahovicek</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Pongor</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Efficient recognition of folds in protein 3D structures by the improved PRIDE algorithm</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>15</issue>
+        <fpage>3322</fpage>
+        <lpage>3323</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti513</pub-id>
+        <pub-id pub-id-type="pmid">15914542</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B33">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lisewski</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lichtarge</surname>
+          <given-names>O</given-names>
+        </name>
+        <article-title>Rapid detection of similarity in protein structure and function through contact metric distances</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2006</year>
+        <volume>34</volume>
+        <issue>22</issue>
+        <fpage>e152</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkl788</pub-id>
+        <pub-id pub-id-type="pmid">17130161</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B34">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kolodny</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Petrey</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Honig</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Protein structure comparison: implications for the nature of fold space, and structure and function prediction</article-title>
+        <source>Current Opinion in Structural Biology</source>
+        <year>2006</year>
+        <volume>16</volume>
+        <issue>3</issue>
+        <fpage>393</fpage>
+        <lpage>398</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.sbi.2006.04.007</pub-id>
+        <pub-id pub-id-type="pmid">16678402</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B35">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Roegen</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Evaluating protein structure descriptors and tuning Gauss integral based descriptors</article-title>
+        <source>J Phys: Condens Matter</source>
+        <year>2005</year>
+        <volume>17</volume>
+        <fpage>S1523</fpage>
+        <lpage>S1538</lpage>
+        <pub-id pub-id-type="doi">10.1088/0953-8984/17/18/010</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B36">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Novotny</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Madsen</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Kleywegt</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Evaluation of protein fold comparison servers</article-title>
+        <source>Proteins Structure Function and Bioinformatics</source>
+        <year>2004</year>
+        <volume>54</volume>
+        <issue>2</issue>
+        <fpage>260</fpage>
+        <lpage>270</lpage>
+        <pub-id pub-id-type="doi">10.1002/prot.10553</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B37">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sierk</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Kleywegt</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Déjà Vu All Over Again Finding and Analyzing Protein Structure Similarities</article-title>
+        <source>Structure</source>
+        <year>2004</year>
+        <volume>12</volume>
+        <issue>12</issue>
+        <fpage>2103</fpage>
+        <lpage>2111</lpage>
+        <pub-id pub-id-type="pmid">15576025</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B38">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kolodny</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Koehl</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Levitt</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Comprehensive Evaluation of Protein Structure Alignment Methods: Scoring by Geometric Measures</article-title>
+        <source>Journal of Molecular Biology</source>
+        <year>2005</year>
+        <volume>346</volume>
+        <issue>4</issue>
+        <fpage>1173</fpage>
+        <lpage>1188</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.jmb.2004.12.032</pub-id>
+        <pub-id pub-id-type="pmid">15701525</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B39">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Orengo</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Taylor</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Fast structure alignment for protein databank searching</article-title>
+        <source>PROTEINS: Structure, Function, and Genetics</source>
+        <year>1992</year>
+        <volume>14</volume>
+        <fpage>139</fpage>
+        <lpage>167</lpage>
+        <pub-id pub-id-type="doi">10.1002/prot.340140203</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B40">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Holm</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Sander</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Dali: a network tool for protein structure comparison</article-title>
+        <source>Trends in Biochemical Sciences</source>
+        <year>1995</year>
+        <volume>20</volume>
+        <issue>11</issue>
+        <fpage>478</fpage>
+        <lpage>480</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0968-0004(00)89105-7</pub-id>
+        <pub-id pub-id-type="pmid">8578593</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B41">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lesk</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Chothia</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>How different amino acid sequences determine similar protein structures: the structure and evolutionary dynamics of the globins</article-title>
+        <source>J Mol Biol</source>
+        <year>1980</year>
+        <volume>136</volume>
+        <issue>3</issue>
+        <fpage>225</fpage>
+        <lpage>70</lpage>
+        <pub-id pub-id-type="doi">10.1016/0022-2836(80)90373-3</pub-id>
+        <pub-id pub-id-type="pmid">7373651</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B42">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <source>Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids</source>
+        <year>1998</year>
+        <publisher-name>Cambridge University Press</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B43">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Karney</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Quaternions in molecular modeling</article-title>
+        <source>Journal of Molecular Graphics and Modelling</source>
+        <year>2007</year>
+        <volume>25</volume>
+        <issue>5</issue>
+        <fpage>595</fpage>
+        <lpage>604</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.jmgm.2006.04.002</pub-id>
+        <pub-id pub-id-type="pmid">16777449</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B44">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hobohm</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Scharf</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Schneider</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Sander</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Selection of representative protein data sets</article-title>
+        <source>Protein Science</source>
+        <year>1992</year>
+        <volume>1</volume>
+        <issue>3</issue>
+        <fpage>409</fpage>
+        <pub-id pub-id-type="pmid">1304348</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B45">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Orengo</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Michie</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Swindells</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Thornton</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>CATH-a hierarchic classification of protein domain structures</article-title>
+        <source>Structure</source>
+        <year>1997</year>
+        <volume>5</volume>
+        <issue>8</issue>
+        <fpage>1093</fpage>
+        <lpage>1108</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0969-2126(97)00260-8</pub-id>
+        <pub-id pub-id-type="pmid">9309224</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B46">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>von Grotthuss</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Plewczynski</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Vriend</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Rychlewski</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>3D-Fun: predicting enzyme function from structure</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2008</year>
+        <volume>36</volume>
+        <issue>suppl_2</issue>
+        <fpage>W303</fpage>
+        <lpage>W307</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkn308</pub-id>
+        <pub-id pub-id-type="pmid">18515349</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B47">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gibrat</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Madej</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Bryant</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Surprising similarities in structure comparison</article-title>
+        <source>Current Opinion in Structural Biology</source>
+        <year>1996</year>
+        <volume>6</volume>
+        <issue>3</issue>
+        <fpage>377</fpage>
+        <lpage>385</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0959-440X(96)80058-3</pub-id>
+        <pub-id pub-id-type="pmid">8804824</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B48">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Krissinel</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Henrick</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Common subgraph isomorphism detection by backtracking search</article-title>
+        <source>Software: Practice and Experience</source>
+        <year>2004</year>
+        <volume>34</volume>
+        <issue>6</issue>
+        <pub-id pub-id-type="doi">10.1002/spe.588</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B49">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Madej</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Spouge</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Bryant</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>VAST implementation</article-title>
+        <source>Linux tar file</source>
+        <year>2002</year>
+        <ext-link ext-link-type="ftp" xlink:href="ftp://ftp.ncbi.nih.gov/mmdb">ftp://ftp.ncbi.nih.gov/mmdb</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B50">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Plewczynski</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Pas</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>von Grotthuss</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Rychlewski</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>Comparison of proteins based on segments structural similarity</article-title>
+        <source>Acta Biochimica Polonica</source>
+        <year>2004</year>
+        <volume>51</volume>
+        <fpage>161</fpage>
+        <lpage>172</lpage>
+        <pub-id pub-id-type="pmid">15094837</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B51">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Qi</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hayward</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>A comprehensive and non-redundant database of protein domain movements</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>12</issue>
+        <fpage>2832</fpage>
+        <lpage>2838</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti420</pub-id>
+        <pub-id pub-id-type="pmid">15802286</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B52">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lee</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Razaz</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hayward</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>The DynDom database of protein domain motions</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>10</issue>
+        <fpage>1290</fpage>
+        <lpage>1291</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg137</pub-id>
+        <pub-id pub-id-type="pmid">12835274</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B53">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gerstein</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Krebs</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>A database of macromolecular motions</article-title>
+        <source>Nucleic acids research</source>
+        <year>1998</year>
+        <volume>26</volume>
+        <issue>18</issue>
+        <fpage>4280</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/26.18.4280</pub-id>
+        <pub-id pub-id-type="pmid">9722650</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B54">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Finn</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Mistry</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Schuster-Bockler</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Griffiths-Jones</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Hollich</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Lassmann</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Moxon</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Marshall</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Khanna</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <etal/>
+        <article-title>Pfam: clans, web tools and services</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2006</year>
+        <volume>34</volume>
+        <fpage>D247</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkj149</pub-id>
+        <pub-id pub-id-type="pmid">16381856</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B55">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rosen</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Wolfson</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Nussinov</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Molecular shape comparisons in searches for active sites and functional similarity</article-title>
+        <source>Protein Engineering Design and Selection</source>
+        <year>1998</year>
+        <volume>11</volume>
+        <issue>4</issue>
+        <fpage>263</fpage>
+        <pub-id pub-id-type="doi">10.1093/protein/11.4.263</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B56">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Blankenbecler</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Ohlsson</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Peterson</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Ringnér</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Matching protein structures with fuzzy alignments</article-title>
+        <source>Proceedings of the National Academy of Sciences</source>
+        <year>2003</year>
+        <volume>100</volume>
+        <issue>21</issue>
+        <fpage>11936</fpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.1635048100</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B57">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kedem</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Chew</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Elber</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Unit-vector RMS (URMS) as a tool to analyze molecular dynamics trajectories</article-title>
+        <source>Proteins Structure Function and Genetics</source>
+        <year>1999</year>
+        <volume>37</volume>
+        <issue>4</issue>
+        <fpage>554</fpage>
+        <lpage>564</lpage>
+        <pub-id pub-id-type="doi">10.1002/(SICI)1097-0134(19991201)37:4&lt;554::AID-PROT6&gt;3.0.CO;2-1</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B58">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kleywegt</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Use of Non-crystallographic Symmetry in Protein Structure Refinement</article-title>
+        <source>Biological Crystallography</source>
+        <year>1996</year>
+        <volume>52</volume>
+        <issue>4</issue>
+        <fpage>842</fpage>
+        <lpage>857</lpage>
+        <pub-id pub-id-type="doi">10.1107/S0907444995016477</pub-id>
+        <pub-id pub-id-type="pmid">15299650</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B59">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Berman</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Westbrook</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Feng</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Gilliland</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Bhat</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Weissig</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Shindyalov</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Bourne</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>The Protein Data Bank</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2000</year>
+        <volume>28</volume>
+        <fpage>235</fpage>
+        <lpage>242</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/28.1.235</pub-id>
+        <pub-id pub-id-type="pmid">10592235</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

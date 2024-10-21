@@ -1,0 +1,1429 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2945785</article-id>
+    <article-id pub-id-type="publisher-id">gb-2010-11-8-r83</article-id>
+    <article-id pub-id-type="pmid">20701754</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2010-11-8-r83</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Cloud-scale RNA-sequencing differential expression analysis with Myrna</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>Ben</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>blangmea@jhsph.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Hansen</surname>
+          <given-names>Kasper D</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>khansen@jhsph.edu</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A3">
+        <name>
+          <surname>Leek</surname>
+          <given-names>Jeffrey T</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>jleek@jhsph.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Biostatistics, Johns Hopkins Bloomberg School of Public Health, 615 North Wolfe Street, Baltimore, MD 21205, USA</aff>
+    <pub-date pub-type="ppub">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>11</day>
+      <month>8</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <issue>8</issue>
+    <fpage>R83</fpage>
+    <lpage>R83</lpage>
+    <history>
+      <date date-type="received">
+        <day>17</day>
+        <month>5</month>
+        <year>2010</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>7</day>
+        <month>7</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>11</day>
+        <month>8</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Langmead et al.; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Langmead et al.; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an open access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/content/11/8/R83"/>
+    <abstract>
+      <p>As sequencing throughput approaches dozens of gigabases per day, there is a growing need for efficient software for analysis of transcriptome sequencing (RNA-Seq) data. Myrna is a cloud-computing pipeline for calculating differential gene expression in large RNA-Seq datasets. We apply Myrna to the analysis of publicly available data sets and assess the goodness of fit of standard statistical models. Myrna is available from <ext-link ext-link-type="uri" xlink:href="http://bowtie-bio.sf.net/myrna">http://bowtie-bio.sf.net/myrna</ext-link>.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Rationale</title>
+    <p>As cost and throughput continue to improve, second generation sequencing [<xref ref-type="bibr" rid="B1">1</xref>], in conjunction with RNA-Seq [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B3">3</xref>], is becoming an increasingly efficient and popular tool for studying gene expression. Currently, an RNA-Seq sequencing run generates hundreds of millions of reads derived from coding mRNA molecules in one or more biological samples. A typical RNA-Seq differential-expression analysis proceeds in three stages. First, reads are computationally categorized according to the transcribed feature from which each likely originated. Features of interest could be genes, exons or isoforms. This categorization might be conducted comparatively with respect to a reference [<xref ref-type="bibr" rid="B4">4</xref>], by <italic>de novo </italic>assembly [<xref ref-type="bibr" rid="B5">5</xref>], or a combination of both [<xref ref-type="bibr" rid="B6">6</xref>-<xref ref-type="bibr" rid="B8">8</xref>]. Second, a normalized count of the number of reads assigned to each feature is calculated. The count acts as a proxy for the feature's true abundance in the sample. Third, a statistical test is applied to identify which features exhibit differential abundance, or expression, between samples.</p>
+    <p>Since second generation sequencing produces a very large number of reads distributed across the entire transcriptome, RNA-Seq affords greater resolution than expression arrays. Preliminary comparisons of the data from RNA-Seq also suggest that the measurements may more precisely measure RNA abundance in spike-in experiments than gene expression microarrays, provided appropriate normalization is applied [<xref ref-type="bibr" rid="B4">4</xref>,<xref ref-type="bibr" rid="B9">9</xref>].</p>
+    <p>But improvements in sequencing cost and throughput also pose a data analysis challenge. While sequencing throughput grows at a rate of about 5× per year [<xref ref-type="bibr" rid="B10">10</xref>-<xref ref-type="bibr" rid="B12">12</xref>], computer speeds are thought to double approximately every 18 or 24 months [<xref ref-type="bibr" rid="B13">13</xref>]. Recent studies and commentaries [<xref ref-type="bibr" rid="B13">13</xref>-<xref ref-type="bibr" rid="B17">17</xref>] propose cloud computing as a paradigm that counteracts this disparity by tapping into the economies of scale afforded by commercial and institutional computing centers. If an algorithm can be made to run efficiently on many loosely coupled processors, implementing it as a cloud application makes it particularly easy to exploit the resources offered by large utility-computing services. These include commercial services such as Amazon's Elastic Compute Cloud [<xref ref-type="bibr" rid="B18">18</xref>] and Elastic MapReduce [<xref ref-type="bibr" rid="B19">19</xref>] services, or non-commercial services such as the IBM/Google Cloud Computing University Initiative [<xref ref-type="bibr" rid="B20">20</xref>] and the US Department of Energy's Magellan service [<xref ref-type="bibr" rid="B21">21</xref>].</p>
+    <p>Here we present Myrna, a cloud computing tool for calculating differential gene expression in large RNA-Seq datasets. Myrna integrates short read alignment with interval calculations, normalization, aggregation and statistical modeling in a single computational pipeline. After alignment, Myrna calculates coverage for exons, genes, or coding regions and differential expression using either parametric or non-parametric permutation tests. The results are returned in the form of per-gene <italic>P</italic>-values and <italic>Q</italic>-values for differential expression, a raw count table, an RPKM table (of reads per kilobase of exon model per million mapped reads), coverage plots for significant genes that can be directly incorporated into publications (Figure <xref ref-type="fig" rid="F1">1</xref>), and other diagnostic plots.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>The Myrna pipeline</bold>. <bold>(a) </bold>Reads are aligned to the genome using a parallel version of Bowtie. <bold>(b) </bold>Reads are aggregated into counts for each genomic feature - for example, for each gene in the annotation files. <bold>(c) </bold>For each sample a normalization constant is calculated based on a summary of the count distribution. <bold>(d) </bold>Statistical models are used to calculate differential expression in the R programming language parallelized across multiple processors. <bold>(e) </bold>Significance summaries such as <italic>P</italic>-values and gene-specific counts are calculated and returned. <bold>(f) </bold>Myrna also returns publication ready coverage plots for differentially expressed genes.</p>
+      </caption>
+      <graphic xlink:href="gb-2010-11-8-r83-1"/>
+    </fig>
+    <p>We apply Myrna to the analysis of a large publicly available RNA-Seq data set. One major advantage of our cloud-based implementation is the ability to rapidly test multiple plausible models for RNA-Seq differential expression. It has been suggested that this type of flexibility is necessary for computational applications to keep pace with the rapidly increasing number of reads in next-generation sequencing data sets [<xref ref-type="bibr" rid="B13">13</xref>]. Using Myrna we show that biological replicates reflect substantially increased variation compared to technical replicates in RNA-Seq and demonstrate that the commonly used Poisson model is not appropriate for biological replicates.</p>
+    <p>Myrna is designed with a parallel Hadoop/MapReduce model in mind. Myrna can be run on the cloud using Amazon Elastic MapReduce, on any Hadoop cluster, or on a single computer (without requiring Hadoop).</p>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <sec>
+      <title>Analysis of HapMap expression data</title>
+      <p>We applied Myrna to the analysis of a large population-based RNA-Seq experiment [<xref ref-type="bibr" rid="B22">22</xref>]. This experiment sequenced 69 lymphoblastoid cell lines derived from unrelated Nigerian individuals studied by the HapMap project [<xref ref-type="bibr" rid="B23">23</xref>], the largest publicly available RNA-Seq experiment at the time of writing. Each sample was sequenced at two separate labs (Argonne and Yale) on Illumina Genome Analyzer II instruments. For each sample, both labs contributed at least one lane of unpaired reads. In cases where a lab contributed more than one lane, we excluded data from all lanes beyond the first. The total input consisted of 1.1 billion reads; one center generated 35-bp unpaired reads and the other 46-bp unpaired reads. All reads were truncated to 35 bp prior to alignment. For each gene, a minimal set of genomic intervals was calculated such that all bases covered by the interval set were covered by all annotated gene transcripts. Where intervals for two or more genes overlapped, the overlapping subinterval was excluded from all sets. The result is one non-overlapping interval set per gene encoding the portions of the gene that are 'constitutive' (included in all transcripts) according to the annotation, and unique to that gene. Reads were aligned with Bowtie [<xref ref-type="bibr" rid="B24">24</xref>] using quality scores and requiring that only reads with a single best alignment are retained. Instances where the base at the extreme 3' end of a read aligned inside a gene's minimal interval set were calculated, each such instance counting as an 'overlap' between the gene and the sample from which the read originated. For this experiment, about 594 million reads (54%) aligned uniquely, whereas about 412 million (38%) aligned non-uniquely and were discarded, and about 97 million (8.8%) failed to align. Of the 594 million reads that aligned uniquely, about 189 million (32% of the reads that aligned uniquely, 17.1% of the input reads) overlapped the minimal interval set for a gene.</p>
+      <p>For our analysis, we pooled all reads from both labs for each sample. After pooling, Myrna filtered all genes without any counts, resulting in 14,934 genes with between 1 and 5,087,304 counts.</p>
+      <p>We used Myrna to analyze the HapMap data using six different statistical models for significance. The first pair of models used a test statistic based on a Poisson distribution, the second pair used a test statistic based on a Gaussian distribution (the well known <italic>t</italic>-test) for the log-transformed counts, and the third pair calculated statistics using the same Gaussian based test statistic, but used a permutation approach to calculate significance (see Materials and methods). For each of these distributional assumptions we performed one of two types of normalization: 75th percentile normalization [<xref ref-type="bibr" rid="B4">4</xref>] or a new normalization procedure where the 75th percentile is included as a term in the statistical model (see Materials and methods). We applied these methods to the HapMap data after randomly assigning each sample to one of two groups. In this case, we expect no differential expression signal, and <italic>P</italic>-values from these tests should be uniformly distributed.</p>
+      <p>Methods for RNA-Seq differential expression frequently assume that the count distribution follows a Poisson model, with a normalization factor included as an offset in the model, and this has been shown to be appropriate when technical (especially lane-to-lane) replication is considered [<xref ref-type="bibr" rid="B4">4</xref>,<xref ref-type="bibr" rid="B25">25</xref>,<xref ref-type="bibr" rid="B26">26</xref>]. The randomized experiment considered here includes biological replication, and it is of considerable interest to assess how well the standard Poisson model can be used to describe and assess differential expression in this circumstance. We found that the standard Poisson model is a poor fit, in the sense that <italic>P</italic>-values produced by this model suggest a large differential expression signal between the two randomized groups (Figures <xref ref-type="fig" rid="F2">2a, b</xref>). At a 5% level we found 5,410 differentially expressed genes where we would expect 747 (5% of 14,934). This signal is present across the entire range of expression, perhaps except for very lowly expressed genes (Figures <xref ref-type="fig" rid="F3">3a, b</xref>).</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Hapmap results</bold>. Histograms of <italic>P</italic>-values from six different analysis strategies applied to randomly labeled samples. In each case the <italic>P</italic>-values should be uniformly distributed (blue dotted line) since the labels are randomly assigned. <bold>(a) </bold>Poisson model, 75th percentile normalization. <bold>(b) </bold>Poisson model, 75th percentile included as term. <bold>(c) </bold>Gaussian model, 75th percentile normalization. <bold>(d) </bold>Gaussian model, 75th percentile included as term. <bold>(e) </bold>Permutation model, 75th percentile normalization. <bold>(f) </bold>Permutation model, 75th percentile included as term.</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-8-r83-2"/>
+      </fig>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Hapmap <italic>P</italic>-values versus read depth</bold>. A plot of <italic>P</italic>-value versus the log base 10 of the average count for each gene using the six different analysis strategies applied to randomly labeled samples. In each case the <italic>P</italic>-values should be uniformly distributed between zero and one. <bold>(a) </bold>Poisson model, 75th percentile normalization. <bold>(b) </bold>Poisson model, 75th percentile included as term. <bold>(c) </bold>Gaussian model, 75th percentile normalization. <bold>(d) </bold>Gaussian model, 75th percentile included as term. <bold>(e)</bold> Permutation model, 75th percentile normalization. <bold>(f) </bold>Permutation model, 75th percentile included as term.</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-8-r83-3"/>
+      </fig>
+      <p>The Gaussian model using 75th percentile normalization overestimates significance as well, but the bias is much smaller than the bias from the Poisson model and is confined to genes with low counts (Figures <xref ref-type="fig" rid="F2">2c, c</xref>). When the 75th percentile is included as a regression term in the model (see Materials and methods), this bias is reduced (Figure <xref ref-type="fig" rid="F2">2d</xref>). Including the normalization constant as a term in the model reduces the effect of the normalization constant on genes with a very small number of observed counts (Figure <xref ref-type="fig" rid="F3">3d</xref>). The permutation approach shows a similar pattern of differential expression signal to the Gaussian model (Figure <xref ref-type="fig" rid="F2">2e, f</xref>), which is not surprising in light of the relatively large (n = 69) sample size. However, in this case, the bias is mostly concentrated in high-count genes (Figure <xref ref-type="fig" rid="F3">3e</xref>) as has been previously reported [<xref ref-type="bibr" rid="B27">27</xref>]. This bias is substantially reduced, again by including the normalization constant as a term; however, some slight read length bias is still apparent (Figure <xref ref-type="fig" rid="F3">3f</xref>), as previously described [<xref ref-type="bibr" rid="B27">27</xref>].</p>
+      <p>These results suggest that the commonly assumed Poisson model is not sufficiently flexible to model the variation in RNA-Seq differential expression analysis. This might be caused by the link between gene expression and variation of the gene expression assumed by the Poisson model. Methods that estimate the variance when calculating significance - such as the Gaussian model or <italic>t</italic>-tests - may reduce bias in differential expression analyses. When the sample size of these experiments is not sufficient to use a distributional assumption to generate <italic>P</italic>-values, it may be more appropriate to use a permutation procedure like we have proposed for Myrna, or to borrow strength across genes to estimate variances [<xref ref-type="bibr" rid="B28">28</xref>-<xref ref-type="bibr" rid="B30">30</xref>].</p>
+      <p>We are surprised at the substantial improvement we obtain by including the normalization factor in the model. This is equivalent to using a gene-specific correction for the sequencing effort, or in other words, genes are differentially affected by changes in sequencing depth.</p>
+      <p>These results show that more work needs to be done regarding assessing differential expression for RNA-Seq experiments, for biological replicates. The often-used Poisson distribution will vastly overestimate the amount of differential expression. Note that procedures for correcting for multiple testing, such as the Benjamini-Horchberg procedure for controlling the false discovery rate, will not affect this result as they assume that the raw <italic>P</italic>-values are uniformly distributed in the case of no differential expression.</p>
+    </sec>
+    <sec>
+      <title>Cloud computing performance</title>
+      <p>We demonstrate Myrna's performance and scalability using the HapMap RNA-Seq dataset described in the previous section [<xref ref-type="bibr" rid="B22">22</xref>]. Recall this dataset consists of 1.1 billion 35-bp unpaired reads (after truncation), sequenced on the Illumina Genome Analyzer II instrument. Of the reads, 594 million (54%) align uniquely, whereas 412 million (38%) align non-uniquely and are discarded, and 97 million (8.8%) fail to align. Of the 594 million unique alignments, 189 million (32% of the reads that aligned uniquely, 17.1% of the input reads) overlap a minimal interval. Note that if gene intervals are not required to be constitutive, the number of uniquely aligned reads overlapping genes increases to 482 million (81% of the reads that aligned uniquely, 43.7% of the input reads); thus, the additional requirement that alignments overlap constitutive portions of genes reduces the usable evidence by a factor of about 2.5.</p>
+      <p>We ran the entire Myrna pipeline on this dataset using Amazon Elastic MapReduce clusters of 10, 20 and 40 worker nodes (80, 160, and 320 cores). In each case, the Myrna pipeline was executed end-to-end using scripts distributed with the Myrna package. The nodes used were EC2 Extra Large High CPU Instances, that is, virtualized 64-bit computers with 7 GB of memory and the equivalent of 8 processor cores clocked at approximately 2.5 to 2.8 Ghz. At the time of this writing, the cost of such nodes was $0.68 ($0.76 in Europe and parts of the US) per node per hour, with an Elastic MapReduce surcharge of $0.12 per node per hour.</p>
+      <p>Before running Myrna, the input read data must be stored on a filesystem accessible to the cluster. Users will typically upload and preprocess the input data to Amazon's Simple Storage Service (S3) [<xref ref-type="bibr" rid="B31">31</xref>] before running the rest of the Myrna pipeline. An efficient method to move data into S3 is to first allocate an Elastic MapReduce cluster of many nodes and have each node transfer a subset of the data from the source to S3 in parallel. The first stage of the Myrna pipeline performs such a bulk copy while also preprocessing the reads into the form required by later stages of the Myrna pipeline. This software was used to copy 43 gigabytes of compressed short read data from a public HTTP server located at the University of Chicago [<xref ref-type="bibr" rid="B32">32</xref>] to an S3 repository located in the US in about 1 hour 15 minutes (approximately 82 Mb/s effective transfer rate). The transfer cost approximately $11: about $6.40 ($7.20 in Europe and parts of the US) in cluster rental fees and about $4.30 in data transfer fees.</p>
+      <p>Transfer time depends heavily on both the size of the data and the speed of the Internet uplink at the source. Public archives like National Center for Biotechnology Information (NCBI) and the European Bioinformatics Institute (EBI) as well as many universities have very high bandwidth uplinks to Internet backbones, making it efficient to copy data between those institutions and S3. However, depending on the uplink speed at the point of origin of the sequencing data, it may be more desirable to run Myrna in either Hadoop mode or Singleton mode (see Materials and methods) on a computer or cluster located on the same local network with the sequencing instruments.</p>
+      <p>To measure scalability, separate experiments were performed using 10, 20 and 40 EC2 Extra Large High CPU worker nodes (plus one master node). Table <xref ref-type="table" rid="T1">1</xref> presents the wall clock running time and approximate cost for each experiment. The experiment was performed once for each cluster size. The results show that Myrna is capable of calculating differential expression from 1.1 billion RNA-Seq reads in less than 2 hours of wall clock time for about $66 ($74 in Europe and parts of the US). Figure <xref ref-type="fig" rid="F4">4</xref> illustrates scalability as a function of the number of processor cores allocated. Units on the vertical axis are the reciprocal of the wall clock time. Whereas wall clock time measures elapsed hours per experiment, its reciprocal measures experiments per hour. The straight line extending from the 80-core point represents hypothetical linear speedup, extrapolated assuming that doubling the number of processors also doubles throughput. In practice, parallel algorithms usually exhibit worse-than-linear speedup because portions of the computation are not fully parallel. For Myrna, deviation from linear speedup is primarily due to load imbalance among processors in the Align stage, but also due to a deficit of parallelism in some downstream stages (for example, Normalize and Postprocess).</p>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Myrna runtime, cost for 1.1 billion reads from the Pickrell <italic>et al</italic>. study [<xref ref-type="bibr" rid="B32">32</xref>]</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">EC2 nodes</th>
+              <th align="left">1 master, 10 workers</th>
+              <th align="left">1 master, 20 workers</th>
+              <th align="left">1 master, 40 workers</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">Worker processor cores</td>
+              <td align="left">80</td>
+              <td align="left">160</td>
+              <td align="left">320</td>
+            </tr>
+            <tr>
+              <td align="left">Wall clock time</td>
+              <td align="left">4h:20m</td>
+              <td align="left">2h:32m</td>
+              <td align="left">1h:38m</td>
+            </tr>
+            <tr>
+              <td align="left"> Cluster setup</td>
+              <td align="left">4m</td>
+              <td align="left">4m</td>
+              <td align="left">3m</td>
+            </tr>
+            <tr>
+              <td align="left"> Align</td>
+              <td align="left">2h:56m</td>
+              <td align="left">1h:31m</td>
+              <td align="left">54m</td>
+            </tr>
+            <tr>
+              <td align="left"> Overlap</td>
+              <td align="left">52m</td>
+              <td align="left">31m</td>
+              <td align="left">16m</td>
+            </tr>
+            <tr>
+              <td align="left"> Normalize</td>
+              <td align="left">6m</td>
+              <td align="left">7m</td>
+              <td align="left">6m</td>
+            </tr>
+            <tr>
+              <td align="left"> Statistics</td>
+              <td align="left">9m</td>
+              <td align="left">6m</td>
+              <td align="left">6m</td>
+            </tr>
+            <tr>
+              <td align="left"> Summarize and Postprocess</td>
+              <td align="left">13m</td>
+              <td align="left">14m</td>
+              <td align="left">13m</td>
+            </tr>
+            <tr>
+              <td align="left">Approximate cost (location dependant)</td>
+              <td align="left">$44.00/$49.50</td>
+              <td align="left">$50.40/$56.70</td>
+              <td align="left">$65.60/$73.80</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Timing and cost for a Myrna experiment with 1.1 billion 35-bp unpaired reads from the Pickrell <italic>et al</italic>. study [<xref ref-type="bibr" rid="B32">32</xref>] as input. Costs are approximate and based on the pricing as of this writing, that is, $0.68 per High-CPU Extra Large instance per hour in the Northern Virginia zone and $0.78 elsewhere, plus a $0.12 per-node-per-hour surcharge for Elastic MapReduce. The table does not include the transfer of the read data from University of Chicago servers to S3, which takes a wall clock time of 1h:15 m and costs about $12. Other charges may apply and times may vary subject to, for example, congestion and Internet traffic conditions.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Scalability of Myrna</bold>. Number of worker CPU cores allocated from EC2 versus throughput measured in experiments per hour: that is, the reciprocal of the wall clock time required to conduct a whole-human experiment on the 1.1 billion read Pickrell <italic>et al</italic>. dataset [<xref ref-type="bibr" rid="B32">32</xref>]. The line labeled 'linear speedup' traces hypothetical linear speedup relative to the throughput for 80 processor cores.</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-8-r83-4"/>
+      </fig>
+    </sec>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec>
+      <title>Myrna computational design</title>
+      <p>Myrna is designed to run in one of three modes: 'Cloud mode' using Amazon Elastic MapReduce; 'Hadoop mode' using a Hadoop cluster; or 'Singleton mode' using a single computer. Cloud mode requires that the user have appropriate accounts and credentials set up beforehand. Cloud mode does not require any special software installation; the appropriate software is either pre-installed or automatically installed on the EC2 instances before Myrna is run. Hadoop mode requires a functioning Hadoop cluster, with Bowtie, R and Bioconductor installed on all nodes. Singleton mode requires Bowtie, R and Bioconductor to be installed on the computer, but does not require Hadoop. Singleton mode is also parallelized and can exploit a user-specified number of processors.</p>
+      <p>Myrna is designed with the Apache Hadoop [<xref ref-type="bibr" rid="B33">33</xref>] open source implementation of the MapReduce [<xref ref-type="bibr" rid="B34">34</xref>] programming model in mind. The pipeline is expressed as a series of map and reduce stages operating on 'tuples' of data. A tuple is a key/value pair, roughly analogous to a row in a database table. A map stage takes a stream of input tuples, performs a computation and outputs a stream of tuples. A reduce stage takes a stream of bundles of 'alike' tuples, where tuples are alike if their primary keys are equal. The reduce stage then performs a computation and outputs a stream of tuples. Between the map and reduce phases, the infrastructure (Hadoop in the case of the Cloud or Hadoop modes, Myrna in the case of Singleton mode) automatically executes a sort/shuffle phase that bins and sorts tuples according to primary and secondary keys, respectively, and passes the sorted bins on to the reducers. Map and reduce stages must be simple and self-contained. They cannot communicate extensively or make heavy use of global data structures. This leaves Hadoop/Myrna with significant freedom in how it distributes parallel tasks across cluster nodes and/or processors.</p>
+    </sec>
+    <sec>
+      <title>Myrna workflow</title>
+      <sec>
+        <title>Preprocess</title>
+        <p>Myrna's workflow is depicted in Figure <xref ref-type="fig" rid="F1">1</xref>. Each stage exploits a different type of parallelism with the aim of maximizing scalability. The first stage ('Preprocess') preprocesses a list of FASTQ files containing the input reads and installs the result on a filesystem visible to the cluster. Reads are also annotated with metadata, including the read's user-assigned sample name and the name of the file where it originated. This stage is parallel across input files, that is, files are downloaded and preprocessed simultaneously in parallel where possible.</p>
+      </sec>
+      <sec>
+        <title>Align</title>
+        <p>The second stage ('Align'; Figure <xref ref-type="fig" rid="F1">1a</xref>) aligns reads to a reference genome using Bowtie [<xref ref-type="bibr" rid="B24">24</xref>]. Bowtie employs a compact index of the reference sequence, requiring about 3 gigabytes of memory for the human genome. Each computer in the cluster independently obtains the index from a local or shared filesystem. When running on EC2, the index obtained here will typically be one of the pre-built indexes available publicly in S3. The user may specify options to be passed to Bowtie in this stage; the default is '-m 1', which discards alignments for reads that align multiple places. The alignment stage is parallel across reads; that is, reads are aligned simultaneously in parallel where possible.</p>
+      </sec>
+      <sec>
+        <title>Overlap</title>
+        <p>The third stage ('Overlap'; Figure <xref ref-type="fig" rid="F1">1b</xref>) calculates overlaps between alignments from the Align stage and a pre-defined collection of gene interval sets. In each instance where the 3'-most base of an alignment overlaps any base of a gene interval set, an overlap record associating the (labeled) alignment with the gene is output. By default, Myrna defines a gene interval set as the minimal set of intervals such that all contained bases are covered by all transcripts annotated for the gene. Intervals where two or more genes overlap are omitted from all gene interval sets. This is equivalent to the 'union intersection' model proposed previously [<xref ref-type="bibr" rid="B4">4</xref>]. Myrna allows the user to specify other models, such as the 'union' model whereby the interval set consists of the minimal set of intervals such that all contained bases are included in any exon annotation for the gene. Also, Myrna allows the user to specify which portion of the alignment to consider when overlapping with the gene interval set; for instance, instead of the 3'-most base the user can specify that the 5'-most five bases be used. The Overlap stage is parallel across alignments; that is, overlaps for distinct alignments are calculated simultaneously and in parallel where possible.</p>
+      </sec>
+      <sec>
+        <title>Normalize</title>
+        <p>The fourth stage ('Normalize'; Figure <xref ref-type="fig" rid="F1">1c</xref>) constructs a sorted vector of per-gene overlap counts for each label. A normalization factor is then calculated for each label - typically a quantile of the sample-specific gene count distribution. By default, Myrna sets the factor to the 75th percentile of the distribution of non-zero gene counts, as suggested previously [<xref ref-type="bibr" rid="B4">4</xref>]. Alternatively, the user may specify that Myrna use a different quantile or value, such as the median or total, as the normalization factor. The Normalize stage is parallel across labels.</p>
+      </sec>
+      <sec>
+        <title>Statistical analysis</title>
+        <p>The fifth stage ('Statistics'; Figure <xref ref-type="fig" rid="F1">1d</xref>) examines counts for each gene and calculates and outputs a <italic>P</italic>-value describing the probability that differences in counts observed between groups are due to chance. The Align and Overlap stages already calculated a count, <italic>c</italic><sub><italic>ij </italic></sub>representing the number of times a read from sample <italic>j </italic>overlapped gene <italic>i</italic>. The differential expression test relates the counts to an outcome <italic>y</italic><sub><italic>j </italic></sub>for the <italic>j</italic>th sample. The Normalization stage already calculated the 75th percentile, <italic>q</italic><sub><italic>j</italic></sub><sup><italic>75</italic></sup>, or another suitable summary of the count distribution for each sample.</p>
+        <p>The basic approach to differential expression is to fit a generalized linear model relating the counts <italic>c</italic><sub><italic>ij </italic></sub>to the outcome <italic>y</italic><sub><italic>j</italic></sub>:</p>
+        <p>
+          <disp-formula>
+            <mml:math id="M1" name="gb-2010-11-8-r83-i1" overflow="scroll">
+              <mml:mrow>
+                <mml:mi>g</mml:mi>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:mi>E</mml:mi>
+                <mml:mo stretchy="false">[</mml:mo>
+                <mml:mi>f</mml:mi>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:msub>
+                  <mml:mi>c</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo>|</mml:mo>
+                <mml:msub>
+                  <mml:mi>y</mml:mi>
+                  <mml:mi>j</mml:mi>
+                </mml:msub>
+                <mml:mo stretchy="false">]</mml:mo>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo>=</mml:mo>
+                <mml:msub>
+                  <mml:mi>b</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mn>0</mml:mn>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>+</mml:mo>
+                <mml:msub>
+                  <mml:mi>η</mml:mi>
+                  <mml:mi>i</mml:mi>
+                </mml:msub>
+                <mml:mi>log</mml:mi>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:mi>q</mml:mi>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo>+</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:munderover>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>k</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>K</mml:mi>
+                  </mml:munderover>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>b</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>i</mml:mi>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:msub>
+                      <mml:mi>s</mml:mi>
+                      <mml:mi>k</mml:mi>
+                    </mml:msub>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:msub>
+                      <mml:mi>y</mml:mi>
+                      <mml:mi>j</mml:mi>
+                    </mml:msub>
+                    <mml:mo stretchy="false">)</mml:mo>
+                  </mml:mrow>
+                </mml:mstyle>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>where <italic>g(·) </italic>specifies a link function (identity for Normal models, log for Poisson models) and <italic>f(·) </italic>is a transformation of the raw count data (identity for Poisson models, log for Normal models). The functions <italic>s</italic><sub><italic>k</italic></sub><italic>(·) </italic>can be used to specify: (1) a continuous relationship between the counts and the outcome, by setting <italic>K </italic>= 1 and <italic>s</italic><sub><italic>k</italic></sub><italic>(·) </italic>to be the identify function; or (2) a factor model by setting <italic>K </italic>= <italic># of groups </italic>and <italic>s</italic><sub><italic>k</italic></sub><italic>(·) </italic>= 1(<italic>y</italic><sub><italic>j </italic></sub>= <italic>k</italic>). Myrna allows the user to specify either the Gaussian or Poisson family of distributions for the generalized linear model. The normalization term, log(<italic>q</italic>), can be included as an offset [<xref ref-type="bibr" rid="B4">4</xref>], in which case <italic>η</italic><sub><italic>i </italic></sub>= 1 for all <italic>i</italic>. The default setting of Myrna is to use the 75th percentile of the count distribution for each sample as the normalization factor so <italic>q </italic>= <italic>q</italic><sub><italic>j</italic></sub><sup><italic>75</italic></sup>.</p>
+        <p>Myrna tests the hypotheses:</p>
+        <p>
+          <disp-formula>
+            <mml:math id="M2" name="gb-2010-11-8-r83-i2" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>H</mml:mi>
+                  <mml:mrow>
+                    <mml:mn>0</mml:mn>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>:</mml:mo>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>:</mml:mo>
+                <mml:msub>
+                  <mml:mi>b</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mo>…</mml:mo>
+                <mml:mo>=</mml:mo>
+                <mml:msub>
+                  <mml:mi>b</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>K</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mn>0</mml:mn>
+                <mml:mtext> versus </mml:mtext>
+                <mml:msub>
+                  <mml:mi>H</mml:mi>
+                  <mml:mrow>
+                    <mml:mn>1</mml:mn>
+                    <mml:mi>i</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>:</mml:mo>
+                <mml:msub>
+                  <mml:mi>b</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>k</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>≠</mml:mo>
+                <mml:mn>0</mml:mn>
+                <mml:mtext> </mml:mtext>
+                <mml:mi>f</mml:mi>
+                <mml:mi>o</mml:mi>
+                <mml:mi>r</mml:mi>
+                <mml:mtext> </mml:mtext>
+                <mml:mi>s</mml:mi>
+                <mml:mi>o</mml:mi>
+                <mml:mi>m</mml:mi>
+                <mml:mi>e</mml:mi>
+                <mml:mtext> </mml:mtext>
+                <mml:mi>k</mml:mi>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>The hypothesis test can be performed using an asymptotic likelihood ratio test, or a permutation procedure. The permutation test is performed by first calculating the likelihood ratio statistic, <italic>D</italic><sub><italic>i</italic></sub>, for testing <italic>H</italic><sub><italic>0i </italic></sub>versus <italic>H</italic><sub><italic>1i </italic></sub>for each gene. The outcome <italic>y</italic><sub><italic>j </italic></sub>is randomly permuted <italic>B </italic>times; for each permutation the same procedure is applied to calculate null statistics <italic>D</italic><sub><italic>i</italic></sub><sup>0b</sup>, <italic>b </italic>= 1,...,<italic>B </italic>and <italic>i </italic>= 1,...,<italic>m </italic>where <italic>m </italic>is the total number of genes. Alternative statistics, like the trimmed mean statistic [<xref ref-type="bibr" rid="B9">9</xref>], can be implemented to try to address well known issues in RNA-Seq analysis, such as transcript length bias [<xref ref-type="bibr" rid="B27">27</xref>].</p>
+        <p>The Statistics stage is parallel across genes; that is, differential-expression <italic>P</italic>-values (both observed and null) for distinct genes are calculated simultaneously and in parallel where possible.</p>
+      </sec>
+      <sec>
+        <title>Summarize</title>
+        <p>The sixth stage ('Summarize') examines a sorted list of all <italic>P</italic>-values generated in the Statistics stage and compiles a list of the top N genes ranked by false discovery rate, where the parameter N is set by the user. In addition to the global significance results, more detailed statistical results and figures (see Postprocessing) are returned for the top N genes.</p>
+        <p>If a permutation test is used, the Summarize stage additionally calculates the permutation <italic>P</italic>-values. Permutation <italic>P</italic>-values are calculated as follows:</p>
+        <p>
+          <disp-formula>
+            <mml:math id="M3" name="gb-2010-11-8-r83-i3" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>p</mml:mi>
+                  <mml:mi>i</mml:mi>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:mo>{</mml:mo>
+                    <mml:mo>#</mml:mo>
+                    <mml:msubsup>
+                      <mml:mi>D</mml:mi>
+                      <mml:mi>j</mml:mi>
+                      <mml:mrow>
+                        <mml:mn>0</mml:mn>
+                        <mml:mi>b</mml:mi>
+                      </mml:mrow>
+                    </mml:msubsup>
+                    <mml:mo>&gt;</mml:mo>
+                    <mml:msub>
+                      <mml:mi>D</mml:mi>
+                      <mml:mi>i</mml:mi>
+                    </mml:msub>
+                    <mml:mo>;</mml:mo>
+                    <mml:mi>b</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo>,</mml:mo>
+                    <mml:mo>…</mml:mo>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>B</mml:mi>
+                    <mml:mo>&amp;</mml:mo>
+                    <mml:mi>j</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo>,</mml:mo>
+                    <mml:mo>…</mml:mo>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>m</mml:mi>
+                    <mml:mo>}</mml:mo>
+                    <mml:mo>+</mml:mo>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>m</mml:mi>
+                    <mml:mo>•</mml:mo>
+                    <mml:mi>B</mml:mi>
+                    <mml:mo>+</mml:mo>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                </mml:mfrac>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>This is accomplished over the course of a single linear scan of the list of observed and null statistics, sorted by statistic. The parallel infrastructure (either Hadoop or Myrna) takes care of the sorting.</p>
+        <p>Though there is a modest amount of exploitable parallelism inherent in this task, Myrna performs the Summarize stage serially (on a single processor). The lack of parallelism is mitigated by the fact that there are typically only on the order of tens of thousands or hundreds of thousands of observed and null <italic>P</italic>-values to examine in this stage.</p>
+      </sec>
+      <sec>
+        <title>Postprocess</title>
+        <p>The seventh stage ('Postprocess') first discards all overlap records not belonging to any top genes, which it does in parallel across all overlaps. Next, Myrna calculates per-gene <italic>Q</italic>-values, a false discovery rate analog of <italic>P</italic>-values [<xref ref-type="bibr" rid="B35">35</xref>]. The user specifies N whereby the N genes with the smallest <italic>P</italic>-values are considered 'top' genes. Finally, Myrna outputs a series of output files, including: (a) files listing all overlaps for each top gene, including alignment information that might indicate the presence of sequence variants, such as single-nucleotide polymorphisms; (b) a table with estimated RPKM values for each gene in the annotation; (c) a sorted table of all <italic>P</italic>-values for all genes, along with a histogram plot; (d) a sorted table of all q-values for all genes; and (e) a series of plots showing the coverage for each of the top N genes, broken down by replicate and by group. These results are then compressed and stored in the user-specified output directory.</p>
+        <p>Some stages of the Myrna pipeline may be run separately. For instance, a user may wish to preprocess a set of input reads once, then re-analyze them several times, in which case the Preprocess phase need be run only once, and the Align through Post-process stages can be re-run for subsequent analyses.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <p>Myrna is a computational pipeline for RNA-Seq differential expression analysis using cloud computing. We used Myrna to analyze a large publicly available RNA-Seq dataset with over 1 billion reads. The efficiency of our pipeline allowed us to test a number of different models rapidly on even this large data set. We showed that under random labeling, a Gaussian or permutation-based testing strategy, including a normalization constant as a term in the model showed the least bias, and that the often used Poisson model vastly overestimates the amount of differential expression when biological variation is assessed. We have implemented both Gaussian and parallelized permutation tests for differential expression in Myrna.</p>
+    <p>The Myrna pipeline is complementary to existing approaches for RNA-Seq analysis - like ERANGE and Cufflinks. ERANGE attempts to recover junction reads based on the uniquely aligned reads, but only reports RPKM and does not calculate a measure of statistical significance [<xref ref-type="bibr" rid="B36">36</xref>]. Cufflinks is more ambitious in its attempt to fully assemble the transcriptome, but bases its differential expression statistics on the Poisson model, which we have shown may not be appropriate for biological replicates [<xref ref-type="bibr" rid="B8">8</xref>]. Myrna focuses on the somewhat simpler problem of differential expression analysis between genes, but uses more sophisticated statistical models and integrates the analysis in a computationally efficient pipeline.</p>
+    <p>The version of Myrna described here does not make any special attempt to align reads across exon junctions, but this is important future work. Expression signal may be lost by failing to align junction reads; Myrna's focus on just the constitutive portions of genes avoids between-sample or between-gene biases due to this policy. Users can trade off between loss of signal due to junction reads and loss of signal due to repetitive reads by adjusting the -truncate-reads option, which trims all input reads down to a given fixed length before passing them on to the alignment step. We expect that future support for counting junction reads will not severely impact Myrna's performance characteristics; its chief impact will be to add computation to the Align stage, which is currently both the biggest bottleneck and the most easily parallelizable step.</p>
+    <p>Myrna exploits the availability of multiple computers and processors where possible and can be run on the cloud using Amazon Elastic MapReduce, on any Hadoop cluster, or on a single computer (bypassing Hadoop entirely). While cloud mode allows Myrna users to tap into the vast economies of scale afforded by cloud providers, users may nonetheless prefer to run in Hadoop or Singleton mode. This may be because: cloud data transfers are inconvenient and sometimes too slow; Singleton mode is easier to use and debug when things go wrong; large, free, local Hadoop resources may be a better alternative; or privacy concerns (for example, internal review board requirements) may disallow use of the cloud. Users considering the appropriateness of the cloud for their work can also consult recent reviews and commentaries on this topic [<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B16">16</xref>].</p>
+    <p>Myrna is freely available, open source software that can be downloaded from our website [<xref ref-type="bibr" rid="B37">37</xref>]. The RNA-Seq data used in this analysis are available from eQTL resources at the Pritchard lab [<xref ref-type="bibr" rid="B32">32</xref>].</p>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>BP: base pair; CPU: central processing unit; EC2: Elastic Compute Cloud; RPKM: reads per kilobase of exon model per million mapped reads; S3: Simple Storage Service.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>BL and JL designed and developed the software and collected results. BL, KH, and JL contributed to discussions on algorithms and wrote the manuscript.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>The authors would like to acknowledge useful discussions with Margaret Taub, Michael Schatz, Hector Corrada Bravo, and Rafael Irizarry. Support for this research was provided by an Amazon Web Services in Education Research Grant, 4 December 2009, and a Johns Hopkins Bloomberg School of Public Health Faculty Innovation Award to JL. BL and KH were supported by NIH Grants R01HG005220 and P41HG004059.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Metzker</surname>
+          <given-names>ML</given-names>
+        </name>
+        <article-title>Sequencing technologies - the next generation.</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>31</fpage>
+        <lpage>46</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg2626</pub-id>
+        <pub-id pub-id-type="pmid">19997069</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pepke</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Wold</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Mortazavi</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Computation for ChIP-seq and RNA-seq studies.</article-title>
+        <source>Nat Methods</source>
+        <year>2009</year>
+        <volume>6</volume>
+        <fpage>S22</fpage>
+        <lpage>S32</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1371</pub-id>
+        <pub-id pub-id-type="pmid">19844228</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wang</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Gerstein</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Snyder</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>RNA-Seq: a revolutionary tool for transcriptomics.</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>57</fpage>
+        <lpage>63</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg2484</pub-id>
+        <pub-id pub-id-type="pmid">19015660</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bullard</surname>
+          <given-names>JH</given-names>
+        </name>
+        <name>
+          <surname>Purdom</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Hansen</surname>
+          <given-names>KD</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments.</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>94</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-11-94</pub-id>
+        <pub-id pub-id-type="pmid">20167110</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Birol</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Jackman</surname>
+          <given-names>SD</given-names>
+        </name>
+        <name>
+          <surname>Nielsen</surname>
+          <given-names>CB</given-names>
+        </name>
+        <name>
+          <surname>Qian</surname>
+          <given-names>JQ</given-names>
+        </name>
+        <name>
+          <surname>Varhol</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Stazyk</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Morin</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Zhao</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Hirst</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Schein</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Horsman</surname>
+          <given-names>DE</given-names>
+        </name>
+        <name>
+          <surname>Connors</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Gascoyne</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Marra</surname>
+          <given-names>MA</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <article-title><italic>De novo </italic>transcriptome assembly with ABySS.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2872</fpage>
+        <lpage>2877</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp367</pub-id>
+        <pub-id pub-id-type="pmid">19528083</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Guttman</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Garber</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Levin</surname>
+          <given-names>JZ</given-names>
+        </name>
+        <name>
+          <surname>Donaghey</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Robinson</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Adiconis</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Fan</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Koziol</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Gnirke</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Nusbaum</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Rinn</surname>
+          <given-names>JL</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <name>
+          <surname>Regev</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title><italic>Ab initio </italic>reconstruction of cell type-specific transcriptomes in mouse reveals the conserved multi-exonic structure of lincRNAs.</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2010</year>
+        <volume>28</volume>
+        <fpage>503</fpage>
+        <lpage>510</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt.1633</pub-id>
+        <pub-id pub-id-type="pmid">20436462</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>TopHat: discovering splice junctions with RNA-Seq.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1105</fpage>
+        <lpage>1111</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp120</pub-id>
+        <pub-id pub-id-type="pmid">19289445</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Williams</surname>
+          <given-names>BA</given-names>
+        </name>
+        <name>
+          <surname>Pertea</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Mortazavi</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Kwan</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>van Baren</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <name>
+          <surname>Wold</surname>
+          <given-names>BJ</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>Transcript assembly and quantification by RNA-Seq reveals unannotated transcripts and isoform switching during cell differentiation.</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2010</year>
+        <volume>28</volume>
+        <fpage>511</fpage>
+        <lpage>515</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt.1621</pub-id>
+        <pub-id pub-id-type="pmid">20436464</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>Oshlack</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>A scaling normalization method for differential expression analysis of RNA-seq data.</article-title>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2010-11-3-r25</pub-id>
+        <pub-id pub-id-type="pmid">20196867</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="other">
+        <article-title>Illumina Announces HiSeq(TM) 2000 Sequencing System</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://investor.illumina.com/phoenix.zhtml?c=121127&amp;p=irol-newsArticle&amp;ID=1374339">http://investor.illumina.com/phoenix.zhtml?c=121127&amp;p=irol-newsArticle&amp;ID=1374339</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="other">
+        <article-title>Illumina Presents Development Roadmap for Scaling its Genome Analyzer</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://investor.illumina.com/phoenix.zhtml?c=121127&amp;p=irol-newsArticle&amp;ID=1252407">http://investor.illumina.com/phoenix.zhtml?c=121127&amp;p=irol-newsArticle&amp;ID=1252407</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pushkarev</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Neff</surname>
+          <given-names>NF</given-names>
+        </name>
+        <name>
+          <surname>Quake</surname>
+          <given-names>SR</given-names>
+        </name>
+        <article-title>Single-molecule sequencing of an individual human genome.</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2009</year>
+        <volume>27</volume>
+        <fpage>847</fpage>
+        <lpage>852</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt.1561</pub-id>
+        <pub-id pub-id-type="pmid">19668243</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Stein</surname>
+          <given-names>LD</given-names>
+        </name>
+        <article-title>The case for cloud computing in genome informatics.</article-title>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>207</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2010-11-5-207</pub-id>
+        <pub-id pub-id-type="pmid">20441614</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Baker</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Next-generation sequencing: adjusting to data overload.</article-title>
+        <source>Nat Methods</source>
+        <year>2010</year>
+        <volume>7</volume>
+        <fpage>495</fpage>
+        <lpage>499</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth0710-495</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Schatz</surname>
+          <given-names>MC</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Searching for SNPs with cloud computing.</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R134</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-11-r134</pub-id>
+        <pub-id pub-id-type="pmid">19930550</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Schatz</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Cloud computing and the DNA data race.</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2010</year>
+        <volume>28</volume>
+        <fpage>691</fpage>
+        <lpage>693</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt0710-691</pub-id>
+        <pub-id pub-id-type="pmid">20622843</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Schatz</surname>
+          <given-names>MC</given-names>
+        </name>
+        <article-title>CloudBurst: highly sensitive read mapping with MapReduce.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1363</fpage>
+        <lpage>1369</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp236</pub-id>
+        <pub-id pub-id-type="pmid">19357099</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="other">
+        <article-title>Amazon Elastic Compute Cloud (Amazon EC2)</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://aws.amazon.com/ec2/">http://aws.amazon.com/ec2/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="other">
+        <article-title>Amazon Elastic MapReduce</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://aws.amazon.com/elasticmapreduce/">http://aws.amazon.com/elasticmapreduce/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="other">
+        <article-title>Google and IBM look to the next generation of programmers</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.ibm.com/ibm/ideasfromibm/us/google/index.shtml">http://www.ibm.com/ibm/ideasfromibm/us/google/index.shtml</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="other">
+        <article-title>Magellan | Argonne's DOE Cloud Computing</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://magellan.alcf.anl.gov/">http://magellan.alcf.anl.gov/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pickrell</surname>
+          <given-names>JK</given-names>
+        </name>
+        <name>
+          <surname>Marioni</surname>
+          <given-names>JC</given-names>
+        </name>
+        <name>
+          <surname>Pai</surname>
+          <given-names>AA</given-names>
+        </name>
+        <name>
+          <surname>Degner</surname>
+          <given-names>JF</given-names>
+        </name>
+        <name>
+          <surname>Engelhardt</surname>
+          <given-names>BE</given-names>
+        </name>
+        <name>
+          <surname>Nkadori</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Veyrieras</surname>
+          <given-names>JB</given-names>
+        </name>
+        <name>
+          <surname>Stephens</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gilad</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Pritchard</surname>
+          <given-names>JK</given-names>
+        </name>
+        <article-title>Understanding mechanisms underlying human gene expression variation with RNA sequencing.</article-title>
+        <source>Nature</source>
+        <year>2010</year>
+        <volume>464</volume>
+        <fpage>768</fpage>
+        <lpage>772</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature08872</pub-id>
+        <pub-id pub-id-type="pmid">20220758</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <collab>International HapMap Consortium</collab>
+        <name>
+          <surname>Frazer</surname>
+          <given-names>KA</given-names>
+        </name>
+        <name>
+          <surname>Ballinger</surname>
+          <given-names>DG</given-names>
+        </name>
+        <name>
+          <surname>Cox</surname>
+          <given-names>DR</given-names>
+        </name>
+        <name>
+          <surname>Hinds</surname>
+          <given-names>DA</given-names>
+        </name>
+        <name>
+          <surname>Stuve</surname>
+          <given-names>LL</given-names>
+        </name>
+        <name>
+          <surname>Gibbs</surname>
+          <given-names>RA</given-names>
+        </name>
+        <name>
+          <surname>Belmont</surname>
+          <given-names>JW</given-names>
+        </name>
+        <name>
+          <surname>Boudreau</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Hardenbol</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Leal</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Pasternak</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Wheeler</surname>
+          <given-names>DA</given-names>
+        </name>
+        <name>
+          <surname>Willis</surname>
+          <given-names>TD</given-names>
+        </name>
+        <name>
+          <surname>Yu</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Zeng</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Gao</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Hu</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Hu</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Pan</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Tang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Yu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Q</given-names>
+        </name>
+        <etal/>
+        <article-title>A second generation human haplotype map of over 3.1 million SNPs.</article-title>
+        <source>Nature</source>
+        <year>2007</year>
+        <volume>449</volume>
+        <fpage>851</fpage>
+        <lpage>861</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature06258</pub-id>
+        <pub-id pub-id-type="pmid">17943122</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome.</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-3-r25</pub-id>
+        <pub-id pub-id-type="pmid">19261174</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lee</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Hansen</surname>
+          <given-names>KD</given-names>
+        </name>
+        <name>
+          <surname>Bullard</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Sherlock</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Novel low abundance and transient RNAs in yeast revealed by tiling microarrays and ultra high-throughput sequencing are not conserved across closely related yeast species.</article-title>
+        <source>PLoS Genet</source>
+        <year>2008</year>
+        <volume>4</volume>
+        <fpage>e1000299</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pgen.1000299</pub-id>
+        <pub-id pub-id-type="pmid">19096707</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marioni</surname>
+          <given-names>JC</given-names>
+        </name>
+        <name>
+          <surname>Mason</surname>
+          <given-names>CE</given-names>
+        </name>
+        <name>
+          <surname>Mane</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Stephens</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gilad</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>RNA-seq: an assessment of technical reproducibility and comparison with gene expression arrays.</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>1509</fpage>
+        <lpage>1517</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.079558.108</pub-id>
+        <pub-id pub-id-type="pmid">18550803</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Oshlack</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Wakefield</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <article-title>Transcript length bias in RNA-seq data confounds systems biology.</article-title>
+        <source>Biol Direct</source>
+        <year>2009</year>
+        <volume>4</volume>
+        <fpage>14</fpage>
+        <pub-id pub-id-type="doi">10.1186/1745-6150-4-14</pub-id>
+        <pub-id pub-id-type="pmid">19371405</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Anders</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Huber</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Differential expression analysis for sequence count data.</article-title>
+        <source>Nat Precedings</source>
+        <year>2010</year>
+        <comment> in press </comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Baldi</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Long</surname>
+          <given-names>AD</given-names>
+        </name>
+        <article-title>A Bayesian framework for the analysis of microarray expression data: regularized t -test and statistical inferences of gene changes.</article-title>
+        <source>Bioinformatics</source>
+        <year>2001</year>
+        <volume>17</volume>
+        <fpage>509</fpage>
+        <lpage>519</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/17.6.509</pub-id>
+        <pub-id pub-id-type="pmid">11395427</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tusher</surname>
+          <given-names>VG</given-names>
+        </name>
+        <name>
+          <surname>Tibshirani</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Chu</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Significance analysis of microarrays applied to the ionizing radiation response.</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <fpage>5116</fpage>
+        <lpage>5121</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.091062498</pub-id>
+        <pub-id pub-id-type="pmid">11309499</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="other">
+        <article-title>Amazon Simple Storage Service (Amazon S3)</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://aws.amazon.com/s3/">http://aws.amazon.com/s3/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="other">
+        <article-title>Data from Pickrell <italic>et al</italic>. study</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://eqtl.uchicago.edu/RNA_Seq_data/unmapped_reads/">http://eqtl.uchicago.edu/RNA_Seq_data/unmapped_reads/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B33">
+      <mixed-citation publication-type="other">
+        <article-title>Welcome to Apache Hadoop!</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://hadoop.apache.org/">http://hadoop.apache.org/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B34">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Dean</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Ghemawat</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>MapReduce: simplified data processing on large clusters</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://static.googleusercontent.com/external_content/untrusted_dlcp/labs.google.com/en//papers/mapreduce-osdi04.pdf">http://static.googleusercontent.com/external_content/untrusted_dlcp/labs.google.com/en//papers/mapreduce-osdi04.pdf</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B35">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Storey</surname>
+          <given-names>JD</given-names>
+        </name>
+        <name>
+          <surname>Tibshirani</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Statistical significance for genomewide studies.</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2003</year>
+        <volume>100</volume>
+        <fpage>9440</fpage>
+        <lpage>9445</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.1530509100</pub-id>
+        <pub-id pub-id-type="pmid">12883005</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B36">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mortazavi</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Williams</surname>
+          <given-names>BA</given-names>
+        </name>
+        <name>
+          <surname>McCue</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Schaeffer</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Wold</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Mapping and quantifying mammalian transcriptomes by RNA-Seq.</article-title>
+        <source>Nat Methods</source>
+        <year>2008</year>
+        <volume>5</volume>
+        <fpage>621</fpage>
+        <lpage>628</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1226</pub-id>
+        <pub-id pub-id-type="pmid">18516045</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B37">
+      <mixed-citation publication-type="other">
+        <article-title>Myrna</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://bowtie-bio.sf.net/myrna">http://bowtie-bio.sf.net/myrna</ext-link>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

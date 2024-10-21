@@ -1,0 +1,1138 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3115854</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-12-198</article-id>
+    <article-id pub-id-type="pmid">21609463</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-12-198</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Methodology Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>HMM-FRAME: accurate protein domain classification for metagenomic sequences containing frameshift errors</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Yuan</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>zhangy72@msu.edu</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A2">
+        <name>
+          <surname>Sun</surname>
+          <given-names>Yanni</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>yannisun@msu.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Computer Science and Engineering Department, Michigan State University, East Lansing, MI, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2011</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>24</day>
+      <month>5</month>
+      <year>2011</year>
+    </pub-date>
+    <volume>12</volume>
+    <fpage>198</fpage>
+    <lpage>198</lpage>
+    <history>
+      <date date-type="received">
+        <day>10</day>
+        <month>8</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>24</day>
+        <month>5</month>
+        <year>2011</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2011 Zhang and Sun; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2011</copyright-year>
+      <copyright-holder>Zhang and Sun; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/12/198"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Protein domain classification is an important step in metagenomic annotation. The state-of-the-art method for protein domain classification is profile HMM-based alignment. However, the relatively high rates of insertions and deletions in homopolymer regions of pyrosequencing reads create frameshifts, causing conventional profile HMM alignment tools to generate alignments with marginal scores. This makes error-containing gene fragments unclassifiable with conventional tools. Thus, there is a need for an accurate domain classification tool that can detect and correct sequencing errors.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We introduce HMM-FRAME, a protein domain classification tool based on an augmented Viterbi algorithm that can incorporate error models from different sequencing platforms. HMM-FRAME corrects sequencing errors and classifies putative gene fragments into domain families. It achieved high error detection sensitivity and specificity in a data set with annotated errors. We applied HMM-FRAME in Targeted Metagenomics and a published metagenomic data set. The results showed that our tool can correct frameshifts in error-containing sequences, generate much longer alignments with significantly smaller E-values, and classify more sequences into their native families.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>HMM-FRAME provides a complementary protein domain classification tool to conventional profile HMM-based methods for data sets containing frameshifts. Its current implementation is best used for small-scale metagenomic data sets. The source code of HMM-FRAME can be downloaded at <ext-link ext-link-type="uri" xlink:href="http://www.cse.msu.edu/~zhangy72/hmmframe/">http://www.cse.msu.edu/~zhangy72/hmmframe/</ext-link> and at <ext-link ext-link-type="uri" xlink:href="https://sourceforge.net/projects/hmm-frame/">https://sourceforge.net/projects/hmm-frame/</ext-link>.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Culture-independent methods and high-throughput sequencing technologies now enable us to obtain community random genomes (metagenomes) from different habitats such as arctic soils and mammalian gut. Currently, metagenomic annotation focuses on phylogenetic complexity and protein composition analysis. An important component in protein composition analysis is protein domain classification, which classifies a putative protein sequence into annotated domain families and thus aids in functional analysis. Profile HMM-based alignment is the state-of-the-art method for protein domain classification because of its high sensitivity in classifying remote homologs [<xref ref-type="bibr" rid="B1">1</xref>]. In conjunction with the Pfam database [<xref ref-type="bibr" rid="B2">2</xref>], which contains over 10,000 annotated protein domain families, HMMER [<xref ref-type="bibr" rid="B3">3</xref>] can accurately classify query protein sequences into existing domain families. In addition, the latest version of HMMER can achieve comparable speed to BLAST, making it applicable to large-scale metagenomic data sets.</p>
+    <p>However, HMMER cannot optimally classify sequences containing frameshift errors. In HMMER's domain analysis, six-frame translations of a sequence read or a predicted gene fragment are aligned with annotated protein domain families using HMMER. One problem of this method is that sequencing errors, including insertions or deletions of nucleotides, create frameshifts during translation. As a result, the derived peptide sequences are likely to generate alignments with marginal scores. As HMMER uses alignment scores, E-values, or lengths to determine family membership, these reads become unclassifiable or can be falsely recognized as "novel" proteins during downstream analysis. Figure <xref ref-type="fig" rid="F1">1</xref> illustrates how insertion or deletion errors cause marginal alignment scores.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Frameshifts cause short alignments with marginal scores</bold>. <italic>X<sub>i</sub></italic>is the <italic>ith </italic>base of a DNA sequence. Every codon is underscored. <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i15.gif"/></inline-formula> is the <italic>jth </italic>amino acid of a peptide sequence derived under reading frame <italic>i</italic>. The correct peptide sequence can be derived from the error-free sequence (shown on the top of the figure) under reading frame 1. Because of insertions of two nucleotides (bolded X and Y), the correct peptide sequence is the concatenation of three short peptide sequences derived using different reading frames. Thus, each peptide sequence derived using one reading frame can only generate short alignments with insignificant scores.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-12-198-1"/>
+    </fig>
+    <p>This problem is more serious in domain analysis for metagenomic data sets. Given the high complexity of many metagenomic data sets, high-quality genome assembly is not always available. Thus, protein annotation can only be conducted on short sequence reads. The average read length varies from 25-35 to around 400 bases for the next-generation sequencing methods currently in use. On average there is about one open reading frame per 1000 base pairs in bacteria genomes. Depending on gene size, many gene fragments in metagenomic sequence reads may share only a small overlap with existing domain families, generating even shorter profile HMM alignments with significantly lower scores.</p>
+    <p>Although a number of tools [<xref ref-type="bibr" rid="B4">4</xref>-<xref ref-type="bibr" rid="B9">9</xref>] exist for frameshift detection, they are not designed for protein domain classification using profile HMMs. In addition, these tools have not incorporated sequencing error patterns associated with next generation sequencing technologies. A clear disadvantage is that they do not distinguish between error rates in and out of homopolymer regions in pyrosequencing reads. The goal of this work is to design an accurate profile HMM alignment method that can incorporate any given error pattern. Our experiments show that our tool has high sensitivity (&gt;95%) in detecting sequencing errors and has a low false positive rate (~ 0.15%). By correcting insertion and deletion errors, it can generate longer alignments with significantly higher alignment scores, and thus provide more accurate protein domain classification.</p>
+  </sec>
+  <sec>
+    <title>Related work</title>
+    <p>A number of programs exist to handle frameshifts through DNA versus protein sequence alignment. The simplest methods discard sequences that might contain frameshifts rather than trying to correct them. For example, BLASTX provides insightful information about whether a query DNA sequence contains frameshifts using six-frame translations. However, it neither explicitly outputs positions of insertions or deletions that create frameshifts, nor does it try to fix them by constructing an alignment from pieces obtained from different reading frames. Other tools are available to detect and fix frameshift errors automatically. Frame [<xref ref-type="bibr" rid="B4">4</xref>] uses BLASTX to compare all six reading frames of the query nucleotide sequence against protein sequences. Then the aligned regions are combined for frameshift detection. Guan et al. [<xref ref-type="bibr" rid="B5">5</xref>], Zhang et al. [<xref ref-type="bibr" rid="B6">6</xref>], and Halperin et al. [<xref ref-type="bibr" rid="B7">7</xref>] describe dynamic programming algorithms for frameshift detection during pairwise DNA and protein sequence alignment. Instead of using all reading frames of a DNA sequence to maximize the alignment score, another group of tools [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B9">9</xref>] translate a protein sequence back into DNA sequences and formulate the alignment problem as a network matching problem. Frameshift detection has also been applied to finding distant protein homologies where the divergence is the result of frameshift mutations and substitutions [<xref ref-type="bibr" rid="B10">10</xref>-<xref ref-type="bibr" rid="B12">12</xref>].</p>
+    <p>Some gene-finding tools detect frameshifts. FrameD [<xref ref-type="bibr" rid="B13">13</xref>] relies on a directed acyclic graph for gene prediction in the presence of frameshifts. Kislyuk et al. [<xref ref-type="bibr" rid="B14">14</xref>] apply an <italic>ab initio </italic>method to detect possible frameshifts from coding potential generated by GeneMark [<xref ref-type="bibr" rid="B15">15</xref>]. GeneTack [<xref ref-type="bibr" rid="B16">16</xref>] and FragGeneScan [<xref ref-type="bibr" rid="B17">17</xref>] use hidden Markov models for <italic>ab initio </italic>frameshift detection in gene finding.</p>
+    <p>Despite the extensive study of frameshift detection, the above programs are not designed for protein family classification through DNA versus protein family alignment. Alternatively, Genewise [<xref ref-type="bibr" rid="B18">18</xref>], a widely used DNA versus protein alignment tool, allows comparison of a DNA sequence with a profile HMM. Our algorithm differs from Genewise by explicitly incorporating a position-specific error model that is trained on data from different sequencing platforms such as 454 GS FLX Titanium.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Method</title>
+    <p>The representative protein domain classification tool HMMER [<xref ref-type="bibr" rid="B3">3</xref>] classifies a query protein sequence into a profile HMM-represented protein family using the Viterbi or the Forward algorithm [<xref ref-type="bibr" rid="B19">19</xref>]. The Viterbi algorithm aligns a query protein sequence to a profile HMM by searching for the most probable state path in the model. If the alignment score or E-value meets the pre-defined threshold, the query is classified into the corresponding family. The alignment generated by the Viterbi algorithm only accounts for the difference caused by evolutionary divergence between a sequence and a protein family. In order to classify error-containing sequences into their native families, the alignment algorithm must detect the differences resulted from both evolution and sequencing errors.</p>
+    <p>In this section, we describe HMM-FRAME, the implementation of an augmented Viterbi algorithm that searches for the optimal alignment between a DNA query and a profile HMM by considering both evolutionary divergence and sequencing errors. HMM-FRAME differs from HMMER in the following ways: 1) HMM-FRAME directly accepts a DNA sequence as input, 2) HMM-FRAME accepts a sequencing error model as input, 3) HMM-FRAME can detect and fix frameshifts caused by sequencing errors in the DNA sequence. The output alignment indicates which bases are inserted or deleted due to evolutionary change or sequencing error.</p>
+    <sec>
+      <title>Error models</title>
+      <p>Here we describe the error models used in our experiments. Different sequencing technologies may have different types of errors. For example, previous work [<xref ref-type="bibr" rid="B20">20</xref>-<xref ref-type="bibr" rid="B22">22</xref>] has shown that insertions and deletions occur more often in homopolymer regions than in non-homopolymer regions for pyrosequencing reads. Substitution errors occur more often than insertions or deletions in Illumina sequencing reads. Because deletion or insertion errors cause frameshifts, we focus on applying HMM-FRAME to pyrosequencing data sets.</p>
+      <p>In this work, we consider two error models. The first one is a published model trained from GS20 sequencing reads [<xref ref-type="bibr" rid="B20">20</xref>]. The insertion and deletion error rates in non-homopolymer and homopolymer regions are 0.0007 and 0.0044, respectively. The second error model is computed on data from FLX Titanium sequencing platform. We obtained a set of Titanium sequence reads (Cole and Wang, unpublished) extracted from the region H of the 16S rRNA, which were amplified from the Baylor mock community (22 strains, 24 sequences). Then we computed error rates using insertions and deletions that were annotated by generating careful Needleman-Wunsch alignments between the Titanium sequencing reads and the control sequences. In total, 7,040 sequences passed the initial quality control of RDP [<xref ref-type="bibr" rid="B23">23</xref>] after contamination and chimera detection. There were 1,721 insertion and deletion errors. Note that PCR, which was used to generate the amplicons of the sample, can introduce errors. However, because most of the errors introduced by PCR are substitution errors, we assumed that the deletions and insertions were mainly sequencing errors. The derived error rates for homopolymers of different sizes were: 1: 0.000532, 2: 0.000698, 3: 0.00102, 4: 0.000688, 5: 0.0372, 6: 0.00167, 7: 0.143, where the first number is the size of homopolymer regions (1 means non-homopolymer) and the second number is the rate of insertion and deletion errors. If we sum the error rates for homopolymer regions of different sizes, the insertion and deletion error rates for non-homopolymer and homopolymer regions were 0.0005 and 0.001, respectively. They are slightly smaller than the published G20 error rates [<xref ref-type="bibr" rid="B20">20</xref>]. We will compare their performance on a data set with annotated errors in the <bold>Results and Discussion </bold>section.</p>
+    </sec>
+    <sec>
+      <title>The augmented Viterbi algorithm for sequencing error correction</title>
+      <p>Let <italic>π </italic>be a state path in a profile HMM <italic>M </italic>. Let <italic>r </italic>be a set of insertion and deletion positions in a DNA sequence <italic>x</italic>. The augmented Viterbi algorithm searches for the most probable path <italic>π* </italic>and the most probably error position set <italic>r</italic>* such that (<italic>π*, r* </italic>) = <italic>argmax</italic><sub>(<italic>π,r</italic>)</sub><italic>P </italic>(<italic>x, π, r</italic>). Intuitively this algorithm searches for an optimal alignment between a DNA sequence and a profile HMM by simultaneously considering 1) evolutionary divergence (i.e. the insertion, deletion, and substitution of amino acids) and 2) sequencing errors (i.e. insertion and deletion of nucleotides). To solve the above equation, we first divide the search space according to different types of sequencing errors inside a codon and between two consecutive codons. For each type of error, we search for the most probable state path.</p>
+      <p><bold>Input</bold>: a DNA sequence <italic>x</italic>, a profile HMM <italic>M </italic>, and a sequencing error model. Notations of <italic>M </italic>and the error model will be described below.</p>
+      <p><bold>Output</bold>: the optimal alignment between DNA sequence <italic>x </italic>and <italic>M </italic>, as well as error positions in <italic>r</italic>.</p>
+      <p><bold>Algorithm: </bold>we first define notations that will be used in the dynamic programming equations.</p>
+      <p>• <bold>Notations about the profile HMM </bold><italic>M</italic>: States <italic>M<sub>j</sub></italic>, <italic>I<sub>j</sub></italic>, and <italic>D<sub>j </sub></italic>are matching, insertion, and deletion states in <italic>M</italic>. <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i1.gif"/></inline-formula> is the transition probability from state <italic>s</italic><sub>1 </sub>to <italic>s</italic><sub>2</sub>. <italic>e<sub>s</sub></italic>(<italic>T </italic>(<italic>x</italic><sub><italic>i</italic>-2</sub><italic>x</italic><sub><italic>i</italic>-1</sub><italic>x</italic><sub><italic>i</italic></sub>)) is the emission probability for state <italic>s </italic>to emit amino acid <italic>T </italic>(<italic>x</italic><sub><italic>i</italic>-2</sub><italic>x</italic><sub><italic>i</italic>-1</sub><italic>x</italic><sub><italic>i</italic></sub>), which is translated from the codon <italic>x</italic><sub><italic>i</italic>-2</sub><italic>x</italic><sub><italic>i</italic>-1</sub><italic>x</italic><sub><italic>i</italic></sub>. For a detailed description of a profile HMM <italic>M </italic>, we refer the reader to the textbook [<xref ref-type="bibr" rid="B19">19</xref>] and the users' guide of HMMER [<xref ref-type="bibr" rid="B3">3</xref>]. State <italic>G<sub>j </sub></italic>is the only state that is not defined in profile HMMs from HMMER 3.0. It encodes insertions of nucleotides between codons. <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i2.gif"/></inline-formula> is the transition probability from matching state <italic>M<sub>j </sub></italic>to nucleotide insertion state <italic>G<sub>j</sub></italic>. It is set to the insertion error probability. <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i3.gif"/></inline-formula> is the self-transition probability for <italic>G<sub>j</sub></italic>, encoding the probability of consecutive insertions. When consecutive insertion is not allowed, it is set to 0. <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i4.gif"/></inline-formula> is the transition probability from <italic>G</italic><sub><italic>j</italic>-1 </sub>to the next matching state <italic>M<sub>j</sub></italic>. When only one insertion error is allowed, it is set to 1.0.</p>
+      <p>• <bold>Notations about the sequencing error model</bold>: <italic>p<sub>I</sub></italic>(<italic>x<sub>i</sub></italic>) is the probability that base <italic>x<sub>i</sub></italic>is an insertion error. <italic>p<sub>D</sub></italic>(<italic>x<sub>i</sub></italic>) is the probability that there is a deletion error after base <italic>x<sub>i</sub></italic>.</p>
+      <p>• <bold>Subproblems and the recursive equations</bold>: Based on our analysis of error patterns, it is very rare that there are consecutive insertions or deletions in a sequence read. Thus, the following DP algorithm assumes that there is at most one insertion or deletion inside a codon. The algorithm can be extended to handle all possible cases.</p>
+      <p>- <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i5.gif"/></inline-formula> is the score of the best alignment matching subsequence <italic>x</italic><sub>1..<italic>i </italic></sub>to the submodel up to the matching state <italic>M<sub>j</sub></italic>, given that <italic>x<sub>i</sub></italic>is the third base of a codon and this codon encodes an amino acid emitted by <italic>M<sub>j</sub></italic>.</p>
+      <p>- <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i6.gif"/></inline-formula> is the score of the best alignment matching subsequence <italic>x</italic><sub>1..<italic>i </italic></sub>to the submodel up to the insertion state <italic>I<sub>j</sub></italic>, given that <italic><sub>T </sub></italic>(<italic>x</italic><sub><italic>i</italic>-2</sub><italic>x</italic><sub><italic>i</italic>-1</sub><italic>x</italic><sub><italic>i</italic></sub>) is emitted by <italic>I<sub>j</sub></italic>.</p>
+      <p>- <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i7.gif"/></inline-formula> is the score of the best alignment ending in <italic>x<sub>i</sub></italic>being emitted by state <italic>G<sub>j</sub></italic>, which encodes an insertion of nucleotides between codons.</p>
+      <p>- <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i8.gif"/></inline-formula> is the score of the best alignment matching subsequence <italic>x</italic><sub>1..<italic>i </italic></sub>to the submodel up to the deletion state <italic>D<sub>j</sub></italic>.<disp-formula><graphic xlink:href="1471-2105-12-198-i9.gif"/></disp-formula></p>
+      <p>In cases IV and V, we use <bold>d </bold>to represent the deleted bases. We choose <bold>d </bold>to maximize the emission probability of <italic>T </italic>(<italic>x</italic><sub><italic>i</italic>-1</sub><bold>d </bold><italic>x<sub>i</sub></italic>) (or <italic>T </italic>(<bold>d </bold><italic>x</italic><sub><italic>i</italic>-1</sub><italic>x<sub>i</sub></italic>)) in the matching state <italic>M<sub>j</sub></italic>.<disp-formula><graphic xlink:href="1471-2105-12-198-i10.gif"/></disp-formula></p>
+      <sec>
+        <title>Running time analysis</title>
+        <p>The time complexity of the above dynamic programming algorithm is <italic>O</italic>(<italic>δ|x||M </italic><italic>|</italic>), where <italic>|x| </italic>is the length of input DNA sequence and <italic>|M </italic><italic>| </italic>is the number of states in <italic>M </italic>. <italic>δ </italic>is the number of different types of errors inside a codon plus the case of insertions between two codons. In our current implementation, <italic>δ </italic>= 26, which renders a longer running time than the standard Viterbi algorithm. Thus, it is not practical to compare millions of metagenomic sequence reads to over 10,000 protein families in Pfam. Instead, we only run HMM-FRAME on sequences that are likely to contain insertion or deletion errors. For large-scale applications, we suggest applying HMMER 3.0, which is as fast as Blast [<xref ref-type="bibr" rid="B24">24</xref>], to all input sequence reads using a big E-value cutoff (such as 100). Alignments covering at least 80% of the translated DNA sequence with significant E-values can be classified by HMMER in this step. Sequence reads that do not yield any partial alignments are unlikely to be members of any protein family. Thus, we only apply HMM-FRAME to reads yielding partial alignment with marginal scores because these reads could potentially contain sequencing errors.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and Discussion</title>
+    <p>In this section, we compare the sensitivity and false positive rates (FP rates) of HMM-FRAME with Genewise [<xref ref-type="bibr" rid="B18">18</xref>] and FragGeneScan [<xref ref-type="bibr" rid="B17">17</xref>]. We then apply HMM-FRAME to Targeted Metagenomics and a published metagenomic data set. Our experimental results show that the length, scores, and E-values of profile HMM alignments are significantly improved after error correction. As profile HMM-based alignment tools determine membership by comparing E-value or length with user-defined thresholds, the improvement of these parameters enables more error-containing sequences to be classified into their native families.</p>
+    <sec>
+      <title>Accuracy of HMM-FRAME</title>
+      <p>In order to evaluate the accuracy of HMM-FRAME in detecting insertion and deletion errors, we obtained a control data set with annotated error positions from RDP (Cole and Wang, unpublished). In this data set, NifH gene families from the <italic>Desulfitobacterium hafniense </italic>strain DCB-2, the <italic>Burkholderia xenovorans </italic>strain LB40, and the PCC 7120 strain of <italic>Anabaena </italic>were amplified and then sequenced using 454 Titanium. The sequenced gene families were aligned with the nifH genes in these three organisms using the Needleman-Wunsch algorithm. Insertion and deletion errors were identified from the alignments. After contamination and chimera screening, we had 18,900 sequences, of which 3,408 sequences contained 4,623 insertion or deletion errors. We conducted the protein domain analysis on the 18,900 sequences using HMM-FRAME under the two error models presented in the <bold>Method </bold>Section. The input profile HMM was trained on 25 nifH genes obtained from RDP's functional gene repository website [<xref ref-type="bibr" rid="B25">25</xref>].</p>
+      <p>We evaluated the performance of error-prediction tools using two types of sensitivity and FP rates. Let <italic>S</italic><sup>+ </sup>be the set of error-containing sequences in the control data set. Let <italic>S </italic>be the set of predicted error-containing sequences. The <italic>Sequence-level sensitivity </italic>and <italic>FP rate </italic>are <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i11.gif"/></inline-formula> and <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i12.gif"/></inline-formula>, respectively. Similarly, let <italic>Q</italic><sup>+ </sup>be the set of insertion and deletion positions in error-containing sequences from the control data set. Let <italic>Q </italic>be the set of predicted error positions. The <italic>Base-level sensitivity </italic>and <italic>FP rate </italic>are <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i13.gif"/></inline-formula> and <inline-formula><inline-graphic xlink:href="1471-2105-12-198-i14.gif"/></inline-formula>, respectively.</p>
+      <p>Using the control data set, we first evaluated the performance of HMM-FRAME under the published GS20 and our self-trained Titanium error models. Then we compared the performance of HMM-FRAME with Genewise [<xref ref-type="bibr" rid="B18">18</xref>] and FragGeneScan [<xref ref-type="bibr" rid="B17">17</xref>]. Similar to HMM-FRAME, Genewise can directly compare DNA sequences with a profile HMM and can accept user-defined error rates. We tested Genewise using different parameters including error rates and the alignment score thresholds (ranging from 0 to 20). The results with the best tradeoff between sensitivity and FP rate were kept for comparison with HMM-FRAME. FragGeneScan [<xref ref-type="bibr" rid="B17">17</xref>] is a newly developed gene prediction tool for short and error-prone sequences. It predicts genes and identifies sequencing errors inside predicted genes. We applied FragGeneScan on the above sequence set (all genes) and tested its sensitivity and FP rate. FragGeneScan successfully recognized all input as protein-coding genes, rendering a high gene-prediction sensitivity in this data set. However, FragGeneScan had higher FP rates than HMM-FRAME in error detection. The results are summarized in Table <xref ref-type="table" rid="T1">1</xref>.</p>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Comparing the error detection performance of HMM-FRAME, Genewise, and FragGeneScan</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th align="center">HMM-FRAME:<break/>G20</th>
+              <th align="center">HMM-FRAME:<break/>self-trained</th>
+              <th align="center">GeneWise</th>
+              <th align="center">FragGeneScan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">seq-sen</td>
+              <td align="center">
+                <bold>95.25%</bold>
+              </td>
+              <td align="center">90.6%</td>
+              <td align="center">53.8%</td>
+              <td align="center">83.04%</td>
+            </tr>
+            <tr>
+              <td align="center">base-sen</td>
+              <td align="center">
+                <bold>85.08%</bold>
+              </td>
+              <td align="center">82.4%</td>
+              <td/>
+              <td align="center">53.39%</td>
+            </tr>
+            <tr>
+              <td align="center">seq-FP</td>
+              <td align="center">0.154%</td>
+              <td align="center">
+                <bold>0</bold>
+              </td>
+              <td align="center">0.001%</td>
+              <td align="center">0.7%</td>
+            </tr>
+            <tr>
+              <td align="center">base-FP</td>
+              <td align="center">2.1%</td>
+              <td align="center">
+                <bold>0.003%</bold>
+              </td>
+              <td/>
+              <td align="center">59.57%</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Sensitivity and FP rate of each program when detecting annotated insertion and deletion errors in nifH genes. seq-sen: sequence-level sensitivity. base-sen: base-level sensitivity. seq-FP: sequence-level FP rate. base-FP: base-level FP rate. The score cutoff of Genewise is set to zero to maximize the sensitivity. As Genewise has low sequence-level sensitivity, we did not evaluate its performance at the base-level.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>As shown in Table <xref ref-type="table" rid="T1">1</xref>, each tool has higher sensitivity and smaller FP rates in identifying error-containing sequences than in locating error positions. HMM-FRAME has a better tradeoff between sensitivity and FP rate than both Genewise and FragGeneScan. Both GS20 and our self-trained Titanium error models have small FP rates in predicting error positions, but GS20 has higher sensitivity. Thus, we plan to use GS20 in all further experiments.</p>
+    </sec>
+    <sec>
+      <title>Using HMM-FRAME in "Targeted Metagenomics"</title>
+      <p>In this section, we present the utility of HMM-FRAME in two applications of "Targeted Metagenomics", where one or several gene families are amplified from environmental DNA and these amplicons are sequenced using high-throughput sequencing platforms. One typical application of Targeted Metagenomics is to sequence the amplicons of the 16S rRNA gene for phylogenetic complexity analysis. Besides 16S rRNA, protein-coding genes that are important to a particular habitat can be amplified and sequenced for targeted functional analysis in metagenomic data sets. For example, Targeted Metagenomics of the nifH gene, which encodes nitrogenase reductase, is important for analyzing microbial genomes sequenced from soil. Although these sequences are sampled from one or several targeted gene families, frameshift errors can cause short alignments with marginal scores between the input and the targeted gene families. As a result, sequences lacking significant alignment length and scores will be regarded as contaminants and be discarded. Thus, it is desirable to fix frameshift errors to maximize the number of usable samples. Given a DNA read and a profile HMM built from a set of known protein sequences, HMM-FRAME can be applied to detect and correct frameshift errors in amplicon reads.</p>
+      <p>In the first experiment, we obtained 3,937 nifH sequences of an average length of 76 bases generated by the 454 FLX sequencing technology. In order to discard contaminants that originated from non-target genes, we aligned the 3,937 sequences with the nifH gene family, which was built on a small set of 25 expert-verified full-length nifH protein reference sequences from RDP's functional gene repository [<xref ref-type="bibr" rid="B25">25</xref>]. In the gene family building process, we first applied ClustalW [<xref ref-type="bibr" rid="B26">26</xref>] to align the 25 reference sequences. Then we applied HMMER 3.0's hmmbuild program to derive a profile HMM from the multiple sequence alignment. Of the 3,937 454 FLX sequences, 111 were found to be contaminants and were excluded from further analysis. Of the remaining 3,826 sequences, HMM-FRAME detected 296 insertions and deletions in 256 sequences. Thus, approximately, 7% of the samples contained frameshift errors. Of the 256 sequences containing insertion or deletion errors, 224 (87.5%) only contained one insertion or deletion error. 24 (9.4%) sequences contained two errors, and eight (3.1%) contained three errors. Of the 296 insertions or deletions, 224 (75.7%) were inside or beside homopolymer regions.</p>
+      <p>Because protein domain classification tools compare alignment lengths, scores, and E-values with pre-defined thresholds to determine a sequence's membership, the changes in the alignments affect the final domain composition analysis. After error correction, profile HMM-based alignment tools are expected to generate longer alignments with bigger scores and smaller E-values. This gives error-containing sequences a better chance of being classified into the correct families rather than being labeled contaminants.</p>
+      <p>In order to conduct a fair comparison on alignments before and after error correction, we choose a third-party tool HMMER 3.0 to generate alignments for original and corrected sequences. The changes of alignments' E-values and lengths due to error correction are presented in Figure <xref ref-type="fig" rid="F2">2</xref>. In order to test whether the improvement was statistically significant, we conducted a two-sample Kolmogorov-Smirnov test (K-S test) on the alignments' lengths and E-values before and after error correction. The p-values for the alignments' length and E-value distributions were 3.1037e-010 and 1.1802e-045, respectively. In particular, the comparison between alignments' lengths and the sequence reads' lengths shows that most partial alignments generated by error-containing sequences become complete alignments after error correction. Thus, when comparatively longer alignments (e.g., 23 amino acids or 69 bases) are required for domain classification, more sequence reads (213 more under when the threshold is 69 bases) will be classified into their native families.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Change of HMMER alignments' scores, lengths, and E-values (in log space) before and after error correction for nifH sequences</bold>. HMMER 3.0 alignments of sequences before and after error correction by HMM-FRAME. The changes of alignments are presented for 256 sequences in which HMM-FRAME detects errors. "Original" refers to HMMER 3.0 alignments on sequences before error correction. "Corrected" refers to HMMER 3.0 alignments on sequences after error correction by HMM-FRAME. As a comparison, we also plot the length of the original sequence reads (with the legend "sequence read"). They largely overlap with the length of corrected alignments, indicating that complete sequence reads can be aligned with the nifH profile HMM after error correction.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-198-2"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Protein domain analysis of the bacterial aromatic dioxygenase genes</title>
+      <p>In the second experiment, we obtained 2486 pyrosequencing samples of an average length of 224 bases from the bacterial aromatic dioxygenase genes in a soil sample [<xref ref-type="bibr" rid="B27">27</xref>]. Although these pyrosequencing reads were sequenced from the 5' end of PCR amplicons of bacterial aromatic dioxygenase genes, we were interested in classifying them into three sub-families of dioxygenase genes: toluene/biphenyl, naphthalene, and benzoate [<xref ref-type="bibr" rid="B28">28</xref>]. Note that there is another subfamily (phthalate). However, due to lack of training proteins for this family (Dr. Iwai, personal communication), we only searched for members of three sub-families. Three sets of reference protein sequences were extracted from Pfam [<xref ref-type="bibr" rid="B2">2</xref>] for toluene/biphenyl, naphthalene, and benzoate [<xref ref-type="bibr" rid="B28">28</xref>]. Based on these training sets, we built three profile HMMs using ClustalW and HMMER 3.0. Then we applied HMM-FRAME to align the 2486 reads with the three profile HMMs. HMM-FRAME detected 77 insertions and 52 deletions, which were distributed in 121 sequences. Of the 121 error-containing sequences, 77 could not be classified into any subfamily by HMMER 3.0 under the E-value threshold 0.1. After error correction using HMM-FRAME, these 77 sequences were classified into different families with an average E-value of 3.3e-06, indicating that they were highly likely to be true members of the underlying families. For other error-containing sequences, the profile HMM alignments' E-values and lengths were significantly increased after error correction. The change is plotted in Figure <xref ref-type="fig" rid="F3">3</xref>. We applied a two-sample K-S test on the alignments' lengths and E-values before and after error correction. The p-values for the length and E-value distributions were 8.0609e-011and 1.9776e-040, respectively. The improved alignment lengths and E-values provide stronger evidence for the membership of the input samples. In total, after error correction by HMM-FRAME, we could classify 1,214 sequences into three subfamilies. 1,042 reads were members of the naphthalene subfamily. 96 reads belonged to the benzoate subfamily. 76 reads belonged to the toluene/biphenyl subfamily. The remaining 1272 reads could potentially be members of the subfamily phthalate (Dr. Iwai, personal communication).</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Change of HMMER alignments' lengths, scores, and E-values (in log space) before and after error correction for the bacterial aromatic dioxygenase genes in a soil sample</bold>. The data set are sequenced from bacterial aromatic dioxygenase genes in a soil sample. All alignments are generated by HMMER 3.0 for a fair comparison. "Original" refers to HMMER 3.0 alignments on sequences before error correction. "Corrected" refers to HMMER 3.0 alignments on sequences after error correction by HMM-FRAME.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-198-3"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Protein domain classification in the deep mine data set</title>
+      <p>In order to show the utility of HMM-FRAME in a metagenomic data set containing members of multiple domain families, we applied HMM-FRAME to the first 454 sequencing project for environment samples, which were sequenced from two sites in the Soudan Mine, Minnesota, USA [<xref ref-type="bibr" rid="B29">29</xref>]. In this experiment, we downloaded the Black Sample from the paper's supplementary data website. This data set contains 388,627 sequence reads with an average length of 99 bases.</p>
+      <p>There were two steps in the annotation. First, we applied gene-prediction tools. Second, we conducted the domain classification on predicted genes. A number of gene-prediction tools are available for metagenomic data sets. However, not every tool can handle short reads. Glimmer [<xref ref-type="bibr" rid="B30">30</xref>] did not output meaningful predictions when it was applied to this data set. The sensitivity of Metagene [<xref ref-type="bibr" rid="B31">31</xref>] drops to 59% for 100-base sequences [<xref ref-type="bibr" rid="B32">32</xref>]. We thus chose FragGeneScan, a newly developed gene-prediction tool for short reads. FragGeneScan predicted 281,658 genes, of which 72,355 contained errors. For convenience in discussion, let S be the set of genes predicted by FragGeneScan. Let S' be the raw read set corresponding to genes in S. Thus, 72,355 sequences in S were different from their raw reads in S' because FragGeneScan predicted and corrected errors in S'. We compared three domain classification pipelines: 1) apply HMMER 3.0 on raw reads S', 2) apply FragGeneScan and then HMMER 3.0 on corrected reads S, and 3) apply HMM-FRAME on raw reads S'. We recorded how many reads could be classified into one of the 2,558 Pfam domain families that contain the keyword "bacteria". The number of classifiable reads for the three pipelines were: 13,544 for HMMER, 12,328 for FragGeneScan + HMMER, and 17,496 for HMM-FRAME. The classification results have large overlaps, which are illustrated in Figure <xref ref-type="fig" rid="F4">4</xref>. In summary, HMM-FRAME was able to classify 2,948 more reads than the other two annotation pipelines. HMM-FRAME found errors in all of these 2,948 reads. Thus, it is likely that other two pipelines failed to classify them because of frameshifts. HMM-FRAME failed to classify four reads that can be aligned by FrageGeneScan + HMMER. A closer examination showed that FragGeneScan and HMM-FRAME output different error positions in these four sequences.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Protein domain classification results for the black sample in the deep mine data set</bold>. Sequence sets that can be classified by HMM-FRAME, HMMER, and FragGeneScan+HMMER are represented by three sets A, B, and C. <italic>|A| </italic>= 17,496. <italic>|B| </italic>= 13,544. <italic>|C| </italic>= 12,328. B-C = 2224. C-B = 1008. C-A = 4. A-(B+C) = 2948.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-198-4"/>
+      </fig>
+      <p>The performance evaluation of FragGeneScan must consider both gene-prediction and error-prediction. Of the 281,658 predicted genes, only 12,328 could be classified into existing domain families. Further analysis is needed to examine whether other predictions are novel genes or wrong predictions. It is worth noting that FragGeneScan could classify 1,008 more sequences after its error correction than applying HMMER 3.0 alone on raw reads. However, while 2,224 raw reads could be classified into existing domain families by HMMER 3.0, they could not be aligned with any family after error correction by FragGeneScan. This indicates that FragGeneScan might have over-predicted errors in the 2,224 sequences. This is consistent with our observation that FragGeneScan has a high FP rate in the control data set.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusion and future directions</title>
+    <p>Despite the advances of high-throughput sequencing technologies, sequencing errors still pose challenges for data annotation. In particular, our error model analysis shows that 454 FLX Titanium only slightly decreases the insertion and deletion error rates compared to GS20. Thus, correcting frameshifts caused by insertion or deletion errors is still important for metagenomic sequence annotation. In this work, we introduce a protein domain classification tool HMM-FRAME, which can classify error-prone DNA sequence reads into protein domain families. HMM-FRAME can accept any error model trained on data from high-throughput sequencing technologies and thus achieve high detection sensitivity while maintaining a low false positive rate.</p>
+    <p>Applying HMM-FRAME to a data set with annotated errors shows its high sensitivity and accuracy in error detection. In particular, by fixing frameshift errors, we can obtain significantly longer profile HMM alignments with smaller E-values. As alignments' lengths, scores, and E-values are often used to determine family membership, improving them helps to classify more sequences into the native domain families. In our experiments, sequences that fail HMMER 3.0 under the default E-value or score threshold are classified into correct domain families using HMM-FRAME. Thus, HMM-FRAME can be used as a complementary tool to HMMER 3.0 on error-prone sequences.</p>
+    <p>HMM-FRAME is more computationally expensive than HMMER 3.0 mainly because of diverse sequencing errors inside codons. We plan to improve the efficiency of our DNA versus profile HMM alignment algorithm so that it can be used efficiently in large-scale protein domain analysis. Besides applying DP matrix pruning techniques to reduce the computational cost, we plan to use a faster but less accurate Viterbi algorithm as a filtration stage. Specifically, we can apply a faster Viterbi algorithm to predict whether there are any errors inside a codon before identifying error positions. If such errors exist, we can then use a more sensitive method to determine the exact number and positions of insertions or deletions.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>YS designed the algorithm, experiments, and wrote the manuscript. YZ implemented the algorithm and conducted the experiments. Both authors read and approved the final manuscript.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>We would like to thank James Cole, Qiong Wang, Benli Chai and other staff members at RDP [<xref ref-type="bibr" rid="B23">23</xref>] for providing us the test data sets and helpful suggestions on improving HMM-FRAME. We also thank Shoko Iwai and Adina Howe for helpful discussions on analyzing the bacterial aromatic dioxygenase genes.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Karplus</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Barrett</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Hughey</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Hidden Markov models for detecting remote protein homologies</article-title>
+        <source>Bioinformatics</source>
+        <year>1998</year>
+        <volume>14</volume>
+        <issue>10</issue>
+        <fpage>846</fpage>
+        <lpage>856</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/14.10.846</pub-id>
+        <pub-id pub-id-type="pmid">9927713</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Bateman</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Coin</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Finn</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hollich</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Griffiths-Jones</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Khanna</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Marshall</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Moxon</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Sonnhammer</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Studholme</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Yeats</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Eddy</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>The Pfam protein families database</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2004</year>
+        <issue>32 database</issue>
+        <fpage>D138</fpage>
+        <lpage>D141</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="other">
+        <article-title>HMMER3: a new generation of sequence homology search software</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://hmmer.janelia.org/">http://hmmer.janelia.org/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brown</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Sander</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Bork</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Frame: detection of genomic sequencing errors</article-title>
+        <source>Bioinformatics</source>
+        <year>1998</year>
+        <volume>14</volume>
+        <issue>4</issue>
+        <fpage>367</fpage>
+        <lpage>71</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/14.4.367</pub-id>
+        <pub-id pub-id-type="pmid">9632832</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Guan</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Uberbacher</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Alignments of DNA and protein sequences containing frameshift errors</article-title>
+        <source>Comput Appl Biosci</source>
+        <year>1996</year>
+        <volume>12</volume>
+        <fpage>31</fpage>
+        <lpage>40</lpage>
+        <pub-id pub-id-type="pmid">8670617</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Pearson</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Aligning a DNA sequence with a protein sequence</article-title>
+        <source>Proc of RECOMB 97: the first international conference on computational molecular biology</source>
+        <year>1997</year>
+        <publisher-name>ACM press</publisher-name>
+        <fpage>337</fpage>
+        <lpage>343</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Halperin</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Faigler</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Gill-More</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>FramePlus: aligning DNA to protein sequences</article-title>
+        <source>Bioinformatics</source>
+        <year>1999</year>
+        <volume>15</volume>
+        <fpage>867</fpage>
+        <lpage>873</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/15.11.867</pub-id>
+        <pub-id pub-id-type="pmid">10743553</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Peltola</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Soderlund</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Ukkonen</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Algorithms for the search of amino acid patterns in nucleic acid sequences</article-title>
+        <source>Nucl Acids Res</source>
+        <year>1986</year>
+        <volume>14</volume>
+        <fpage>99</fpage>
+        <lpage>107</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/14.1.99</pub-id>
+        <pub-id pub-id-type="pmid">3753796</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Chang</surname>
+          <given-names>WI</given-names>
+        </name>
+        <name>
+          <surname>Lawler</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Sublinear expected time approximate string matching and biological applications</article-title>
+        <source>Algorithmica</source>
+        <year>1994</year>
+        <volume>12</volume>
+        <fpage>327</fpage>
+        <lpage>44</lpage>
+        <pub-id pub-id-type="doi">10.1007/BF01185431</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pellegrini</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Yeates</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Searching for frameshift evolutionary relationships between protein sequence families</article-title>
+        <source>Proteins</source>
+        <year>1999</year>
+        <volume>37</volume>
+        <issue>2</issue>
+        <fpage>278</fpage>
+        <lpage>83</lpage>
+        <pub-id pub-id-type="doi">10.1002/(SICI)1097-0134(19991101)37:2&lt;278::AID-PROT12&gt;3.0.CO;2-X</pub-id>
+        <pub-id pub-id-type="pmid">10584072</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Girdea</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Noe</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Kucherov</surname>
+          <given-names>G</given-names>
+        </name>
+        <person-group person-group-type="editor">Warnow T, Salzberg S</person-group>
+        <article-title>Back-translation for discovering distant protein homologies</article-title>
+        <source>Proceedings of WABI 2009: September 12-13; Philadelphia</source>
+        <year>2009</year>
+        <fpage>108</fpage>
+        <lpage>120</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Girdea</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Noe</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Kucherov</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Back-translation for discovering distant protein homologies in the presence of frameshift mutations</article-title>
+        <source>Algorithms for Molecular Biology</source>
+        <year>2010</year>
+        <volume>5</volume>
+        <issue>6</issue>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Schiex</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Gouzy</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Moisan</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Oliveira</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>FrameD: a flexible program for quality check and gene prediction in prokaryotic genomes and noisy matured eukaryotic sequences</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <issue>13</issue>
+        <fpage>3738</fpage>
+        <lpage>3741</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkg610</pub-id>
+        <pub-id pub-id-type="pmid">12824407</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kislyuk</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lomsadze</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lapidus</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Borodovsky</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Frameshift detection in prokaryotic genomic sequences</article-title>
+        <source>International Journal of Bioinformatics Research and Applications</source>
+        <year>2009</year>
+        <volume>5</volume>
+        <issue>4</issue>
+        <fpage>458</fpage>
+        <lpage>477</lpage>
+        <pub-id pub-id-type="doi">10.1504/IJBRA.2009.027519</pub-id>
+        <pub-id pub-id-type="pmid">19640832</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Borodovsky</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>McIninch</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>GeneMark: parallel gene recognition for both DNA strands</article-title>
+        <source>Computers and Chemistry</source>
+        <year>1993</year>
+        <volume>17</volume>
+        <issue>19</issue>
+        <fpage>123</fpage>
+        <lpage>133</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Antonov</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Borodovsky</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Genetack: frameshift identification in protein-coding sequences by the Viterbi algorithm</article-title>
+        <source>J Bioinform Comput Biol</source>
+        <year>2010</year>
+        <volume>8</volume>
+        <issue>3</issue>
+        <fpage>535</fpage>
+        <lpage>551</lpage>
+        <pub-id pub-id-type="doi">10.1142/S0219720010004847</pub-id>
+        <pub-id pub-id-type="pmid">20556861</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rho</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Tang</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Ye</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>FragGeneScan: predicting genes in short and error-prone reads</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2010</year>
+        <volume>1</volume>
+        <issue>38</issue>
+        <fpage>e191</fpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Birney</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Clamp</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>GeneWise and Genomewise</article-title>
+        <source>Genome Research</source>
+        <year>2004</year>
+        <volume>14</volume>
+        <fpage>988</fpage>
+        <lpage>995</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.1865504</pub-id>
+        <pub-id pub-id-type="pmid">15123596</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Eddy</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Krogh</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Mitchison</surname>
+          <given-names>G</given-names>
+        </name>
+        <source>Biological Sequence Analysis Probabilistic Models of Proteins and Nucleic Acids</source>
+        <year>1998</year>
+        <publisher-name>UK: Cambridge University Press</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wang</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Mitsuya</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Gharizadeh</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Ronaghi</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Shafer</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Characterization of mutation spectra with ultra-deep pyrosequencing: application to HIV-1 drug resistance</article-title>
+        <source>Genome Res</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <issue>8</issue>
+        <fpage>1195</fpage>
+        <lpage>201</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.6468307</pub-id>
+        <pub-id pub-id-type="pmid">17600086</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Eriksson</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Mitsuya</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Rhee</surname>
+          <given-names>SY</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Gharizadeh</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Ronaghi</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Shafer</surname>
+          <given-names>RW</given-names>
+        </name>
+        <name>
+          <surname>Beerenwinkel</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>Viral Population Estimation Using Pyrosequencing</article-title>
+        <source>PLoS Comput Biol</source>
+        <year>2008</year>
+        <volume>4</volume>
+        <issue>5</issue>
+        <fpage>e1000074</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pcbi.1000074</pub-id>
+        <pub-id pub-id-type="pmid">18437230</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Quince</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Lanzen</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Curtis</surname>
+          <given-names>TP</given-names>
+        </name>
+        <name>
+          <surname>Davenport</surname>
+          <given-names>RJ</given-names>
+        </name>
+        <name>
+          <surname>Hall</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Head</surname>
+          <given-names>IM</given-names>
+        </name>
+        <name>
+          <surname>Read</surname>
+          <given-names>LF</given-names>
+        </name>
+        <name>
+          <surname>Sloan</surname>
+          <given-names>WT</given-names>
+        </name>
+        <article-title>Accurate determination of microbial diversity from 454 pyrosequencing data</article-title>
+        <source>Nature Methods</source>
+        <year>2009</year>
+        <volume>6</volume>
+        <fpage>639</fpage>
+        <lpage>641</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1361</pub-id>
+        <pub-id pub-id-type="pmid">19668203</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="other">
+        <article-title>The Ribosomal Database Project</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://rdp.cme.msu.edu/">http://rdp.cme.msu.edu/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Altschul</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Gish</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Lipman</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Basic local alignment search tool</article-title>
+        <source>Journal of Molecular Biology</source>
+        <year>1990</year>
+        <volume>215</volume>
+        <issue>3</issue>
+        <fpage>403</fpage>
+        <lpage>410</lpage>
+        <pub-id pub-id-type="pmid">2231712</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="other">
+        <article-title>FunGene: functional gene pipeline and repository</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://fungene.cme.msu.edu/">http://fungene.cme.msu.edu/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Larkin</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Blackshields</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Chenna</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>McGettigan</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>H</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Valentin</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Wallace</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Wilm</surname>
+          <given-names>LRA</given-names>
+        </name>
+        <name>
+          <surname>Thompson</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Gibson</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Higgins</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>ClustalW and ClustalX version 2</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <issue>21</issue>
+        <fpage>2947</fpage>
+        <lpage>2948</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btm404</pub-id>
+        <pub-id pub-id-type="pmid">17846036</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Iwai</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Chai</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Sul</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Cole</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hashsham</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Tiedje</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Gene-targeted-metagenomics reveals extensive diversity of aromatic dioxygenase genes in the environment</article-title>
+        <source>ISME J</source>
+        <year>2010</year>
+        <volume>4</volume>
+        <issue>2</issue>
+        <fpage>279</fpage>
+        <lpage>285</lpage>
+        <pub-id pub-id-type="doi">10.1038/ismej.2009.104</pub-id>
+        <pub-id pub-id-type="pmid">19776767</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gibson</surname>
+          <given-names>DT</given-names>
+        </name>
+        <name>
+          <surname>Parales</surname>
+          <given-names>RE</given-names>
+        </name>
+        <article-title>Aromatic hydrocarbon dioxygenases in environmental biotechnology</article-title>
+        <source>Current Opinion in Biotechnology</source>
+        <year>2000</year>
+        <volume>11</volume>
+        <issue>3</issue>
+        <fpage>236</fpage>
+        <lpage>243</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0958-1669(00)00090-2</pub-id>
+        <pub-id pub-id-type="pmid">10851146</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Edwards</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Rodriguez-Brito</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Wegley</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Haynes</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Breitbart</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Peterson</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Saar</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Alexander</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Alexander</surname>
+          <given-names>EC</given-names>
+        </name>
+        <name>
+          <surname>Rohwer</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>Using pyrosequencing to shed light on deep mine microbial ecology</article-title>
+        <source>BMC Genomics</source>
+        <year>2006</year>
+        <volume>7</volume>
+        <fpage>57</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-7-57</pub-id>
+        <pub-id pub-id-type="pmid">16549033</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Delcher</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Bratke</surname>
+          <given-names>KA</given-names>
+        </name>
+        <name>
+          <surname>Powers</surname>
+          <given-names>EC</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Identifying bacterial genes and endosymbiont DNA with Glimmer</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <issue>6</issue>
+        <fpage>673</fpage>
+        <lpage>679</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btm009</pub-id>
+        <pub-id pub-id-type="pmid">17237039</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Noguchi</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Park</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Takagi</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>MetaGene: prokaryotic gene finding from environmental genome shotgun sequences</article-title>
+        <source>Nucl Acids Res</source>
+        <year>2006</year>
+        <volume>34</volume>
+        <issue>19</issue>
+        <fpage>5623</fpage>
+        <lpage>5630</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkl723</pub-id>
+        <pub-id pub-id-type="pmid">17028096</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Analysis and comparison of very large metagenomes with fast clustering and functional annotation</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>359</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-10-359</pub-id>
+        <pub-id pub-id-type="pmid">19863816</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

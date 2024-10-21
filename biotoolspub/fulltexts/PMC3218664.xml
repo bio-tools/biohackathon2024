@@ -1,0 +1,3068 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3218664</article-id>
+    <article-id pub-id-type="publisher-id">gb-2010-11-10-r108</article-id>
+    <article-id pub-id-type="pmid">21034477</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2010-11-10-r108</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Method</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Rapid haplotype inference for nuclear families</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Williams</surname>
+          <given-names>Amy L</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>amy@csail.mit.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Housman</surname>
+          <given-names>David E</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>dhousman@mit.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A3">
+        <name>
+          <surname>Rinard</surname>
+          <given-names>Martin C</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>rinard@csail.mit.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A4">
+        <name>
+          <surname>Gifford</surname>
+          <given-names>David K</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>dkg@csail.mit.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Computer Science and Artificial Intelligence Laboratory, Massachusetts Institute of Technology, 32 Vassar Street, Cambridge, MA, 02139, USA</aff>
+    <aff id="I2"><label>2</label>David H. Koch Institute for Integrative Cancer Research at MIT, Massachusetts Institute of Technology, 40 Ames Street, Cambridge, MA, 02142, USA</aff>
+    <pub-date pub-type="ppub">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>29</day>
+      <month>10</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <issue>10</issue>
+    <fpage>R108</fpage>
+    <lpage>R108</lpage>
+    <history>
+      <date date-type="received">
+        <day>11</day>
+        <month>3</month>
+        <year>2010</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>21</day>
+        <month>7</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>29</day>
+        <month>10</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Williams et al.; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Williams et al.; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access">
+        <license-p>This is an open access article distributed under the terms of the Creative Commons Attribution License (&lt;url&gt;http://creativecommons.org/licenses/by/2.0&lt;/url&gt;), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/2010/11/10/R108"/>
+    <abstract>
+      <p>Hapi is a new dynamic programming algorithm that ignores uninformative states and state transitions in order to efficiently compute minimum-recombinant and maximum likelihood haplotypes. When applied to a dataset containing 103 families, Hapi performs 3.8 and 320 times faster than state-of-the-art algorithms. Because Hapi infers both minimum-recombinant and maximum likelihood haplotypes and applies to related individuals, the haplotypes it infers are highly accurate over extended genomic distances.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>The emergence of high throughput genotyping technologies has enabled rapid, low-cost assays of single nucleotide polymorphisms (SNPs) in large datasets of human subjects. These genotype data provide two unordered allele values at each queried genomic position, with each allele derived from the two homologous chromosomes in a diploid cell. However, genotype data do not identify which variant is present on each homologous chromosome.</p>
+    <p>A haplotype is an assignment of each allele to the homologous chromosome it resides on, and the haplotypes of a set of individuals can be determined, with varying levels of accuracy, from their genotype data using haplotype inference or 'phasing' techniques. Haplotypes are essential for many important genetic applications, including: (1) imputation of genotypes at loci that were originally untyped in a set of samples [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B5">5</xref>], a technique that can uncover novel disease susceptibility loci when incorporated into a genome-wide association study; (2) studying the results of meiosis - within a single generation or averaged across many generations - providing the opportunity to build genetic maps [<xref ref-type="bibr" rid="B6">6</xref>], identify recombination hotspots [<xref ref-type="bibr" rid="B7">7</xref>], and identify genetic causes of recombination rate variation [<xref ref-type="bibr" rid="B8">8</xref>]; (3) studying parental transmission effects such as imprinting [<xref ref-type="bibr" rid="B9">9</xref>]; (4) identifying signatures of selection [<xref ref-type="bibr" rid="B10">10</xref>], and many others. Indeed, much research at the frontier of biological understanding, such as the allelic control of chromatin structure, will require accurate haplotype information.</p>
+    <p>Genome scale haplotypes cannot be discovered using direct molecular means at present, so computational methods must be used to infer them. Algorithms for inferring haplotypes can be separated into three classes. One class of haplotyping algorithms applies to unrelated individuals, and techniques of this class use probabilistic constraints governed by mathematical models of population dynamics to infer haplotypes. Available algorithms [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B12">12</xref>] include PHASE [<xref ref-type="bibr" rid="B13">13</xref>], BEAGLE [<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B4">4</xref>], HAPLOTYPER [<xref ref-type="bibr" rid="B14">14</xref>], and HAP2 [<xref ref-type="bibr" rid="B15">15</xref>,<xref ref-type="bibr" rid="B16">16</xref>]. The models these algorithms approximate are often insufficient to prevent switch errors - that is, positions with incorrectly assigned haplotypes relative to the previous heterozygous locus [<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B16">16</xref>] - except across short genomic distances, as was recently demonstrated experimentally [<xref ref-type="bibr" rid="B17">17</xref>]. Additionally, haplotypes inferred from unrelated individuals can only reveal information about the results of meiosis (including the location of hotspots) averaged across thousands of generations and both genders.</p>
+    <p>The second class of haplotyping algorithms applies to individuals with known family relationships [<xref ref-type="bibr" rid="B18">18</xref>-<xref ref-type="bibr" rid="B26">26</xref>]. These algorithms infer haplotypes using the laws of Mendelian inheritance and the fact that allelic variants in close proximity to each other segregate together (that is, exhibit genetic linkage). Haplotypes inferred from family-based data are accurate across extended genomic distances: depending on the family size, they will contain few or no switch errors. Additionally, these datasets and algorithms enable the identification of the probable sites of <italic>de novo </italic>meiotic recombinations and gene conversions (which appear as short double crossovers), and have been used to build genetic maps of recombination rates [<xref ref-type="bibr" rid="B6">6</xref>], and identify hotspots [<xref ref-type="bibr" rid="B7">7</xref>]. Considering <italic>de novo </italic>meiotic recombinations and gene conversions enables the study of differences in location and number [<xref ref-type="bibr" rid="B27">27</xref>] of such events between individuals, including gender-based differences, and a gene affecting individuals' genome wide recombination rates has been identified [<xref ref-type="bibr" rid="B8">8</xref>]. Importantly, haplotypes from family-based datasets are also used to perform linkage analysis to study the genetic basis of disease within families.</p>
+    <p>The third class of haplotyping algorithms applies to many family trios which contain data for a father, mother, and one child; approaches in this class leverage techniques from the other two classes outlined above. In particular, algorithms for haplotyping trio data use the laws of Mendelian inheritance to resolve the haplotypes of the trio individuals at every locus where one of the individuals is homozygous. For the remaining ambiguous loci, these algorithms utilize the mathematical models that govern haplotype expectations for unrelated individuals, with adaptations to apply to trio data. PHASE [<xref ref-type="bibr" rid="B13">13</xref>], BEAGLE [<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B4">4</xref>], HAP2 [<xref ref-type="bibr" rid="B15">15</xref>,<xref ref-type="bibr" rid="B16">16</xref>], and other algorithms support this form of haplotyping. Trio-based approaches produce haplotypes with far fewer switch errors than techniques that rely only on data from unrelated individuals. However, haplotypes from trios still do not provide information about <italic>de novo </italic>meiotic recombinations or gene conversions, and therefore suffer from the same limitations for studies of the results of meiosis as do haplotypes from unrelated individuals.</p>
+    <p>Hapi is a new dynamic programming algorithm that infers both minimum-recombinant and maximum likelihood haplotypes, and performs substantially faster than all other haplotyping algorithms for the nuclear family problem. Nuclear family derived genotypic data identifies parents and their children, but provides no information about relationships within a larger pedigree. Minimum-recombinant haplotypes assign family members' genotypes to homologs such that the number of recombinations that occur in the homologs the parents transmitted to the children is minimized. Maximum likelihood haplotypes utilize recombination frequencies between successive loci from a genetic map to calculate the most likely haplotype reconstruction.</p>
+    <p>Maximum likelihood haplotypes are often substantially similar or identical to minimum-recombinant haplotypes. Both approaches to haplotype estimation have strengths and weaknesses.</p>
+    <p>Minimum-recombinant haplotyping may yield suboptimal results when the recombination frequencies between loci in some region varies widely. (Recombination rate variation can occur if the distance between pairs of loci varies dramatically within a region, or, if genotypes are sampled at a very fine scale, recombination hotspots and coldspots can produce such variation.) Maximum-likelihood haplotyping reports only the most likely haplotype, a feature that can be misleading to a user when the difference in probability to alternate haplotypes is small. Typically this occurs when the number of recombinations across the alternate haplotypes are the same, and in such a case, minimum-recombinant haplotyping reports the ambiguities. Historically, geneticists have manually performed minimum-recombinant haplotype assignment to analyze small datasets. Hapi enables this approach to be applied to the very large datasets currently produced by high-throughput SNP genotyping.</p>
+    <p>Several existing programs for haplotyping related individuals are based on the Lander-Green algorithm [<xref ref-type="bibr" rid="B19">19</xref>], including Merlin [<xref ref-type="bibr" rid="B20">20</xref>], GENEHUNTER [<xref ref-type="bibr" rid="B21">21</xref>,<xref ref-type="bibr" rid="B22">22</xref>], and Allegro [<xref ref-type="bibr" rid="B23">23</xref>,<xref ref-type="bibr" rid="B24">24</xref>]. The basic approach of the Lander-Green algorithm uses hidden Markov models (HMMs) to obtain a probability distribution of haplotype assignments for individuals in a pedigree. A user can either sample a haplotype from this distribution, or, more commonly, obtain the maximum likelihood haplotype assignment. The state space for these HMMs is composed of inheritance vectors at each locus that are bit strings encoding which chromosome homolog a parent transmitted for each child in the pedigree at that locus. This state space is inherently exponential, with 2<sup>2<italic>n </italic></sup>possible values, where <italic>n </italic>is the number of non-founders or individuals with at least one parent in the pedigree.</p>
+    <p>Although Merlin, GENEHUNTER, and Allegro all employ techniques to reduce computational space and time requirements of this basic algorithm, all are relatively inefficient; in general, each requires exponential time in the number of non-founders in the pedigree. One technique that all these algorithms employ is to avoid representing inheritance vectors that are inconsistent with Mendelian inheritance. In addition, Merlin [<xref ref-type="bibr" rid="B20">20</xref>] uses sparse gene flow trees that avoid redundant representations for states with identical likelihoods or a probability of zero. Allegro [<xref ref-type="bibr" rid="B24">24</xref>] uses multi-terminal binary decision diagrams (MTBDDs) [<xref ref-type="bibr" rid="B28">28</xref>], which are more general than sparse gene flow trees. MTBDDs are at least as sparse as Merlin's sparse gene flow trees, and depending on how they are constructed, can be smaller. The optimized representations that Merlin and Allegro utilize are effective in reducing the number of states at a single locus. However, transition probabilities will, in general, differ for most or all possible transitions between states at adjacent loci. Because of this, the algorithms must represent most or all of the 2<sup>2<italic>n </italic></sup>states in order to perform multipoint analyses, including haplotyping.</p>
+    <p>Superlink [<xref ref-type="bibr" rid="B29">29</xref>] is another maximum likelihood haplotyping algorithm that uses Bayesian networks. While Superlink employs several optimizations to improve its efficiency, it performed slower than Merlin and Allegro in our experiments.</p>
+    <p>Hapi's optimizations reduce the state space that it must examine both at a single locus and across multiple loci, as it is able to avoid considering transitions between all possible states at adjacent loci. The optimizations we introduce in Hapi represent a leap forward in reducing the algorithm runtime and space complexity compared to existing algorithms. The following is a summary of Hapi's optimizations; further details appear in Materials and methods:</p>
+    <p>1. When a parent <italic>p </italic>is homozygous at a locus <italic>l</italic>, Hapi only builds states for <italic>l </italic>in which the homolog that parent <italic>p </italic>transmitted does not exhibit recombination relative to the previous locus. In connection with this, Hapi does not build states at loci where both parents are homozygous since recombination cannot be observed at these loci. This optimization is natural for minimum-recombinant haplotyping, but it requires special consideration in the context of maximum likelihood haplotypes.</p>
+    <p>2. At loci where Mendelian inheritance cannot unambiguously infer for a set of children which parent transmitted each allele, Hapi uses a novel, concise representation of the ambiguities instead of forming an exponential number of states for all possible transmissions to the children. Hapi also avoids building any states that represent recombinations on both homologs for the ambiguous children and later evaluates whether that decision is consistent with nearby loci.</p>
+    <p>3. To transition between states at adjacent loci, Hapi considers a state at the previous locus as possibly transitioning to either two or four states at the next locus, depending on the genotypes and possible phase assignments of the parents at that locus. This optimization is actually a by-product of the first two optimizations mentioned above, but deserves separate consideration. Normally if two adjacent loci each have <italic>s </italic>states, there are <italic>s</italic><sup>2 </sup>possible state transitions (note that <italic>s </italic>may be an exponential number). Kruglyak and Lander [<xref ref-type="bibr" rid="B30">30</xref>] introduced a fast Fourier transform optimization that reduced the computational burden for transiton calculations to <italic>O</italic>(<italic>s</italic>·log <italic>s</italic>), but Hapi's transition runtime is only <italic>O</italic>(<italic>s</italic>), that is, linear in the number of states at a locus.</p>
+    <p>4. Some states encode the same transmissions of homologs from the parents to the children and differ only in the parents' phase. These states are equivalent downstream of the current locus and Hapi only retains the state with minimum recombinations or maximum likelihood. Kruglyak <italic>et al</italic>. [<xref ref-type="bibr" rid="B22">22</xref>] first discovered a more general form of this optimization that applies to all founders in a pedigree. Hapi applies this optimization to parents in a nuclear family.</p>
+    <p>5. The previous optimization is most effective when none of the children are missing genotype data. We devised a mechanism for comparing nearly equivalent states in the presence of children with missing data that often enables the detection and elimination of suboptimal states.</p>
+    <p>6. At each locus, Hapi only considers states that are consistent with Mendel's laws for the genotypes of the individuals and spends no time processing any inconsistent states. Other algorithms also employ similar optimizations that help reduce the number of states they examine [<xref ref-type="bibr" rid="B20">20</xref>,<xref ref-type="bibr" rid="B21">21</xref>,<xref ref-type="bibr" rid="B24">24</xref>].</p>
+    <p>To demonstrate the efficacy of Hapi's optimizations in the context of real genotype data, we ran Merlin, Allegro, Superlink, PedPhase 2.0 [<xref ref-type="bibr" rid="B26">26</xref>] and Hapi on a dataset containing 103 nuclear families. In these experiments, Hapi ran 3.8 and 320 times faster than Merlin, and provided even greater runtime improvements over Allegro, Superlink, and PedPhase (see Results).</p>
+    <p>Existing algorithms have limits on the size and number of families they can haplotype. Hapi makes possible the efficient haplotyping of very large numbers of families as well as families with large numbers of individuals. Because of the relative ease of gathering genotypes for nuclear families, we expect that the number of nuclear families within datasets will continue to grow and that Hapi will provide the opportunity to haplotype this large quantity of data. The techniques Hapi implements to efficiently haplotype nuclear families also apply to general pedigrees, and thus promise to extend the size of pedigree datasets beyond the limitations of roughly 20 non-founders inherent in existing algorithms (see Conclusions). Hapi is freely available for non-profit use [<xref ref-type="bibr" rid="B31">31</xref>].</p>
+    <p>The remainder of this paper describes our experimental results (Results and discussion), gives a summary of our contributions (Conclusions), and describes our algorithm in detail (Materials and methods).</p>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <p>We have evaluated Hapi's runtime performance compared to three state-of-the-art algorithms: Merlin [<xref ref-type="bibr" rid="B20">20</xref>], Allegro [<xref ref-type="bibr" rid="B24">24</xref>], and Superlink [<xref ref-type="bibr" rid="B29">29</xref>], programs in current use for family-based haplotype assignment. Like most algorithms for computing maximum likelihood haplotypes, these programs have exponential complexity in general. However, each contains several optimizations, and these are the most suitable programs for comparison to Hapi. We omitted GENEHUNTER from our comparison because Merlin outperforms it [<xref ref-type="bibr" rid="B20">20</xref>]. We ran each program on a dataset of nuclear families derived from a pedigree from the Huntington's Disease Venezuela Collaborative Study [<xref ref-type="bibr" rid="B32">32</xref>]. This Venezuelan pedigree has 757 individuals and 458 families. None of Merlin, Allegro, or Superlink can successfully haplotype such a large pedigree. Hapi can currently only analyze nuclear families where both parents have genotype data, so the pedigree was broken up into such families. The choice to break up such a large pedigree into smaller sets of related individuals is necessary regardless of which haplotyping tool is used since runtime and memory requirements impose hard limits on the scalability of existing algorithms.</p>
+    <p>The derived nuclear family dataset contains 103 nuclear families where both parents have data. These families have a total of 438 individuals. Note that because we analyzed the families separately, we double counted individuals that appear in more than one family (for example, as a parent in one and a child in another, or as a parent in more than one family).</p>
+    <p>These families range in size from one to eleven children, with an average of 2.23 children per family. There are 86 families with three or fewer children (308 total individuals), with an average of 1.56 children for that subset of families. Using the Illumina linkage IV_v3 SNP panel, genotypes at 5,456 SNPs covering the whole genome were obtained for each individual in the dataset [<xref ref-type="bibr" rid="B32">32</xref>]. The numbers of SNPs per chromosome are roughly proportional to the chromosome's size and range from 102 on chromosome 21 to 468 on chromosome 2. Prior to analysis, the PEDSTATS [<xref ref-type="bibr" rid="B33">33</xref>] and PedCheck [<xref ref-type="bibr" rid="B34">34</xref>] programs were used to remove genotypes exhibiting non-Mendelian errors. When processing a family, Hapi omits loci that are missing data for either parent, but the missing data status of one family does not affect any other family in the dataset.</p>
+    <p>Table <xref ref-type="table" rid="T1">1</xref> shows timing results from our experiments of performing maximum likelihood haplotyping using Hapi, Merlin, Allegro v2, and Superlink on a 2.30 GHz AMD Opteron machine with 32 GB of RAM. Although this is a multi-core processor, none of the algorithms are parallelized, so their runtimes are directly comparable. We used Hapi to infer maximum likelihood rather than minimum-recombinant haplotypes in this set of experiments because the other programs address that problem, and because that form of haplotyping is slower in Hapi. All programs except for Superlink (see below) used less than 8 GB of memory.</p>
+    <table-wrap id="T1" position="float">
+      <label>Table 1</label>
+      <caption>
+        <p>Runtime results comparing Hapi to other family-based haplotyping algorithms</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th/>
+            <th/>
+            <th align="center" colspan="2">All families</th>
+            <th align="center" colspan="2">≤3 Children</th>
+          </tr>
+          <tr>
+            <th/>
+            <th/>
+            <th colspan="2">
+              <hr/>
+            </th>
+            <th colspan="2">
+              <hr/>
+            </th>
+          </tr>
+          <tr>
+            <th align="center">Machine</th>
+            <th align="center">Program</th>
+            <th align="center">Runtime</th>
+            <th align="center">Speedup</th>
+            <th align="center">Runtime</th>
+            <th align="center">Speedup</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td/>
+            <td align="center">Hapi</td>
+            <td align="center">3.112 s</td>
+            <td align="center">-</td>
+            <td align="center">2.225 s</td>
+            <td align="center">-</td>
+          </tr>
+          <tr>
+            <td align="center">2.30 GHz</td>
+            <td align="center">Merlin</td>
+            <td align="center">1005 s</td>
+            <td align="center">323×</td>
+            <td align="center">8.662 s</td>
+            <td align="center">3.84×</td>
+          </tr>
+          <tr>
+            <td align="center">AMD Opteron</td>
+            <td align="center">Allegro v2</td>
+            <td align="center">7661 s</td>
+            <td align="center">2,462×</td>
+            <td align="center">14.50 s</td>
+            <td align="center">6.43×</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="center">Superlink</td>
+            <td align="center">1393 s*</td>
+            <td align="center">448×</td>
+            <td align="center">38.75 s</td>
+            <td align="center">17.2×</td>
+          </tr>
+          <tr>
+            <td colspan="6">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="center">1.40 GHz</td>
+            <td align="center">Hapi</td>
+            <td align="center">4.732 s</td>
+            <td align="center">-</td>
+            <td align="center">3.451 s</td>
+            <td align="center">-</td>
+          </tr>
+          <tr>
+            <td align="center">Pentium M</td>
+            <td align="center">PedPhase 2.0</td>
+            <td align="center">&gt;21,600 s (6 h)<sup>†</sup></td>
+            <td align="center">&gt;4,500×</td>
+            <td align="center">&gt;21,600 s (6 h)<sup>†</sup></td>
+            <td align="center">&gt;6,000×</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>Runtimes for maximum likelihood haplotyping using Hapi, Merlin Allegro and Superlink of nuclear families from the Huntington's Disease Venezuela Collaborative Study [<xref ref-type="bibr" rid="B32">32</xref>]. We list times for haplotyping all nuclear families and for haplotyping those with three or fewer children. *Superlink failed to haplotype the family with 11 children; we therefore used only 8 of the children from the 11 child family to time it. Times are averages from running Hapi eight times and Merlin, Allegro, and Superlink three times each. Runtimes also on a different machine for minimum-recombinant haplotyping using Hapi (averaged from eight runs) and PedPhase <sup>†</sup>for chromosome 1 only.</p>
+      </table-wrap-foot>
+    </table-wrap>
+    <p>Superlink ran for over six hours without finishing when we used it haplotype chromosome 1 for all families in the dataset. At that time, the program reported that 0% of the haplotyping was complete. We found that Superlink uses an excessive amount of memory (&gt;24 GB) to haplotype a family with nine or ten children. The times for Superlink therefore reflect its haplotyping a modified set of families, with three of the children removed from the original eleven child family. Superlink used less than 8 GB of memory when analyzing this modified dataset.</p>
+    <p>We include times for haplotyping all families in the dataset (modified for Superlink), as well as the subset of families with three or fewer children in Table <xref ref-type="table" rid="T1">1</xref>. Because of the fixed and disproportionate overhead involved in printing the haplotypes in Hapi and Merlin (approximately .5 seconds in Hapi or about 16% of runtime and approximately 29 seconds in Merlin or &lt;3% of runtime), we report the times only for reading in the dataset and performing the haplotyping in these programs, but not printing the results. Source code is not publicly available for Superlink, so we could not modify it to avoid printing haplotypes, but such a change is unlikely to dramatically affect its runtime. We also did not modify Allegro to prevent it from printing haplotypes, but its runtime is also unlikely to change significantly compared to the current results. As Table <xref ref-type="table" rid="T1">1</xref> shows, Hapi is substantially faster than Merlin, running 323 times faster for the entire dataset and 3.84 times faster for the subset of families with three or fewer children. Hapi compares even more favorably against Allegro and Superlink, even though Superlink is only able to haplotype a reduced-sized dataset. When haplotyping the entire dataset, Hapi runs 2,462 times faster than Allegro and 448 times faster than Superlink's analysis of the smaller dataset. For haplotyping the subset of families with three or fewer children, Hapi runs 6.43 times faster than Allegro and 17.2 times faster than Superlink. Hapi's speedup for the entire dataset demonstrates experimentally the vast difference between the theoretical complexity of these algorithms. Whereas Merlin, Allegro, and Superlink have exponential runtime complexity, Hapi runs in polynomial time in practice (see Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> for complexity analysis). At the same time, the more modest gains for the families with three or fewer children is unsurprising. The other algorithms scale exponentially in the number of non-founders or, in the case of nuclear families, in the number of children in the family being analyzed. When that number is very small, an exponential algorithm will not differ as significantly from one that has polynomial runtime in practice. Our algorithm is still significantly faster than these programs even in this case that is less taxing to an exponential algorithm.</p>
+    <p>Besides these maximum likelihood systems, we compared Hapi's minimum-recombinant haplotyping to PedPhase 2.0, which uses an Integer Linear Programming algorithm to calculate minimum-recombinant haplotypes for pedigrees [<xref ref-type="bibr" rid="B26">26</xref>]. PedPhase 2.0 runs only in Windows, and we used a 1.40 GHz Pentium M laptop with 1.24 GB of RAM to compare runtimes of these two systems. Table <xref ref-type="table" rid="T1">1</xref> gives timing results on this machine for Hapi and PedPhase. We ran PedPhase on the entire dataset and on the families with three or fewer children. In both cases, PedPhase did not exceed available memory, and ran for over 6 hours without haplotyping even chromosome 1. Because 464 of the 5,456 total SNPs reside on chromosome 1, we estimate that the total runtime for PedPhase on this dataset would be at least 70 hours. In contrast, Hapi completes haplotyping the entire dataset in 4.732 seconds (in Linux) on this machine.</p>
+    <p>As we discuss in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> the number of states in Hapi is affected by the number and pattern of markers that are missing data. Our nuclear family dataset contains only 1.17% missing data. To explore the runtime performance of Hapi in the presence of moderate to significant proportions of missing data, we modified it to randomly drop various proportions of data. Table <xref ref-type="table" rid="T2">2</xref> gives the results of our simulations. In the most extreme case of 50% missing data, Hapi's average runtime was 36.38 s, which is still 27.6 times faster than Merlin. Real datasets will generally contain 5% or less missing data, and we probabilistically dropped 3.83% markers from the original data to obtain approximately 5% missing data. In this scenario, Hapi performed only 5.21% slower compared to haplotyping the dataset without the added missing data (306 times faster than Merlin). These results demonstrate that Hapi is robust to haplotyping data with significant proportions of missing data and performs very well for the more modest missing data proportions for which it is likely to be used.</p>
+    <table-wrap id="T2" position="float">
+      <label>Table 2</label>
+      <caption>
+        <p>Timing results from simulations of extreme amounts of missing data</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="center">Total % missing</th>
+            <th align="center">Simulation probability</th>
+            <th align="center">Runtime</th>
+            <th align="center">Slowdown</th>
+            <th align="center">Speedup vs. Merlin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">5%</td>
+            <td align="center">3.83%</td>
+            <td align="center">3.274 s</td>
+            <td align="center">5.21%</td>
+            <td align="center">306×</td>
+          </tr>
+          <tr>
+            <td align="center">10%</td>
+            <td align="center">8.83%</td>
+            <td align="center">3.564 s</td>
+            <td align="center">14.5%</td>
+            <td align="center">281×</td>
+          </tr>
+          <tr>
+            <td align="center">20%</td>
+            <td align="center">18.8%</td>
+            <td align="center">4.567 s</td>
+            <td align="center">46.8%</td>
+            <td align="center">220×</td>
+          </tr>
+          <tr>
+            <td align="center">30%</td>
+            <td align="center">28.8%</td>
+            <td align="center">6.897 s</td>
+            <td align="center">122%</td>
+            <td align="center">145×</td>
+          </tr>
+          <tr>
+            <td align="center">40%</td>
+            <td align="center">38.8%</td>
+            <td align="center">11.36 s</td>
+            <td align="center">265%</td>
+            <td align="center">88.5×</td>
+          </tr>
+          <tr>
+            <td align="center">50%</td>
+            <td align="center">48.8%</td>
+            <td align="center">36.38 s</td>
+            <td align="center">1070%</td>
+            <td align="center">27.6×</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>Hapi's runtime performance for haplotyping the dataset discussed in Results in the presence of various total proportions of missing data. Because this dataset contains 1.17% missing data already, we dropped genotypes according to the indicated probabilities in order to obtain the total overall proportions of missing data. The table lists the runtime, percentage slowdown compared to running Hapi on the unmodified dataset, and the speedup compared to running Merlin on the unmodified dataset.</p>
+      </table-wrap-foot>
+    </table-wrap>
+    <p>Hapi produces output in text or CSV format, suitable for import into a spreadsheet. It can output either the actual haplotypes with allele values or the children's inheritance vector values. The latter is useful for inspecting the results of meioses, including recombination patterns. Figure <xref ref-type="fig" rid="F1">1</xref> shows the inheritance vector output from Hapi for a family with 11 children, imported into a spreadsheet. This output uses letter symbols rather than bit values, with lower case letters indicating that the corresponding meiosis is uninformative. To help identify recombinations sites, we use the spreadsheet program's conditional formatting feature to color the cells based on which homolog the child received. The output from Merlin, Allegro, and Superlink provide the same information as Hapi, but each of these programs uses its own text-based format. We expect that geneticists will find the ability to import Hapi's output into a spreadsheet to be more intuitive and more convenient than the output from other programs.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Sample inheritance vector output from Hapi imported into a spreadsheet</bold>. Output from Hapi showing the inherited homologs on chromosome 1 for a family with 11 children from the Huntington's Disease Venezuela Collaborative Study [<xref ref-type="bibr" rid="B32">32</xref>]. Hapi produces CSV format output, which we imported into a spreadsheet. To color the cells, we used conditional formatting based on the homolog value transmitted. The output of inheritance vector values uses letters A and B. Lower-case letters indicate the transmitting parent is homozygous and the presence of recombination unknown. Each column is labeled with the child's numerical id with either a 'P' or an 'M' preceding it to indicate either paternal or maternal-derived homologs. The left most column gives the SNP rs numbers, and the right most column lists the number of recombinations across all children at the given locus.</p>
+      </caption>
+      <graphic xlink:href="gb-2010-11-10-r108-1"/>
+    </fig>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>Assignment of haplotypes is an important element in a number of significant areas of genetic analysis, including locating genes involved in human disease, analyzing the products of meiosis to locate recombination hotspots and gene conversions, and studying population dynamics and history for humans and other species. Because of their importance, researchers have developed computational algorithms for inferring haplotypes from genotypes. The most effective approach to this problem is to use data for individuals whose family relationships are known.</p>
+    <p>Inferring minimum-recombinant haplotypes for the individuals in a pedigree is known to be NP-hard in general [<xref ref-type="bibr" rid="B25">25</xref>,<xref ref-type="bibr" rid="B35">35</xref>]. Problems classified as NP-hard are not known to have a polynomial time (that is, efficient) solution, and are therefore thought to be computationally intractable. Existing algorithms computing either maximum likelihood (based on recombination rates) or minimum-recombinant solutions for pedigrees consequently have exponential complexity.</p>
+    <p>Hapi is an efficient algorithm for inferring both minimum-recombinant and maximum likelihood haplotypes for nuclear families. Hapi runs in polynomial time in practice (see Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> for algorithm complexity details), and our experimental data demonstrate the effectiveness of our approach. When haplotyping a large dataset of nuclear families, Hapi outperforms the state-of-the-art system Merlin with a speedup of between 3.8 and 320 times. Hapi also runs between 6.4 and 2,460 times faster than Allegro and between 17 and 448 times faster than Superlink.</p>
+    <p>The optimizations Hapi uses to efficiently haplotype nuclear families can also be extended to pedigrees. A detailed discussion of this problem is available elsewhere [<xref ref-type="bibr" rid="B36">36</xref>], but we give a brief description here. Two of Hapi's optimizations - eliminating equivalent states for all pedigree founders, and avoiding inheritance vectors that are inconsistent with Mendelian Inheritance - are already included in known algorithms. The other optimizations can apply individually to each of the nuclear families that make up the pedigree. Whenever one or both parents in one of the pedigree families is homozygous, it suffices to propagate the inheritance vector values corresponding to the parent(s) transmitted homologs from the states at the previous locus. (The system cannot skip uninformative loci for a particular family since other families in the pedigree will usually be informative.) Additionally, the ambiguous inheritance vectors optimization applies to all offspring in the pedigree except shared individuals that are a child in one family and a parent in another. In utilizing these optimizations, the system need only consider a linear number of transitions for the inheritance vectors corresponding to each nuclear family. Note that the algorithm must build states corresponding to all combinations of inheritance vector values across all the nuclear families. The bound on the number of states at each locus using our approach is therefore <italic>O</italic>((2<sup><italic>i</italic>* </sup><italic>s</italic>)<italic><sup>r</sup></italic>), where <italic>s </italic>is the maximum states the algorithm would produce to evaluate any of the nuclear families individually, <italic>r </italic>is the number of nuclear families in the pedigree, and <italic>i</italic>* is the maximum number of shared individuals in any nuclear family. This bound, while exponential, compares favorably against the bound of <italic>O</italic>(2<sup>2<italic>n</italic>-<italic>f</italic></sup>) states per locus of existing techniques since <italic>r</italic>·<italic>i</italic>* &lt;<italic>n </italic>(note: there must be at least one offspring that is not a shared individual). With this reduction in the bound on the number of states, the optimizations Hapi employs make possible the haplotyping of larger pedigrees than can be handled by existing techniques.</p>
+    <p>As time passes and technology improves, genotype datasets will continue to grow in size, both numbers of individuals and numbers of loci assayed. As such, faster tools for haplotype analysis will be essential. Existing algorithms for haplotyping related individuals have hard limits on the size of families they can analyze because of their exponential complexity. These algorithms are consequently ineffective for datasets with thousands of families or for families with large numbers of children. Hapi provides a solution that is able to meet many of these future challenges.</p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <p>Hapi performs both minimum-recombinant and maximum likelihood haplotyping for nuclear families. These two haplotyping approaches are similar, and we first present the minimum-recombinant algorithm. Later we will describe how to extend this approach to calculate maximum likelihood haplotypes. This paper describes an algorithm for haplotyping nuclear families that have genotype data for both parents and some number of children. We elsewhere describe how to generalize the algorithm to infer haplotypes for nuclear families with data for only one parent or to sets of siblings only (that is, without data for either parent) [<xref ref-type="bibr" rid="B36">36</xref>].</p>
+    <p>Hapi seeks to find a minimum-recombinant haplotype solution that is <italic>globally </italic>minimal across the chromosome length rather than <italic>locally </italic>minimal between successive pairs of loci. Thus, a solution may contain a locus that has an alternate assignment of individuals' alleles to homologous chromosomes that yields fewer recombinations from the previous locus (that is, locally), but not over the entire chromosome length (that is, globally). An example of such a locus from real data for a family of human subjects is described in the Example subsection.</p>
+    <p>Hapi uses inheritance vectors, represented using bit strings, to encode which chromosome homolog each parent transmitted to each child at a locus. These bit strings are composed of 2<italic>c </italic>bits, where <italic>c </italic>is the number of children in the nuclear family.</p>
+    <p>A dynamic programming equation for calculating minimum-recombinant haplotypes is given below. The function <inline-formula><mml:math id="M1" name="gb-2010-11-10-r108-i1" overflow="scroll"><mml:mrow><mml:mi>R</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mi>l</mml:mi><mml:mo>,</mml:mo><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:mrow><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula> calculates the minimal number of recombinations necessary to reach inheritance vector <inline-formula><mml:math id="M2" name="gb-2010-11-10-r108-i2" overflow="scroll"><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula> at locus <italic>l</italic>:</p>
+    <p>
+      <disp-formula id="bmcM1">
+        <label>(1)</label>
+        <mml:math id="M3" name="gb-2010-11-10-r108-i3" overflow="scroll">
+          <mml:mrow>
+            <mml:mi>R</mml:mi>
+            <mml:mrow>
+              <mml:mo>(</mml:mo>
+              <mml:mrow>
+                <mml:mi>l</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mover accent="true">
+                  <mml:mi>v</mml:mi>
+                  <mml:mo>→</mml:mo>
+                </mml:mover>
+              </mml:mrow>
+              <mml:mo>)</mml:mo>
+            </mml:mrow>
+            <mml:mo>=</mml:mo>
+            <mml:munder>
+              <mml:mrow>
+                <mml:mi>min</mml:mi>
+              </mml:mrow>
+              <mml:mover accent="true">
+                <mml:mi>w</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+            </mml:munder>
+            <mml:mrow>
+              <mml:mo>{</mml:mo>
+              <mml:mrow>
+                <mml:mi>R</mml:mi>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>l</mml:mi>
+                    <mml:mo>−</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo>,</mml:mo>
+                    <mml:mover accent="true">
+                      <mml:mi>w</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:mrow>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+                <mml:mo>+</mml:mo>
+                <mml:mi>H</mml:mi>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mrow>
+                    <mml:mover accent="true">
+                      <mml:mi>w</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                    <mml:mo>,</mml:mo>
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:mrow>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mo>}</mml:mo>
+            </mml:mrow>
+            <mml:mo>.</mml:mo>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+    </p>
+    <p>Here, <inline-formula><mml:math id="M4" name="gb-2010-11-10-r108-i4" overflow="scroll"><mml:mrow><mml:mi>R</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mi>l</mml:mi><mml:mo>−</mml:mo><mml:mn>1</mml:mn><mml:mo>,</mml:mo><mml:mover accent="true"><mml:mi>w</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:mrow><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula> is the minimum number of recombinations necessary to reach an inheritance vector <inline-formula><mml:math id="M5" name="gb-2010-11-10-r108-i5" overflow="scroll"><mml:mover accent="true"><mml:mi>w</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula> at the previous locus <italic>l</italic>-1. <inline-formula><mml:math id="M6" name="gb-2010-11-10-r108-i6" overflow="scroll"><mml:mrow><mml:mi>H</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mover accent="true"><mml:mi>w</mml:mi><mml:mo>→</mml:mo></mml:mover><mml:mo>,</mml:mo><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:mrow><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula> is the number of recombinations between vectors <inline-formula><mml:math id="M7" name="gb-2010-11-10-r108-i7" overflow="scroll"><mml:mover accent="true"><mml:mi>w</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula> and <inline-formula><mml:math id="M8" name="gb-2010-11-10-r108-i8" overflow="scroll"><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula>, which is equal to the number of bits that differ between them, that is, the hamming distance. The initial number of recombinations at locus <italic>l </italic>= 0 is defined naturally as <inline-formula><mml:math id="M9" name="gb-2010-11-10-r108-i9" overflow="scroll"><mml:mrow><mml:mi>R</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mi>l</mml:mi><mml:mo>=</mml:mo><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:mrow><mml:mo>)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:mn>0</mml:mn></mml:mrow></mml:math></inline-formula>.</p>
+    <p>A naive implementation of the above dynamic programming recurrence would initialize all 2<sup>2<italic>c </italic></sup>possible inheritance vectors at locus <italic>l </italic>= 0 and would model most or all of these vectors at successive loci. Hapi functions differently: the initial locus has only one inheritance vector, and successive loci model a very small number of inheritance vectors.</p>
+    <p>Hapi uses a locus <italic>state </italic>to store the information computed in the above dynamic programming equation. A locus state stores: (1) an inheritance vector; (2) the assignment of the heterozygous parent's or parents' genotype alleles to homologs that is consistent with this inheritance vector; (3) the minimal number of recombinations necessary to reach this state/inheritance vector value; (4) a pointer to the state or states at the previous locus that yields this minimal number of recombinations; and (5) a bit string encoding which children have ambiguous inheritance values (necessary for some kinds of loci as we describe later). Because the parents' allele to homolog assignments imply part or all of the inheritance vector values, there is only one consistent parent assignment for each inheritance vector.</p>
+    <p>After evaluating equation (1) by building the necessary states for all loci, it is straight forward to deduce haplotypes. Hapi does this by performing the assignments of alleles to homologs as dictated by the minimum-recombinant state at the final locus and then back tracing to states at previous loci. Rather than waiting until the final locus to make these assignments and perform back tracing, Hapi does this work whenever a locus yields only one state (which happens frequently). The one state at that locus and those leading to it at previous loci are guaranteed to have minimum recombinations. Performing this process before the final locus allows the system to reclaim the memory used to store states.</p>
+    <p>We give an illustrative example of what a graph of states generated by our algorithm might look like in Figure <xref ref-type="fig" rid="F2">2</xref>. In this graph, boxes represent states, and each row of boxes corresponds to the states for a single locus. The number in each box represents the minimal number of recombinations necessary to reach that state. The first locus (top-most box) has only one box/state with an initial value of zero recombinations. At the second locus, there are four states that have between one and five recombinations. Note that at the third locus, the second state has pointers to two different states at the previous locus. The final locus has only one state. Once the system determines this final state, it performs back tracing along pointers to previous states, and uses the haplotype values stored in the encountered states to make the allele assignments.</p>
+    <fig id="F2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Example graph of states across several loci</bold>. A pictorial representation showing the relationship between states at different loci. Each row of boxes correspond to a locus; boxes represent a state and indicate the numbers of recombinations the state incurs; arrows point to previous state(s). Once the system deduces a single state at some locus - shown here as the bottom box - it back traces by traversing the pointers and assigns the haplotype values from the states it encounters. The numbers are not from real data.</p>
+      </caption>
+      <graphic xlink:href="gb-2010-11-10-r108-2"/>
+    </fig>
+    <p>Hapi implements six optimizations that allow it to very efficiently infer minimum-recombinant haplotypes, and it uses these same optimizations to calculate maximum likelihood haplotypes, as we describe later. The goal of each optimization is to reduce the number of states and state transitions that Hapi must consider and store. Below, we give details about five of the optimizations Hapi implements. The last optimization applies at loci where one or more children are missing data, a scenario we discuss later. Note that Hapi builds states for a locus based on the states at the previous locus and the genotypes of the individuals at the locus being considered. Considering states at the previous locus is necessary for two of Hapi's optimizations. The initial state for a chromosome cannot depend on previous locus states and is therefore built differently as we discuss later.</p>
+    <sec>
+      <title>Non-recombinant states for homozygous parents</title>
+      <p>When one or both of the parents at a locus are homozygous, which homolog the homozygous parent(s) transmitted is ambiguous. A naive implementation of the Lander-Green algorithm builds states corresponding to all possible homolog transmissions for the homozygous parent, yielding 2<italic><sup>c </sup></italic>inheritance vector values for each homozygous parent. Instead of building and processing this exponential number of states, Hapi copies the inheritance vector values corresponding to the homozygous parent from the states at the previous locus. Typically the number of unique inheritance vector values for the homozygous parent at the previous locus is small, though it is possible for this number to be large. In general, other optimizations aid in keeping the number of states small, and our experimental results demonstrate that the number of states is small in practice.</p>
+      <p>This approach of copying inheritance vector values for the homozygous parent assumes a lack of recombination for this uninformative case, and this will always yield minimal recombinations. The next locus that is heterozygous for the parent in question will indicate if a recombination has occurred within any region of homozygosity for that parent.</p>
+      <p>For loci where both parents are homozygous, all 2<sup>2<italic>c </italic></sup>possible inheritance vectors are consistent with the genotypes. Rather than building all states or copying every state from the previous locus, Hapi simply skips these loci. Subsequent loci utilize the states located at the most recent locus for which states exist. Table <xref ref-type="table" rid="T3">3</xref> gives an example from real data of a locus in which one parent is homozygous and the other parent is heterozygous. The inheritance vector values corresponding to the homozygous parent <italic>p</italic><sub>1 </sub>are shown as the second element in each of the ordered pairs in the rows labeled <inline-formula><mml:math id="M10" name="gb-2010-11-10-r108-i10" overflow="scroll"><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula>. The inheritance vector values for the homozygous parent in the two states <italic>a </italic>and <italic>b </italic>are the same as those in the previous state since Hapi copies these values. Without this copying optimization, the locus would have 2·2<italic><sup>c </sup></italic>states rather than two. Merlin [<xref ref-type="bibr" rid="B20">20</xref>] and Allegro [<xref ref-type="bibr" rid="B24">24</xref>] also include techniques that reduce the number of states they represent in the presence of uninformative meioses. These techniques represent redundancies in states' probabilities and are effective at a single locus, but transitions between states at adjacent loci inhibit their utility since differing transition probabilities typically reduce the amount of redundancy in the data.</p>
+      <table-wrap id="T3" position="float">
+        <label>Table 3</label>
+        <caption>
+          <p>Two states at a fully informative for one parent locus built from the previous state</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th/>
+              <th align="center" colspan="2">Parents</th>
+              <th align="center" colspan="5">Children</th>
+              <th align="center"># Rec</th>
+            </tr>
+            <tr>
+              <th/>
+              <th/>
+              <th colspan="2">
+                <hr/>
+              </th>
+              <th colspan="5">
+                <hr/>
+              </th>
+              <th/>
+            </tr>
+            <tr>
+              <th/>
+              <th/>
+              <th align="center">
+                <bold>
+                  <italic>p</italic>
+                </bold>
+                <sub>
+                  <bold>0</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>p</italic>
+                </bold>
+                <sub>
+                  <bold>1</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>0</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>1</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>2</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>3</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>4</bold>
+                </sub>
+              </th>
+              <th/>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">Prev</td>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M11" name="gb-2010-11-10-r108-i11" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈0, 1〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈0, 0〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">0</td>
+            </tr>
+            <tr>
+              <td align="center">State</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈g, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>a</italic>
+              </td>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M12" name="gb-2010-11-10-r108-i12" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈<bold>1</bold>, 1〉</td>
+              <td align="center">〈<bold>0</bold>, 1〉</td>
+              <td align="center">〈<bold>0</bold>, 1〉 〈</td>
+              <td align="center">0, 0〉</td>
+              <td align="center">〈<bold>0</bold>, 1〉</td>
+              <td align="center">4</td>
+            </tr>
+            <tr>
+              <td align="center">State</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈g, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈g, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, a〉 〈</td>
+              <td align="center">a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>b</italic>
+              </td>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M13" name="gb-2010-11-10-r108-i13" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈0, 1〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈1, 1〉 〈</td>
+              <td align="center"><bold>1</bold>, 0〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">1</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>An example locus with one heterozygous and one homozygous parent that shows one state at the previous locus and the two states Hapi builds based on this previous state. This example is from the real dataset discussed in Results. The rows labeled <inline-formula><mml:math id="M14" name="gb-2010-11-10-r108-i14" overflow="scroll"><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula> show the states' inheritance vectors and the rows labeled <italic>hap </italic>give haplotype assignments of the alleles. Hapi copies the inheritance vector values corresponding to the homozygous parent from the previous state to states <italic>a </italic>and <italic>b</italic>. Recombinations result from differing inheritance vector values from the previous state; these differences appear in bold and the states' total number of recombinations appear in the right-most column. Note that the heterozygous parent's inheritance vector values in the two states are exactly opposite each other and are therefore equivalently labeled.</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+    <sec>
+      <title>Ambiguous inheritance vector values</title>
+      <p>At loci where both parents are heterozygous with the same genotype (which we later term 'partly informative'), a heterozygous child will have the same genotype as its parents. As a result, these heterozygous children are <italic>a priori </italic>ambiguous as to which parent transmitted each of their alleles: either parent could have transmitted either allele.</p>
+      <p>Existing algorithms build states corresponding to all possible inheritance vector values for these ambiguous children, and for a given assignment of the parents' alleles to homologs, each heterozygous child has two possible inheritance vector values. Thus, for <italic>h </italic>heterozygous children, there are 2<italic><sup>h </sup></italic>possible inheritance vectors for each of the four possible assignments of parents' alleles to homologs, or 4·2<italic><sup>h </sup></italic>total inheritance vectors/states consistent with the individuals' genotypes at these loci.</p>
+      <p>Instead of building this exponential number of states, Hapi again uses the states at the previous locus to reduce the number of states it must build. The system maps each previous state to four states corresponding to each assignment of parents' alleles to homologs. Note that multiple previous states can map to the same state, so the number of states usually does not quadruple. Also note that homozygous children have only one inheritance vector value that is consistent with a given assignment of parents' alleles, so they do not affect the number of necessary states.</p>
+      <p>Heterozygous children have two consistent inheritance vector values for a given assignment of parents' alleles to homologs, and these two values are opposite each other. If the inheritance value in the previous state is equivalent to one of these two values, Hapi uses the value equivalent to the previous state in the state being built. The other inheritance value results in two crossovers for the child, one from each parent. Such an event is extremely unlikely, yet if it were to take place, downstream loci that are fully informative would reveal its occurrence. In that rare case, Hapi will mark the partly informative locus as ambiguous during back tracing, since it is impossible to know whether these two recombinations took place at the earlier partly informative locus or at the later fully informative locus. (Maximum likelihood haplotyping determines the location of the recombinations based on recombination frequencies.)</p>
+      <p>In the case that the inheritance value in the previous state is not equal to one of the two ambiguous inheritance values, the previous inheritance value must differ from these two values in exactly one bit. For example, if the previous value is 〈0, 0〉 and is not equal to either of the values at the current locus, they must be 〈0, 1〉 and 〈1, 0〉. The differences between the two consistent values and the previous one represent a recombination in one or the other parent. Which parent recombined is ambiguous at this locus and can only be determined at later loci.</p>
+      <p>Rather than creating separate states for these two inheritance values - which would yield an exponential number of states across multiple children - Hapi instead marks the child as having ambiguous inheritance. A child's inheritance being marked as ambiguous means that its inheritance vector value can be inverted without inducing additional recombinations - both possibilities result in the exactly one recombination.</p>
+      <p>The choice of which of the two inheritance values to store in the state is arbitrary, and Hapi indicates that a child is ambiguous using another bit vector. For our explanation, we designate ambiguous values with the? symbol. One can view an ambiguous inheritance value as a set of values, so 〈0, 0〉? = 〈1, 1〉? = {〈0, 0〉, 〈1, 1〉}. For the earlier example with a previous inheritance value of 〈0, 0〉, the resulting inheritance value would be 〈0, 1〉?. The use of these ambiguous values effectively merges the exponential number of states that would otherwise result. Merging the states in this way suffices because (1) Hapi can later resolve which of the unambiguous inheritance vectors is optimal, and (2) the number of recombinations remains the same regardless of which unambiguous inheritance vector ultimately results. If the previous inheritance value is itself ambiguous, the resulting value must also be ambiguous, and when there is a recombination, the resulting value is unequal to the previous value, such as with 〈0, 0〉? and 〈0, 1〉?.</p>
+      <p>Hapi resolves ambiguous inheritance values for a state during the back tracing process. While back tracing, if the system encounters a state that has one or more ambiguous inheritance values, it compares these values to the corresponding values at the next (already resolved) locus. If the unambiguous form of this value (that is, that without the ? symbol) or its opposite is equal to the inheritance value at the next locus, the system assigns the equivalent value at the current locus. If neither is equal, recombinations occur on either side of this locus and the inheritance value is truly ambiguous. In this rare case, Hapi's output reports the child's haplotype at this locus as ambiguous.</p>
+      <p>This optimization significantly improves Hapi's efficiency. Removing this optimization would cause the number of states to grow unwieldy whenever Hapi encountered a locus that has heterozygous parents with the same genotype. Even with all the other optimizations in place, the increase in the number of states would propagate to subsequent loci that have one parent that is heterozygous and the other homozygous.</p>
+    </sec>
+    <sec>
+      <title>State transitions between loci</title>
+      <p>In general, any state at a previous locus can transition to any state at the next locus. However, because Hapi does not consider state transitions that include recombinations from a parent that is homozygous, and because it uses ambiguous inheritance values, the number of possible state transitions is limited. The state transitions optimization actually comes as a by-product of the two optimizations we have already outlined, yet the effects of these optimizations on the complexity of state transition calculations merit a separate discussion.</p>
+      <p>At each locus, Hapi considers transitions from the states at the previous locus to either two or four states. If only one parent is heterozygous at the locus, each state at the previous locus can transition to only two states at the current locus. These two states correspond to the two possible phase assignments for the heterozygous parent. A particular phase assignment for the heterozygous parent uniquely defines the inheritance vector bits that that parent transmits. The system copies the other inheritance vector bits from the previous state.</p>
+      <p>If both parents are heterozygous at a locus, then the parents have four possible phase assignments, and each state at the previous locus can transition to four states at the next locus. The ambiguous inheritance vector optimization makes this possible, since loci in which both parents have the same heterozygous genotype would otherwise produce an exponential number of states. Instead, for a given phase assignment for the parents, a state at previous locus uniquely determines the inheritance vector it transitions to. If the parents are heterozygous with differing genotypes, the children's genotypes at the locus unambiguously imply the complete inheritance vectors corresponding to each parent phase assignment. Thus, exactly four inheritance vectors are possible, and each previous state can transition to these four states.</p>
+      <p>The efficiency gains of our approach are significant. Without these optimizations, haplotyping algorithms must consider all possible state transitions between loci. If two adjacent loci each have <italic>s </italic>states, other algorithms compute transition probabilities corresponding to all <italic>s</italic><sup>2 </sup>state transitions. Use of a fast Fourier transformation reduces the computational burden of these optimizations from a quadratic <italic>O</italic>(<italic>s</italic><sup>2</sup>) to <italic>O</italic>(<italic>s</italic>·log <italic>s</italic>) [<xref ref-type="bibr" rid="B30">30</xref>]. With Hapi's optimizations there are only 2<italic>s </italic>or 4<italic>s </italic>possible transitions, so the computational burden is linear, O(<italic>s</italic>). The speed of computing state transitions - in addition to and in connection with tracking of very few states at each locus - enable Hapi to perform haplotyping calculations very efficiently.</p>
+    </sec>
+    <sec>
+      <title>Equivalent states</title>
+      <p>At many loci, it is possible to unambiguously deduce which allele each heterozygous parent transmitted to each child. In that case, the inheritance bits that correspond to transmissions from this parent can take on exactly two values depending on the parent's phase assignment. The inheritance bits in these two values are opposite each other, since the parent transmits the same allele in each case, but the alleles reside on opposite homologs for the opposite phase assignments. The locus in Table <xref ref-type="table" rid="T3">3</xref> illustrates these ideas. For this locus, it is easy to deduce which alleles the heterozygous parent transmitted to each child. As well, the two states have opposite inheritance values corresponding to this parent, consistent with their opposite phase assignments.</p>
+      <p>Two inheritance vectors with opposite bits corresponding to one parent and equivalent bits for the other parent are equivalent in terms of the number and locations of recombinations that will occur at downstream loci. Hapi uses inheritance vectors to detect recombinations. A recombination occurs when the homolog a parent transmitted to a child differs between two loci. Because the parent's inheritance values in these states are exactly opposite each other, each of these inheritance vectors encodes the same set of children as receiving a given homolog. The two states merely use opposite labels for the homologs as implied by the parent's opposite phase assignments. Choosing one of the states instead of the other results in all downstream loci having opposite phase assignments for the parent, consistent with the chosen phase assignment in the upstream locus. The number and location of downstream recombinations are the same regardless of which state the system chooses at this locus because the sets of children that share a common homolog same between states. The two states <italic>a </italic>and <italic>b </italic>in Table <xref ref-type="table" rid="T3">3</xref> are equivalent, and Hapi retains only state <italic>b </italic>and eliminates state <italic>a </italic>from further consideration.</p>
+      <p>In general, any states with opposite inheritance values for one parent and either equivalent or opposite inheritance values for the other parent are equivalent. This means that, if both parents are heterozygous with differing genotypes, there are only four possible states, and these have equivalent downstream affects. When two or more states are equivalent at a locus, Hapi only retains the state with the fewest recombinations.</p>
+      <p>Kruglyak <italic>et al</italic>. [<xref ref-type="bibr" rid="B22">22</xref>] first discovered a more general form of this optimization, finding that equivalent states exist for all founders in a pedigree. A founder is an individual with no parents in the pedigree. For each founder, the number of inheritance vectors is decreased by a factor of 2. So, whereas there are 2<sup>2<italic>n </italic></sup>possible inheritance vectors in a pedigree, where <italic>n </italic>is the number of non-founders, this optimization reduces the state space to 2<sup>2<italic>n-f </italic></sup>inheritance vectors, where <italic>f </italic>is the number of founders. For a nuclear family, <italic>f </italic>= 2, so this optimization reduces the state space by a factor of 4.</p>
+    </sec>
+    <sec>
+      <title>States consistent with Mendel's laws</title>
+      <p>Although there are 2<sup>2<italic>c </italic></sup>possible inheritance vectors for every locus, the genotypes of the individuals at a locus often make many of these inheritance vectors inconsistent with the Mendelian laws of inheritance. For example, a parent that has a genotype of <italic>a</italic>/<italic>b </italic>cannot transmit its <italic>b </italic>allele to a child with genotype <italic>a</italic>/<italic>a</italic>. Hapi builds states based explicitly on the genotypes at each locus and spends no time processing any inheritance vectors that are inconsistent with Mendelian inheritance. Merlin [<xref ref-type="bibr" rid="B20">20</xref>], GENEHUNTER [<xref ref-type="bibr" rid="B21">21</xref>], and Allegro [<xref ref-type="bibr" rid="B24">24</xref>] all contain similar optimizations to this, though each spends some small amount of time considering inconsistent inheritance vectors.</p>
+    </sec>
+    <sec>
+      <title>Locus types</title>
+      <p>Hapi's optimizations apply in different contexts, and in particular, we have identified four types of loci with different parents' genotypes for which different technical issues arise and different optimizations apply. Table <xref ref-type="table" rid="T4">4</xref> summarizes these locus types, listing the number of states that result at each type if there are s states at the previous locus. The table also includes the average number of states that occur at relevant locus types for the dataset we evaluated in Results. (See Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> for a detailed analysis of Hapi's runtime complexity in general.)</p>
+      <table-wrap id="T4" position="float">
+        <label>Table 4</label>
+        <caption>
+          <p>Four types of loci Hapi distinguishes</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th/>
+              <th/>
+              <th align="center" colspan="2">Number of states</th>
+            </tr>
+            <tr>
+              <th/>
+              <th/>
+              <th/>
+              <th colspan="2">
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th align="center">Locus type</th>
+              <th align="center">Parent <italic>p</italic></th>
+              <th align="center">Parent <italic>q</italic></th>
+              <th align="center">If <italic>s </italic>previous states</th>
+              <th align="center">Average</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">Fully informative for both parents</td>
+              <td align="center"><italic>a</italic>/<italic>b</italic></td>
+              <td align="center"><italic>a</italic>/<italic>c </italic>or <italic>c</italic>/<italic>d</italic></td>
+              <td align="center">1</td>
+              <td align="center">N/A</td>
+            </tr>
+            <tr>
+              <td align="center">Fully informative for one parent</td>
+              <td align="center"><italic>a</italic>/<italic>b</italic></td>
+              <td align="center"><italic>a</italic>/<italic>a </italic>or <italic>c</italic>/<italic>c</italic></td>
+              <td align="center">After informative for parent <italic>q</italic>: 1<break/>Previous states unambiguous: ≤<italic>s</italic><break/>Previous states ambiguous: ≤2<italic>s</italic></td>
+              <td align="center">1.87</td>
+            </tr>
+            <tr>
+              <td align="center">Partly informative</td>
+              <td align="center"><italic>a</italic>/<italic>b</italic></td>
+              <td align="center"><italic>a</italic>/<italic>b</italic></td>
+              <td align="center">≤4<italic>s</italic></td>
+              <td align="center">6.31</td>
+            </tr>
+            <tr>
+              <td align="center">Uninformative</td>
+              <td align="center"><italic>a</italic>/<italic>a</italic></td>
+              <td align="center"><italic>a</italic>/<italic>a </italic>or <italic>b</italic>/<italic>b</italic></td>
+              <td align="center">0</td>
+              <td align="center">N/A</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>The four types of loci our algorithm handles separately with the names we use to refer to them. The table lists the number of states that Hapi produces for each type if there are <italic>s </italic>states at the previous locus, and gives the average number of states produced for haplotyping the dataset we evaluate in Results. Note that either parent may have the genotypes listed for parents <italic>p </italic>and <italic>q</italic>.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Loci that we term to be fully informative for both parents are those in which both parents are heterozygous but with differing genotypes. In this case there are exactly four possible states and the equivalent states optimization enables Hapi to retain only one state. Note that although this locus type is advantageous, most SNPs are bi-allelic, and therefore this locus type will not occur in SNP genotype datasets. A fully informative for one parent locus is one that has one heterozygous parent and one homozygous parent. Two successive loci that are fully informative for each of the parents is analogous to one fully informative for both parents locus. Each such locus produces only two possible inheritance vector values corresponding to each parent and, at the second locus, the states are all equivalent.</p>
+      <p>Often the states at the locus preceding a fully informative for one parent locus do not contain ambiguous inheritance values. When that is the case, because Hapi does not introduce any states with recombinations for the homozygous parent, and the because of the equivalent states optimization, the system retains at most s states. We discuss the case in which the previous locus has states with ambiguous inheritance below. Partly informative loci are those in which both parents are heterozygous with the same genotype. The number of states at these loci may increase by a factor of four from the previous locus, but typically the number of states does not grow large. As Table <xref ref-type="table" rid="T4">4</xref> shows, the average number of states Hapi produces at partly informative loci when haplotyping a real dataset is only 6.31.</p>
+      <p>Uninformative loci are those in which both parents are homozygous, and yield no information about meiosis. Hapi does not produce any states for these loci, and only deduces the children's phase if they are heterozygous.</p>
+    </sec>
+    <sec>
+      <title>Ambiguous inheritance values and fully informative for one parent loci</title>
+      <p>Ambiguous inheritance values complicate the handling of fully informative for one parent loci. At this locus type, we apply an optimization to propagate the inheritance vector bits for the homozygous parent from the previous locus. This requires only copying in the case of unambiguous inheritance values, and results in two equivalently labeled states.</p>
+      <p>The situation is different when a previous state has children with ambiguous inheritance values. In that case, the corresponding two inheritance vectors that Hapi builds are not equivalent because, for children with ambiguous inheritance values, the homozygous parent's inheritance bits are opposite each other rather than equivalent. At the same time, the homozygous parent's inheritance bits for any unambiguous children remain identical across the two values.</p>
+      <p>Consider the example in Table <xref ref-type="table" rid="T5">5</xref> which is modified from the example in Table <xref ref-type="table" rid="T3">3</xref> to include ambiguous inheritance values. As usual, the inheritance vector values for the heterozygous parent are opposite in the two states. However, the ambiguous inheritance bits correspond to two entirely opposite values, so the two resulting states do not have identical inheritance vector values for the homozygous parent (we underline these differing values in the table). Because the two inheritance vectors are not equivalent, the algorithm cannot eliminate one of these two states. Even so, because the heterozygous parent's inheritance values are still exactly opposite, if the next locus is fully informative for the other parent, Hapi can produce one state at that locus.</p>
+      <table-wrap id="T5" position="float">
+        <label>Table 5</label>
+        <caption>
+          <p>States at a fully informative for one parent locus built from a state with ambiguous values</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th/>
+              <th align="center">
+                <bold>
+                  <italic>p</italic>
+                </bold>
+                <sub>
+                  <bold>0</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>p</italic>
+                </bold>
+                <sub>
+                  <bold>1</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>0</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>1</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>2</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>3</bold>
+                </sub>
+              </th>
+              <th align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>4</bold>
+                </sub>
+              </th>
+              <th align="center"># Rec</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">Prev</td>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M15" name="gb-2010-11-10-r108-i15" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈0, 1〉</td>
+              <td align="center">〈1, 1〉?</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈0, 0〉?</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">0</td>
+            </tr>
+            <tr>
+              <td align="center">State</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈g, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">4</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>a</italic>
+              </td>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M16" name="gb-2010-11-10-r108-i16" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈<bold>1</bold>, 1〉</td>
+              <td align="center">〈<bold>0</bold>, <underline>0</underline>〉</td>
+              <td align="center">〈<bold>0</bold>, 1〉</td>
+              <td align="center">〈0, <underline>0</underline>〉</td>
+              <td align="center">〈<bold>0</bold>, 1〉</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="center">State</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈g, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈g, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">1</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>b</italic>
+              </td>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M17" name="gb-2010-11-10-r108-i17" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈0, 1〉</td>
+              <td align="center">〈1, <underline>1</underline>〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈<bold>1</bold>, <underline>1</underline>〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td/>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>An example, modified from Table 3 and not from real data, showing a state with ambiguous inheritance values (marked by ?) at the previous locus, and the two states Hapi builds based on it. For unambiguous children's inheritance vector values, the system copies the bits corresponding to the homozygous parent from the previous state. For ambiguous children, two opposite inheritance values are valid for the previous state, and the system uses the homozygous parent bit from the inheritance value that matches the heterozygous parent's bit in the state being built. Both of the two inheritance values are necessarily represented, one in each of the resulting states. As the underlined values show, the inheritance values for the homozygous parent differ across the two outputs. As such, the states are not equivalent, and Hapi cannot eliminate either. Bold values indicate recombinations.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Ambiguous inheritance values in states at a locus preceding a fully informative for one parent locus can produce double the number of states at that locus, but does not always do so. While the two inheritance vectors produced by a particular previous state with ambiguous inheritance values are not equivalent, some other previous state may yield an inheritance value that is equivalent to one of these states, thereby enabling the elimination of some states.</p>
+    </sec>
+    <sec>
+      <title>Initial state</title>
+      <p>To build the initial state from which to haplotype a given chromosome, Hapi uses either a fully informative for both parent locus or two loci that are fully informative for opposite parents. Hapi begins at the first locus on a chromosome, scanning for these types of loci, and skips any partly informative loci. Later, after defining an initial state and haplotyping the remainder of the chromosome, Hapi resolves haplotypes at these early partly informative loci by performing reverse haplotyping from the locus that established the initial state.</p>
+      <p>A locus that is fully informative for both parents completely defines an initial state. This locus type has exactly four possible inheritance vectors, and because they are equivalent, Hapi arbitrarily chooses one of them.</p>
+      <p>A fully informative for one parent locus defines half of an inheritance vector, giving information only for the bits that correspond to the heterozygous parent. Hapi again arbitrarily chooses one of the two possible values to assign. The initial state is then partially defined with values for the heterozygous parent. Later, when the system encounters a locus that is fully informative for the undefined parent (or a locus fully informative for both parents), it fills in the inheritance vector values for the undefined parent, and haplotyping proceeds forward normally from this point. The system handles any intervening loci that are fully informative for the already-defined parent in the normal way, while still leaving the homozygous parents' inheritance vector bits undefined. Table <xref ref-type="table" rid="T6">6</xref> (described in more detail below) gives an example of aninitial state defined from two fully informative loci (numbered 8 and 12).</p>
+      <table-wrap id="T6" position="float">
+        <label>Table 6</label>
+        <caption>
+          <p>Example haplotype inference across a series of loci from real data</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <tbody>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td align="center">
+                <bold>Locus</bold>
+              </td>
+              <td/>
+              <td align="center">
+                <bold>
+                  <italic>p</italic>
+                </bold>
+                <sub>
+                  <bold>0</bold>
+                </sub>
+              </td>
+              <td align="center">
+                <bold>
+                  <italic>p</italic>
+                </bold>
+                <sub>
+                  <bold>1</bold>
+                </sub>
+              </td>
+              <td align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>0</bold>
+                </sub>
+              </td>
+              <td align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>1</bold>
+                </sub>
+              </td>
+              <td align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>2</bold>
+                </sub>
+              </td>
+              <td align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>3</bold>
+                </sub>
+              </td>
+              <td align="center">
+                <bold>
+                  <italic>c</italic>
+                </bold>
+                <sub>
+                  <bold>4</bold>
+                </sub>
+              </td>
+              <td align="center">
+                <bold># Rec</bold>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td colspan="10">
+                <hr/>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td align="center">8</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">0</td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M18" name="gb-2010-11-10-r108-i18" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈-, 0〉</td>
+              <td align="center">〈-, 1〉</td>
+              <td align="center">〈-, 1〉</td>
+              <td align="center">〈-, 1〉</td>
+              <td align="center">〈-, 0〉</td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td align="center">12</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈g, t〉</td>
+              <td align="center">〈t, t〉</td>
+              <td align="center">〈t, t〉</td>
+              <td align="center">〈t, t〉</td>
+              <td align="center">〈g, t〉</td>
+              <td align="center">〈t, t〉</td>
+              <td align="center">〈t, t〉</td>
+              <td align="center">0</td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M19" name="gb-2010-11-10-r108-i19" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈1, 0〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈0, 1〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈1, 0〉</td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td colspan="10">
+                <hr/>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td colspan="10">
+                <hr/>
+              </td>
+              <td colspan="10">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">14</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈c, a〉</td>
+              <td align="center">〈c, a〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">2</td>
+              <td align="center">14</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈c, a〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈a, c〉</td>
+              <td align="center">〈c, a〉</td>
+              <td align="center">3</td>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M20" name="gb-2010-11-10-r108-i20" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈1, 0〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈0, <bold>0</bold>〉</td>
+              <td align="center">〈1, <bold>0</bold>〉?</td>
+              <td align="center">〈1, 0〉</td>
+              <td/>
+              <td/>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M21" name="gb-2010-11-10-r108-i21" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈1, <bold>1</bold>〉?</td>
+              <td align="center">〈1, <bold>0</bold>〉</td>
+              <td align="center">〈0, 1〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈<bold>0</bold>, 0〉?</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="center">16</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈g, a〉</td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">3</td>
+              <td align="center">16</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, g〉</td>
+              <td align="center">〈a, a〉</td>
+              <td align="center">3</td>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M22" name="gb-2010-11-10-r108-i22" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈1, 0〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈0, 0〉</td>
+              <td align="center">〈1, 0〉</td>
+              <td align="center">〈1, <bold>1</bold>〉</td>
+              <td/>
+              <td/>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M23" name="gb-2010-11-10-r108-i23" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈1, 0〉</td>
+              <td align="center">〈0, 1〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈0, 0〉</td>
+              <td/>
+            </tr>
+            <tr>
+              <td align="center">17</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈t, c〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈t, c〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈t, c〉</td>
+              <td align="center">4</td>
+              <td align="center">17</td>
+              <td align="center">
+                <italic>hap</italic>
+              </td>
+              <td align="center">〈t, c〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈t, c〉</td>
+              <td align="center">〈c, c〉</td>
+              <td align="center">〈t, c〉</td>
+              <td align="center">3</td>
+            </tr>
+            <tr>
+              <td/>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M24" name="gb-2010-11-10-r108-i24" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈1, 0〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈0, 0〉</td>
+              <td align="center">〈1, 0〉</td>
+              <td align="center">〈<bold>0</bold>, 1〉</td>
+              <td/>
+              <td/>
+              <td align="center">
+                <inline-formula>
+                  <mml:math id="M25" name="gb-2010-11-10-r108-i25" overflow="scroll">
+                    <mml:mover accent="true">
+                      <mml:mi>v</mml:mi>
+                      <mml:mo>→</mml:mo>
+                    </mml:mover>
+                  </mml:math>
+                </inline-formula>
+              </td>
+              <td/>
+              <td/>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈1, 0〉</td>
+              <td align="center">〈0, 1〉</td>
+              <td align="center">〈1, 1〉</td>
+              <td align="center">〈0, 0〉</td>
+              <td/>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>An example from the real dataset described in Results. The loci are from chromosome 3 and we number them sequentially in the order they occur physically. For simplicity and conciseness, we omit uninformative loci and one non-recombinant fully informative locus between locus 8 and 12. Bold inheritance vector values indicate recombinations. Each state lists its total number of recombinations. Note that the state at locus 14 with minimum recombinations is ultimately not minimum-recombinant globally. See the Example subsection for a detailed description of this table.</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+    <sec>
+      <title>Missing data</title>
+      <p>Missing genotype data can result either because of quality control mechanisms associated with genotyping technologies or because of non-Mendelian errors (which can be removed using various software packages [<xref ref-type="bibr" rid="B33">33</xref>,<xref ref-type="bibr" rid="B34">34</xref>]). To handle loci that have children with missing data, Hapi copies the inheritance vector values corresponding to those children from the state(s) at the previous locus to the states at the current locus. This approach assumes a lack of recombination for that child, which is analogous to assuming no recombination at loci where a parent is homozygous. Because the inheritance vector values for that child will no longer be opposite each other between states with opposite parental phase - but will instead be identical - Hapi cannot eliminate states at fully informative loci in the way it does when no data is missing. However, it is still possible to eliminate states in most cases.</p>
+      <p>The following constitutes Hapi's sixth and final optimization. Consider a set of states that have equivalent inheritance vectors when the missing data children are ignored and with identical inheritance values for those missing data children (that is, states built based on the same previous state). Let <italic>x </italic>be the number of children with missing data, and let <italic>r </italic>be the value of the smallest number of recombinations among this set of states. The states in this set are <italic>x </italic>or 2<italic>x </italic>recombinations away from having equivalent inheritance vectors, depending on whether the inheritance values are opposite each other for transmissions from one or both of the parents. (Viewed another way, if two states have the same assignment of alleles to homologs for one parent and opposite assignments for the other, the inheritance vectors are <italic>x </italic>recombinations away from being equivalent. If both parents have opposite allele assignments, the inheritance vectors must be entirely opposite each other and therefore 2<italic>x </italic>recombinations separate them since the missing data children's inheritance values are identical, not opposite.) Considering states that are separated by <italic>x </italic>recombinations, a state that has more than <italic>r </italic>+ <italic>x </italic>recombinations will always be less optimal than the minimal state and can therefore be removed. Even if all the missing data children later recombine relative to the state with <italic>r </italic>recombinations - which would produce an inheritance vector equivalent to the larger state - that minimal state would yield <italic>r </italic>+ <italic>x </italic>recombinations - that is, fewer than that for the larger state.</p>
+      <p>Although this technique will not always eliminate the same number of states as if full data were available, it is quite effective. Our experimental results demonstrate this as Hapi very efficiently analyzes a real dataset that includes missing data (see Results). Often one state at a locus will have zero or one recombinations compared to another state that has all or all but one child recombining. In such a case, the technique just described will typically be able to eliminate the state with more recombinations.</p>
+      <p>Hapi does not currently handle loci that are missing data for one or both parents. It can be modified to do so by building states corresponding to all possible parent genotypes consistent with the children's genotypes [<xref ref-type="bibr" rid="B36">36</xref>].</p>
+    </sec>
+    <sec>
+      <title>Example</title>
+      <p>We give a brief example illustrating some aspects of our algorithm in Table <xref ref-type="table" rid="T6">6</xref>. This example is from real data for one of the families in the Huntington's Disease Venezuela Collaborative Study [<xref ref-type="bibr" rid="B32">32</xref>] dataset discussed in Results. The initial locus 8 defines inheritance vector values for parent 1, the heterozygous parent, but leaves the values for parent 0 undefined (designated by -). When analyzing this example, Hapi produces a complete initial state at locus 12, where it deduces inheritance vector values for parent 0 and copies those for parent 1 from locus 8. (Note: this table omits uninformative loci.) Locus 14 is partly informative, and with one state at the previous locus, it has only four states corresponding to the four possible parents' phase assignments. The table shows two of these four states, one on the left and one on the right. The two omitted states have four and five recombinations at locus 14 and still more at locus 16 and 17.</p>
+      <p>The left side state at locus 14 has two recombinations. It transitions to two states at locus 16, one with a total of three recombinations and one with five; the table shows the state with fewer recombinations. These two states at locus 16 both transition to the same two states at locus 17, and we include the state with fewer recombinations in the table.</p>
+      <p>The right side state for locus 14 has three recombinations. Although this is greater than the two local recombinations shown for the left side state, this state actually yields fewer recombinations globally. It transitions to two states at locus 16, one of which produces no additional recombinations, and likewise that non-recombinant state produces zero recombinations at locus 17. This path of states therefore has only three recombinations, which is minimal across these loci.</p>
+      <p>Although this discussion considered the downstream effects of each state at locus 14 separately, Hapi considers all states at successive loci at the same time and does not revisit loci. The four states at locus 14 each transition to two non-equivalent (because of ambiguous inheritance values) states at locus 16, for a total of eight states. Because locus 16 is fully informative for parent 1, the inheritance vector values for that parent are equivalently labeled in these states. Locus 17 is heterozygous for parent 0 and produces exactly four equivalently labeled states, and the state with the fewest recombinations must be globally minimal. This globally minimal state is on the right side of the table.</p>
+    </sec>
+    <sec>
+      <title>Maximum likelihood haplotyping</title>
+      <p>We now formulate the problem of maximum likelihood haplotyping and show how to solve it using the same techniques as those we employ for minimum-recombinant haplotyping.</p>
+      <p>Suppose we have genotyped loci numbered 0,...,<italic>L </italic>for each member of a nuclear family with <italic>c </italic>children, and assigned inheritance vectors <inline-formula><mml:math id="M26" name="gb-2010-11-10-r108-i26" overflow="scroll"><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula> for each locus <italic>l</italic>. Let <italic>θ<sub>l </sub></italic>be the recombination frequency between locus <italic>l </italic>and <italic>l </italic>- 1 for all 0 &lt;<italic>l </italic>≤ <italic>L</italic>. Also let <inline-formula><mml:math id="M27" name="gb-2010-11-10-r108-i27" overflow="scroll"><mml:mrow><mml:mi>r</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mi>l</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:mi>H</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:msub><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover><mml:mrow><mml:mi>l</mml:mi><mml:mo>−</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover><mml:mi>l</mml:mi></mml:msub></mml:mrow><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula>, the number of recombinations (Hamming distance) between the inheritance vectors at loci <italic>l </italic>- 1 and <italic>l</italic>. Then the probability of the assigned inheritance vectors is:</p>
+      <p>
+        <disp-formula id="bmcM2">
+          <label>(2)</label>
+          <mml:math id="M28" name="gb-2010-11-10-r108-i28" overflow="scroll">
+            <mml:mrow>
+              <mml:mi mathvariant="script">P</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:munderover>
+                  <mml:mo>∏</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>l</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                  <mml:mi>L</mml:mi>
+                </mml:munderover>
+                <mml:mrow>
+                  <mml:msubsup>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mi>l</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>r</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>l</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:msubsup>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:mo>⋅</mml:mo>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mi>l</mml:mi>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                  <mml:mi>c</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>r</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mi>l</mml:mi>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+              </mml:msup>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>Using log likelihoods, this can be written as:</p>
+      <p>
+        <disp-formula id="bmcM3">
+          <label>(3)</label>
+          <mml:math id="M29" name="gb-2010-11-10-r108-i29" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>ℒ</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:munderover>
+                  <mml:mo>∑</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>l</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                  <mml:mi>L</mml:mi>
+                </mml:munderover>
+                <mml:mrow>
+                  <mml:mi>ln</mml:mi>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>θ</mml:mi>
+                <mml:mi>l</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>⋅</mml:mo>
+              <mml:mi>r</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>l</mml:mi>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>+</mml:mo>
+              <mml:mi>ln</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mn>1</mml:mn>
+              <mml:mo>−</mml:mo>
+              <mml:msub>
+                <mml:mi>θ</mml:mi>
+                <mml:mi>l</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>⋅</mml:mo>
+              <mml:mo stretchy="false">[</mml:mo>
+              <mml:mn>2</mml:mn>
+              <mml:mi>c</mml:mi>
+              <mml:mo>−</mml:mo>
+              <mml:mi>r</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>l</mml:mi>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo stretchy="false">]</mml:mo>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>This formulation of the maximum likelihood problem shows clearly the relationship of the maximum likelihood problem to the minimum-recombinant one. If all loci have the same recombination frequency <italic>θ </italic>&lt; 0:5, then the maximum likelihood solution is the same as the minimum-recombinant one since ln(<italic>θ</italic>) &lt; ln(1 - <italic>θ</italic>) across all loci, so decreased <italic>r</italic>(<italic>l</italic>) values increase the overall likelihood. However, when the recombination frequencies differ across loci, more recombinations at one locus may have higher likelihood than fewer recombinations at another.</p>
+      <p>A dynamic programming equation computing maximum likelihood haplotypes can be written as follows, where <italic>l </italic>is a locus, and <inline-formula><mml:math id="M30" name="gb-2010-11-10-r108-i30" overflow="scroll"><mml:mover accent="true"><mml:mi>v</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula>, <inline-formula><mml:math id="M31" name="gb-2010-11-10-r108-i31" overflow="scroll"><mml:mover accent="true"><mml:mi>w</mml:mi><mml:mo>→</mml:mo></mml:mover></mml:math></inline-formula> are inheritance vectors:</p>
+      <p>
+        <disp-formula id="bmcM4">
+          <label>(4)</label>
+          <mml:math id="M32" name="gb-2010-11-10-r108-i32" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>P</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>l</mml:mi>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>v</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>=</mml:mo>
+              <mml:munder>
+                <mml:mrow>
+                  <mml:mi>max</mml:mi>
+                </mml:mrow>
+                <mml:mover accent="true">
+                  <mml:mi>w</mml:mi>
+                  <mml:mo>→</mml:mo>
+                </mml:mover>
+              </mml:munder>
+              <mml:mo>{</mml:mo>
+              <mml:mi>P</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>l</mml:mi>
+              <mml:mo>−</mml:mo>
+              <mml:mn>1</mml:mn>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>w</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>⋅</mml:mo>
+              <mml:msubsup>
+                <mml:mi>θ</mml:mi>
+                <mml:mi>l</mml:mi>
+                <mml:mrow>
+                  <mml:mi>H</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mover accent="true">
+                    <mml:mi>w</mml:mi>
+                    <mml:mo>→</mml:mo>
+                  </mml:mover>
+                  <mml:mo>,</mml:mo>
+                  <mml:mover accent="true">
+                    <mml:mi>v</mml:mi>
+                    <mml:mo>→</mml:mo>
+                  </mml:mover>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+              </mml:msubsup>
+              <mml:mo>⋅</mml:mo>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mi>l</mml:mi>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                  <mml:mi>c</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>H</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mover accent="true">
+                    <mml:mi>w</mml:mi>
+                    <mml:mo>→</mml:mo>
+                  </mml:mover>
+                  <mml:mo>,</mml:mo>
+                  <mml:mover accent="true">
+                    <mml:mi>v</mml:mi>
+                    <mml:mo>→</mml:mo>
+                  </mml:mover>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+              </mml:msup>
+              <mml:mo>}</mml:mo>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>Using log likelihoods, the dynamic programming formulation becomes:</p>
+      <p>
+        <disp-formula id="bmcM5">
+          <label>(5)</label>
+          <mml:math id="M33" name="gb-2010-11-10-r108-i33" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>L</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>l</mml:mi>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>v</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>=</mml:mo>
+              <mml:munder>
+                <mml:mrow>
+                  <mml:mi>max</mml:mi>
+                </mml:mrow>
+                <mml:mover accent="true">
+                  <mml:mi>w</mml:mi>
+                  <mml:mo>→</mml:mo>
+                </mml:mover>
+              </mml:munder>
+              <mml:mo>{</mml:mo>
+              <mml:mi>L</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>l</mml:mi>
+              <mml:mo>−</mml:mo>
+              <mml:mn>1</mml:mn>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>w</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>+</mml:mo>
+              <mml:mi>ln</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>θ</mml:mi>
+                <mml:mi>l</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>⋅</mml:mo>
+              <mml:mi>H</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>w</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>v</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>+</mml:mo>
+              <mml:mi>ln</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mn>1</mml:mn>
+              <mml:mo>−</mml:mo>
+              <mml:msub>
+                <mml:mi>θ</mml:mi>
+                <mml:mi>l</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>⋅</mml:mo>
+              <mml:mo stretchy="false">[</mml:mo>
+              <mml:mn>2</mml:mn>
+              <mml:mi>c</mml:mi>
+              <mml:mo>−</mml:mo>
+              <mml:mi>H</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>w</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>v</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo stretchy="false">]</mml:mo>
+              <mml:mo>}</mml:mo>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>Immediate application of the above formula is problematic because we cannot completely ignore uninformative loci: they have non-zero recombination frequencies that affect the overall probability of a solution. Without some novel insight, it is necessary to model most or all of the 2<sup>2c</sup>/4 non-equivalent inheritance vectors at uninformative loci, and at least 2<sup>c</sup>/2 inheritance vectors at loci that are fully informative for one parent.</p>
+      <p>In order to account for recombination frequencies at loci where both parents are homozygous - that is, at uninformative loci - Hapi computes modified recombination frequencies at all other informative loci, including fully informative for one parent loci where one parent is homozygous. These modified recombination frequencies include the recombination frequencies for all uninformative loci that occur between a given informative locus and the nearest upstream informative locus. In calculating these probabilities, the algorithm is pre-computing the effects of recombination frequencies at uninformative loci, allowing it to avoid directly processing such loci.</p>
+      <p>We denote Hapi's modified recombination frequency at a locus <italic>l </italic>as <italic>φ<sub>l </sub></italic>and the frequency of non-recombination (expressed above as (1 - <italic>θ<sub>l</sub></italic>)) as <italic>ψ<sub>l</sub></italic>. To calculate <italic>φ<sub>l </sub></italic>and <italic>ψ<sub>l </sub></italic>for a locus <italic>l</italic>, let <italic>l</italic><sub>0 </sub>be the nearest upstream informative locus and let <italic>l</italic><sub>1, ..., </sub><italic>l</italic><sub><italic>n</italic>-1 </sub>be the uninformative loci that appear between <italic>l</italic><sub>0 </sub>and <italic>l</italic>. Let <italic>l</italic><sub>n </sub>= <italic>l </italic>and let <italic>l</italic>* be the locus with the highest recombination frequency, that is, find <italic>l* </italic>∈ {<italic>l</italic><sub>1</sub>, ..., <italic>l<sub>n</sub></italic>} such that <inline-formula><mml:math id="M34" name="gb-2010-11-10-r108-i34" overflow="scroll"><mml:mrow><mml:msub><mml:mi>θ</mml:mi><mml:mrow><mml:msup><mml:mi>l</mml:mi><mml:mo>*</mml:mo></mml:msup></mml:mrow></mml:msub><mml:mo>=</mml:mo><mml:msubsup><mml:mrow><mml:mi>max</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow><mml:mi>n</mml:mi></mml:msubsup><mml:msub><mml:mi>θ</mml:mi><mml:mrow><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub></mml:mrow></mml:msub></mml:mrow></mml:math></inline-formula>. Then:</p>
+      <p>
+        <disp-formula id="bmcM6">
+          <label>(6)</label>
+          <mml:math id="M35" name="gb-2010-11-10-r108-i35" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mi>ϕ</mml:mi>
+                <mml:mi>l</mml:mi>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:msub>
+                <mml:mi>θ</mml:mi>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mo>∗</mml:mo>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>·</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:munderover>
+                  <mml:mo>∏</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo>,</mml:mo>
+                    <mml:msub>
+                      <mml:mi>l</mml:mi>
+                      <mml:mi>i</mml:mi>
+                    </mml:msub>
+                    <mml:mo>≠</mml:mo>
+                    <mml:mi>l</mml:mi>
+                    <mml:mo>∗</mml:mo>
+                  </mml:mrow>
+                  <mml:mi>n</mml:mi>
+                </mml:munderover>
+                <mml:mrow>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mi>l</mml:mi>
+                        <mml:mi>i</mml:mi>
+                      </mml:msub>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>Thus, the probability of recombination between locus <italic>l</italic><sub>0 </sub>and <italic>l</italic><sub>n </sub>= <italic>l </italic>is equal to the maximum between-marker recombination frequency within the region spanned by these loci, or <italic>θ<sub>l*</sub></italic>, multiplied by the probability of not recombining anywhere else. Note that <italic>θ</italic><sub><italic>l</italic>* </sub>is the probability of recombining between locus <italic>l* </italic>and <italic>l* </italic>- 1, and either or both of these loci can be uninformative. Hapi stores the locus number <italic>l* </italic>so that the final haplotype solution includes any recombinations in their most likely positions.</p>
+      <p>A consequence of this formula is that at most one recombination can occur between any two informative loci on a given homolog. Thus, within a region of uninformative loci, we do not model the possibility of intervening gene conversions or double recombinations. Not modeling such events is sensible because it is impossible to observe or verify them. Furthermore, haplotypes that include additional recombinations or gene conversions not directly implied by the data are less likely than those without these events since <italic>θ<sub>l </sub></italic>&lt; 0.5 means recombination is less likely than non-recombination. Therefore, even if we were to model such events, they would not ultimately appear in the haplotype solution, so we lose nothing by not modeling them.</p>
+      <p>The probability of not recombining between locus <italic>l</italic><sub>0 </sub>and <italic>l<sub>n </sub></italic>= <italic>l </italic>is the product of non-recombination across each of the locus intervals:</p>
+      <p>
+        <disp-formula id="bmcM7">
+          <label>(7)</label>
+          <mml:math id="M36" name="gb-2010-11-10-r108-i36" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mi>ψ</mml:mi>
+                <mml:mi>l</mml:mi>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:munderover>
+                  <mml:mo>∏</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>=</mml:mo>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                  <mml:mi>n</mml:mi>
+                </mml:munderover>
+                <mml:mrow>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mi>l</mml:mi>
+                        <mml:mi>i</mml:mi>
+                      </mml:msub>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>The equations for <italic>φ<sub>l </sub></italic>and <italic>ψ<sub>l </sub></italic>utilize the recombination frequencies between each pair of loci rather than a single recombination frequency spanning the region between <italic>l</italic><sub>0 </sub>and <italic>l</italic>. This is the case because the haplotyping output must place every recombination at some discrete location between a pair of markers. There must exist a pair of markers flanking every recombination, and sometimes one or both of these will be uninformative. This matches the maximum likelihood approach employed by other algorithms, which calculate the probability of recombining (or not) between each pair of markers, not just those that are informative. A consequence of this formulation is that <italic>φ<sub>l </sub></italic>+ <italic>ψ<sub>l </sub></italic>≠ 1. This occurs because, as we earlier noted, these probabilities account for the possibility of only one recombination on a given homolog between any two informative loci - more than one recombination will always be less likely. Some applications - notably linkage analysis; see below - may benefit from using a single recombination frequency between the region spanned by <italic>l</italic><sub>0 </sub>to <italic>l</italic>. Our algorithm functions the same regardless of how we calculate <italic>φ </italic>and <italic>ψ</italic>. To increase numerical stability and efficiency, Hapi uses the log likelihood formulation of this dynamic programming problem. This formula substitutes multiplication for exponentiation and uses the values ln(<italic>φ<sub>l</sub></italic>) and ln(<italic>ψ<sub>l</sub></italic>) which requires summation instead of multiplication to calculate. The dynamic programming equation for maximum log likelihood haplotypes at a locus <italic>l </italic>is thus given by the following:</p>
+      <p>
+        <disp-formula id="bmcM8">
+          <label>(8)</label>
+          <mml:math id="M37" name="gb-2010-11-10-r108-i37" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>L</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>l</mml:mi>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>v</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>=</mml:mo>
+              <mml:munder>
+                <mml:mrow>
+                  <mml:mi>max</mml:mi>
+                </mml:mrow>
+                <mml:mover accent="true">
+                  <mml:mi>w</mml:mi>
+                  <mml:mo>→</mml:mo>
+                </mml:mover>
+              </mml:munder>
+              <mml:mo>{</mml:mo>
+              <mml:mi>L</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>l</mml:mi>
+              <mml:mo>−</mml:mo>
+              <mml:mn>1</mml:mn>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>w</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>+</mml:mo>
+              <mml:mi>ln</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>ϕ</mml:mi>
+                <mml:mi>l</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>⋅</mml:mo>
+              <mml:mi>H</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>w</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>v</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>+</mml:mo>
+              <mml:mi>ln</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>ψ</mml:mi>
+                <mml:mi>l</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>⋅</mml:mo>
+              <mml:mo stretchy="false">[</mml:mo>
+              <mml:mn>2</mml:mn>
+              <mml:mi>c</mml:mi>
+              <mml:mo>−</mml:mo>
+              <mml:mi>H</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>w</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo>,</mml:mo>
+              <mml:mover accent="true">
+                <mml:mi>v</mml:mi>
+                <mml:mo>→</mml:mo>
+              </mml:mover>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo stretchy="false">]</mml:mo>
+              <mml:mo>}</mml:mo>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>The formulation just presented solves the problem of needing to track states at uninformative loci, but does not resolve another important issue. One of Hapi's key optimizations is to avoid modeling states that exhibit recombination from a parent that is homozygous at a locus, including at fully informative for one parent loci. This approach suffices in order to produce minimum-recombinant haplotypes since recombinations only occur at the informative locus that reveals them. For maximum likelihood haplotyping, if some informative locus exhibits recombination, the most likely location of that recombination might be upstream of an earlier fully informative for one parent locus where the transmitting parent is homozygous.</p>
+      <p>A further complication to this issue of fully informative for one parent loci is the interactions between such loci and partly informative loci. A child may exhibit an ambiguous recombination at a partly informative locus immediately after a fully informative for one parent locus. In this case, the recombination might occur at the partly informative locus or upstream of the fully informative for one parent locus on the homozygous parent's homolog. Confounding this issue is the possibility of additional recombinations occurring downstream of the partly informative locus in this scenario. Although we could immediately evaluate the relative likelihoods of placing the ambiguous recombination upstream or at the partly informative locus, a downstream recombination may affect the overall likelihood.</p>
+      <p>Complicated dependence across loci can also occur when a fully informative for one parent locus appears downstream of a partly informative locus where the child is heterozygous. The earlier partly informative locus may be the result of an ambiguous recombination and the opposite inheritance value may have equivalent or nearly equivalent likelihood. Choosing the opposite inheritance at the partly informative locus introduces a recombination but also inverts the inheritance value that occurs for the homozygous parent at the subsequent fully informative for one parent locus. Making such a change affects the inheritance values at downstream loci and may be more likely than some other downstream recombination. To address all these possibilities, Hapi tracks the probability of an <italic>alternate inheritance </italic>value for each child at a locus. In the case of fully informative for one parent loci, this is the probability of inverting the inheritance value transmitted by the homozygous parent. For partly informative loci, the alternate inheritance has inverted homolog transmissions from both parents. The alternate inheritance probability at a locus depends on the surrounding loci. For example, the system can assign the alternate inheritance at a fully informative for one parent locus by recombining at that locus or, if the previous locus is fully informative for the same parent or partly informative, the system can apply the alternate inheritance (and associated probability) at the previous locus. (Note that the system must account for any additional local recombinations introduced by using the alternate inheritance at the previous locus.) Hapi evaluates the probabilities for all possible ways of assigning the alternate inheritance for each child at a locus and stores those probabilities and the information relating to how they are assigned. Because of space considerations, we omit the details of how Hapi handles alternate inheritance probabilities; a complete description is available in another document [<xref ref-type="bibr" rid="B36">36</xref>].</p>
+      <p>We note briefly that because the alternate inheritance probabilities will differ across states at a locus, whenever multiple states transition to the same state at the next locus, Hapi must sometimes track multiple probabilities. To do so, it stores a range of probabilities - the maximum and minimum alternate probability for each child across all previous states. The alternate probability is therefore ambiguous during haplotyping and can only be determined during back tracing as Hapi explores the paths yielding the alternate inheritance values. Determining the maximum likelihood haplotyping assignment therefore requires back tracing to determine which path of states yields the highest likelihood and then forward tracing to assign those states.</p>
+    </sec>
+    <sec>
+      <title>Linkage analysis and LOD scores</title>
+      <p>The basic Hapi algorithm is applicable not only to haplotype reconstruction but also to linkage analysis and LOD score calculations. This paper provides an overview of how to apply Hapi to linkage analysis; for more details, see Williams [<xref ref-type="bibr" rid="B36">36</xref>]. Briefly, all that is required is that Hapi retain all states it considers across all loci (that is, it should not perform back tracing), and that it calculate state probabilities that fully account for inheritance values at both upstream and downstream loci. Hapi already includes probabilities for upstream loci in each state. To include the probabilities of states at downstream loci, Hapi must perform a second traversal of all the loci/states in reverse, multiplying a given state's probability by the appropriate transition probability and the probability of the state at the next locus. With the probability distribution of locus states computed in this way, Hapi can calculate LOD scores (or non-parametric Z scores) by weighting the score of each possible inheritance vector by its probability at the locus in question [<xref ref-type="bibr" rid="B22">22</xref>]. Hapi does not consider all possible states at each locus; specifically, it omits any states that exhibit double recombinations within a series of uninformative loci. Hapi also omits some states at partly informative loci, depending on the inheritance values at surrounding loci. Any omitted states always have lower likelihood than some other included state, and will typically exhibit extra recombinations and thus have considerably lower likelihood. Because of their lower likelihood, the potential impact on the overall linkage score of any omitted states is proportionately limited. As well, a high LOD score for a state that exhibits a double recombination is suspect since physical limitations make double recombinations within a short span of uninformative loci extremely unlikely. To more fully account for possible inheritance vector assignments at partly informative loci, Hapi could detect and include states in which the opposite inheritance assignment for a child or children does not yield additional recombinations but only places the recombinations differently across parents. Making this change for partly informative loci would enable Hapi to omit only states that exhibit additional recombinations relative to those it already considers. This change would serve to exclude very unlikely states from consideration and include marginally likely ones.</p>
+      <p>Hapi's dramatic efficiency gains over other algorithms make it attractive to apply to linkage analysis for disease gene studies. Its optimizations make possible analyses of datasets for which current algorithms either fail or have significant time and storage requirements.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>HMM: Hidden Markov Model; LOD score: Logarithm base 10 of Odds score; MTBDD: Multi-Terminal Binary Decision Diagram; SNP: Single Nucleotide Polymorphism.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>ALW devised and implemented the Hapi algorithm and wrote this paper under the supervision of DEH, MCR, and DKG.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>Analysis of Hapi's runtime complexity</bold>. A detailed discussion of Hapi's runtime complexity, including descriptions of inputs that can yield runtime that is exponential in the size of the family. Also a probabilistic analysis of the likelihood of one class of these inputs occurring in real data.</p>
+      </caption>
+      <media xlink:href="gb-2010-11-10-r108-S1.pdf" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>We thank Angelina Lee, Adam Kieżun, and Bonnie Kirkpatrick for helpful discussions about our algorithm, and Nick Patterson, Junne Kamihara, Karen Zee, Shaun Mahony, and Sylvia Pearce for comments on this paper. We also thank Josh Taylor and Bill Thies for pointers to information helpful in writing this paper. This work is supported by NIH grants 5-T90-DK070069 and 5-P01-NS055923, and an NSF Graduate Research Fellowship.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Howie</surname>
+          <given-names>BN</given-names>
+        </name>
+        <name>
+          <surname>Donnelly</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Marchini</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>A flexible and accurate genotype imputation method for the next generation of genome-wide association studies.</article-title>
+        <source>PLoS Genet</source>
+        <year>2009</year>
+        <volume>5</volume>
+        <fpage>e1000529</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pgen.1000529</pub-id>
+        <pub-id pub-id-type="pmid">19543373</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Ding</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>GR</given-names>
+        </name>
+        <article-title>Mach 1.0: Rapid haplotype reconstruction and missing genotype inference.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2006</year>
+        <volume>79</volume>
+        <fpage>S2290</fpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Browning</surname>
+          <given-names>SR</given-names>
+        </name>
+        <name>
+          <surname>Browning</surname>
+          <given-names>BL</given-names>
+        </name>
+        <article-title>Rapid and accurate haplotype phasing and missing-data inference for whole-genome association studies by use of localized haplotype clustering.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2007</year>
+        <volume>81</volume>
+        <fpage>1084</fpage>
+        <lpage>1097</lpage>
+        <pub-id pub-id-type="doi">10.1086/521987</pub-id>
+        <pub-id pub-id-type="pmid">17924348</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Browning</surname>
+          <given-names>BL</given-names>
+        </name>
+        <name>
+          <surname>Browning</surname>
+          <given-names>SR</given-names>
+        </name>
+        <article-title>A unified approach to genotype imputation and haplotype-phase inference for large data sets of trios and unrelated individuals.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2009</year>
+        <volume>84</volume>
+        <fpage>210</fpage>
+        <lpage>223</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.ajhg.2009.01.005</pub-id>
+        <pub-id pub-id-type="pmid">19200528</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Scheet</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Stephens</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>A fast and flexible statistical model for large-scale population genotype data: applications to inferring missing genotypes and haplotypic phase.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2006</year>
+        <volume>78</volume>
+        <fpage>629</fpage>
+        <lpage>644</lpage>
+        <pub-id pub-id-type="doi">10.1086/502802</pub-id>
+        <pub-id pub-id-type="pmid">16532393</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kong</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Gudbjartsson</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Sainz</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Jonsdottir</surname>
+          <given-names>GM</given-names>
+        </name>
+        <name>
+          <surname>Gudjonsson</surname>
+          <given-names>SA</given-names>
+        </name>
+        <name>
+          <surname>Richardsson</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Sigurdardottir</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Barnard</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hallbeck</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Masson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Shlien</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Palsson</surname>
+          <given-names>ST</given-names>
+        </name>
+        <name>
+          <surname>Frigge</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Thorgeirsson</surname>
+          <given-names>TE</given-names>
+        </name>
+        <name>
+          <surname>Gulcher</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Stefansson</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>A high-resolution recombination map of the human genome.</article-title>
+        <source>Nat Genet</source>
+        <year>2002</year>
+        <volume>31</volume>
+        <fpage>241</fpage>
+        <lpage>247</lpage>
+        <pub-id pub-id-type="pmid">12053178</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Coop</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Wen</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Ober</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pritchard</surname>
+          <given-names>JK</given-names>
+        </name>
+        <name>
+          <surname>Przeworski</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>High-resolution mapping of crossovers reveals extensive variation in fine-scale recombination patterns among humans.</article-title>
+        <source>Science</source>
+        <year>2008</year>
+        <volume>319</volume>
+        <fpage>1395</fpage>
+        <lpage>1398</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1151851</pub-id>
+        <pub-id pub-id-type="pmid">18239090</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kong</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Thorleifsson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Stefansson</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Masson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Helgason</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Gudbjartsson</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Jonsdottir</surname>
+          <given-names>GM</given-names>
+        </name>
+        <name>
+          <surname>Gudjonsson</surname>
+          <given-names>SA</given-names>
+        </name>
+        <name>
+          <surname>Sverrisson</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Thorlacius</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Jonasdottir</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Hardarson</surname>
+          <given-names>GA</given-names>
+        </name>
+        <name>
+          <surname>Palsson</surname>
+          <given-names>ST</given-names>
+        </name>
+        <name>
+          <surname>Frigge</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Gulcher</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Thorsteinsdottir</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Stefansson</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Sequence variants in the RNF212 gene associate with genomewide recombination rate.</article-title>
+        <source>Science</source>
+        <year>2008</year>
+        <volume>319</volume>
+        <fpage>1398</fpage>
+        <lpage>1401</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1152422</pub-id>
+        <pub-id pub-id-type="pmid">18239089</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kong</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Steinthorsdottir</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Masson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Thorleifsson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Sulem</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Besenbacher</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Jonasdottir</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Sigurdsson</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Kristinssona</surname>
+          <given-names>KT</given-names>
+        </name>
+        <name>
+          <surname>Jonasdottir</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Frigge</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Gylfason</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Olason</surname>
+          <given-names>PI</given-names>
+        </name>
+        <name>
+          <surname>Gudjonsson</surname>
+          <given-names>SA</given-names>
+        </name>
+        <name>
+          <surname>Sverrisson</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Stacey</surname>
+          <given-names>SN</given-names>
+        </name>
+        <name>
+          <surname>Sigurgeirsson</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Benediktsdottir</surname>
+          <given-names>KR</given-names>
+        </name>
+        <name>
+          <surname>Sigurdsson</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Jonsson</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Benediktsson</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Olafsson</surname>
+          <given-names>JH</given-names>
+        </name>
+        <name>
+          <surname>Johannsson</surname>
+          <given-names>OT</given-names>
+        </name>
+        <name>
+          <surname>Hreidarsson</surname>
+          <given-names>AB</given-names>
+        </name>
+        <name>
+          <surname>Sigurdsson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Consortium</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Ferguson-Smith</surname>
+          <given-names>AC</given-names>
+        </name>
+        <name>
+          <surname>Gudbjartsson</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Thorsteinsdottir</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Stefansson</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Parental origin of sequence variants associated with complex diseases.</article-title>
+        <source>Nature</source>
+        <year>2009</year>
+        <volume>462</volume>
+        <fpage>868</fpage>
+        <lpage>874</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature08625</pub-id>
+        <pub-id pub-id-type="pmid">20016592</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sabeti</surname>
+          <given-names>PC</given-names>
+        </name>
+        <name>
+          <surname>Reich</surname>
+          <given-names>DE</given-names>
+        </name>
+        <name>
+          <surname>Higgins</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Levine</surname>
+          <given-names>HZP</given-names>
+        </name>
+        <name>
+          <surname>Richter</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Schaffner</surname>
+          <given-names>SF</given-names>
+        </name>
+        <name>
+          <surname>Gabriel</surname>
+          <given-names>SB</given-names>
+        </name>
+        <name>
+          <surname>Platko</surname>
+          <given-names>JV</given-names>
+        </name>
+        <name>
+          <surname>Patterson</surname>
+          <given-names>NJ</given-names>
+        </name>
+        <name>
+          <surname>McDonald</surname>
+          <given-names>GJ</given-names>
+        </name>
+        <name>
+          <surname>Ackerman</surname>
+          <given-names>HC</given-names>
+        </name>
+        <name>
+          <surname>Campbell</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Altshuler</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Cooper</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Kwiatkowski</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Ward</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <article-title>Detecting recent positive selection in the human genome from haplotype structure.</article-title>
+        <source>Nature</source>
+        <year>2002</year>
+        <volume>419</volume>
+        <fpage>832</fpage>
+        <lpage>837</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature01140</pub-id>
+        <pub-id pub-id-type="pmid">12397357</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Niu</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Algorithms for inferring haplotypes.</article-title>
+        <source>Genet Epidemiol</source>
+        <year>2004</year>
+        <volume>27</volume>
+        <fpage>334</fpage>
+        <lpage>347</lpage>
+        <pub-id pub-id-type="doi">10.1002/gepi.20024</pub-id>
+        <pub-id pub-id-type="pmid">15368348</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marchini</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Cutler</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Patterson</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Stephens</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Eskin</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Halperin</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Qin</surname>
+          <given-names>ZS</given-names>
+        </name>
+        <name>
+          <surname>Munro</surname>
+          <given-names>HM</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>GR</given-names>
+        </name>
+        <name>
+          <surname>Donnelly</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>A comparison of phasing algorithms for trios and unrelated individuals.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2006</year>
+        <volume>78</volume>
+        <fpage>437</fpage>
+        <lpage>450</lpage>
+        <pub-id pub-id-type="doi">10.1086/500808</pub-id>
+        <pub-id pub-id-type="pmid">16465620</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Stephens</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Donnelly</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>A comparison of Bayesian methods for haplotype reconstruction from population genotype data.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2003</year>
+        <volume>73</volume>
+        <fpage>1162</fpage>
+        <lpage>1169</lpage>
+        <pub-id pub-id-type="doi">10.1086/379378</pub-id>
+        <pub-id pub-id-type="pmid">14574645</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Niu</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Qin</surname>
+          <given-names>ZS</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>JS</given-names>
+        </name>
+        <article-title>Bayesian haplotype inference for multiple linked single-nucleotide polymorphisms.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2002</year>
+        <volume>70</volume>
+        <fpage>157</fpage>
+        <lpage>169</lpage>
+        <pub-id pub-id-type="doi">10.1086/338446</pub-id>
+        <pub-id pub-id-type="pmid">11741196</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lin</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Chakravarti</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Cutler</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <article-title>Haplotype and missing data inference in nuclear families.</article-title>
+        <source>Genome Res</source>
+        <year>2004</year>
+        <volume>14</volume>
+        <fpage>1624</fpage>
+        <lpage>1632</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.2204604</pub-id>
+        <pub-id pub-id-type="pmid">15256514</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lin</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Cutler</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Zwick</surname>
+          <given-names>ME</given-names>
+        </name>
+        <name>
+          <surname>Chakravarti</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Haplotype inference in random population samples.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2002</year>
+        <volume>71</volume>
+        <fpage>1129</fpage>
+        <lpage>1137</lpage>
+        <pub-id pub-id-type="doi">10.1086/344347</pub-id>
+        <pub-id pub-id-type="pmid">12386835</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Andrés</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Clark</surname>
+          <given-names>AG</given-names>
+        </name>
+        <name>
+          <surname>Shimmin</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Boerwinkle</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Sing</surname>
+          <given-names>CF</given-names>
+        </name>
+        <name>
+          <surname>Hixson</surname>
+          <given-names>JE</given-names>
+        </name>
+        <article-title>Understanding the accuracy of statistical haplotype inference with sequence data of known phase.</article-title>
+        <source>Genet Epidemiol</source>
+        <year>2007</year>
+        <volume>31</volume>
+        <fpage>659</fpage>
+        <lpage>671</lpage>
+        <pub-id pub-id-type="pmid">17922479</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gao</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Allison</surname>
+          <given-names>DB</given-names>
+        </name>
+        <name>
+          <surname>Hoeschele</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>Haplotyping methods for pedigrees.</article-title>
+        <source>Hum Hered</source>
+        <year>2009</year>
+        <volume>67</volume>
+        <fpage>248</fpage>
+        <lpage>266</lpage>
+        <pub-id pub-id-type="doi">10.1159/000194978</pub-id>
+        <pub-id pub-id-type="pmid">19172084</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <name>
+          <surname>Green</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Construction of multilocus genetic linkage maps in humans.</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>1987</year>
+        <volume>84</volume>
+        <fpage>2363</fpage>
+        <lpage>2367</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.84.8.2363</pub-id>
+        <pub-id pub-id-type="pmid">3470801</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>GR</given-names>
+        </name>
+        <name>
+          <surname>Cherny</surname>
+          <given-names>SS</given-names>
+        </name>
+        <name>
+          <surname>Cookson</surname>
+          <given-names>WO</given-names>
+        </name>
+        <name>
+          <surname>Cardon</surname>
+          <given-names>LR</given-names>
+        </name>
+        <article-title>Merlin - rapid analysis of dense genetic maps using sparse gene flow trees.</article-title>
+        <source>Nat Genet</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>97</fpage>
+        <lpage>101</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng786</pub-id>
+        <pub-id pub-id-type="pmid">11731797</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Markianos</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Daly</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Kruglyak</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>Efficient multipoint linkage analysis through reduction of inheritance space.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2001</year>
+        <volume>68</volume>
+        <fpage>963</fpage>
+        <lpage>977</lpage>
+        <pub-id pub-id-type="doi">10.1086/319507</pub-id>
+        <pub-id pub-id-type="pmid">11254453</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kruglyak</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Daly</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Reeve-Daly</surname>
+          <given-names>MP</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <article-title>Parametric and nonparametric linkage analysis: a unified multipoint approach.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>1996</year>
+        <volume>58</volume>
+        <fpage>1347</fpage>
+        <lpage>1363</lpage>
+        <pub-id pub-id-type="pmid">8651312</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gudbjartsson</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Jonasson</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Frigge</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Kong</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Allegro, a new computer program for multipoint linkage analysis.</article-title>
+        <source>Nat Genet</source>
+        <year>2000</year>
+        <volume>25</volume>
+        <fpage>12</fpage>
+        <lpage>13</lpage>
+        <pub-id pub-id-type="doi">10.1038/75514</pub-id>
+        <pub-id pub-id-type="pmid">10802644</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gudbjartsson</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Thorvaldsson</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Kong</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Gunnarsson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Ingolfsdottir</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Allegro version 2.</article-title>
+        <source>Nat Genet</source>
+        <year>2005</year>
+        <volume>37</volume>
+        <fpage>1015</fpage>
+        <lpage>1016</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng1005-1015</pub-id>
+        <pub-id pub-id-type="pmid">16195711</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Jiang</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Efficient rule-based haplotyping algorithm for pedigree data.</article-title>
+        <source>RECOMB</source>
+        <year>2003</year>
+        <fpage>197</fpage>
+        <lpage>206</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Jiang</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>An exact solution for finding minimum recombinant haplotype configurations on pedigrees with missing data by integer linear programming.</article-title>
+        <source>RECOMB</source>
+        <year>2004</year>
+        <fpage>101</fpage>
+        <lpage>110</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kong</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Barnard</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Gudbjartsson</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Thorleifsson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Jonsdottir</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Sigurdardottir</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Richardsson</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Jonsdottir</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Thorgeirsson</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Frigge</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Lamb</surname>
+          <given-names>NE</given-names>
+        </name>
+        <name>
+          <surname>Sherman</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Gulcher</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Stefansson</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Recombination rate and reproductive success in humans.</article-title>
+        <source>Nat Genet</source>
+        <year>2004</year>
+        <volume>36</volume>
+        <fpage>1203</fpage>
+        <lpage>1206</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng1445</pub-id>
+        <pub-id pub-id-type="pmid">15467721</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Fujita</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>McGeer</surname>
+          <given-names>PC</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>JCY</given-names>
+        </name>
+        <article-title>Multi-terminal binary decision diagrams: an efficient data structure for matrix representation.</article-title>
+        <source>Formal Methods in System Design</source>
+        <year>1997</year>
+        <volume>10</volume>
+        <fpage>149</fpage>
+        <lpage>169</lpage>
+        <pub-id pub-id-type="doi">10.1023/A:1008647823331</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Fishelson</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Dovgolevsky</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Geiger</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Maximum likelihood haplotyping for general pedigrees.</article-title>
+        <source>Hum Hered</source>
+        <year>2005</year>
+        <volume>59</volume>
+        <fpage>41</fpage>
+        <lpage>60</lpage>
+        <pub-id pub-id-type="doi">10.1159/000084736</pub-id>
+        <pub-id pub-id-type="pmid">15802921</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kruglyak</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <article-title>Faster multipoint linkage analysis using Fourier transforms.</article-title>
+        <source>J Comput Biol</source>
+        <year>1998</year>
+        <volume>5</volume>
+        <fpage>1</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.1998.5.1</pub-id>
+        <pub-id pub-id-type="pmid">9541867</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="other">
+        <article-title>Hapi program website.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://hapi.csail.mit.edu/">http://hapi.csail.mit.edu/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gayán</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Brocklebank</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Andresen</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Alkorta-Aranburu</surname>
+          <given-names>G</given-names>
+        </name>
+        <collab>Group TUVCR</collab>
+        <name>
+          <surname>Cader</surname>
+          <given-names>MZ</given-names>
+        </name>
+        <name>
+          <surname>Roberts</surname>
+          <given-names>SA</given-names>
+        </name>
+        <name>
+          <surname>Cherny</surname>
+          <given-names>SS</given-names>
+        </name>
+        <name>
+          <surname>Wexler</surname>
+          <given-names>NS</given-names>
+        </name>
+        <name>
+          <surname>Cardon</surname>
+          <given-names>LR</given-names>
+        </name>
+        <name>
+          <surname>Housman</surname>
+          <given-names>DE</given-names>
+        </name>
+        <article-title>Genomewide linkage scan reveals novel loci modifying age of onset of Huntington's disease in the Venezuelan HD kindreds.</article-title>
+        <source>Genet Epidemiol</source>
+        <year>2008</year>
+        <volume>32</volume>
+        <fpage>445</fpage>
+        <lpage>453</lpage>
+        <pub-id pub-id-type="pmid">18481795</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B33">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wigginton</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>GR</given-names>
+        </name>
+        <article-title>PEDSTATS: descriptive statistics, graphics and quality assessment for gene mapping data.</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>3445</fpage>
+        <lpage>3447</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti529</pub-id>
+        <pub-id pub-id-type="pmid">15947021</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B34">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>O'Connell</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Weeks</surname>
+          <given-names>DE</given-names>
+        </name>
+        <article-title>PedCheck: a program for identification of genotype incompatibilities in linkage analysis.</article-title>
+        <source>Am J Hum Genet</source>
+        <year>1998</year>
+        <volume>63</volume>
+        <fpage>259</fpage>
+        <lpage>266</lpage>
+        <pub-id pub-id-type="pmid">9634505</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B35">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Doi</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Jiang</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Minimum recombinant haplotype configuration on tree pedigrees.</article-title>
+        <source>WABI</source>
+        <year>2003</year>
+        <fpage>339</fpage>
+        <lpage>353</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B36">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Williams</surname>
+          <given-names>AL</given-names>
+        </name>
+        <article-title>Efficient haplotyping for families.</article-title>
+        <source>PhD thesis</source>
+        <year>2010</year>
+        <publisher-name>MIT Dept. of EECS</publisher-name>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

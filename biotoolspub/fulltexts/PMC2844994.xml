@@ -1,0 +1,854 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title-group>
+      <journal-title>Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1367-4811</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2844994</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btq057</article-id>
+    <article-id pub-id-type="publisher-id">btq057</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Original Papers</subject>
+        <subj-group>
+          <subject>Sequence Analysis</subject>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Fast and SNP-tolerant detection of complex variants and splicing in short reads</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Wu</surname>
+          <given-names>Thomas D.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="COR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Nacu</surname>
+          <given-names>Serban</given-names>
+        </name>
+      </contrib>
+    </contrib-group>
+    <aff>Department of Bioinformatics, Genentech, Inc., 1 DNA Way, South San Francisco, CA, USA</aff>
+    <author-notes>
+      <corresp id="COR1">* To whom correspondence should be addressed.</corresp>
+      <fn>
+        <p>Associate Editor: Limsoon Wong</p>
+      </fn>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>1</day>
+      <month>4</month>
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>10</day>
+      <month>2</month>
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>10</day>
+      <month>2</month>
+      <year>2010</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="epub"/>. -->
+    <volume>26</volume>
+    <issue>7</issue>
+    <fpage>873</fpage>
+    <lpage>881</lpage>
+    <history>
+      <date date-type="received">
+        <day>31</day>
+        <month>7</month>
+        <year>2009</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>4</day>
+        <month>2</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>5</day>
+        <month>2</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author(s) 2010. Published by Oxford University Press.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/2.5">http://creativecommons.org/licenses/by-nc/2.5</ext-link>), which permits unrestricted non-commercial use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Motivation:</bold> Next-generation sequencing captures sequence differences in reads relative to a reference genome or transcriptome, including splicing events and complex variants involving multiple mismatches and long indels. We present computational methods for fast detection of complex variants and splicing in short reads, based on a successively constrained search process of merging and filtering position lists from a genomic index. Our methods are implemented in GSNAP (Genomic Short-read Nucleotide Alignment Program), which can align both single- and paired-end reads as short as 14 nt and of arbitrarily long length. It can detect short- and long-distance splicing, including interchromosomal splicing, in individual reads, using probabilistic models or a database of known splice sites. Our program also permits SNP-tolerant alignment to a reference space of all possible combinations of major and minor alleles, and can align reads from bisulfite-treated DNA for the study of methylation state.</p>
+      <p><bold>Results:</bold> In comparison testing, GSNAP has speeds comparable to existing programs, especially in reads of ≥70 nt and is fastest in detecting complex variants with four or more mismatches or insertions of 1–9 nt and deletions of 1–30 nt. Although SNP tolerance does not increase alignment yield substantially, it affects alignment results in 7–8% of transcriptional reads, typically by revealing alternate genomic mappings for a read. Simulations of bisulfite-converted DNA show a decrease in identifying genomic positions uniquely in 6% of 36 nt reads and 3% of 70 nt reads.</p>
+      <p><bold>Availability:</bold> Source code in C and utility programs in Perl are freely available for download as part of the GMAP package at <ext-link ext-link-type="uri" xlink:href="http://share.gene.com/gmap">http://share.gene.com/gmap</ext-link>.</p>
+      <p>
+        <bold>Contact:</bold>
+        <email>twu@gene.com</email>
+      </p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec sec-type="intro" id="SEC1">
+    <title>1 INTRODUCTION</title>
+    <p>Numerous programs have been developed to date for the alignment of short reads from next-generation sequencing technologies, such as Illumina/Solexa (Hayward, CA, USA) and ABI/SOLiD (Foster City, CA, USA), to a reference genome or transcriptome. Because of the large numbers of short reads that can be produced from a given sample, much emphasis has placed on speed. Accordingly, recent programs, such as Bowtie (Langmead <italic>et al.</italic>, <xref ref-type="bibr" rid="B14">2009</xref>), BWA (Li and Durbin, <xref ref-type="bibr" rid="B15">2009</xref>) and SOAP2 (Li <italic>et al.</italic>, <xref ref-type="bibr" rid="B18">2009</xref>), have shown how suffix arrays (Manber and Myers, <xref ref-type="bibr" rid="B20">1993</xref>), compressed using a Burrows–Wheeler Transform (BWT; Burrows and Wheeler, <xref ref-type="bibr" rid="B3">1994</xref>), can rapidly map reads that are exact matches or have a few mismatches or short insertions or deletions (indels) relative to the reference.</p>
+    <p>In addition to speed, it is also important to broaden the range of possible variants that can be detected in reads, since interesting biology is likely to be revealed not merely as single nucleotide polymorphisms (SNPs) or mutations from the reference, but also as more complex phenomena, such as multiple mismatches, long indels and combinations thereof. Such complex variants represent a substantial source of genetic diversity. For example, indels represent 7–8% of human polymorphisms, with 25% of coding indels being longer than 3 nt (Bhangale <italic>et al.</italic>, <xref ref-type="bibr" rid="B1">2005</xref>; Weber <italic>et al.</italic>, <xref ref-type="bibr" rid="B30">2002</xref>). Long indels that affect multiple amino acids may have significant biological consequences. Moreover, as reads continue to lengthen, from their original ∼30 nt to their current 75–100 nt, they are more likely to have multiple or complex differences from the reference, making detection of complex variants even more critical.</p>
+    <p>Other important biological phenomena arise from splicing events, which provide insights into gene structure, alternative splicing, gene fusions and chromosomal rearrangements. Although splicing can be determined readily in long EST and cDNA sequences using general-purpose genomic mapping and alignment programs such as BLAT (Kent, <xref ref-type="bibr" rid="B12">2002</xref>) or GMAP (Wu and Watanabe, <xref ref-type="bibr" rid="B32">2005</xref>), short reads pose a challenge because they often align to numerous places in a genome, and because they often lack insufficient sequence specificity on one or both ends of the exon–exon junction to accurately define the junction.</p>
+    <p>One solution for detecting splicing in short reads has been to align them to a reference transcriptome, possibly augmented with artificially constructed exon–exon segments (Wang <italic>et al.</italic>, <xref ref-type="bibr" rid="B29">2008</xref>). However, such an approach will identify only known or predicted combinations of exons, and not unexpected exon pairs that occur through exon skipping, cryptic splicing or gene fusions. Another approach, taken by the TopHat program (Trapnell <italic>et al.</italic>, <xref ref-type="bibr" rid="B28">2009</xref>), analyzes an entire dataset of mapped reads to identify splice site junctions between exons in a given neighborhood. However, that approach requires exons to have sufficiently high expression and will miss splicing events that are spanned by individual reads at a low level. A third approach, provided by the QPALMA program (Bona <italic>et al.</italic>, <xref ref-type="bibr" rid="B2">2008</xref>), can align individual reads across exon–exon junctions using Smith–Waterman-type alignments and a specifically trained splice site model. All of these approaches are limited to identifying only local exon–exon junctions and not unanticipated distant or interchromosomal gene fusion events.</p>
+    <p>To expand the range of biological phenomena that can be inferred from short reads, we have developed fast and memory-efficient methods for detecting complex variants and splicing in individual reads. Our methods are implemented in <monospace>GSNAP</monospace> (Genomic Short-read Nucleotide Alignment Program), which can align single- and paired-end reads as short as 14 nt and as long as desired. Our program can detect splicing, multiple mismatches, long indels and combinations thereof, up to a user-specified point total, limited to a single splice or indel per read, provided the read (or parts of the read on each end of the indel or splice) has a consecutive stretch of 14 nt that match the reference sequence (<xref ref-type="fig" rid="F1">Fig. 1</xref>A). (Future versions of the program may allow multiple indels or possibly multiple splices per read.)
+<fig id="F1" position="float"><label>Fig. 1.</label><caption><p>Examples of complex variants detected by GSNAP. (<bold>A</bold>) A 17 nt indel with mismatches in reads (below) relative to a genomic region (above), matching a known polymorphism in dbSNP. (<bold>B</bold>) Splicing found using probabilistic models reveals an intron within exon 1 of HOXA9, supported experimentally (Dintilhac <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2004</xref>). (<bold>C</bold>) Splicing found using known splice sites, despite low probabilistic model scores. Ellipses indicate ‘half intron’ alignments, where reads have insufficient sequence to determine the distal exon. (<bold>D</bold>) Interchromosomal splicing between BCAS4 and BCAS3 found in the MAQC universal human reference RNA sample and observed in MCF7 cell lines (Hampton <italic>et al.</italic>, <xref ref-type="bibr" rid="B9">2009</xref>). (<bold>E</bold>) SNP-tolerant alignment near a splice site allows both genotypes to align equally well.</p></caption><graphic xlink:href="btq057f1"/></fig></p>
+    <p>Our program can identify splicing within short reads using two types of evidence. First, it can evaluate the surrounding genomic sequence using probabilistic models of donor and acceptor splice sites (<xref ref-type="fig" rid="F1">Fig. 1</xref>B). Second, it can utilize a user-provided database of known exon–intron boundaries, which avoids false positive and negative results from probabilistic models (<xref ref-type="fig" rid="F1">Fig. 1</xref>C). Known splice sites will reveal most alternative splicing and gene fusion events, which generally occur through exon skipping and crossovers between introns. GSNAP can rely upon either or both of these types of evidence to identify splicing events, including those with mismatches, as well as partial splicing or ‘half intron’ events, where one end has enough sequence to align to one exon, but the other end lacks enough sequence to identify the other exon (<xref ref-type="fig" rid="F1">Fig. 1</xref>C). Splicing events may span not only the short distances seen in normal or alternative splicing, but also long-distance intrachromosomal deletions or inversions, and interchromosomal translocations (<xref ref-type="fig" rid="F1">Fig. 1</xref>D).</p>
+    <p>Our program also implements the ability to align reads not just to a single reference sequence, but to a reference ‘space’ of all possible combinations of major and minor alleles from databases like dbSNP (Sherry <italic>et al.</italic>, <xref ref-type="bibr" rid="B26">2001</xref>). By aligning to a reference space instead of a single reference sequence, our program avoids treating minor alleles as mismatches and thereby penalizing those genotypes in the alignment process. The utility of SNP-tolerant alignment is illustrated by an example that initially suggested a splice junction specific to one sample, but was actually due to two minor alleles nearby causing the read to fail to align (<xref ref-type="fig" rid="F1">Fig. 1</xref>E). In SNP-tolerant alignment, minor alleles are treated as matches to a reference space, rather than as mismatches to a reference sequence. This idea has been implemented elsewhere (Manske and Kwiatkowski, <xref ref-type="bibr" rid="B21">2009</xref>), but in a way that requires 29 GB of memory for SNP-tolerant alignment to the human genome. In this paper, we show how this feature can be performed instead with a much smaller memory requirement.</p>
+    <p>Our methods can be generalized for other tasks, such as mapping reads from DNA treated with sodium bisulfite (BS) for the study of methylation state (Lister and Ecker, <xref ref-type="bibr" rid="B19">2009</xref>). BS converts each unmethylated cytosine in genomic DNA to uracil, which appears subsequently as thymine in reads. Reads from BS-converted DNA have a high error rate, which provides additional motivation for efficient detection of multiple mismatches. Although existing alignment programs can be adapted to handle such data, by converting all cytosines to thymines in both the reference sequence and reads (Deng <italic>et al.</italic>, <xref ref-type="bibr" rid="B6">2009</xref>), one subtle problem is that this approach obscures mismatches between reference thymines and read cytosines. The data structures in GSNAP allow it to align BS-seq reads with explicit detection of genomic-T to read-C mismatches, against either a reference sequence or a SNP-tolerant reference space.</p>
+  </sec>
+  <sec sec-type="methods" id="SEC2">
+    <title>2 METHODS</title>
+    <sec id="SEC2.1">
+      <title>2.1 Overview</title>
+      <p>We view alignment as a search problem over a space of genomic regions in the reference sequence, or combinations of regions if gaps are allowed. (Although a reference sequence may consist of chromosomes, contigs, transcripts or artificial segments, we simplify our discourse by referring to it as a ‘genome’.) Searching involves the steps of generating, filtering and verifying candidate genomic regions, and its efficiency depends on designing the generation and filtering steps to produce as few candidates as possible. Several alignment programs, including MAQ (Li <italic>et al.</italic>, <xref ref-type="bibr" rid="B16">2008a</xref>), RMAP (Smith <italic>et al.</italic>, <xref ref-type="bibr" rid="B27">2008</xref>), SeqMap (Jiang and Wong, <xref ref-type="bibr" rid="B11">2008</xref>) and RazerS (Weese <italic>et al.</italic>, <xref ref-type="bibr" rid="B31">2009</xref>), preprocess the reads and then generate and filter candidate genomic regions by scanning a read index against the genome.</p>
+      <p>For large genomes, it is more efficient to pre-process the genome rather than the reads to create genomic index files, which provide genomic positions for a given oligomer. Genomic indexing also permits parts of reads to be aligned to arbitrary genomic regions, needed for long-distance splice detection. Indexing need be done only once for each reference sequence, with the resulting index files usable by each new dataset. Oligomers of all lengths can be indexed using a suffix array or its compressed BWT equivalent, as used in Bowtie, BWA and SOAP2, which can represent a reference sequence compactly, in 2 GB for a human-sized genome of 3 billion nt.</p>
+      <p>However, when only a single oligomer length <italic>q</italic> is needed by an algorithm, a simple hash table (Ning <italic>et al.</italic>, <xref ref-type="bibr" rid="B23">2001</xref>) or <italic>q</italic>-gram index (Rasmussen <italic>et al.</italic>, <xref ref-type="bibr" rid="B24">2006</xref>) applied to the genome will suffice (<xref ref-type="fig" rid="F2">Fig. 2</xref>A). This data structure consists of an offset file (or lookup table) of all possible <italic>q</italic>-mers, with pointers to a position file (or occurrence table) containing a list of genomic positions for each <italic>q</italic>-mer. For our search algorithm to work most efficiently, it is important that each position list in the position file be pre-sorted, which allows intersections to be computed quickly among multiple <italic>q</italic>-mer lookups. The intersection process also requires the positions in each position list to be adjusted at run time for its location in the given read, so they correspond to the diagonals in an alignment matrix between genome and read. Although our alignment algorithm could potentially work with another data structure that provides genomic positions for a given <italic>q</italic>-mer, a suffix array would require the additional step of sorting each position list at run time.
+<fig id="F2" position="float"><label>Fig. 2.</label><caption><p>Representing a reference sequence and a reference space for genomic alignment. (<bold>A</bold>) A hash table consists of an offset file of possible 12mers and a position file containing a sorted list of genomic positions for each 12mer. (<bold>B</bold>) SNPs in a genomic 12mer are represented by duplicating the position in the lists for all combinations of major and minor alleles within the 12mer. (<bold>C</bold>) Major alleles are represented in one compressed genome, while minor alleles are represented in another compressed genome.</p></caption><graphic xlink:href="btq057f2"/></fig></p>
+      <p>A set of <italic>n</italic> sorted lists can be merged in time <italic>O</italic>(<italic>l</italic> log <italic>n</italic>), where <italic>l</italic> is the sum of list lengths, by using a heap-based <italic>multiway merging</italic> procedure (Knuth, <xref ref-type="bibr" rid="B13">1973</xref>). A merging procedure can produce not only a list of candidate genomic regions, but also information about the count and read location of the position lists that support each region. This support information can provide evidence about the number of mismatches in the read, and can therefore be used to filter out candidate regions.</p>
+      <p>To use multiway merging effectively, our algorithm depends on another idea, that of <italic>successive score constraints</italic>. For a given read, our program is designed to report the ‘best’ alignment or alignments, those with the lowest score based on mismatches plus an opening gap penalty for an indel or a splice. Therefore, our search process is constrained successively by an increasing score level <italic>K</italic>, starting from <italic>K</italic>=0 for an exact match, and ending either with a successful alignment at some <italic>K</italic> or at a maximum score level specified by the user. In addition to finding the best alignment, a constrained search process can also find suboptimal alignments, by continuing the search at successive score levels beyond the first, or optimal, one that yields an alignment. Our algorithm could also find an exhaustive set of alignments up to a given score level by searching at that score level and reporting all results.</p>
+      <p>Depending on the score constraint <italic>K</italic> and the read length <italic>L</italic>, a multiway merging process can be formulated in two different ways to generate and filter genomic regions. For low values of <italic>K</italic> involving none or a few mismatches relative to <italic>L</italic>, we apply a merging procedure based on a <italic>spanning set</italic> of oligomers, which filters genomic regions based on the <italic>count</italic> of <italic>q</italic>-mers that support the region. For higher levels of <italic>K</italic> involving more mismatches, we apply a merging procedure based on a <italic>complete set</italic> of oligomers, which filters genomic regions based on the <italic>pattern</italic> of <italic>q</italic>-mers that support the region. Both the count- and pattern-based criteria provide lower bounds on the number of mismatches present in a read or part of a read. If a lower bound exceeds the given score constraint <italic>K</italic> of allowed mismatches, the read may be filtered out and need not be verified against the genome to determine the actual number of mismatches.</p>
+      <p>A hash table is relatively large, requiring 12 GB to represent a human-sized genome if every overlapping oligomer is indexed. Accordingly, SOAP (Li <italic>et al.</italic>, <xref ref-type="bibr" rid="B17">2008b</xref>) requires 14 GB of memory to process a human-sized genome. Although modern computers generally have sufficient physical memory to query such large hash tables, smaller data structures can speed up programs by using memory paging and caching resources more effectively. We can reduce the size of a hash table by sampling the genomic oligomers that are indexed in the table. In our program, we index 12mers every 3 nt in the genome, which reduces the size of a human genomic hash table to 4 GB. As a result, our algorithm is designed to use a hash table sampled every 3 nt and still achieve full sensitivity as if every overlapping oligomer were indexed.</p>
+      <p>A hash table indexing scheme can be extended to align major and minor alleles equally well in SNP-tolerant alignment. (For ease of discussion, we refer to the alleles in the reference sequence as ‘major’ and their corresponding alternate versions as ‘minor’, regardless of their actual frequencies in a population.) Because a hash table represents the genome in <italic>q</italic>-mer pieces, it can represent the enormous space of all combinations of major and minor alleles in a relatively straightforward way.</p>
+      <p>To construct a SNP-tolerant hash table, we scan the genome and process each sampled genomic <italic>q</italic>-mer that contains one or more SNPs, by generating each possible combination of the major and minor alleles contained within and duplicating this genomic position for each generated <italic>q</italic>-mer. Finally, we re-sort the position list for each <italic>q</italic>-mer (<xref ref-type="fig" rid="F2">Fig. 2</xref>B). A lookup in this hash table of any combination of major and minor alleles in a <italic>q</italic>-mer at a given genomic position will all contain the desired position. Our experience shows that a SNP-tolerant hash table is only slightly larger than the original. When we incorporate the 12 million SNPs from dbSNP version 129 into human genome version 36, the hash table increases in size from 3.8 to 4.0 GB. Our construction algorithm requires that the computer have sufficient memory to store the hash table, thereby requiring 4 GB for a human-sized genome. Verification in a SNP-tolerant manner is discussed in <xref ref-type="sec" rid="SEC2.4">Section 2.4</xref>.</p>
+    </sec>
+    <sec id="SEC2.2">
+      <title>2.2 Spanning set generation and filtering</title>
+      <p>A spanning set is a minimal set of 12mers that covers the read (<xref ref-type="fig" rid="F3">Fig. 3</xref>). This structure exploits the pigeonhole principle that the number of non-supporting 12mers—those that fail to contain a given position in their corresponding position list—provides a lower bound on the number of mismatches in the read. However, implementation of this pigeonhole principle is complicated by our use of sampling in the hash table, which creates uncertainty about the phase of the aligned read relative to the sampled genomic 12mers. Therefore, the program must construct six spanning sets, one for each shift of 0, 1 or 2 nt in both the forward and reverse complement directions (<xref ref-type="fig" rid="F3">Fig. 3</xref>A). In addition, sampled hash tables cause genomic position information to be available only at intervals of 3 nt, thereby causing information to incomplete for 12mers that overhang past read boundaries. To handle such cases, the program computes the position list for a 12mer that overhangs the end of the read by 1 or 2 nt by substituting all possible nucleotides in the overhanging positions and taking the union of the resulting position lists (<xref ref-type="fig" rid="F3">Fig. 3</xref>B).
+<fig id="F3" position="float"><label>Fig. 3.</label><caption><p>Spanning set method for generating and filtering mismatch candidates. (<bold>A</bold>) A read of length 62 nt is analyzed at shifts of 0, 1 and 2 nt, with spanning sets each consisting of five elements. Elements at the ends may overhang the ends by 1 or 2 nt. Spanning set elements are shown in detail for the shift of 2 nt. (<bold>B</bold>) An overhanging 12mer is represented by a union of lists obtained from hash table lookups of all possible substitutions for the overhang. (<bold>C</bold>) Overlapping 12mers are represented by taking the intersection of their position lists. (<bold>D</bold>) Elements used for generating candidates (gray). (<bold>E</bold>) Elements used for filtering candidates (white). A candidate region (black) is supported by two of the generating elements, and is checked for support in the remaining filtering elements.</p></caption><graphic xlink:href="btq057f3"/></fig></p>
+      <p>Another complication is that a spanning set will often contain 12mers that overlap. To address this issue, we consider an overlapping pair of 12mers to be a single ‘element’ in the spanning set, with a position list equal to the intersection of the two constituent position lists (<xref ref-type="fig" rid="F3">Fig. 3</xref>C). The resulting set of elements is non-overlapping, so the pigeonhole principle now holds where <italic>k</italic> non-supporting elements implies a lower bound of <italic>k</italic> mismatches, and the region may be filtered out if <italic>k</italic>&gt;<italic>K</italic>. There may be several choices for the pair of 12mers that overlap to create a single element; our program heuristically selects the 12mer with the longest position list or union of position lists as the site of the overlap, because the intersection operation on that 12mer is likely to eliminate the largest number of positions from subsequent consideration.</p>
+      <p>Although we could use all spanning set elements to generate candidates and then proceed to the verification step, we can make our algorithm faster if we designate some elements for generating candidates (<xref ref-type="fig" rid="F3">Fig. 3</xref>D) and reserve others for a separate filtering step (<xref ref-type="fig" rid="F3">Fig. 3</xref>E). This division of labor is intended to reduce the <italic>O</italic>(<italic>l</italic> log <italic>n</italic>) complexity for a heap-based priority queue, which is linear in <italic>l</italic>. If we check a sorted list of length <italic>l</italic><sub><italic>i</italic></sub> for the presence of a given position in a filtering step, this can be done in logarithmic time <italic>O</italic>(log <italic>l</italic><sub><italic>i</italic></sub>) through a binary search process. Consequently, our method performs a heap-based merge of some position lists (the generating elements), and counts the number of elements that support each of the resulting candidate regions. If this count is high enough to allow the possibility that <italic>K</italic> or fewer total elements will be non-supporting, then the candidate region undergoes a filtering step that checks each of the filtering elements for support. The algorithm eliminates the candidate if more than <italic>K</italic> total elements show non-support; otherwise, the region undergoes a verification step to determine the actual number of mismatches.</p>
+      <p>We have made implementation of our spanning set method efficient in various ways. First, the program selects elements with the shortest position lists as generating elements and the longest ones for filtering elements, because while every position in generating elements must be processed, only some of those in the filtering elements need be. Second, we maintain a pointer on each filtering element and advance that pointer only when we check for support, by using a galloping binary search (Hwang and Lin, <xref ref-type="bibr" rid="B10">1980</xref>). Third, filtering elements that involve unions or intersections of position lists need not have these set operations computed explicitly, but can be represented instead by their constituent position lists, and support checked by performing the appropriate disjunctive or conjunctive searches when needed.</p>
+      <p>Allocation of <italic>N</italic> total elements between generating and filtering purposes depends on the constraint score level <italic>K</italic> of allowed mismatches. At least (<italic>K</italic> + 1) elements must be generating to guarantee that at least one generating element has support for a candidate region when the <italic>K</italic> other generating elements do not. We have found empirically that for <italic>K</italic> &gt; 1, it is more efficient to allocate (<italic>K</italic> + 2) elements for generating purposes, because the requirement for two supporting elements greatly reduces the number of candidate regions generated.</p>
+      <p>Because the spanning set method requires at least (<italic>K</italic> + 2) generating elements [or (<italic>K</italic> + 1) for the exact and one-mismatch constraints], it can be used to detect only a limited number of mismatches relative to read length <italic>L</italic>, which limits the total number of elements <italic>N</italic>. Spanning set elements are non-overlapping in all three shifts when <italic>L</italic> = 10 (mod 12), so <italic>N</italic>≤⌊(<italic>L</italic> + 2)/12⌋. Therefore, (<italic>K</italic> + 1)&lt;<italic>N</italic> or (<italic>K</italic> + 2)&lt;<italic>N</italic> indicates that the spanning set method can be applied to constraint level <italic>K</italic> when <italic>K</italic> = 0 for 14≤<italic>L</italic>≤21; <italic>K</italic>≤1 for 22≤<italic>L</italic>≤33; and <italic>K</italic>≤⌊(<italic>L</italic>+2)/12⌋−2 for <italic>L</italic>≥34.</p>
+    </sec>
+    <sec id="SEC2.3">
+      <title>2.3 Complete set generation and filtering</title>
+      <p>To handle greater numbers of mismatches than those detectable by the spanning set method, we employ a strategy based on the complete set of overlapping 12mers. This complete set method works for any constraint level <italic>K</italic> of allowed mismatches, as long as the read and candidate region have 14 consecutive matches (a 12mer out of phase by as many as 2 nt). One sufficient condition for 14 consecutive matches is that the number of mismatches be ≤⌊<italic>L</italic>/14⌋−1. Up to this level of mismatches, GSNAP is an exhaustive algorithm, meaning that it can guarantee to identify and report all available alignments in the genome with that many mismatches.</p>
+      <p>Candidates are generated by performing a multiway merge of position lists for all read locations in a single forward and single reverse complement pass, keeping track of the read location of 12mers that support each candidate region. The pattern of supporting 12mers provides a lower bound on mismatches in the read. If the supporting 12mers have read locations separated by Δ<italic>p</italic>, then the minimum number of mismatches between them is ⌊(Δ<italic>p</italic>+6)/12⌋ (<xref ref-type="fig" rid="F4">Fig. 4</xref>A). Over the entire read, we can sum these lower bounds in a pattern-based lower bound calculation (<xref ref-type="fig" rid="F4">Fig. 4</xref>B). Specifically, if a read of length <italic>L</italic> has a pattern of supporting 12mers at read locations <italic>p</italic><sub><italic>i</italic></sub>, <italic>i</italic>=1,…, <italic>n</italic>, a lower bound on mismatches is ∑<sub><italic>i</italic>=0</sub><sup><italic>n</italic></sup>⌊(<italic>p</italic><sub><italic>i</italic>+1</sub>−<italic>p</italic><sub><italic>i</italic></sub>+6)/12⌋, where <italic>p</italic><sub>0</sub>=−3 and <italic>p</italic><sub><italic>n</italic>+1</sub>=<italic>L</italic>−9.
+<fig id="F4" position="float"><label>Fig. 4.</label><caption><p>Complete set method for generating and filtering mismatch candidates. (<bold>A</bold>) Patterns of supporting (gray) and non-supporting (white) 12mers induced by a single mismatch, by two close mismatches, and by two distant mismatches (crosses). These patterns indicate a lower bound of ⌊(Δ<italic>p</italic>+6)/12⌋ mismatches, where Δ<italic>p</italic> is the distance between start locations of consecutive supporting 12mers. (<bold>B</bold>) Pattern-based lower bound calculation for a read of 51 nt, shown on top with actual mismatches. Supporting 12mers (gray) start at read locations 5, 8, 11 and 29, with end locations at −3 and <italic>L</italic>−9=42. The lower bound formula is summed over successive supporting 12mers to give a total lower bound of four mismatches.</p></caption><graphic xlink:href="btq057f4"/></fig></p>
+      <p>To make the complete set method more efficient, we note that the merging process must process every position from each position list, and can therefore be slowed down by non-specific 12mers with extremely long position lists that do not help localize the read. We can gain efficiency by ignoring these non-specific 12mers, defined currently as those with position lists that are &gt; 10 times the mean position list length. The lower bound formula must be modified accordingly to compensate for the missing 12mers, essentially by assuming that they are supporting. This strategy can potentially fail to align reads or portions of reads if the non-specific or repetitive nucleotide patterns are necessary for mapping the read. To successfully align these reads, the program provides an option for a greedy strategy in which non-specific or repetitive 12mers are initially ignored, and then subsequently included if an alignment is not found.</p>
+    </sec>
+    <sec id="SEC2.4">
+      <title>2.4 Verification of candidate regions</title>
+      <p>Candidate regions that are generated and survive the filtering process have an established lower bound on their number of mismatches. To determine the actual number of mismatches and verify that it does not exceed the score constraint <italic>K</italic>, we check these regions by aligning the read against the region. To reduce memory requirements, we store the genome in a compressed format that is created in addition to the hash table during the pre-indexing process (<xref ref-type="fig" rid="F2">Fig. 2</xref>C), and verification is performed against this compressed version of the genome. For indexing of a reference sequence, the compressed genome contains the major alleles. For indexing of a reference space, GSNAP also accesses a second compressed genome that contains the minor alleles. The compressed genome format, as described in our paper on GMAP, stores each nucleotide in 3 bits. Each 32 nt block of the genome is represented by three 32-bit words. The first two words represent the nucleotide using 2 bits each, while the remaining word has 32 bits used as flags. For the major-allele genome, the flags indicate if the genomic position has a unknown or ambiguous nucleotide that cannot be represented as A, C, G or T. For the minor-allele genome, the flags indicate if the genomic position has a SNP.</p>
+      <p>Verification is performed at the bit level. Instead of decompressing the genome, the program compresses the read and shifts it to match the genome coordinates for a candidate region. The compressed read and genome are then combined bitwise using an exclusive-or function, and adjacent pairs of bits are reduced to yield bit vectors that contain the positions of mismatches. For alignment against a reference space, the read is similarly combined bitwise with the minor-allele genome and the two mismatch results are combined using a logical-and function. Therefore, a mismatch occurs at a SNP only if the read allele differs from both the major and minor alleles. Mismatch results can be further analyzed to count the total number of mismatches, or to report their locations from the left or right of the read. GSNAP will use the built-in bitwise functions <monospace>popcount</monospace>, <monospace>clz</monospace> (count leading zeroes) and <monospace>ctz</monospace> (count trailing zeroes) for these tasks, if they are available on a given machine, or will use its own equivalent bitwise functions if they are not. However, our testing reveals that built-in functions provide only a 1–2% increase in speed, in part because the generation and filtering steps greatly limit the number of regions that must be verified.</p>
+    </sec>
+    <sec id="SEC2.5">
+      <title>2.5 Detecting insertions and deletions</title>
+      <p>Our program can detect alignments containing a single insertion or deletion, with mismatches up to a user-specified maximum. Indel alignments can be penalized relative to gap-free alignments using a user-defined penalty <italic>G</italic>. Therefore, as the program imposes progressively stronger constraint levels <italic>K</italic> of allowed mismatches, it also searches for indel alignments by imposing a constraint level of (<italic>K</italic> − <italic>G</italic>) allowed mismatches with an indel.</p>
+      <p>Indels are detected using two algorithms, one that detects indels in the middle of the short read (between the first and last 14mer), and one that detects indels at the ends (within the first or last 14mer). End indels are constrained to have a distal short fragment that is free of mismatches and sufficiently long (as specified by the user) to determine its alignment reliably. For both methods, the merging step of the complete set method, but not the filtering calculation, is executed to produce all candidate regions having 14 or more consecutive matches with the read.</p>
+      <p>The method for detecting middle indels seeks a pair of candidate regions that co-localize within the maximum allowed deletion and insertion sizes (<xref ref-type="fig" rid="F5">Fig. 5</xref>A). The position-based lower bound calculation can be applied to both ends of the candidate pair to filter out pairs with too many mismatches. Verification of the remaining candidate pairs at the nucleotide level identifies the location of mismatches in each member of the pair, which can then be analyzed to determine whether an area of possible crossovers exists within the constraint level <italic>K</italic> of allowed mismatches (<xref ref-type="fig" rid="F5">Fig. 5</xref>B). The middle indel algorithm is efficient even for long indels because the genomic distance between the two ends specifies the gap size and allows efficient verification of mismatches without resorting to a dynamic programming algorithm.
+<fig id="F5" position="float"><label>Fig. 5.</label><caption><p>Efficient detection of indels and splice pairs. (<bold>A</bold>) The complete set method generates candidate regions with supporting 12mers (gray). (<bold>B</bold>) Pairs of candidates within the allowed distance are tested for middle indels and short-distance splice pairs. The constraint on number of mismatches (shown for the value 1) determines a range of crossover points. (<bold>C</bold>) End indels are tested in the distal 14 nt when the long region of the read has a sufficiently low number of mismatches. (<bold>D</bold>) Long-distance splicing is detected by identifying known or novel splice sites in single candidate regions within areas defined by constraints on number of mismatches. Candidate regions with donor and acceptor splice sites are then paired to reveal splice junctions.</p></caption><graphic xlink:href="btq057f5"/></fig></p>
+      <p>Detection of end indels also depends upon candidate regions generated by the complete set method, but filters single candidate regions rather than pairs. Candidates are filtered using a variant of the position-based lower bound calculation that ignores the first or last 14mer of the read, which is made non-supporting by an end indel. Candidates that pass this filtering step are verified against the genome to count the number of mismatches in the long part of the read. If the number of mismatches is sufficiently low, the end region is tested across the range of possible end insertion and deletion gap sizes for an indel. For each gap size, the program backtracks from the end until the first mismatch is reached, and then along the main diagonal to count the total number of mismatches near the end (<xref ref-type="fig" rid="F5">Fig. 5</xref>C). An end indel is detected if the distal segment is sufficiently long and if the sum of mismatches in the long and distal regions is sufficiently low.</p>
+    </sec>
+    <sec id="SEC2.6">
+      <title>2.6 Detecting splice junctions</title>
+      <p>GSNAP can align transcriptional reads that cross exon–exon junctions involving known or novel splice sites. For known splice sites, the program depends upon a user-provided set of splice sites, which belong to one of four categories: donors and acceptors on the plus genomic strand, and donors and acceptors on the minus genomic strand. Identification of novel splice sites is assisted by a probabilistic model, currently implemented as a maximum entropy model (Yeo and Burge, <xref ref-type="bibr" rid="B33">2004</xref>), which uses frequencies of nucleotides neighboring a splice site to discriminate between true and false splice sites.</p>
+      <p>We use two methods for detecting splice junctions, one for short-distance and one for long-distance splicing. Short-distance splicing involves two splice sites that are on the same chromosomal strand, with the acceptor site being downstream of the donor site, within a user-specified parameter (default 200 000 nt). Short-distance splice junctions can be detected using a method similar to that for middle deletions, except that the distance allowed between candidate regions is much longer (<xref ref-type="fig" rid="F5">Fig. 5</xref>B). As with middle indel detection, the positions of mismatches in the two regions determine whether a crossover area exists with the allowed number of mismatches (<italic>K</italic> − <italic>S</italic>), where <italic>S</italic> is the opening gap penalty for a splice. This crossover area is searched for donor and acceptor splice sites that are either known or supported by a splice site model at a sufficiently high probability. The probability score required is dependent on the length of short read sequence available for alignment in the exon region. When the aligned exon sequence is short, on the order of 12–20 nt, a relatively high probability score is needed. But when the aligned exon sequence is sufficiently long, more than 35 nt, only the expected dinucleotides at the intron end are needed.</p>
+      <p>For long-distance splicing, probability scores are also used to help find novel splice sites, although the required probability scores are higher for a given length of aligned sequence to compensate for the larger search space over the entire genome. To detect cases of long-distance splicing, the program identifies known or novel splice ends within single candidate regions, in the area delimited by the constraint level <italic>K</italic> of allowed mismatches (<xref ref-type="fig" rid="F5">Fig. 5</xref>D). Candidate regions with donor and acceptor splice sites are then paired if they have the same breakpoint on the read, and have an acceptable number of total mismatches.</p>
+      <p>Reads that lie predominantly on one end of a splice junction may have too little sequence at the distant end to identify the other exon. Such alignments can still be reported by our program as partial splicing or ‘half intron’ alignments, if there is sufficient sequence on one end to determine a splice site, but insufficient sequence on the other end for the other site.</p>
+    </sec>
+    <sec id="SEC2.7">
+      <title>2.7 Aligning paired-end reads</title>
+      <p>GSNAP can align paired-end reads, which are produced when both ends of a nucleotide fragment are sequenced. Paired-end reads can also be generated by circularizing a long fragment of 10 000 or more bases with a short linker, and then cutting outside the linker to give reads at both ends of the long fragment. Our algorithm attempts to find an optimal pair of mapping variants that are concordant, meaning that they are within a user-defined range of expected genomic distances and that their strand directions are consistent. Therefore, GSNAP will favor concordant solutions involving suboptimal alignments on one or both ends, even when better alignments can be found individually for each end.</p>
+      <p>To consider pairs of alignments together, the program imposes successively stronger constraint levels and attempts to align each end at the given constraint level. For paired-end alignment, both ends of the read contribute toward the overall score, so at a given constraint level <italic>K</italic>, the program must accumulate alignments for each end up to that level. At each constraint level, the program tries to pair the exhaustive set of alignments found so far at each end to see if any pair is concordant. If so, the best alignment or alignments are those with the lowest total score of mismatches and penalties on the two ends. If suboptimal alignments are desired by the user, the program proceeds to find additional alignments beyond the optimal score level. If the algorithm reaches the maximum user-defined score limit without finding any concordant pair, it reports the best individual alignments for each end.</p>
+    </sec>
+    <sec id="SEC2.8">
+      <title>2.8 BS-converted DNA</title>
+      <p>An auxiliary program processes an existing reference sequence or reference space hash table to produce two new hash tables, both representing the plus strand of the genome, with one having C–T substitutions and the other having G–A substitutions. The second hash table accommodates reads from the minus strand, whose C–T substitutions appear as G–A substitutions on the plus strand. The auxiliary program combines and sorts the positions for each substituted 12mer into a single position list.</p>
+      <p>When GSNAP processes a BS read, it performs a C–T substitution of each 12mer in the read to check against the C–T hash table, and a G–A substitution of each 12mer in the reverse complement of the read to check against the G–A hash table. The generation and filtering steps behave as before. The verification step compares the substituted read against the substituted genomic region to identify mismatches. A special check is made in the original read against the original genomic region for mismatches between genomic-T and read-C, which are obscured by a C–T substitution.</p>
+    </sec>
+  </sec>
+  <sec sec-type="results" id="SEC3">
+    <title>3 RESULTS</title>
+    <sec id="SEC3.1">
+      <title>3.1 Simulated reads</title>
+      <p>We compared GSNAP with several alignment programs that have been benchmarked in previous studies: MAQ version 0.7.1, SOAP version 1.11, Bowtie version 0.9.9.1, BWA version 0.4.9 and SOAP2 version 2.19. We generated 36, 70, and 100 nt reads that were sampled uniformly from the human genome (NCBI release 36) and generated datasets of different variant types by introducing mismatches or indels at random. Short indels of 1–3 nt were required to be at least 6 nt from the ends, and long indels at least 14 nt. Programs were run on a Linux machine with 8 dual-core AMD 8220 Opteron CPUs at 2.8 GHz and 64 GB of RAM. All programs have a multi-threaded mode, but were run in single-threaded mode in our tests. To study each variant separately and to prevent programs from searching for suboptimal hits, we provided each program with parameters adequate to identify the given variant.</p>
+      <p>Alignment results (<xref ref-type="table" rid="T1">Table 1</xref>) show that programs could generally align reads correctly with up to three mismatches, with SOAP2 limited to two mismatches, and with misses observed in 36 nt reads by GSNAP and SOAP and in 70 nt reads by SOAP. Misses of two and three mismatches in 36 nt reads by GSNAP were cases where the number of mismatches exceeded the guarantee condition of ⌊<italic>L</italic>/14⌋−1 for exhaustiveness, essentially because mismatches were spaced evenly enough to prevent a consecutive stretch of 14 nt to match between the read and genome. Exact alignments were identified most quickly by Bowtie and one-mismatch alignments by SOAP2. Alignments of two and three mismatches in 70 and 100 nt reads were identified at comparable speeds by BWA and GSNAP, and GSNAP was fastest at identifying four or five mismatches. For short indels, GSNAP showed perfect sensitivity, while BWA and SOAP showed a miss rate of up to 5%. SOAP2 was unable to detect indels in the single-end reads in our dataset, although it can detect short indels in paired-end reads. In all but one dataset, GSNAP was fastest at identifying short indels. For long indels, GSNAP was the only program able to detect the alignments, except that long indels in 36 nt reads could also be detected by SOAP at a much slower rate. Detection of long indels by GSNAP occurred at speeds comparable to those for short indels, and showed a miss rate of 0.1%, all due to repetitive regions on one end of the indel, which the program is designed to ignore.
+<table-wrap id="T1" position="float"><label>Table 1.</label><caption><p>Results of read alignment algorithms on simulated reads</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th rowspan="1" colspan="1"/><th align="center" colspan="6" rowspan="1">(Percent misses) Time<hr/></th></tr><tr><th align="left" rowspan="1" colspan="1">Variant</th><th align="right" rowspan="1" colspan="1">GSNAP</th><th align="right" rowspan="1" colspan="1">BWA</th><th align="right" rowspan="1" colspan="1">Bowtie</th><th align="right" rowspan="1" colspan="1">SOAP2</th><th align="right" rowspan="1" colspan="1">SOAP</th><th align="right" rowspan="1" colspan="1">MAQ</th></tr></thead><tbody align="left"><tr><td rowspan="1" colspan="1">36 nt reads</td><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/></tr><tr><td align="left" rowspan="1" colspan="1"> Exact</td><td align="right" rowspan="1" colspan="1">51</td><td align="right" rowspan="1" colspan="1">17</td><td align="right" rowspan="1" colspan="1">9</td><td align="right" rowspan="1" colspan="1">70</td><td align="right" rowspan="1" colspan="1">869</td><td align="right" rowspan="1" colspan="1">2248</td></tr><tr><td align="left" rowspan="1" colspan="1"> 1 mm</td><td align="right" rowspan="1" colspan="1">55</td><td align="right" rowspan="1" colspan="1">60</td><td align="right" rowspan="1" colspan="1">33</td><td align="right" rowspan="1" colspan="1">11</td><td align="right" rowspan="1" colspan="1">1157</td><td align="right" rowspan="1" colspan="1">2106</td></tr><tr><td align="left" rowspan="1" colspan="1"> 2 mm</td><td align="right" rowspan="1" colspan="1">(1.0) 304</td><td align="right" rowspan="1" colspan="1">64</td><td align="right" rowspan="1" colspan="1">46</td><td align="right" rowspan="1" colspan="1">39</td><td align="right" rowspan="1" colspan="1">(2.9) 1470</td><td align="right" rowspan="1" colspan="1">6008</td></tr><tr><td align="left" rowspan="1" colspan="1"> 3 mm</td><td align="right" rowspan="1" colspan="1">(11.9) 405</td><td align="right" rowspan="1" colspan="1">551</td><td align="right" rowspan="1" colspan="1">544</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(15.6) 1369</td><td align="right" rowspan="1" colspan="1">19 523</td></tr><tr><td align="left" rowspan="1" colspan="1"> Ins, 1–3</td><td align="right" rowspan="1" colspan="1">640</td><td align="right" rowspan="1" colspan="1">(4.9) 767</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(5.1) 5534</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Del, 1–3</td><td align="right" rowspan="1" colspan="1">653</td><td align="right" rowspan="1" colspan="1">(3.3) 1016</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(3.7) 4308</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Ins, 4–9</td><td align="right" rowspan="1" colspan="1">(0.1) 507</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">31420</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Del, 4–30</td><td align="right" rowspan="1" colspan="1">(0.1) 887</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td rowspan="1" colspan="1">70 nt reads</td><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/></tr><tr><td align="left" rowspan="1" colspan="1"> Exact</td><td align="right" rowspan="1" colspan="1">15</td><td align="right" rowspan="1" colspan="1">23</td><td align="right" rowspan="1" colspan="1">9</td><td align="right" rowspan="1" colspan="1">13</td><td align="right" rowspan="1" colspan="1">1205</td><td align="right" rowspan="1" colspan="1">2180</td></tr><tr><td align="left" rowspan="1" colspan="1"> 1 mm</td><td align="right" rowspan="1" colspan="1">23</td><td align="right" rowspan="1" colspan="1">25</td><td align="right" rowspan="1" colspan="1">15</td><td align="right" rowspan="1" colspan="1">12</td><td align="right" rowspan="1" colspan="1">(0.1) 1564</td><td align="right" rowspan="1" colspan="1">2120</td></tr><tr><td align="left" rowspan="1" colspan="1"> 2 mm</td><td align="right" rowspan="1" colspan="1">45</td><td align="right" rowspan="1" colspan="1">33</td><td align="right" rowspan="1" colspan="1">48</td><td align="right" rowspan="1" colspan="1">67</td><td align="right" rowspan="1" colspan="1">(0.9) 2363</td><td align="right" rowspan="1" colspan="1">6175</td></tr><tr><td align="left" rowspan="1" colspan="1"> 3 mm</td><td align="right" rowspan="1" colspan="1">95</td><td align="right" rowspan="1" colspan="1">83</td><td align="right" rowspan="1" colspan="1">542</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(3.3) 2272</td><td align="right" rowspan="1" colspan="1">20 316</td></tr><tr><td align="left" rowspan="1" colspan="1"> 4 mm</td><td align="right" rowspan="1" colspan="1">325</td><td align="right" rowspan="1" colspan="1">373</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(7.8) 2098</td><td align="right" rowspan="1" colspan="1">(2.4) 20 002</td></tr><tr><td align="left" rowspan="1" colspan="1"> Ins, 1–3</td><td align="right" rowspan="1" colspan="1">245</td><td align="right" rowspan="1" colspan="1">(2.0) 323</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(4.3) 15 516</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Del, 1–3</td><td align="right" rowspan="1" colspan="1">263</td><td align="right" rowspan="1" colspan="1">(1.3) 425</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(4.7) 14 645</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Ins, 4–9</td><td align="right" rowspan="1" colspan="1">(0.1) 288</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Del, 4–30</td><td align="right" rowspan="1" colspan="1">(0.1) 292</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td rowspan="1" colspan="1">100 nt reads</td><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/></tr><tr><td align="left" rowspan="1" colspan="1"> Exact</td><td align="right" rowspan="1" colspan="1">15</td><td align="right" rowspan="1" colspan="1">29</td><td align="right" rowspan="1" colspan="1">11</td><td align="right" rowspan="1" colspan="1">10</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">2211</td></tr><tr><td align="left" rowspan="1" colspan="1"> 1 mm</td><td align="right" rowspan="1" colspan="1">21</td><td align="right" rowspan="1" colspan="1">30</td><td align="right" rowspan="1" colspan="1">16</td><td align="right" rowspan="1" colspan="1">13</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">2168</td></tr><tr><td align="left" rowspan="1" colspan="1"> 2 mm</td><td align="right" rowspan="1" colspan="1">33</td><td align="right" rowspan="1" colspan="1">35</td><td align="right" rowspan="1" colspan="1">56</td><td align="right" rowspan="1" colspan="1">73</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">6330</td></tr><tr><td align="left" rowspan="1" colspan="1"> 3 mm</td><td align="right" rowspan="1" colspan="1">50</td><td align="right" rowspan="1" colspan="1">52</td><td align="right" rowspan="1" colspan="1">620</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">20 697</td></tr><tr><td align="left" rowspan="1" colspan="1"> 4 mm</td><td align="right" rowspan="1" colspan="1">82</td><td align="right" rowspan="1" colspan="1">137</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(0.5) 20 503</td></tr><tr><td align="left" rowspan="1" colspan="1"> 5 mm</td><td align="right" rowspan="1" colspan="1">155</td><td align="right" rowspan="1" colspan="1">543</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">(2.1) 20 283</td></tr><tr><td align="left" rowspan="1" colspan="1"> Ins, 1–3</td><td align="right" rowspan="1" colspan="1">269</td><td align="right" rowspan="1" colspan="1">(1.3) 218</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Del, 1–3</td><td align="right" rowspan="1" colspan="1">273</td><td align="right" rowspan="1" colspan="1">(0.8) 360</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Ins, 4–9</td><td align="right" rowspan="1" colspan="1">(0.1) 335</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td></tr><tr><td align="left" rowspan="1" colspan="1"> Del, 4–30</td><td align="right" rowspan="1" colspan="1">(0.1) 312</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td><td align="right" rowspan="1" colspan="1">−</td></tr></tbody></table><table-wrap-foot><fn><p>Times (in seconds) are for each set of 100 000 reads. For BWA, times include conversion to genomic coordinates (∼8 s per dataset). For SOAP2, times exclude loading of indices (∼35 s per dataset). Sensitivity was computed over reads that were unique (mapping to one location in the genome) and non-upgradeable (not mapping to another genomic location with a better variant type than the expected alteration). Misses, if any, are represented by percentages in parentheses before the corresponding running time. Dashes indicate variant types that could not be detected by the corresponding program. Variants: mm, mismatch(es); ins, insertion; and del, deletion. Parameter flags used, where <italic>n</italic> is number of mm in dataset: GSNAP (mm): -t 1 -m <italic>n</italic>. GSNAP (indel): -t 1 -m 0 -i 0. BWA (mm): aln -o 0 -n <italic>n</italic>. BWA (indel): aln -n 3 -o 1 -O 1 -E 1. Bowtie: -f -k 10 –quiet -p 1 -v <italic>n</italic>. SOAP2: -r 2 -v <italic>n</italic>. SOAP (mm): -s 12 -r 2 -w 10 -v <italic>n</italic>. SOAP (indel): -s 12 -r 2 -w 10 -v 0 -g 3. MAQ: map -C 10 -e 200 -n <italic>n</italic>. For the 3-mismatch dataset, Bowtie was also run in its MAQ mode, by removing the -v flag for limiting the number of mismatches and adding ‘-e 200’ to permit more mismatches. In that mode, times for the 36, 70 and 100 nt datasets were 46, 142 and 750 s, but miss rates were 57.2, 13.4 and 6.4%.</p></fn></table-wrap-foot></table-wrap>
+</p>
+      <p>We measured the amount of heap memory used by the programs using the Valgrind Massif tool (Nethercote and Steward, <xref ref-type="bibr" rid="B22">2007</xref>). GSNAP used a peak of 86 MB on the exact match datasets, 101 MB on the mismatch datasets and 170 MB on the indel datasets, with memory usage varying from read to read. However, these values do not measure memory used by GSNAP for its hash table position file of size 3.8 GB and the compressed genome of size 1.15 GB, which are accessed using memory mapping when available on the host computer. In memory mapping, our program will run fastest when sufficient physical memory is available to hold relevant parts of the index files. Therefore, for optimum performance on a human-sized genome, GSNAP should have access to 5 GB of physical memory, although the program can still run, albeit more slowly, if less memory is available. One advantage of memory mapping is that multiple instances of GSNAP can run on the same computer simultaneously and share the system memory that is mapped to the index files, without each process having to allocate that memory separately. For comparison, BWA used 2.2 GB on all datasets; Bowtie used 1.1 GB on the exact match datasets and 2.2 GB on the mismatch datasets; MAQ used 302 MB on all datasets; and SOAP used 14 GB on all datasets. Memory usage of SOAP2 could not be determined because source code is not available and the binary program was compiled without the flag necessary for memory profiling.</p>
+      <p>We also evaluated the ability of GSNAP to detect intragenic and intergenic exon–exon junctions in simulated reads, using either known splice sites from RefSeq or only novel splice site detection (These tests were performed on a earlier version of GSNAP that used absolute probability thresholds, instead of the sliding scale used in the current version). Simulated reads were based upon RefSeq splice sites, and GSNAP achieved perfect sensitivity when it had access to that information, but missed 0.1% of intragenic events and 5% of intergenic events when it relied solely upon probabilistic splice site models. Missed splice events were due to known splice sites with model scores below the default probability threshold of 0.90. Differences in sensitivity between intragenic and intergenic splice detection were due to the different criteria in GSNAP for short-distance splicing, which used a lower probability threshold (default 0.50) for the second splice site. Running times on datasets of 100 000 reads were 48, 114 and 183 s for 36, 70 and 100 nt intragenic reads, and 122, 211 and 287 s for intergenic reads. These running times are faster than those for the benchmarking of mismatches and indels, because the spliced reads were generated from the coding part of the genome, which is less repetitive.</p>
+    </sec>
+    <sec id="SEC3.2">
+      <title>3.2 Transcriptional reads</title>
+      <p>We measured the impact of complex variant detection and SNP tolerance by GSNAP on actual data taken from universal human reference RNA (UHR, Stratagene catalog number 740 000), used in the MAQC (MicroArray Quality Control) project (Canales <italic>et al.</italic>, <xref ref-type="bibr" rid="B4">2006</xref>) and assayed by Illumina on their Solexa Genome Analyzer. From this dataset, we sampled 100 000 reads uniformly among the dataset of 50 nt reads. Unlike simulated reads, actual reads lack information about their original genomic location, so we determined the performance of programs using alignment yield, which is the percentage of reads that could be aligned by each program with various settings of mismatches, splicing or indels. We tested GSNAP against NCBI human genome version 36 and also against a reference space that covered 12 million SNPs from dbSNP version 129.</p>
+      <p>Alignment yields were 70% for two mismatches and 74% for three mismatches (<xref ref-type="table" rid="T2">Table 2</xref>). Alignment yield increased when programs were allowed to identify more complex variants. The addition of splicing involving known splice sites to GSNAP increased alignment yields by 8–9%, and the further addition of novel splice sites increased alignment yields by another 0.3–0.6%. Allowing indels increased alignment yield by a further 1%.
+<table-wrap id="T2" position="float"><label>Table 2.</label><caption><p>Effect of splicing, indels and SNP tolerance on transcriptional dataset</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th rowspan="1" colspan="1"/><th align="left" colspan="2" rowspan="1">Alignment yield (%)<hr/></th><th align="left" colspan="6" rowspan="1">SNP effect on alignment (%)<hr/></th><th align="left" colspan="2" rowspan="1">Time (s)<hr/></th></tr><tr><th align="left" rowspan="1" colspan="1">Variants allowed</th><th align="left" rowspan="1" colspan="1">Non-SNP</th><th align="left" rowspan="1" colspan="1">SNP</th><th align="left" rowspan="1" colspan="1">New</th><th align="left" rowspan="1" colspan="1">Same</th><th align="left" rowspan="1" colspan="1">Superset</th><th align="left" rowspan="1" colspan="1">Subset</th><th align="left" rowspan="1" colspan="1">Diff</th><th align="left" rowspan="1" colspan="1">Total</th><th align="left" rowspan="1" colspan="1">Non-SNP</th><th align="left" rowspan="1" colspan="1">SNP</th></tr></thead><tbody align="left"><tr><td align="left" rowspan="1" colspan="1">≤2 mismatches</td><td align="left" rowspan="1" colspan="1">69.7</td><td align="left" rowspan="1" colspan="1">70.2</td><td align="left" rowspan="1" colspan="1">0.5</td><td align="left" rowspan="1" colspan="1">1.7</td><td align="left" rowspan="1" colspan="1">4.9</td><td align="left" rowspan="1" colspan="1">0.4</td><td align="left" rowspan="1" colspan="1">0.1</td><td align="left" rowspan="1" colspan="1">7.5</td><td align="left" rowspan="1" colspan="1">52</td><td align="left" rowspan="1" colspan="1">57</td></tr><tr><td align="left" rowspan="1" colspan="1">Above plus known splicing</td><td align="left" rowspan="1" colspan="1">78.7</td><td align="left" rowspan="1" colspan="1">79.1</td><td align="left" rowspan="1" colspan="1">0.5</td><td align="left" rowspan="1" colspan="1">1.8</td><td align="left" rowspan="1" colspan="1">4.8</td><td align="left" rowspan="1" colspan="1">0.3</td><td align="left" rowspan="1" colspan="1">0.2</td><td align="left" rowspan="1" colspan="1">7.6</td><td align="left" rowspan="1" colspan="1">381</td><td align="left" rowspan="1" colspan="1">457</td></tr><tr><td align="left" rowspan="1" colspan="1">Above plus novel splicing</td><td align="left" rowspan="1" colspan="1">79.0</td><td align="left" rowspan="1" colspan="1">79.5</td><td align="left" rowspan="1" colspan="1">0.5</td><td align="left" rowspan="1" colspan="1">1.9</td><td align="left" rowspan="1" colspan="1">4.8</td><td align="left" rowspan="1" colspan="1">0.2</td><td align="left" rowspan="1" colspan="1">0.3</td><td align="left" rowspan="1" colspan="1">7.7</td><td align="left" rowspan="1" colspan="1">457</td><td align="left" rowspan="1" colspan="1">522</td></tr><tr><td align="left" rowspan="1" colspan="1">Above plus indels</td><td align="left" rowspan="1" colspan="1">80.2</td><td align="left" rowspan="1" colspan="1">80.7</td><td align="left" rowspan="1" colspan="1">0.5</td><td align="left" rowspan="1" colspan="1">1.8</td><td align="left" rowspan="1" colspan="1">4.9</td><td align="left" rowspan="1" colspan="1">0.2</td><td align="left" rowspan="1" colspan="1">0.5</td><td align="left" rowspan="1" colspan="1">8.0</td><td align="left" rowspan="1" colspan="1">725</td><td align="left" rowspan="1" colspan="1">905</td></tr><tr><td align="left" rowspan="1" colspan="1">≤3 mismatches</td><td align="left" rowspan="1" colspan="1">73.9</td><td align="left" rowspan="1" colspan="1">74.3</td><td align="left" rowspan="1" colspan="1">0.4</td><td align="left" rowspan="1" colspan="1">2.0</td><td align="left" rowspan="1" colspan="1">5.2</td><td align="left" rowspan="1" colspan="1">0.4</td><td align="left" rowspan="1" colspan="1">0.1</td><td align="left" rowspan="1" colspan="1">8.1</td><td align="left" rowspan="1" colspan="1">161</td><td align="left" rowspan="1" colspan="1">214</td></tr><tr><td align="left" rowspan="1" colspan="1">Above plus known splicing</td><td align="left" rowspan="1" colspan="1">82.2</td><td align="left" rowspan="1" colspan="1">82.6</td><td align="left" rowspan="1" colspan="1">0.4</td><td align="left" rowspan="1" colspan="1">2.1</td><td align="left" rowspan="1" colspan="1">5.1</td><td align="left" rowspan="1" colspan="1">0.3</td><td align="left" rowspan="1" colspan="1">0.2</td><td align="left" rowspan="1" colspan="1">8.0</td><td align="left" rowspan="1" colspan="1">530</td><td align="left" rowspan="1" colspan="1">668</td></tr><tr><td align="left" rowspan="1" colspan="1">Above plus novel splicing</td><td align="left" rowspan="1" colspan="1">82.8</td><td align="left" rowspan="1" colspan="1">83.1</td><td align="left" rowspan="1" colspan="1">0.4</td><td align="left" rowspan="1" colspan="1">2.2</td><td align="left" rowspan="1" colspan="1">5.1</td><td align="left" rowspan="1" colspan="1">0.3</td><td align="left" rowspan="1" colspan="1">0.3</td><td align="left" rowspan="1" colspan="1">8.3</td><td align="left" rowspan="1" colspan="1">624</td><td align="left" rowspan="1" colspan="1">755</td></tr><tr><td align="left" rowspan="1" colspan="1">Above plus indels</td><td align="left" rowspan="1" colspan="1">83.8</td><td align="left" rowspan="1" colspan="1">84.2</td><td align="left" rowspan="1" colspan="1">0.4</td><td align="left" rowspan="1" colspan="1">2.1</td><td align="left" rowspan="1" colspan="1">5.1</td><td align="left" rowspan="1" colspan="1">0.3</td><td align="left" rowspan="1" colspan="1">0.6</td><td align="left" rowspan="1" colspan="1">8.5</td><td align="left" rowspan="1" colspan="1">949</td><td align="left" rowspan="1" colspan="1">1262</td></tr></tbody></table></table-wrap>
+</p>
+      <p>The introduction of SNP tolerance resulted in only a minor increase in alignment yields. However, 7–8% of alignment results were affected in some way by a SNP. SNP tolerance gave an alignment where none was previously found in only 0.4–0.5% of cases. In 5% of cases, known SNPs revealed additional genomic locations for a given read beyond the original locations, resulting in a superset of the original results. In 0.2–0.4% of cases, SNP tolerance yielded a subset of genomic locations, meaning that some of the mismatches in the original alignments could be resolved in favor of known SNPs. In 1–2% of cases, all mismatches in the original alignments were at known SNP locations, leaving the genomic locations the same, but allowing nucleotide differences to be interpreted as matches to minor alleles rather than as mismatches. In a small fraction of cases, SNP tolerance gave a significantly different set of results compared with the original.</p>
+    </sec>
+    <sec id="SEC3.3">
+      <title>3.3 BS-converted reads</title>
+      <p>We used the simulated datasets from <xref ref-type="sec" rid="SEC3.1">Section 3.1</xref> with mismatches of 0, 1 and 2 nt, and substituted thymine for cytosine with a probability of 95%, ignoring sequence contexts, such as non-island CG dinucleotides in eukaryotes (Goll and Bestor, <xref ref-type="bibr" rid="B8">2005</xref>) or in CG, CHG and CHH patterns in plants (Cao and Jacobsen, <xref ref-type="bibr" rid="B5">2002</xref>), where methylcytosines occur more often. We aligned the original reads with the standard version of GSNAP and the substituted reads with the methylation flag turned on. Results show that thymine substitution had a minor effect on the ability of GSNAP to identify the original genomic position, due to increased ambiguity in aligning some reads (<xref ref-type="table" rid="T3">Table 3</xref>). The fraction of additional reads giving non-unique positions in the genome was 5.5% of 36 nt reads, 2.6% of 70 nt reads and 1.3% of 100 nt reads, in the exact match datasets, and slightly higher fractions in the datasets with one or two mismatches.
+<table-wrap id="T3" position="float"><label>Table 3.</label><caption><p>Effect of simulated BS treatment</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th rowspan="1" colspan="1"/><th rowspan="1" colspan="1"/><th align="left" colspan="3" rowspan="1">Alignment uniqueness (%)<hr/></th></tr><tr><th align="left" rowspan="1" colspan="1">Length (nt)</th><th align="left" rowspan="1" colspan="1">Variant</th><th align="left" rowspan="1" colspan="1">Genomic</th><th align="left" rowspan="1" colspan="1">BS</th><th align="left" rowspan="1" colspan="1">Difference</th></tr></thead><tbody align="left"><tr><td align="left" rowspan="1" colspan="1">36</td><td align="left" rowspan="1" colspan="1">Exact</td><td align="left" rowspan="1" colspan="1">87.1</td><td align="left" rowspan="1" colspan="1">81.6</td><td align="left" rowspan="1" colspan="1">5.5</td></tr><tr><td rowspan="1" colspan="1"/><td align="left" rowspan="1" colspan="1">1 mismatch</td><td align="left" rowspan="1" colspan="1">86.7</td><td align="left" rowspan="1" colspan="1">80.6</td><td align="left" rowspan="1" colspan="1">6.0</td></tr><tr><td rowspan="1" colspan="1"/><td align="left" rowspan="1" colspan="1">2 mismatches</td><td align="left" rowspan="1" colspan="1">85.3</td><td align="left" rowspan="1" colspan="1">78.7</td><td align="left" rowspan="1" colspan="1">6.5</td></tr><tr><td align="left" rowspan="1" colspan="1">70</td><td align="left" rowspan="1" colspan="1">Exact</td><td align="left" rowspan="1" colspan="1">95.0</td><td align="left" rowspan="1" colspan="1">92.4</td><td align="left" rowspan="1" colspan="1">2.6</td></tr><tr><td rowspan="1" colspan="1"/><td align="left" rowspan="1" colspan="1">1 mismatch</td><td align="left" rowspan="1" colspan="1">94.9</td><td align="left" rowspan="1" colspan="1">92.1</td><td align="left" rowspan="1" colspan="1">2.8</td></tr><tr><td rowspan="1" colspan="1"/><td align="left" rowspan="1" colspan="1">2 mismatches</td><td align="left" rowspan="1" colspan="1">94.7</td><td align="left" rowspan="1" colspan="1">91.7</td><td align="left" rowspan="1" colspan="1">3.0</td></tr><tr><td align="left" rowspan="1" colspan="1">100</td><td align="left" rowspan="1" colspan="1">Exact</td><td align="left" rowspan="1" colspan="1">96.6</td><td align="left" rowspan="1" colspan="1">95.3</td><td align="left" rowspan="1" colspan="1">1.3</td></tr><tr><td rowspan="1" colspan="1"/><td align="left" rowspan="1" colspan="1">1 mismatch</td><td align="left" rowspan="1" colspan="1">96.6</td><td align="left" rowspan="1" colspan="1">95.2</td><td align="left" rowspan="1" colspan="1">1.4</td></tr><tr><td rowspan="1" colspan="1"/><td align="left" rowspan="1" colspan="1">2 mismatches</td><td align="left" rowspan="1" colspan="1">96.5</td><td align="left" rowspan="1" colspan="1">95.1</td><td align="left" rowspan="1" colspan="1">1.4</td></tr></tbody></table></table-wrap>
+</p>
+    </sec>
+  </sec>
+  <sec sec-type="discussion" id="SEC4">
+    <title>4 DISCUSSION</title>
+    <p>The methods described in this paper expand the scope of variants that can be detected in reads, and should therefore increase the utility of next-generation sequencing data. The ability to recognize a wide range of variants should also improve mapping accuracy by recognizing the correct genomic origin of variant reads. Likewise, the SNP-tolerance feature implemented in our program should help resolve mappings in certain genomic regions. The utility of this feature should be measured not just by the 7–8% of reads affected, but by its contribution towards making correct biological inferences in the subsequent analysis pipeline. Other researchers (Manske and Kwiatkowski, <xref ref-type="bibr" rid="B21">2009</xref>) have also found cases where SNP-tolerant alignment facilitates the alignment of reads with minor alleles.</p>
+    <p>We have developed an algorithm to meet the specific needs of short-read sequence analysis for both speed and sensitivity in detecting complex variants and splicing. The strength of our algorithm is its successively constrained search strategy for generating candidate genomic regions by merging position lists from oligomers across the entire read, and filtering them using count- or pattern-based lower bound calculations. Our search procedure operates at the oligomer level, which differs from the nucleotide-level backtracking procedures used in BWT-based programs to identify mismatches and short indels.</p>
+    <p>By filtering the set of candidate regions, our intersection process represents a significant efficiency improvement over the seed-and-extend strategy, used in BLAT and other seed-based alignment programs, which find genomic regions based on a single <italic>q</italic>-mer and then test each of those regions in a time-consuming verification step. Some programs, such as ELAND, further restrict the seed to be at the beginning of the short read. The use of seeds can be a highly effective heuristic, and BWA can run faster by using a seeding mode that allows a certain number of mismatches in the initial part of the short read. Our method can be thought of as trying all possible seeds simultaneously over the entire short read, and therefore has the feature of not favoring one part of the read over another.</p>
+    <p>Our intersection procedure also provides an efficient alternative to the <italic>q</italic>-gram procedure, used in SHRiMP (Rumble <italic>et al.</italic>, <xref ref-type="bibr" rid="B25">2009</xref>) and RazerS, which scans the entire genome using a sliding window and counts <italic>q</italic>-mers within bins to find candidate genomic regions (Rasmussen <italic>et al.</italic>, <xref ref-type="bibr" rid="B24">2006</xref>). The <italic>q</italic>-gram procedure allows for two or more indels in a single read, which is not currently allowed by GSNAP, although our algorithm could be modified to identify them. Another difference is that the <italic>q</italic>-gram procedure defines alignment differences as an edit distance, where each nucleotide in a gap counts as a difference, so longer indels are considered more distant. In contrast, GSNAP uses only an opening gap penalty in scoring indel alignments, so it can identify long indels more readily.</p>
+    <p>Our program also differs from several alignment programs, including MAQ, RMAP, SHRiMP, Bowtie, BWA and SOAP2, which have the ability to use quality scores to rank alignments. Although quality scores could be applied in the validation step of our algorithm, it remains unclear to us how best to make tradeoffs between quality scores and alignment results, for example, how to choose between an alignment with one mismatch at a high-quality score or one with two mismatches at lower quality scores. Color space reads produced by ABI SOLiD technology require some extensions to our algorithm, and we are working to implement this capability in our program.</p>
+    <p>Although our results and experience indicate that our program has practical utility for analyzing next-generation sequencing data, our research is ongoing. In particular, longer reads will entail more flexibility in alignment and may require the enhancement of more general cDNA–genomic alignment programs, such as our GMAP program. Future biological research should benefit from having a diversity of bioinformatics methods and programs to meet the various needs of sequence analysis.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>We thank our colleagues Colin Watanabe for valuable discussion and Sekar Seshagiri for collaboration on next-generation sequencing projects. We appreciate feedback on early versions of our program from Andrew Farmer and Ernie Retzel at the National Center for Genome Resources. We also thank Irina Khrebtukova and Gary Schroth at Illumina for access to transcriptional read data.</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="B1">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bhangale</surname>
+            <given-names>TR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Comprehensive identification and characterization of diallelic insertion-deletion polymorphisms in 330 human candidate genes</article-title>
+        <source>Hum. Mol. Genet.</source>
+        <year>2005</year>
+        <volume>14</volume>
+        <fpage>59</fpage>
+        <lpage>69</lpage>
+        <pub-id pub-id-type="pmid">15525656</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B2">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bona</surname>
+            <given-names>FD</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Optimal spliced alignments of short sequence reads</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <fpage>i174</fpage>
+        <lpage>180</lpage>
+        <pub-id pub-id-type="pmid">18689821</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B3">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Burrows</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Wheeler</surname>
+            <given-names>DJ</given-names>
+          </name>
+        </person-group>
+        <article-title>A block-sorting lossless data compression algorithm</article-title>
+        <source>Technical Report 124.</source>
+        <year>1994</year>
+        <publisher-loc>California</publisher-loc>
+        <publisher-name>Digital Equipment Corporation, Palo Alto</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="B4">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Canales</surname>
+            <given-names>RD</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Evaluation of DNA microarray results with quantitative gene expression platforms</article-title>
+        <source>Nat. Biotechnol.</source>
+        <year>2006</year>
+        <volume>24</volume>
+        <fpage>1115</fpage>
+        <lpage>1122</lpage>
+        <pub-id pub-id-type="pmid">16964225</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B5">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cao</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Jacobsen</surname>
+            <given-names>SE</given-names>
+          </name>
+        </person-group>
+        <article-title>Locus-specific control of asymmetric and CpNpG methylation by the DRM and CMT3 methyltransferase genes</article-title>
+        <source>Proc. Natl Acad. Sci.</source>
+        <year>2002</year>
+        <volume>99</volume>
+        <issue>suppl. 4</issue>
+        <fpage>16491</fpage>
+        <lpage>16498</lpage>
+        <pub-id pub-id-type="pmid">12151602</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B6">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Deng</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Targeted bisulfite sequencing reveals changes in DNA methylation associated with nuclear reprogramming</article-title>
+        <source>Nat. Biotechnol.</source>
+        <year>2009</year>
+        <volume>27</volume>
+        <fpage>353</fpage>
+        <lpage>360</lpage>
+        <pub-id pub-id-type="pmid">19330000</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B7">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dintilhac</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A conserved non-homeodomain Hoxa9 isoform interacting with CBP is co-expressed with the ‘typical’ Hoxa9 protein during embryogenesis</article-title>
+        <source>Gene Expression Patterns</source>
+        <year>2004</year>
+        <volume>4</volume>
+        <fpage>215</fpage>
+        <lpage>222</lpage>
+        <pub-id pub-id-type="pmid">15161102</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B8">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Goll</surname>
+            <given-names>MG</given-names>
+          </name>
+          <name>
+            <surname>Bestor</surname>
+            <given-names>TH</given-names>
+          </name>
+        </person-group>
+        <article-title>Eukaryotic cytosine methyltransferases</article-title>
+        <source>Annu. Rev. Biochem.</source>
+        <year>2005</year>
+        <volume>74</volume>
+        <fpage>481</fpage>
+        <lpage>514</lpage>
+        <pub-id pub-id-type="pmid">15952895</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B9">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hampton</surname>
+            <given-names>OA</given-names>
+          </name>
+        </person-group>
+        <article-title>A sequence-level map of chromosomal breakpoints in the MCF-7 breast cancer cell line yields insights into the evolution of a cancer genome</article-title>
+        <source>Genome Res.</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>167</fpage>
+        <lpage>177</lpage>
+        <pub-id pub-id-type="pmid">19056696</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B10">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hwang</surname>
+            <given-names>FK</given-names>
+          </name>
+          <name>
+            <surname>Lin</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>A simple algorithm for merging two disjoint linearly ordered sets</article-title>
+        <source>SIAM J. Comput.</source>
+        <year>1980</year>
+        <volume>1</volume>
+        <fpage>31</fpage>
+        <lpage>39</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B11">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jiang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Wong</surname>
+            <given-names>WH</given-names>
+          </name>
+        </person-group>
+        <article-title>SeqMap: mapping massive amount of oligonucleotides to the genome</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <fpage>2395</fpage>
+        <lpage>2396</lpage>
+        <pub-id pub-id-type="pmid">18697769</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B12">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kent</surname>
+            <given-names>WJ</given-names>
+          </name>
+        </person-group>
+        <article-title>BLAT—the BLAST-like alignment tool</article-title>
+        <source>Genome Research</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>656</fpage>
+        <lpage>664</lpage>
+        <pub-id pub-id-type="pmid">11932250</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B13">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Knuth</surname>
+            <given-names>DE</given-names>
+          </name>
+        </person-group>
+        <source>The Art of Computer Programming: Sorting and Searching</source>
+        <year>1973</year>
+        <volume>3</volume>
+        <publisher-loc>Massachusetts</publisher-loc>
+        <publisher-name>Addison-Wesley</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="B14">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Langmead</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Ultrafast and memory-efficient alignment of short dna sequences to the human genome</article-title>
+        <source>Genome Biology</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="pmid">19261174</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B15">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Fast and accurate short read alignment with Burrows-Wheeler Transform</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1754</fpage>
+        <lpage>1760</lpage>
+        <pub-id pub-id-type="pmid">19451168</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B16">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Mapping short DNA sequencing reads and calling variants using mapping quality scores</article-title>
+        <source>Genome Res.</source>
+        <year>2008a</year>
+        <volume>18</volume>
+        <fpage>1851</fpage>
+        <lpage>1858</lpage>
+        <pub-id pub-id-type="pmid">18714091</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B17">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>R</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>SOAP: short oligonucleotide alignment program</article-title>
+        <source>Bioinformatics</source>
+        <year>2008b</year>
+        <volume>24</volume>
+        <fpage>713</fpage>
+        <lpage>714</lpage>
+        <pub-id pub-id-type="pmid">18227114</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B18">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>R</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>SOAP2: an improved ultrafast tool for short read alignment</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1966</fpage>
+        <lpage>1967</lpage>
+        <pub-id pub-id-type="pmid">19497933</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B19">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lister</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Ecker</surname>
+            <given-names>JR</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding the fifth base: Genome-wide sequencing of cytosine methylation</article-title>
+        <source>Genome Research</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>959</fpage>
+        <lpage>966</lpage>
+        <pub-id pub-id-type="pmid">19273618</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B20">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Manber</surname>
+            <given-names>U</given-names>
+          </name>
+          <name>
+            <surname>Myers</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>Suffix arrays: a new method for on-line string searches</article-title>
+        <source>SIAM J. Comput.</source>
+        <year>1993</year>
+        <volume>22</volume>
+        <fpage>935</fpage>
+        <lpage>948</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B21">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Manske</surname>
+            <given-names>HM</given-names>
+          </name>
+          <name>
+            <surname>Kwiatkowski</surname>
+            <given-names>DP</given-names>
+          </name>
+        </person-group>
+        <article-title>SNP-o-matic</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2434</fpage>
+        <lpage>2435</lpage>
+        <pub-id pub-id-type="pmid">19574284</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B22">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nethercote</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Steward</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Valgrind: a framework for heavyweight dynamic binary instrumentation</article-title>
+        <source>Proceedings of the 2007 ACM SIGPLAN Conference on Programming Language Design and Implementation</source>
+        <year>2007</year>
+        <publisher-loc>San Diego, California</publisher-loc>
+        <fpage>89</fpage>
+        <lpage>100</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B23">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ning</surname>
+            <given-names>Z</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>SSAHA: a fast search method for large DNA databases</article-title>
+        <source>Genome Res.</source>
+        <year>2001</year>
+        <volume>11</volume>
+        <fpage>1725</fpage>
+        <lpage>1729</lpage>
+        <pub-id pub-id-type="pmid">11591649</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B24">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rasmussen</surname>
+            <given-names>KR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Efficient <italic>q</italic>-gram filters for finding all ε-matches over a given length</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>2006</year>
+        <volume>13</volume>
+        <fpage>296</fpage>
+        <lpage>308</lpage>
+        <pub-id pub-id-type="pmid">16597241</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B25">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rumble</surname>
+            <given-names>SM</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>SHRiMP: accurate mapping of color-space reads</article-title>
+        <source>PLoS Comput. Biol.</source>
+        <year>2009</year>
+        <volume>5</volume>
+        <fpage>e1000386</fpage>
+        <pub-id pub-id-type="pmid">19461883</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B26">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sherry</surname>
+            <given-names>ST</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>dbSNP: the NCBI database of genetic variation</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>308</fpage>
+        <lpage>311</lpage>
+        <pub-id pub-id-type="pmid">11125122</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B27">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Smith</surname>
+            <given-names>AD</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Using quality scores and longer reads improves accuracy of Solexa read mapping</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>128</fpage>
+        <pub-id pub-id-type="pmid">18307793</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B28">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Trapnell</surname>
+            <given-names>C</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>TopHat: discovering splice junctions with RNA-Seq</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1105</fpage>
+        <lpage>1111</lpage>
+        <pub-id pub-id-type="pmid">19289445</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B29">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wang</surname>
+            <given-names>ET</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Alternative isoform regulation in human tissue transcriptomes</article-title>
+        <source>Nature</source>
+        <year>2008</year>
+        <volume>456</volume>
+        <fpage>470</fpage>
+        <lpage>476</lpage>
+        <pub-id pub-id-type="pmid">18978772</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B30">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weber</surname>
+            <given-names>JL</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Human diallelic insertion/deletion polymorphisms</article-title>
+        <source>Am. J. Hum. Genet.</source>
+        <year>2002</year>
+        <volume>71</volume>
+        <fpage>854</fpage>
+        <lpage>862</lpage>
+        <pub-id pub-id-type="pmid">12205564</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B31">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weese</surname>
+            <given-names>D</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>RazerS—fast read mapping with sensitivity control</article-title>
+        <source>Genome Res.</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1646</fpage>
+        <lpage>1654</lpage>
+        <pub-id pub-id-type="pmid">19592482</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B32">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wu</surname>
+            <given-names>TD</given-names>
+          </name>
+          <name>
+            <surname>Watanabe</surname>
+            <given-names>CK</given-names>
+          </name>
+        </person-group>
+        <article-title>GMAP: a genomic mapping and alignment program for mRNA and EST sequences</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>1859</fpage>
+        <lpage>1875</lpage>
+        <pub-id pub-id-type="pmid">15728110</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B33">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yeo</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Burge</surname>
+            <given-names>CB</given-names>
+          </name>
+        </person-group>
+        <article-title>Maximum entropy modeling of short sequence motifs with applications to RNA splicing signals</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>2004</year>
+        <volume>11</volume>
+        <fpage>377</fpage>
+        <lpage>394</lpage>
+        <pub-id pub-id-type="pmid">15285897</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

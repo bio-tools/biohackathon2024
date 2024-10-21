@@ -1,0 +1,1905 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Algorithms Mol Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Algorithms for Molecular Biology : AMB</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1748-7188</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3112114</article-id>
+    <article-id pub-id-type="publisher-id">1748-7188-6-13</article-id>
+    <article-id pub-id-type="pmid">21513505</article-id>
+    <article-id pub-id-type="doi">10.1186/1748-7188-6-13</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>GRISOTTO: A greedy approach to improve combinatorial algorithms for motif discovery with prior knowledge</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Carvalho</surname>
+          <given-names>Alexandra M</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>asmc@kdbio.inesc-id.pt</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Oliveira</surname>
+          <given-names>Arlindo L</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>aml@inesc-id.pt</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Electrical Engineering, IST/TULisbon, KDBIO/INESC-ID, Lisboa, Portugal</aff>
+    <aff id="I2"><label>2</label>Department of Computer Science and Engineering, IST/TULisbon, KDBIO/INESC-ID, Lisboa, Portugal</aff>
+    <pub-date pub-type="collection">
+      <year>2011</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>22</day>
+      <month>4</month>
+      <year>2011</year>
+    </pub-date>
+    <volume>6</volume>
+    <fpage>13</fpage>
+    <lpage>13</lpage>
+    <history>
+      <date date-type="received">
+        <day>10</day>
+        <month>11</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>22</day>
+        <month>4</month>
+        <year>2011</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2011 Carvalho and Oliveira; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2011</copyright-year>
+      <copyright-holder>Carvalho and Oliveira; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.almob.org/content/6/1/13"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Position-specific priors (PSP) have been used with success to boost EM and Gibbs sampler-based motif discovery algorithms. PSP information has been computed from different sources, including orthologous conservation, DNA duplex stability, and nucleosome positioning. The use of prior information has not yet been used in the context of combinatorial algorithms. Moreover, priors have been used only independently, and the gain of combining priors from different sources has not yet been studied.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We extend RISOTTO, a combinatorial algorithm for motif discovery, by post-processing its output with a greedy procedure that uses prior information. PSP's from different sources are combined into a scoring criterion that guides the greedy search procedure. The resulting method, called GRISOTTO, was evaluated over 156 yeast TF ChIP-chip sequence-sets commonly used to benchmark prior-based motif discovery algorithms. Results show that GRISOTTO is at least as accurate as other twelve state-of-the-art approaches for the same task, even without combining priors. Furthermore, by considering combined priors, GRISOTTO is considerably more accurate than the state-of-the-art approaches for the same task. We also show that PSP's improve GRISOTTO ability to retrieve motifs from mouse ChiP-seq data, indicating that the proposed algorithm can be applied to data from a different technology and for a higher eukaryote.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>The conclusions of this work are twofold. First, post-processing the output of combinatorial algorithms by incorporating prior information leads to a very efficient and effective motif discovery method. Second, combining priors from different sources is even more beneficial than considering them separately.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>An important part of gene regulation is mediated by specific proteins, called <italic>transcription factors </italic>(TF), which influence the transcription of a particular gene by binding to specific sites on DNA sequences, called <italic>transcription factor binding sites </italic>(TFBS). Such binding sites are relatively short segments of DNA, normally 5 to 25 nucleotides long. Discovering TFBS's is a challenging task, mainly because they exhibit a high degree of degeneracy making them difficult to distinguish from random artifacts. For this reason, algorithms for motifs discovery often suffer from impractical high false positive rates and return noisy models that are not useful to characterize TFBS's. Some extra knowledge, carefully selected from the literature, has been incorporated in motif discovery methods in order capture a variety of characteristics of the motif patterns. This extra knowledge is used during the process of motif discovery.</p>
+    <p>Some interesting works in this line of research made use of the DNA structure for motif discovery. These works take into consideration the bendability of a region, as well as the nucleotide position in DNA loops, to determine sequence accessibility [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B3">3</xref>]. A quite different and particularly interesting work was devised by R. Lavery [<xref ref-type="bibr" rid="B4">4</xref>-<xref ref-type="bibr" rid="B10">10</xref>]. In one approach [<xref ref-type="bibr" rid="B4">4</xref>], the atomic structure of the protein, which specifically bounds to a fragment of DNA, was used to calculate the binding energy needed for the full combinatorial space of base sequences. Binding sites were selected considering an energy cutoff. This result suggests that the crystallographic structure of a protein-DNA complex indeed contains enough information to locate the binding sequences of a protein. Recently, a general approach was proposed which allows the incorporation of almost any type of information into the class of motif discovery algorithms based on Gibbs sampling [<xref ref-type="bibr" rid="B11">11</xref>]. This extra information is incorporated in a <italic>position-specific prior </italic>(PSP) and it amounts for the likelihood that a motif starts in a certain position of a given DNA sequence. The most effective PSP's have been built in a discriminative way by taking into account not only the sequence-sets that were bounded by some profile TF, but also sequence-sets that were not bounded. This is accordant to the evidence that the discovery of regulatory elements is improved by employing discriminative approaches [<xref ref-type="bibr" rid="B12">12</xref>]. A PSP is built in pre-processing time and then used to bias the optimization procedure towards real motifs. Prior information such as orthologous conservation, DNA duplex stability, nucleosome positioning and transcription factor structural class have been shown to be very effective when used with Gibbs sampler-based PRIORITY algorithm [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B13">13</xref>-<xref ref-type="bibr" rid="B16">16</xref>]. The popular MEME algorithm also pointed out that PSP's are beneficial when used with EM procedures [<xref ref-type="bibr" rid="B17">17</xref>]. This approach has not yet been used in the context of combinatorial algorithms for the same task. Moreover, the information given by PSP's from different sources was never combined, although there is evidence that predicting protein-DNA interactions can be improved by integrating diverse information [<xref ref-type="bibr" rid="B18">18</xref>].</p>
+    <p>Meanwhile, chromatin immunoprecipitation (ChiP) followed by ultra-high-throughput sequencing, known as ChiP-seq, brought new challenges for motif discovery [<xref ref-type="bibr" rid="B19">19</xref>]. As a result of direct sequencing of all DNA fragments from ChiP assays, ChiP-seq is able to unravel DNA sites, across the entire genome, where a specific protein binds. Regions of high sequencing read density are referred to as <italic>peaks </italic>to capture the evidence of high base-specific read coverage. Peaks are found by peak finding algorithms [<xref ref-type="bibr" rid="B20">20</xref>], which is called <italic>peak calling</italic>, yielding a set of DNA fragments of ChiP-enriched genomic regions. Usually, DNA fragments of size ±100 bp are extracted around top peaks and then a motif discovery tool is used to find for overrepresented sequences [<xref ref-type="bibr" rid="B21">21</xref>]. Some authors have further exploited the information provided by these binding peaks by devising priors that use coverage profiles as motif positional preferences [<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B23">23</xref>].</p>
+    <p>In this paper, we extend the RISOTTO combinatorial algorithm [<xref ref-type="bibr" rid="B24">24</xref>] in a greedy fashion to take into account prior information in a PSP format. RISOTTO is a consensus-based algorithm that exhaustively enumerates all motifs of a certain size by collecting their occurrences, at a given distance, from a set of co-regulated DNA sequences [<xref ref-type="bibr" rid="B24">24</xref>-<xref ref-type="bibr" rid="B27">27</xref>]. Since methods based on the detection of overrepresentation of TFBS's in co-regulated DNA sequences are known to face problems detecting weak motifs, we propose to post-process the RISOTTO output by modifying top motifs in a greedy fashion, guided by the information given by the prior. The rational for this approach is that the combinatorial algorithm exploits the full space of possible motifs pointing out good candidates. Afterwards a greedy search is performed over these initial guesses and good motifs are up-weighted by the prior. The reduction of the search space attained in the greedy search by using the output of a combinatorial algorithm makes the proposed algorithm, called GRISOTTO, very efficient.</p>
+    <p>A great advantage of GRISOTTO is its ability to combine priors from different sources. This is achieved by considering a convex combination of the information given by all priors resulting in an information-theoretical scoring criterion called <italic>Balanced Information Score </italic>(BIS). To unravel the benefits of using BIS with GRISOTTO we focus on discovering motifs in 156 benchmark datasets from ChIP-chip data from yeast. We considered three different priors already used by PRIORITY, namely, orthologous conservation [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B16">16</xref>], DNA duplex stability [<xref ref-type="bibr" rid="B15">15</xref>] and nucleosome positioning [<xref ref-type="bibr" rid="B11">11</xref>]. By combining the information of these three priors together in BIS we guided the GRISOTTO greedy search and achieved considerably more accurate results than by using the priors separately. Moreover, we further verified that GRISOTTO is at least as accurate as the PRIORITY and MEME algorithms when using the same priors separately.</p>
+    <p>We also gauge GRISOTTO with 13 mouse ChiP-seq data. In this evaluation we used two different priors providing extra information from orthologous conservation [<xref ref-type="bibr" rid="B17">17</xref>] and coverage profiles given by ChiP-seq assays [<xref ref-type="bibr" rid="B23">23</xref>]. Results show that orthologous conservation was able to uncover motifs that resemble ones already reported by previous works on the same data [<xref ref-type="bibr" rid="B17">17</xref>,<xref ref-type="bibr" rid="B21">21</xref>]. However, the PSP built from the ChiP-seq assays was not very beneficial to GRISOTTO, as it reported exactly the same motifs as the <italic>uniform prior </italic>for which any position in the DNA sequences is likely to contain a motif. We attributed this to the fact that the information contained in this prior is already encoded in the BIS score. Indeed, coverage profiles indicate overrepresentation, expressed via high sequencing read density, and the BIS score is a weighted balance between overrepresentation and priors.</p>
+    <p>Besides effectiveness, GRISOTTO also showed to be very efficient, taking around 2 to 3 seconds per yeast sequence-set, that have around 200 sequences of 500 bp, and 1 to 4 minutes per mouse sequence-set, that have from around 1000 to 40000 sequences of 200 bp. These computational times were obtained using one core of an Intel 2.4 GHz Core 2 Duo and include the generation of the initial starting points by RISOTTO. We conclude that post-processing the output of combinatorial algorithms guided with the information given by single or combined priors yields an efficient approach that shows great promise in extending the power of motif discovery tools.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <p>Herein, we present the GRISOTTO algorithm for motif discovery. The proposed algorithm uses the RISOTTO [<xref ref-type="bibr" rid="B24">24</xref>] output as starting points of a greedy procedure that aims at maximizing a scoring criterion based on combined prior information. Our approach diverges from EM (used in MEME [<xref ref-type="bibr" rid="B17">17</xref>]) and Gibbs sampling (used in PRIORITY [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B13">13</xref>-<xref ref-type="bibr" rid="B16">16</xref>]) as we do not consider latent variables and do not use a background model. Moreover, instead of maximizing the likelihood, we propose a scoring criterion based on the balanced information of observing the DNA sequences and the priors given a candidate motif. We called this score <italic>Balanced Information Score </italic>(BIS). Furthermore, instead of reporting a PSSM, GRISOTTO returns the IUPAC string that is best fitted, according to BIS, via a greedy search procedure.</p>
+    <sec>
+      <title>GRISOTTO algorithm</title>
+      <p>We next introduce some notation needed to describe the GRISOTTO algorithm (refer to Table <xref ref-type="table" rid="T1">1</xref>). Start by considering that we have a set of <italic>N </italic>co-regulated DNA sequences henceforward denoted by <italic>f </italic>= (<italic>f</italic><sub><italic>i</italic></sub>)<sub><italic>i </italic>= 1, ..., <italic>N</italic></sub>. The length of the each sequence <italic>f<sub>i </sub></italic>is <italic>n</italic><sub><italic>i</italic></sub>, that is, <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i1.gif"/></inline-formula>. Moreover, consider that <italic>S<sub>p </sub></italic>contains some prior information in a PSP format about the domain in study, with <italic>p </italic>= 1 ... ℓ, where ℓ is the number of priors (eventually zero). We denote by <italic>S </italic>= 〈<italic>S</italic><sub>1</sub>, ..., <italic>S</italic><sub>ℓ</sub>〉 the list of all priors. The goal of GRISOTTO is to report a single motif of a fixed size <italic>k</italic>, that is, an IUPAC string of size <italic>k</italic>. The IUPAC alphabet is henceforward denoted by Σ.</p>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Definition of terms used in describing the algorithms presented in Methods.</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="center">Symbol</th>
+              <th align="left">Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">Σ</td>
+              <td align="left">alphabet (usually DNA or IUPAC)</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>f</italic>
+              </td>
+              <td align="left">input sequences</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>f</italic>
+                <sub>
+                  <italic>i</italic>
+                </sub>
+              </td>
+              <td align="left"><italic>i</italic>-th input sequence</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>f</italic>
+                <sub>
+                  <italic>ij</italic>
+                </sub>
+              </td>
+              <td align="left"><italic>j</italic>-th position of the <italic>i</italic>-th input sequence</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>N</italic>
+              </td>
+              <td align="left">number of input sequences</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>n</italic>
+                <sub>
+                  <italic>i</italic>
+                </sub>
+              </td>
+              <td align="left">length of <italic>f</italic><sub><italic>i</italic></sub></td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>k</italic>
+              </td>
+              <td align="left">motif size</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>S</italic>
+                <sub>
+                  <italic>p</italic>
+                </sub>
+              </td>
+              <td align="left"><italic>p</italic>-th prior (in PSP format)</td>
+            </tr>
+            <tr>
+              <td align="center">ℓ</td>
+              <td align="left">number of priors (it can be zero)</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>S</italic>
+              </td>
+              <td align="left"><italic>S </italic>= 〈<italic>S</italic><sub>1</sub>, ..., <italic>S</italic><sub>ℓ</sub>〉 is the list of all priors</td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>z<sub>min</sub></italic>
+              </td>
+              <td align="left">minimum number of motifs expected to be returned by a RISOTTO run</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>z<sub>max</sub></italic>
+              </td>
+              <td align="left">maximum number of motifs expected to be returned by a RISOTTO run</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>z</italic>
+              </td>
+              <td align="left">number of top motifs post-processed from RISOTTO output</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <inline-formula>
+                  <inline-graphic xlink:href="1748-7188-6-13-i2.gif"/>
+                </inline-formula>
+              </td>
+              <td align="left">the set with the <italic>z </italic>top motifs to be post-processed by GRISOTTO</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>m</italic>
+              </td>
+              <td align="left">motif of size <italic>k</italic></td>
+            </tr>
+            <tr>
+              <td align="center"><italic>m</italic>〈<italic>i</italic>, <italic>α</italic>〉</td>
+              <td align="left">motif <italic>m </italic>where the <italic>i</italic>-th position (starting with 0) is replaced by <italic>α </italic>∈ Σ</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>ε</italic>
+              </td>
+              <td align="left">empty motif (its BIS score is the minimum possible value)</td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center"><italic>f<sub>i</sub></italic>[<italic>j </italic>... <italic>j </italic>+ <italic>k </italic>- 1]</td>
+              <td align="left"><italic>k</italic>-long segment of the <italic>i</italic>-th input sequence that starts at position <italic>j</italic></td>
+            </tr>
+            <tr>
+              <td align="center"><italic>S<sub>p</sub></italic>[<italic>i</italic>, <italic>j</italic>]</td>
+              <td align="left">prior probability at the <italic>j</italic>-th position of <italic>f<sub>i</sub></italic></td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>j<sub>i</sub></italic>
+              </td>
+              <td align="left">annotated position for <italic>f<sub>i </sub></italic>with maximum BIS score for a motif <italic>m</italic></td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>P<sub>m</sub></italic>
+              </td>
+              <td align="left">probability distribution given by the PSSM induced by <italic>m</italic></td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>α<sub>p</sub></italic>
+              </td>
+              <td align="left">the weight of the <italic>p</italic>-th prior</td>
+            </tr>
+            <tr>
+              <td align="center">
+                <italic>λ</italic>
+              </td>
+              <td align="left">coefficient to balance priors and over-representation contribution</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p>The pseudocode of GRISOTTO is depicted in Algorithm 1. The algorithm starts by running RISOTTO to extract, at least <italic>z<sub>min</sub></italic>, and at most <italic>z<sub>max</sub></italic>, motifs of size <italic>k </italic>(see details in Additional File <xref ref-type="supplementary-material" rid="S1">1</xref>). From the RISOTTO output, the top <italic>z </italic>motifs are collected in a set called <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i2.gif"/></inline-formula> (Step 2) and constitute the starting points of the GRISOTTO greedy procedure, called GGP (Step 4). Briefly, GGP starts with a motif <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i3.gif"/></inline-formula> and returns the best fitted motif, according to BIS, by updating each position in <italic>m </italic>with an IUPAC symbol until no local improvements can be achieved. In Step 5-6 the variable <italic>r</italic>, that stores the output of the algorithm, is updated whenever the GGP procedure returns a motif with a BIS score higher than the current stored one. Note that in Step 2 the result variable <italic>r </italic>is initialized with the empty motif <italic>ε</italic>. We consider that the empty motif <italic>ε </italic>has the minimum possible BIS scoring value.</p>
+      <p><bold>Algorithm 1 </bold>GRISOTTO, Greedy RISOTTO</p>
+      <p>GRISOTTO(DNA sequences <italic>f </italic>, list of priors <italic>S </italic>= 〈<italic>S</italic><sub>1</sub>, ..., <italic>S<sub>ℓ</sub></italic>〉)</p>
+      <p>1. run RISOTTO(<italic>k</italic>,<italic>z<sub>min</sub></italic>,<italic>z<sub>max</sub></italic>);</p>
+      <p>2. let <italic>r </italic>= <italic>ε </italic>and <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i2.gif"/></inline-formula> be the list of the first <italic>z </italic>motifs returned in Step 1;</p>
+      <p>3. for each motif <italic>m </italic>in <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i2.gif"/></inline-formula></p>
+      <p>4.    let <italic>m </italic>= GGP(<italic>m</italic>, <italic>f</italic>, <italic>S</italic>);</p>
+      <p>5.    if (BIS(<italic>r</italic>,<italic>f </italic>,<italic>S</italic>)&lt;BIS(<italic>m</italic>,<italic>f </italic>,<italic>S</italic>))</p>
+      <p>6.       let <italic>r </italic>= <italic>m</italic>;</p>
+      <p>7. return <italic>r</italic>;</p>
+      <p>It remains to explain the GGP procedure given in Algorithm 2. The general idea of the algorithm is to process each position of the motif <italic>m</italic>, received as parameter, in a greedy fashion. Variable <italic>i </italic>identifies the motif position being processed. It is initialized with the value 0 (Step 1), the first position of <italic>m</italic>, and it is incremented in a circular way using modular arithmetics (Step 9). GPP terminates when <italic>k </italic>consecutive positions of the motif <italic>m </italic>being considered can not be improved, according to BIS, and so <italic>m </italic>remains unchanged for a complete <italic>k</italic>-round. This information is stored in variable <italic>t </italic>that counts how many consecutive positions of <italic>m </italic>have not been modified. Variable <italic>t </italic>is initialized with 0 (Step 1) and controls the outer cycle (Step 2-9), which terminates when <italic>t </italic>= <italic>k</italic>. The Boolean flag <italic>changed </italic>is read in the outer cycle (Step 7) to detect whether the <italic>i</italic>-th position of the motif has been modified inside the body of the inner cycle (Step 6). It is initialized in each run of the outer cycle with <italic>false </italic>(Step 3). The inner cycle (Step 4-6) tries to improve the BIS score of <italic>m </italic>by updating its <italic>i</italic>-th position with each letter <italic>α </italic>∈ Σ. We denote by <italic>m</italic>〈<italic>i</italic>, <italic>α</italic>〉 the motif <italic>m </italic>where the <italic>i</italic>-th position of <italic>m </italic>was replaced by the letter <italic>α</italic>. Whenever the BIS score of <italic>m</italic>〈<italic>i</italic>, <italic>α</italic>〉 is greater than the BIS score of <italic>m </italic>(Step 5) three variables are updated: (i) motif <italic>m </italic>is updated to <italic>m</italic>〈<italic>i</italic>, <italic>α</italic>〉; (ii) variable <italic>t </italic>is reset to its initial value, forcing a complete <italic>k</italic>-round from that point on; and (iii) flag <italic>changed </italic>is turned to <italic>true</italic>. After the inner cycle, in Step 7, we test whether the <italic>i</italic>-th position of <italic>m </italic>was not modified by checking the value of the flag <italic>changed</italic>. If that is the case, variable <italic>t </italic>is incremented (Step 8). Next, in Step 9, variable <italic>i </italic>is incremented so that the next position of <italic>m </italic>can be inspected.</p>
+      <p><bold>Algorithm 2 </bold>GGP, GRISOTTO greedy procedure</p>
+      <p>GGP(motif <italic>m</italic>, DNA sequences <italic>f</italic>, list of priors <italic>S </italic>= 〈<italic>S</italic><sub>1</sub>, ..., <italic>S<sub>ℓ</sub></italic>〉)</p>
+      <p>1. let <italic>t </italic>= 0 and <italic>i </italic>= 0;</p>
+      <p>2. while (<italic>t </italic>&lt;<italic>k</italic>)</p>
+      <p>3.    let <italic>changed </italic>= <italic>false</italic>;</p>
+      <p>4.    for each <italic>α </italic>in Σ</p>
+      <p>5.       if (BIS(<italic>m</italic>〈<italic>i</italic>, <italic>α</italic>〉, <italic>f </italic>,<italic>S</italic>)&gt;BIS(<italic>m</italic>, <italic>f </italic>,<italic>S</italic>))</p>
+      <p>6.          let <italic>m </italic>= <italic>m</italic>〈<italic>i</italic>, <italic>α</italic>〉, <italic>t </italic>= 0 and <italic>changed </italic>= <italic>true</italic>;</p>
+      <p>7.    if (not <italic>changed</italic>)</p>
+      <p>8.       let <italic>t </italic>= <italic>t </italic>+ 1;</p>
+      <p>9.    let <italic>i </italic>= (<italic>i </italic>+ 1) mod <italic>k</italic>;</p>
+      <p>10. return <italic>m</italic>;</p>
+      <p>We note that the GGP procedure converges since the BIS score is upper-bounded. Next, we derive and present in detail the BIS score.</p>
+    </sec>
+    <sec>
+      <title>Balanced information score</title>
+      <p>Start by noticing that a motif <italic>m </italic>of size <italic>k </italic>written in IUPAC can be easily translated into a PSSM with dimension 4 × <italic>k </italic>(for details see Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>). Moreover, observe that if we had to guess in which position <italic>m </italic>occurs in sequence <italic>f<sub>i </sub></italic>that would be the position <italic>j<sub>i </sub></italic>that maximizes <italic>P<sub>m</sub></italic>(<italic>f<sub>i</sub></italic>[<italic>j<sub>i </sub></italic>... <italic>j<sub>i </sub></italic>+ <italic>k </italic>- 1]) where P<sub>m</sub>(<italic>w</italic>) is the probability of observing the DNA word <italic>w </italic>by the PSSM induced by <italic>m </italic>and <italic>f<sub>i</sub></italic>[<italic>j<sub>i </sub></italic>... <italic>j<sub>i </sub></italic>+ <italic>k </italic>- 1] is the <italic>k</italic>-long segment of <italic>f<sub>i </sub></italic>that starts at position <italic>j<sub>i</sub></italic>. In other words, such <italic>j<sub>i </sub></italic>annotates the position in which we believe the motif <italic>m </italic>occurs in <italic>f<sub>i</sub></italic>. Henceforward consider that we annotate for each sequence <italic>f<sub>i </sub></italic>the respective position <italic>j<sub>i </sub></italic>where <italic>m </italic>occurs with higher probability (refer to Table <xref ref-type="table" rid="T1">1</xref>).</p>
+      <p>Following Shannon, the <italic>self-information </italic>of a probabilistic event with probability <italic>p </italic>is given by - log(<italic>p</italic>). If the event is very rare, the self-information is very high. On the other hand, if the event has probability close to 1, observing such event gives us almost no information. So, by assuming that <italic>m </italic>occurs independently in each sequence of <italic>f</italic>, the self-information that <italic>m </italic>occurs in all sequences of <italic>f </italic>in the annotated positions is given by<disp-formula id="bmcM1"><label>(1)</label><graphic xlink:href="1748-7188-6-13-i4.gif"/></disp-formula></p>
+      <p>Note that the above sum is zero (its minimal value) if the motif <italic>m </italic>occurs with probability 1 in all annotated positions and, moreover, the sum is not upper-bounded.</p>
+      <p>Considering that the priors are in PSP format, their information can be easily computed from the annotated sequences. Indeed, the self-information given by the prior <italic>S<sub>p </sub></italic>of observing the annotated positions <italic>j<sub>i</sub></italic>, for all 1 ≤ <italic>i </italic>≤ <italic>N</italic>, is computed as<disp-formula><graphic xlink:href="1748-7188-6-13-i5.gif"/></disp-formula></p>
+      <p>where <italic>S<sub>p</sub></italic>[<italic>i</italic>, <italic>j</italic>] is the prior probability stored at the <italic>j</italic>-th position of the <italic>i</italic>-th sequence in the <italic>S<sub>p </sub></italic>PSP file. Having this, it remains to understand how the information from different priors can be combined. Actually, priors come from different sources [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B13">13</xref>-<xref ref-type="bibr" rid="B16">16</xref>], and some of these sources might have more quality or be more relevant for motif discovery than others. A simple way to heuristically combine prior information is to multiply the contribution of each prior by a constant <italic>α<sub>p </sub></italic>that measures the belief in the quality/relevance of each prior <italic>S<sub>p </sub></italic>and consider a balanced sum of all self-informations. In order to keep the resulting value with the same magnitude of each component, we consider a convex combination, that is, <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i6.gif"/></inline-formula>. Thus, the combined self-information is computed as<disp-formula id="bmcM2"><label>(2)</label><graphic xlink:href="1748-7188-6-13-i7.gif"/></disp-formula></p>
+      <p>Following a similar idea, we balance with a constant λ ∈ (0, 1] the self-information given by the occurrence of the motif in (1) with the self-information given by the priors in (2), obtaining in this way the following expression:<disp-formula id="bmcM3"><label>(3)</label><graphic xlink:href="1748-7188-6-13-i8.gif"/></disp-formula></p>
+      <p>The closer the above expression is to zero the less (balanced) self-information follows from observing a candidate motif <italic>m </italic>in the annotated positions of both the DNA sequences and the priors. Indeed, we expect motifs to occur in the annotated positions of both the DNA sequences and the priors with high probability. Therefore, the goal is to find a motif <italic>m </italic>that minimizes such information. Next, and for the sake of simplification, we drop the minus sign in (3), that is, we consider the final scoring criterion, called <italic>balanced information score </italic>(BIS), defined as<disp-formula id="bmcM4"><label>(4)</label><graphic xlink:href="1748-7188-6-13-i9.gif"/></disp-formula></p>
+      <p>and restate our goal to finding a motif <italic>m </italic>that maximizes (4). Note that BIS(<italic>m</italic>, <italic>f</italic>, <italic>S</italic>) is always non-positive and, therefore, is upper-bounded by 0.</p>
+      <p>For the BIS score in Equation (4) to be well-defined it remains to determine the values of the constants λ and <italic>α<sub>p </sub></italic>for all 1 ≤ <italic>p </italic>≤ ℓ. Whenever there is no knowledge about the quality of the priors the values of such constants should be uniform, that is, <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i10.gif"/></inline-formula> and <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i11.gif"/></inline-formula> for all 1 ≤ <italic>p </italic>≤ ℓ. Usually, it is possible to refine heuristically these constants by evaluating the usefulness of each prior in well-know domains.</p>
+      <p>Finally, it is not obvious how to translate back the combined information into a combined prior that could be used in an EM or Gibbs sampler-based algorithm. These techniques need that such prior reflects the probability of finding a motif in a certain position of the DNA sequences in order to correctly bias, in each iteration step, the expected log-likelihood of the candidate motif occurring in the positions given by the latent variable. On the other hand, GRISOTTO incorporates prior information in BIS resulting in a theoretical-information scoring criterion that measures the information of observing the candidate motif in the annotated positions of both the DNA sequences and the priors. These annotated positions are computed only once, for each candidate motif, in such a way that the balanced contribution to the BIS score of the DNA sequences and the priors in those positions is maximal. The higher the value of the BIS score, the higher the probability that a candidate motif occurs in the annotated positions of both the DNA sequences and the priors. Therefore, GRISOTTO reports the motif, among all candidate ones, that maximizes the BIS scoring criterion.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <p>The GRISOTTO algorithm was implemented in Java. Source code and binaries are available at <ext-link ext-link-type="uri" xlink:href="http://kdbio.inesc-id.pt/~asmc/software/grisotto.html">http://kdbio.inesc-id.pt/~asmc/software/grisotto.html</ext-link>. A C implementation of the RISOTTO combinatorial algorithm, needed by GRISOTTO, is also available. Source code and executables can also be found at the GRISOTTO webpage.</p>
+    <p>We start the evaluation of the effectiveness of GRISOTTO by measuring the benefits of using single and combined priors in finding motifs in yeast ChiP-chip data. This data is now a <italic>gold standard </italic>with several priors available, providing an unbiased experimental assay for motif discovery tools. It contains a human-curated set of 156 motifs known to be present in 156 sequence-sets (one motif per sequence-set). Motif finder tools are asked to report a single motif for each sequence-set, which is then compared with the human-curated one. Human-curated motifs are called throughout this work as <italic>literature motifs, known motifs </italic>or even <italic>true motifs</italic>. Details about the data, priors, evaluation methodology, and results can be found in the following ChiP-chip data subsection.</p>
+    <p>We also provide an additional check on the value of using priors with GRISOTTO from data with different characteristics - a higher eukaryote with sequence data derived from a different technology. On this account, we evaluate the performance of GRISOTTO in 13 sequence-sets from mouse ChiP-seq data. Details of this assessment can be found in ChiP-seq data subsection.</p>
+    <sec>
+      <title>ChiP-chip data</title>
+      <p>We gauge the performance of GRISOTTO by measuring the benefits of using BIS for finding motifs in 156 sequence-sets experimentally verified to bind different TF's in yeast. These datasets were collected by PRIORITY researchers [<xref ref-type="bibr" rid="B11">11</xref>] and were compiled from the work of Harbison <italic>et al. </italic>[<xref ref-type="bibr" rid="B28">28</xref>]. More precisely, Harbison <italic>et al. </italic>profiled the intergenetic binding locations of 203 TF's under various environmental conditions over 6140 yeast intergetecic regions. From these only intergenetic sequences reported to be bounded with a <italic>p</italic>-value ≤ 0.001 for some condition were considered by the PRIORITY researchers. Moreover, only sequence-sets with at least size 10 bounded by TF's with a known consensus from the literature were considered, resulting in 156 sequence-sets. Presently, these datasets are being used to benchmark several motif discovery tools [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B14">14</xref>-<xref ref-type="bibr" rid="B17">17</xref>,<xref ref-type="bibr" rid="B28">28</xref>-<xref ref-type="bibr" rid="B35">35</xref>] as they provide a reliable and fair assay over real data.</p>
+      <p>Three different PSP's were incorporated in BIS to boost GRISOTTO motif discoverer, namely, priors based on evolutionary conservation [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B16">16</xref>], destabilization energy [<xref ref-type="bibr" rid="B15">15</xref>], and nucleosome occupancy [<xref ref-type="bibr" rid="B11">11</xref>]. All these priors were devised by PRIORITY researchers and were kindly made available by the authors (personal communication). The popular MEME algorithm was also evaluated with the evolutionary conservation-based prior [<xref ref-type="bibr" rid="B17">17</xref>] devised by PRIORITY researchers. Since the sequence-sets and priors used to evaluate GRISOTTO were exactly the ones used in PRIORITY and MEME and, moreover, the criterion used to determine a correct prediction by the algorithms was also the same, we were able to make direct comparisons with their published results. PRIORITY and MEME had already shown that the use of these priors is advantageous when combined with Gibbs sampling and EM techniques. Herein we aim at investigating if the same improvements are also achieved by GRISOTTO. Moreover, we evaluate if combining priors is beneficial.</p>
+      <p>Following the approach of PRIORITY, we let GRISOTTO look for a single motif of size 8 in each of the 156 yeast sequence-sets, since priors were computed for 8-mers. The results provided by MEME considered a modification of the priors, adapting them for <italic>k</italic>-mers of different sizes. As a consequence, MEME was able to report accurately a large number of long motifs. Although we acknowledge that MEME's approach improves the capacity to discover motifs, we keep the original priors used in PRIORITY. Moreover, to measure the accuracy of GRISOTTO we used exactly the same metric as the one previously used by the PRIORITY and MEME researches. This metric compares the single motif reported by the discoverer, for each of the 156 yeast sequence-sets, to a literature motif by computing a scaled version of the Euclidean distance between the true motif and the reported one. A more complete explanation of this metric can be found in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>.</p>
+      <p>The results of GRISOTTO, as well as those of state-of-the-art motif discoverers, are summarized in Table <xref ref-type="table" rid="T2">2</xref>. Detailed results of GRISOTTO can be found in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref> while details about the evaluation methodology, including, parameter settings and running times, can be found in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>. A brief explanation about the priors is given in the following sections.</p>
+      <table-wrap id="T2" position="float">
+        <label>Table 2</label>
+        <caption>
+          <p>Comparison of GRISOTTO with state-of-the-art methods over ChiP-chip data.</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Algorithm</th>
+              <th align="left">Description</th>
+              <th align="center">Successes</th>
+              <th align="center">%</th>
+              <th align="center">Ref</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">PhyloCon</td>
+              <td align="left">Local alignment of conserved regions</td>
+              <td align="center">19</td>
+              <td align="center">12%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B29">29</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">PhyME</td>
+              <td align="left">Alignment-based with EM</td>
+              <td align="center">21</td>
+              <td align="center">13%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B30">30</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">MEME:OOPS</td>
+              <td align="left">MEME with OOPS model</td>
+              <td align="center">36</td>
+              <td align="center">23%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B31">31</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">MEME:ZOOPS</td>
+              <td align="left">MEME with ZOOPS model</td>
+              <td align="center">39</td>
+              <td align="center">25%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B31">31</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">MEME-c</td>
+              <td align="left">MEME without conserved bases masked</td>
+              <td align="center">49</td>
+              <td align="center">31%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B28">28</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">PhyloGibbs</td>
+              <td align="left">Alignment-based with Gibbs Sampling</td>
+              <td align="center">54</td>
+              <td align="center">35%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B32">32</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">Kellis <italic>et al.</italic></td>
+              <td align="left">Alignment-based</td>
+              <td align="center">56</td>
+              <td align="center">36%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B33">33</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">CompareProspector</td>
+              <td align="left">Alignment-based with Gibbs sampling</td>
+              <td align="center">64</td>
+              <td align="center">41%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B34">34</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">Converge</td>
+              <td align="left">Alignment-based with EM</td>
+              <td align="center">68</td>
+              <td align="center">44%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B35">35</xref>]</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">MEME:OOPS-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula></td>
+              <td align="left">MEME with OOPS model and <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> priors</td>
+              <td align="center">73</td>
+              <td align="center">47%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B17">17</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula></td>
+              <td align="left">Gibbs sampler with <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> priors</td>
+              <td align="center">77</td>
+              <td align="center">49%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B16">16</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left">MEME:ZOOP-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula></td>
+              <td align="left">MEME with ZOOPS model and <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> priors</td>
+              <td align="center">81</td>
+              <td align="center">52%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B17">17</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left"><bold>GRISOTTO</bold>-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula></td>
+              <td align="left">GRISOTTO with <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> priors</td>
+              <td align="center">
+                <bold>83</bold>
+              </td>
+              <td align="center">
+                <bold>53%</bold>
+              </td>
+              <td align="center">-</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula></td>
+              <td align="left">Gibbs sampler with <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> priors</td>
+              <td align="center">70</td>
+              <td align="center">45%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B15">15</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left"><bold>GRISOTTO</bold>-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula></td>
+              <td align="left">GRISOTTO with <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> priors</td>
+              <td align="center">
+                <bold>80</bold>
+              </td>
+              <td align="center">
+                <bold>51%</bold>
+              </td>
+              <td align="center">-</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula></td>
+              <td align="left">Gibbs sampler with <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> priors</td>
+              <td align="center">70</td>
+              <td align="center">45%</td>
+              <td align="center">[<xref ref-type="bibr" rid="B11">11</xref>]</td>
+            </tr>
+            <tr>
+              <td align="left"><bold>GRISOTTO</bold>-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula></td>
+              <td align="left">GRISOTTO with <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> priors</td>
+              <td align="center">
+                <bold>77</bold>
+              </td>
+              <td align="center">
+                <bold>49%</bold>
+              </td>
+              <td align="center">-</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"><bold>GRISOTTO</bold>-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i15.gif"/></inline-formula></td>
+              <td align="left">GRISOTTO with combined priors</td>
+              <td align="center">
+                <bold>93</bold>
+              </td>
+              <td align="center">
+                <bold>60%</bold>
+              </td>
+              <td align="center">-</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>The results of motif discoverers were taken from R. Gordân <italic>et al. </italic>[<xref ref-type="bibr" rid="B16">16</xref>] and T. L. Bailey <italic>et al. </italic>[<xref ref-type="bibr" rid="B17">17</xref>].</p>
+          <p>All priors used were devised by R. Gordân, A. J. Hartemink and L. Narlikar [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B14">14</xref>-<xref ref-type="bibr" rid="B16">16</xref>].</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <sec>
+        <title>Evolutionary conservation-based priors</title>
+        <p>Diverse methods for motif discovery make use of orthologous conservation to assess wether a particular DNA site is conserved across related organisms, and thus more likely to be functional. A comprehensive work along this line was done by PRIORITY researchers [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B16">16</xref>], where an orthologous conservation-based prior was devised to improve their Gibbs sampler-based motif discovery method. This prior was built in a discriminative way by taking into account not only sequence-sets that were bounded by some profiled TF (the positive set) but also sequence-sets that were not bounded by the same TF (the negative set). In this way the prior reflects not only the probability that a <italic>W </italic>-mer at a certain position is conserved but of all the conserved occurrences of this <italic>W </italic>-mer what fraction occurs in the bound sequence-set. Conserved occurrences are found by searching if a <italic>W </italic>-mer in a reference sequence also occurs in most of its orthologous ones regardless of its orientation or specific position. For this particular case, the evolutionary conservation-based prior was used for each intergenetic region in <italic>S. cerevisiae </italic>and it used the orthologous sequences from six related organisms, namely, <italic>S. paradoxus, S. mikatae, S. kudriavzevii, S. bayanus, S. castelli </italic>and <italic>S. kluyveri</italic>. The prior was named <italic>discriminative conservation-based prior </italic>(<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>) and was made available, in a PSP format, at PRIORITY webpage.</p>
+        <p>Herein, we gauge the performance of GRISOTTO when this exact <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> prior is incorporated into the BIS scoring criterion. Results comparing GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> with PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>[<xref ref-type="bibr" rid="B16">16</xref>], MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>[<xref ref-type="bibr" rid="B17">17</xref>], and other state-of-the-art algorithms, can be found in Table <xref ref-type="table" rid="T2">2</xref>. Results show that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> correctly predicted 83 motifs out of the 156 experiments, whereas PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> found 77 and MEME:ZOOP-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> 81. We conclude that GRISOTTO performed at least as well as PRIORITY and MEME:ZOOP when the same <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> PSP was used. A closer inspection of detailed results of GRISOTTO, in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref> reveals that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> found 15 motifs that PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> did not, while PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> found only 10 motifs that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> did not.</p>
+      </sec>
+      <sec>
+        <title>Destabilization energy-based priors</title>
+        <p>Information about DNA double-helical stability has also been collected into a PSP to boost the PRIORITY Gibbs sampler-based algorithm [<xref ref-type="bibr" rid="B15">15</xref>]. The rational for the information contained in this prior is based in the fact that, in general, the energy needed to destabilize the DNA double helix is higher at TFBS's than at random DNA sites. The PSP resulting from this effort was built in a discriminative way, just as for the <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> prior, and was named <italic>discriminative energy-based prior </italic>(<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula>).</p>
+        <p>We evaluated the <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> prior within GRISOTTO. Results comparing GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> with PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula>[<xref ref-type="bibr" rid="B15">15</xref>], and other state-of-the-art algorithms, can be found in Table <xref ref-type="table" rid="T2">2</xref>. This table shows that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> correctly predicted 80 motifs out of the 156 experiments, whereas PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> found only 70. We conclude that GRISOTTO performed quite well when the <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> prior was used, with an improvement of 14% over correct predictions relatively to PRIORITY, raising the overall proportion of successful predictions in 6% (from 45% to 51%). As before, we made a closer examination of the detailed results included in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref> which revealed that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> found 19 motifs that PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> did not, whereas PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> found only 9 motifs that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> did not.</p>
+      </sec>
+      <sec>
+        <title>Nucleosome occupancy-based priors</title>
+        <p>Nucleosome occupancy has also been used in motif discovery. The rationale for this approach is that Eukaryotic genomes are packaged into nucleosomes along chromatin affecting sequence accessibility. There are two main works in the literature to predict genome-wide organization of nucleosomes in <italic>Saccharomyces cerevisiae </italic>[<xref ref-type="bibr" rid="B36">36</xref>-<xref ref-type="bibr" rid="B38">38</xref>]. Taking into account the work of Segal <italic>et al. </italic>[<xref ref-type="bibr" rid="B38">38</xref>] the PRIORITY researchers [<xref ref-type="bibr" rid="B11">11</xref>] devised an informative prior based on a discriminative view of nucleosome occupancy. The prior was named <italic>discriminative nucleosome-based prior </italic>(<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula>).</p>
+        <p>GRISOTTO was evaluated with the <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> prior incorporated in the BIS score. Results comparing GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> with PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula>, and other state-of-the-art algorithms, can be found in Table <xref ref-type="table" rid="T2">2</xref>. This table shows that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> correctly predicted 77 motifs out of the 156 experiments, while PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> found 70. We conclude that GRISOTTO outperformed PRIORITY when <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> prior was used, with an improvement of 10% over correct predictions. A closer investigation of detailed results in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref> unravels that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> found 13 motifs that PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> did not, whereas PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> found 6 motifs that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> did not.</p>
+      </sec>
+      <sec>
+        <title>Combining priors</title>
+        <p>Despite considerable effort to date in developing new potential priors to boost motif discoverers, PSP's from different sources have not yet been combined. Actually, although having some degree of redundancy, because, for instance, the positioning of nucleosomes may be correlated with DNA double helix stability, it is easy to conclude by a closer inspection of the detailed results in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref> that different PSP's still report a considerable number of disjoint motifs (refer to Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> for further details). As a matter of fact, PRIORITY researchers have already noticed this fact [<xref ref-type="bibr" rid="B15">15</xref>]. However, it is not a trivial task determining how to translate the BIS combined information into a PSP that can be used in EM or Gibbs sampler-based algorithms.</p>
+        <p>In order to gauge the potential of combined priors, we incorporated in the BIS score the three <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>, <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> and <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> priors. We call the final prior <italic>combined discriminative prior </italic>(<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i15.gif"/></inline-formula>). Results show that GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i15.gif"/></inline-formula> is the more accurate motif discoverer for the 156 sequence-sets being evaluated. It correctly predicted 93 motifs, while GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> found 83, GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i13.gif"/></inline-formula> 80 and GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i14.gif"/></inline-formula> 77. In this way GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i15.gif"/></inline-formula> accomplished an improvement of at least 12% over correct predictions, when compared with GRISOTTO variants considering the priors individually. This raises the overall proportion of successful predictions in 7%, on top of the improvements already attained in the previous sections, over these 156 yeast sequence-sets. Moreover, when comparing GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i15.gif"/></inline-formula> with state-of-the-art motif discoverers (refer to Table <xref ref-type="table" rid="T2">2</xref>), the final proportion of successful predictions was raised to 60%, while the best known previous value, to our knowledge, was 51% attained by MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>[<xref ref-type="bibr" rid="B17">17</xref>]. This leads us to conclude that combining priors from different sources is even more beneficial than considering them separately.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>ChiP-seq data</title>
+      <p>Herein we measure the accuracy of GRISOTTO in TF motif discovery on 13 mouse ChiP-seq data. This data was gathered by Chen <italic>et al. </italic>[<xref ref-type="bibr" rid="B21">21</xref>] where whole-genome binding sites of 13 sequence-specific TFs (Nanog, Oct4, STAT3, Smad1, Sox2, Zfx, c-Myc, n-Myc, Klf4, Essrb, Tcfcp2l, E2f1, and CTCF) were profiled in mouse ES cells using the ChiP-seq approach. Sequences of ±100 bp size from the top 500 binding peaks were selected for each factor, repeats were masked, and the Weeder [<xref ref-type="bibr" rid="B39">39</xref>] tool was used to find overrepresented sequences unravelling 12 of the 13 factors (excluding E2f1).</p>
+      <p>We assess the quality of GRISOTTO in discovering motifs from mouse ChiP-seq data with two priors. First, an orthologous conservation-based PSP was used as information for higher organisms is now available. Indeed, there are already such PSP's for yeast, fly, mouse and even human [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B16">16</xref>,<xref ref-type="bibr" rid="B17">17</xref>]. Second, a binding peak-based PSP was tried as ChiP-seq assays provide an intrinsic positional prior that can be computed from base-specific coverage profiles. This prior has recently been employed in motif discoverers [<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B23">23</xref>] with success.</p>
+      <p>As for ChiP-chip data, we let GRISOTTO find for a single motif of size 8, since priors were computed for 8-mers. However, as human-curated motifs are not available for this ChiP-seq data, we made only a resemblance, based on a 6-window match, between the motifs reported by GRISOTTO with those outputted by Chen <italic>et al. </italic>[<xref ref-type="bibr" rid="B21">21</xref>] and MEME [<xref ref-type="bibr" rid="B17">17</xref>] for the same data.</p>
+      <sec>
+        <title>Evolutionary conservation-based priors</title>
+        <p>Orthologous conservation-based priors for mouse ChiP-seq data were obtained by MEME researchers [<xref ref-type="bibr" rid="B17">17</xref>] following a similar methodology as PRIORITY-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> for the yeast ChiP-chip data ones. As before, this new mouse prior received the shorthand name <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>. We incorporated the <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> prior into the BIS score and ran GRISOTTO. In Figure <xref ref-type="fig" rid="F1">1</xref>, motifs reported by Chen <italic>et al. </italic>and MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> are shown along side motifs found by GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> for the 13 mouse sequence-sets. Recall that Chen <italic>et al. </italic>only reported 12 out of the 13 motifs, excluding the E2f1 motif, so in this case the TRANSFAC [<xref ref-type="bibr" rid="B40">40</xref>] motif is shown instead. MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> and GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> were able to retrieve all motifs. Moreover, the number of sequences of these sequence-sets vary from 1038 to 38238 and, due to efficiency issues, MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> was only able to run over 100 sequences randomly chosen from each sequence-set. GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> was able to use all of them taking only 1-4 minutes, per sequence-set, to report a motif.</p>
+        <fig id="F1" position="float">
+          <label>Figure 1</label>
+          <caption>
+            <p><bold>Comparison of GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i16.gif"/></inline-formula> with Chen et al. and MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i16.gif"/></inline-formula></bold>. Motifs reported by Chen <italic>et al. </italic>[<xref ref-type="bibr" rid="B21">21</xref>] and MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>[<xref ref-type="bibr" rid="B17">17</xref>] are shown along side motifs found by GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> for the 13 mouse ChiP-seq data. Chen <italic>et al. </italic>only reported 12 out of the 13 motifs, excluding the E2f1 motif, so in this case the TRANSFAC [<xref ref-type="bibr" rid="B40">40</xref>] motif is shown instead.</p>
+          </caption>
+          <graphic xlink:href="1748-7188-6-13-1"/>
+        </fig>
+        <p>Because sequences-sets are very large, some of the reported motifs became highly degenerated. Actually, only 6 out of the 13 motifs seem to be highly conserved, namely, CTCF, Esrrb, Klf4, n-Myc, Tcfc and c-Myc. For these, even allowing for IUPAC symbols during the greedy search results in highly conserved motifs. Therefore, for this data, we searched for IUPAC strings that allow only two positions to have degenerate IUPAC symbols.</p>
+        <p>By a closer inspection of Figure <xref ref-type="fig" rid="F1">1</xref> we conclude that motifs reported by GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> are strongly similar to the ones reported by Chen <italic>et al. </italic>and MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>. Have in mind that GRISOTTO outputs an IUPAC, and not a PSSM, but we used, in a 6-window size, the same color scheme as PSSM's to make the resemblance with reported motifs easier.</p>
+      </sec>
+      <sec>
+        <title>Binding peak-based priors</title>
+        <p>Hu <italic>el al. </italic>[<xref ref-type="bibr" rid="B23">23</xref>] devised a prior using coverage profile information provided by the ChiP-seq approach. This grounds in the belief that motifs are tightly packed near the <italic>peak summit </italic>- the location inside each peak with the highest sequence coverage depth. As a result, prior probabilities were set to be proportional to a discretized Student's <italic>t</italic>-distribution with 3 degrees of freedom and rescaled such that they form a step function with a fixed 25 bp step-size. The prior probabilities are symmetric and centered at the peak summits. As such prior is intrinsically a positional one we built a PSP resuming the described probabilities for the 13 mouse ChiP-seq data and ran GRISOTTO.</p>
+        <p>Our results show that direct use of binding peak-based priors does not help GRISOTTO much. Actually, the motifs reported by this prior were exactly the same as using the uniform prior (recall that for the uniform prior any position in the DNA is likely to contain a motif). Moreover, when combined with the <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> prior GRISOTTO reported precisely the same motifs as <inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula> prior alone. These findings suggest that GRISOTTO is unable to retrieve any useful information from the binding peak-based prior. We attributed this to the fact that part of the information contained in the binding peak-based prior is already encoded in the BIS score. Indeed, peak summits indicate an overrepresentation of a motif in a certain locus. Such overrepresentation is already weighted in the BIS score (recall Equation (1) and (4) in page 8-9). Notwithstanding, it seems reasonable that for short sequences of 200 bp (namely, ±100 bp around the peak summits) the coverage-based prior has no real impact on motif discovery. For longer sequences, the effective resolution of the peak summits seems to provide useful information [<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B23">23</xref>].</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <p>Wasserman and Sandelin [<xref ref-type="bibr" rid="B41">41</xref>] noticed that the discovery of TFBS's from a nucleotide sequence alone suffers from impractical high false positive rates. This was termed the <italic>futility theorem </italic>as nearly every predicted TFBS has no function <italic>in vivo</italic>. This problem has been studied and addressed by taking into consideration information in and beyond the TFBS's, such as orthologous conservation [<xref ref-type="bibr" rid="B16">16</xref>,<xref ref-type="bibr" rid="B17">17</xref>], nucleosome positioning [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B42">42</xref>], DNA duplex stability [<xref ref-type="bibr" rid="B14">14</xref>] and coverage profiles obtained from ChiP-seq assays [<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B23">23</xref>].</p>
+    <p>Following this line of research we have verified in the present study that post-processing the output of RISOTTO with prior knowledge from different sources is beneficial for motif discovery. RISOTTO is a consensus-based method that enumerated exhaustively all motifs by collecting their occurrences, up to a fixed Hamming distance, from input sequences. The <italic>Hamming distance </italic>between two string measures the minimum number of substitutions required to change one string into the other. As a result, a set of overrepresented motifs is reported and then ordered by their biological relevance according to some statistical significance test [<xref ref-type="bibr" rid="B24">24</xref>,<xref ref-type="bibr" rid="B26">26</xref>,<xref ref-type="bibr" rid="B27">27</xref>]. This ordered list is retrieved in a classical way from the nucleotide sequence alone and, as previously mentioned, it is of particular importance to introduce a bias from available priors. Following this goal, we noticed that the top 10 motifs from the RISOTTO ordered list could be greedily modified to have a good BIS score. The greedy procedure would modify these motifs introducing some noise allowed by the prior and up-weighting weak motifs that were masked during the combinatorial and/or statistical significance test. Certainly, we would not expect RISOTTO, or any other combinatorial algorithm, to report completely outlandish motifs, as motif discovery problem is indeed a combinatorial problem that accounts for overrepresentation of a string in a set of DNA sequences. However, prior information provides valuable guidance on how to describe a motif that goes beyond neighborhoods (defined by the Hamming distance or any similar distance) of the consensus sequence. GRISOTTO incorporates such information in the BIS score providing in this way a broader definition of overrepresentation of a motif in the input sequences.</p>
+    <p>Currently, a significant point of discussion is related with the use of prior information as a post-processing step of RISOTTO, and not within the RISOTTO procedure itself. For the sake of simplicity, consider we are looking for motifs of a fixed size <italic>k</italic>. Combinatorial algorithms take into consideration overrepresentation of motifs to extract them. This extraction is exhaustive, by iteratively extending candidate strings of size 1 ... <italic>k </italic>- 1, letter by letter of the DNA alphabet, and checking in each step if the extended string is still overrepresented in the sequence-set. Usually, complex data structures, such as suffix-trees, are employed to extend the candidate string. Whenever an extension fails to be overrepresented in the input sequences that extension is disregarded and another one is attempted. Only extensions that reach the size <italic>k </italic>are reported.</p>
+    <p>Conversely, prior information only asserts if a sub-sequence of a fixed size W in a certain position of the DNA sequences is likely to be a motif. It is not straightforward to use prior information in combinatorial algorithms because they would need to know if a sub-string of size 1 ... <italic>k </italic>- 1 is likely to be a motif. However, in one hand, it is space-wise unfeasible to have priors for multiple values of <italic>W </italic>. On the other hand, priors for small or large values of <italic>W </italic>have no information whatsoever, as either they are very common (occur in all input sequences) or very rare (occur only once or never). Our work, as well as state-of-the-art ones [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B14">14</xref>-<xref ref-type="bibr" rid="B17">17</xref>], have shown that an efficient and effective solution is to consider <italic>W </italic>= <italic>k </italic>= 8.</p>
+    <p>Besides this discussion, there are two obvious advantages of using prior information at a post-processing step. First, the greedy-search procedure is independent from the starting points provided by the combinatorial algorithm, allowing any method to be employed (for instance, Weeder [<xref ref-type="bibr" rid="B39">39</xref>], SMILE [<xref ref-type="bibr" rid="B26">26</xref>], RISO [<xref ref-type="bibr" rid="B27">27</xref>], RISOTTO, etc). Another advantage is that while new priors are devised, we do not need to re-compute previous starting points, being sufficient to run the greedy-search procedure of the GRISOTTO algorithm.</p>
+    <p>In closing, we stress that the BIS score was used throughout the experiments with sequence-sets known to be bound by a TF. Therefore, it was only used to discover the positions of each sequence-set where the motif occurs. Another possible application of the BIS score would be to detect the fraction of sequences that are likely to have site predictions. There are two possible ways to adapt GRISOTTO to this new problem: (i) derive a threshold of the BIS score contribution of a sequence above which the sequence is likely to have site predictions; (ii) incorporate an input parameter in the GRISOTTO greedy procedure, usually called <italic>quorum</italic>, that amounts for the fraction of sequences that have binding site predictions. None of these approaches seems straightforward and are out of the scope of this paper, hence they were left as a future research topic.</p>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>The GRISOTTO algorithm post-processes in a greedy-fashion the output of RISOTTO taking into account prior information available about the domain. In practice, this introduces some extra knowledge taken from the literature, or computed from the sequences, that will help in characterizing motifs. The algorithm is flexible enough to combine several priors from different sources. Each prior is given a weight reflecting the confidence on the information contained in it and its relevance for motif discovery. In this way, priors can be introduced at will giving rise to a scoring criterion based on the convex closure of the information given by each prior.</p>
+    <p>Prior information has previously been shown to be beneficial when used with EM and Gibbs sampler-based motif discoverers. We have shown here that they can also be of great benefit to boost combinatorial algorithms such as RISOTTO. We emphasize that the goal of this paper is not to introduce new priors, but to show that priors can also be advantageous to assist and improve the output of combinatorial algorithms such as RISOTTO. Moreover, we have shown that combining priors is very promising in further extending the power of motif discovery algorithms.</p>
+    <p>We gauge the effect of adding prior information to GRISOTTO over 156 well-studied sequence-sets from yeast TF ChiP-chip experiments. For each sequence-set, motif discoverers were asked to report a single PSSM motif that was then compared with the known PSSM for the TF pulled down in the ChIP-chip experiment. Prior information from different sources was used, including, orthologous conservation, nucleosome occupancy, and destabilization energy. The use of exactly the same priors in EM and Gibbs sampler-based motif discoverers, namely, MEME and PRIORITY, respectively, has been shown to dramatically improve their performance. In this work, we show that this boost can be also achieved by GRISOTTO that performed at least as well as PRIORITY and MEME when each prior was considered individually. The great advantage of GRISOTTO was accomplished by the combination of priors. Indeed, when GRISOTTO compromised the three mentioned priors in a convex combination of their information it achieved an improvement of about 15% over correct predictions relatively to the best motif discoverer (MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>[<xref ref-type="bibr" rid="B17">17</xref>]), at our present knowledge, for exactly the same experiments. The final proportion of successful predictions is now at 60%, attained with 93 correct predictions from GRISOTTO-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i15.gif"/></inline-formula> (with only 81 correct predictions of MEME-<inline-formula><inline-graphic xlink:href="1748-7188-6-13-i12.gif"/></inline-formula>) out of the 156 experiments.</p>
+    <p>Finally, we also confirm the benefit of using GRISOTTO with 13 sequence-sets from a higher eukaryote ChiP-seq data, namely, the mouse. In this assessment two priors were used, including, orthologous conservation and base coverage profiles obtained from the ChiP-seq assays. We concluded that, as for ChiP-chip data, the orthologous conservation-based prior was of great convenience, being able to unravel 13 motifs strongly similar to the ones reported by other tools and found in the TRANSFAC database. In respect to the coverage-based prior, their direct use as a positional prior was not favorable, having been comparable to the uniform prior. We believe this is due to the fact that the BIS score already accounts for overrepresentation in the input sequences which we suspect mimics the information contained in this new prior, turning the prior redundant.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>AMC did the programming and designed and performed the experiments. AMC also wrote the final draft of the paper. ALO did the proofreading of the final draft of the paper. Both authors have read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>Detailed set up and evaluation methodology of GRISOTTO</bold>. This additional file presents in detail three topics needed to make the paper self-contained. First, is describes the call to RISOTTO algorithm found in Step 1 of the Algorithm 1. Second, it includes the inter-motif distance used to compute successful predictions from motif discoverers, along with PSSM representation of IUPAC strings reported by GRISOTTO. Finally, it contains relevant information about the evaluation methodology, including, parameter settings and running times. This makes the results presented in this paper reproducible along with the data and algorithms provided in the GRISOTTO webpage.</p>
+      </caption>
+      <media xlink:href="1748-7188-6-13-S1.PDF" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S2">
+      <caption>
+        <title>Additional file 2</title>
+        <p><bold>Detailed results of GRISOTTO</bold>. Additional details about experimental results of GRISOTTO presenting actual predictions sequence-set by sequence-set for various positional priors. It also presents results of PRIORITY taken from the supplementary material of the original papers.</p>
+      </caption>
+      <media xlink:href="1748-7188-6-13-S2.PDF" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements and funding</title>
+    <p>The authors thank Raluca Gordân and her co-authors for providing the sequence-sets and respective priors for the yeast experiments. We also thank Timothy Bailey and his co-authors for making available the mouse ChiP-seq data and respective priors used in the experiments. For last, but not least, the authors are very thankful for the invaluable comments of the anonymous referees.</p>
+    <p>This work was supported by FCT (INESC-ID multiannual funding) through the PIDDAC Program funds and by the projects PTDC/SAU-MII/100964/2008, PneumoSyS - A systems biology approach to the role of pneumococcal carbon metabolism in colonization and invasive disease, and PTDC/EIA/67722/2006, ARN - Algorithms for the Identification of Genetic Regulatory Networks, funded by FCT, Fundacão para a Ciência e Tecnologia.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Beiko</surname>
+          <given-names>RG</given-names>
+        </name>
+        <name>
+          <surname>Charlebois</surname>
+          <given-names>RL</given-names>
+        </name>
+        <article-title>GANN: Genetic Algorithm Neural Networks for the detection of conserved combinations of features in DNA</article-title>
+        <source>Proc. Natl Acad Sci USA</source>
+        <year>2005</year>
+        <volume>102</volume>
+        <fpage>17400</fpage>
+        <lpage>17405</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.0505147102</pub-id>
+        <pub-id pub-id-type="pmid">16301543</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Pudimat</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Schukat-Talamazzini</surname>
+          <given-names>EG</given-names>
+        </name>
+        <name>
+          <surname>Backofen</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Feature Based Representation and Detection of Transcription Factor Binding Sites</article-title>
+        <source>Proc. German Conference on Bioinformatics</source>
+        <year>2004</year>
+        <fpage>43</fpage>
+        <lpage>52</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ponomarenko</surname>
+          <given-names>JV</given-names>
+        </name>
+        <name>
+          <surname>Ponomarenko</surname>
+          <given-names>MP</given-names>
+        </name>
+        <name>
+          <surname>Frolov</surname>
+          <given-names>AS</given-names>
+        </name>
+        <name>
+          <surname>Vorobiev</surname>
+          <given-names>DG</given-names>
+        </name>
+        <name>
+          <surname>Overton</surname>
+          <given-names>GC</given-names>
+        </name>
+        <name>
+          <surname>Kolchanov</surname>
+          <given-names>NA</given-names>
+        </name>
+        <article-title>Conformational and physicochemical DNA features specific for transcription factor binding sites</article-title>
+        <source>Bioinformatics</source>
+        <year>1999</year>
+        <volume>15</volume>
+        <issue>7</issue>
+        <fpage>654</fpage>
+        <lpage>668</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/15.7.654</pub-id>
+        <pub-id pub-id-type="pmid">10487873</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Deremble</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Lavery</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Macromolecular recognition</article-title>
+        <source>Current Opinion in Structural Biology</source>
+        <year>2005</year>
+        <volume>15</volume>
+        <fpage>171</fpage>
+        <lpage>175</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.sbi.2005.01.018</pub-id>
+        <pub-id pub-id-type="pmid">15837175</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>O'Flanagan</surname>
+          <given-names>RA</given-names>
+        </name>
+        <name>
+          <surname>Paillard</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Lavery</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Sengupta</surname>
+          <given-names>AM</given-names>
+        </name>
+        <article-title>Non-additivity in protein-DNA binding</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>10</issue>
+        <fpage>2254</fpage>
+        <lpage>2263</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti361</pub-id>
+        <pub-id pub-id-type="pmid">15746285</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Paillard</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Lavery</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Analyzing protein-DNA recognition mechanisms</article-title>
+        <source>Structure</source>
+        <year>2004</year>
+        <volume>12</volume>
+        <fpage>113</fpage>
+        <lpage>122</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.str.2003.11.022</pub-id>
+        <pub-id pub-id-type="pmid">14725771</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Paillard</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Deremble</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Lavery</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Looking into DNA recognition: Zinc finger binding specificity</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2004</year>
+        <volume>32</volume>
+        <issue>22</issue>
+        <fpage>6673</fpage>
+        <lpage>6682</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkh1003</pub-id>
+        <pub-id pub-id-type="pmid">15613596</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lafontaine</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Lavery</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>ADAPT: A molecular mechanics approach for studying the structural properties of long DNA sequences</article-title>
+        <source>Biopolymers (Nucleic Acid Science)</source>
+        <year>2001</year>
+        <volume>56</volume>
+        <fpage>292</fpage>
+        <lpage>310</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lafontaine</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Lavery</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>High-speed molecular mechanics searches for optimal DNA interaction sites</article-title>
+        <source>Comb Chem High Throughput Screen</source>
+        <year>2001</year>
+        <volume>4</volume>
+        <issue>8</issue>
+        <fpage>707</fpage>
+        <lpage>717</lpage>
+        <pub-id pub-id-type="pmid">11812263</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lafontaine</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Lavery</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Optimization of nucleic acid sequences</article-title>
+        <source>Biophys J</source>
+        <year>2000</year>
+        <volume>79</volume>
+        <issue>2</issue>
+        <fpage>680</fpage>
+        <lpage>685</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0006-3495(00)76326-0</pub-id>
+        <pub-id pub-id-type="pmid">10920002</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Narlikar</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Gordân</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hartemink</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <article-title>Nucleosome Occupancy Information Improves <italic>de novo </italic>Motif Discovery</article-title>
+        <source>Proc. RECOMB'07</source>
+        <year>2007</year>
+        <fpage>107</fpage>
+        <lpage>121</lpage>
+        <pub-id pub-id-type="pmid">15531607</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Valen</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Sandelin</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Winther</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Krogh</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Discovery of Regulatory Elements is Improved by a Discriminatory Approach</article-title>
+        <source>PLoS Comput Biol</source>
+        <year>2009</year>
+        <volume>5</volume>
+        <issue>11</issue>
+        <fpage>e1000562</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pcbi.1000562</pub-id>
+        <pub-id pub-id-type="pmid">19911049</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Narlikar</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Gordân</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Ohler</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Hartemink</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <article-title>Informative priors based on transcription factor structural class improve <italic>de novo </italic>motif discovery</article-title>
+        <source>Proc. ISMB'06 (Supplement of Bioinformatics)</source>
+        <year>2006</year>
+        <fpage>384</fpage>
+        <lpage>392</lpage>
+        <pub-id pub-id-type="pmid">11125091</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Gordân</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Narlikar</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Hartemink</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <article-title>A Fast, Alignment-Free, Conservation-Based Method for Transcription Factor Binding Site Discovery</article-title>
+        <source>Proc. RECOMB'08</source>
+        <year>2008</year>
+        <fpage>98</fpage>
+        <lpage>111</lpage>
+        <pub-id pub-id-type="pmid">15531607</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Gordân</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hartemink</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <article-title>Using DNA Duplex Stability Information for Transcription Factor Binding Site Discovery</article-title>
+        <source>Pacific Symposium on Biocomputing</source>
+        <year>2008</year>
+        <fpage>453</fpage>
+        <lpage>464</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gordân</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Narlikar</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Hartemink</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <article-title>Finding regulatory DNA motifs using alignment-free evolutionary conservation information</article-title>
+        <source>Nuc Ac Res</source>
+        <year>2010</year>
+        <volume>38</volume>
+        <issue>6</issue>
+        <fpage>e90</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkp1166</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bailey</surname>
+          <given-names>TL</given-names>
+        </name>
+        <name>
+          <surname>Bodén</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Whitington</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Machanick</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>The value of position-specific priors in motif discovery using MEME</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>179</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-11-179</pub-id>
+        <pub-id pub-id-type="pmid">20380693</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Ucar</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Beyer</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Parthasarathy</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Workman</surname>
+          <given-names>CT</given-names>
+        </name>
+        <article-title>Predicting functionality of protein-DNA interactions by integrating diverse evidence</article-title>
+        <year>2009</year>
+        <volume>25</volume>
+        <issue>12</issue>
+        <fpage>i137</fpage>
+        <lpage>i144</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Valouev</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Johnson</surname>
+          <given-names>DS</given-names>
+        </name>
+        <name>
+          <surname>Sundquist</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Medina</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Anton</surname>
+          <given-names>E</given-names>
+        </name>
+        <collab>Serafim Batzoglo and RMM</collab>
+        <name>
+          <surname>Sidow</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Genome-wide analysis of transcription factor binding sites based on ChIP-Seq data</article-title>
+        <source>Nature Methods</source>
+        <year>2008</year>
+        <volume>5</volume>
+        <fpage>829</fpage>
+        <lpage>834</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1246</pub-id>
+        <pub-id pub-id-type="pmid">19160518</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Fejes</surname>
+          <given-names>AP</given-names>
+        </name>
+        <name>
+          <surname>Robertson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Bilenky</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Varhol</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Bainbridge</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>SJM</given-names>
+        </name>
+        <article-title>FindPeaks 3.1: a tool for identifying areas of enrichment from massively parallel short-read sequencing technology</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <issue>15</issue>
+        <fpage>1729</fpage>
+        <lpage>1730</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btn305</pub-id>
+        <pub-id pub-id-type="pmid">18599518</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Chen</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Fang</surname>
+          <given-names>Yuan F Pingand</given-names>
+        </name>
+        <name>
+          <surname>Huss</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Vega</surname>
+          <given-names>VB</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Orlov</surname>
+          <given-names>YL</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Jiang</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Loh</surname>
+          <given-names>YH</given-names>
+        </name>
+        <name>
+          <surname>Yeo</surname>
+          <given-names>HC</given-names>
+        </name>
+        <name>
+          <surname>Yeo</surname>
+          <given-names>ZX</given-names>
+        </name>
+        <name>
+          <surname>Narang</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Govindarajan</surname>
+          <given-names>KR</given-names>
+        </name>
+        <name>
+          <surname>Leong</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Shahab</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Bourque</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Sung</surname>
+          <given-names>WK</given-names>
+        </name>
+        <name>
+          <surname>Clarke</surname>
+          <given-names>ND</given-names>
+        </name>
+        <name>
+          <surname>Wei</surname>
+          <given-names>CL</given-names>
+        </name>
+        <name>
+          <surname>Ng</surname>
+          <given-names>HH</given-names>
+        </name>
+        <article-title>Integration of External Signaling Pathways with the Core Transcriptional Network in Embryonic Stem Cells</article-title>
+        <source>Cell</source>
+        <year>2008</year>
+        <volume>133</volume>
+        <issue>6</issue>
+        <fpage>1106</fpage>
+        <lpage>1117</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.cell.2008.04.043</pub-id>
+        <pub-id pub-id-type="pmid">18555785</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kulakovskiy</surname>
+          <given-names>IV</given-names>
+        </name>
+        <name>
+          <surname>Boeva</surname>
+          <given-names>VA</given-names>
+        </name>
+        <name>
+          <surname>Favorov</surname>
+          <given-names>AV</given-names>
+        </name>
+        <name>
+          <surname>Makeev</surname>
+          <given-names>VJ</given-names>
+        </name>
+        <article-title>Deep and wide digging for binding motifs in ChIP-Seq data</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <issue>20</issue>
+        <fpage>2622</fpage>
+        <lpage>2623</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq488</pub-id>
+        <pub-id pub-id-type="pmid">20736340</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hu</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Yu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Taylor</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Chinnaiyan</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Qin</surname>
+          <given-names>ZS</given-names>
+        </name>
+        <article-title>On the detection and refinement of transcription factor binding sites using ChIP-Seq data</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2010</year>
+        <volume>38</volume>
+        <issue>7</issue>
+        <fpage>2154</fpage>
+        <lpage>2167</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkp1180</pub-id>
+        <pub-id pub-id-type="pmid">20056654</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Pisanti</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Carvalho</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Marsan</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Sagot</surname>
+          <given-names>MF</given-names>
+        </name>
+        <person-group person-group-type="editor">JR Correa AH, Kiwi M</person-group>
+        <article-title>RISOTTO: Fast extraction of motifs with mismatches</article-title>
+        <source>Proc. LATIN'06, Volume 3887 of LNCS</source>
+        <year>2006</year>
+        <publisher-name>Spriger-Verlag</publisher-name>
+        <fpage>757</fpage>
+        <lpage>768</lpage>
+        <pub-id pub-id-type="pmid">20889688</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Sagot</surname>
+          <given-names>MF</given-names>
+        </name>
+        <article-title>Spelling approximate repeated or common motifs using a suffix tree</article-title>
+        <source>Proc. Latin'98, Volume 1380 of LNCS. Edited by Lucchessi C, Moura A, Springer-Verlag</source>
+        <year>1998</year>
+        <fpage>111</fpage>
+        <lpage>127</lpage>
+        <pub-id pub-id-type="pmid">20889688</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marsan</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Sagot</surname>
+          <given-names>MF</given-names>
+        </name>
+        <article-title>Algorithms for extracting structured motifs using a suffix tree with an application to promoter and regulatory site consensus identification</article-title>
+        <source>J Comp Bio</source>
+        <year>2000</year>
+        <volume>7</volume>
+        <issue>3-4</issue>
+        <fpage>345</fpage>
+        <lpage>362</lpage>
+        <pub-id pub-id-type="doi">10.1089/106652700750050826</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Carvalho</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Freitas</surname>
+          <given-names>AT</given-names>
+        </name>
+        <name>
+          <surname>Oliveira</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Sagot</surname>
+          <given-names>MF</given-names>
+        </name>
+        <article-title>An Efficient Algorithm for the Identification of Structured Motifs in DNA Promoter Sequences</article-title>
+        <source>IEEE/ACM Trans. Comput Biol Bioinformatics</source>
+        <year>2006</year>
+        <volume>3</volume>
+        <issue>2</issue>
+        <fpage>126</fpage>
+        <lpage>140</lpage>
+        <pub-id pub-id-type="doi">10.1109/TCBB.2006.16</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Harbison</surname>
+          <given-names>CT</given-names>
+        </name>
+        <name>
+          <surname>Gordon</surname>
+          <given-names>DB</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>TI</given-names>
+        </name>
+        <name>
+          <surname>Rinaldi</surname>
+          <given-names>NJ</given-names>
+        </name>
+        <name>
+          <surname>Macisaac</surname>
+          <given-names>KD</given-names>
+        </name>
+        <name>
+          <surname>Danford</surname>
+          <given-names>TW</given-names>
+        </name>
+        <name>
+          <surname>Hannett</surname>
+          <given-names>NM</given-names>
+        </name>
+        <name>
+          <surname>Tagne</surname>
+          <given-names>JB</given-names>
+        </name>
+        <name>
+          <surname>Reynolds</surname>
+          <given-names>DB</given-names>
+        </name>
+        <name>
+          <surname>Yoo</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Jennings</surname>
+          <given-names>EG</given-names>
+        </name>
+        <name>
+          <surname>Zeitlinger</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Pokholok</surname>
+          <given-names>DK</given-names>
+        </name>
+        <name>
+          <surname>Kellis</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Rolfe</surname>
+          <given-names>PA</given-names>
+        </name>
+        <name>
+          <surname>Takusagawa</surname>
+          <given-names>KT</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <name>
+          <surname>Gifford</surname>
+          <given-names>DK</given-names>
+        </name>
+        <name>
+          <surname>Fraenkel</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Young</surname>
+          <given-names>RA</given-names>
+        </name>
+        <article-title>Transcriptional regulatory code of a eukaryotic genome</article-title>
+        <source>Nature</source>
+        <year>2009</year>
+        <volume>431</volume>
+        <issue>7004</issue>
+        <fpage>99</fpage>
+        <lpage>104</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wang</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Stormo</surname>
+          <given-names>GD</given-names>
+        </name>
+        <article-title>Combining phylogenetic data with co-regulated genes to identify regulatory motifs</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>18</issue>
+        <fpage>2369</fpage>
+        <lpage>2380</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg329</pub-id>
+        <pub-id pub-id-type="pmid">14668220</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sinha</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Blanchette</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Tompa</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>PhyME: A probabilistic algorithm for finding motifs in sets of orthologous sequences</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>170</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-5-170</pub-id>
+        <pub-id pub-id-type="pmid">15511292</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Bailey</surname>
+          <given-names>TL</given-names>
+        </name>
+        <name>
+          <surname>Elkan</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>The value of prior knowledge in discovering motifs with MEME</article-title>
+        <source>Proc. ISMB'95</source>
+        <year>1995</year>
+        <fpage>21</fpage>
+        <lpage>29</lpage>
+        <pub-id pub-id-type="pmid">11125091</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Siddharthan</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Siggia</surname>
+          <given-names>ED</given-names>
+        </name>
+        <name>
+          <surname>van Nimwegen</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>PhyloGibbs: A Gibbs Sampling Motif Finder That Incorporates Phylogeny</article-title>
+        <source>PLoS Comput Biol</source>
+        <year>2005</year>
+        <volume>1</volume>
+        <issue>7</issue>
+        <fpage>e67</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pcbi.0010067</pub-id>
+        <pub-id pub-id-type="pmid">16477324</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B33">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kellis</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Patterson</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Endrizzi</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Birren</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <article-title>Sequencing and comparison of yeast species to identify genes and regulatory elements</article-title>
+        <source>Nature</source>
+        <year>2003</year>
+        <volume>423</volume>
+        <fpage>241</fpage>
+        <lpage>254</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature01644</pub-id>
+        <pub-id pub-id-type="pmid">12748633</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B34">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Liu</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Wei</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Altman</surname>
+          <given-names>RB</given-names>
+        </name>
+        <name>
+          <surname>Batzoglou</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Eukaryotic Regulatory Element Conservation Analysis and Identification Using Comparative Genomics</article-title>
+        <source>Genome Res</source>
+        <year>2004</year>
+        <volume>14</volume>
+        <fpage>451</fpage>
+        <lpage>458</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.1327604</pub-id>
+        <pub-id pub-id-type="pmid">14993210</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B35">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>MacIsaac</surname>
+          <given-names>KD</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Gordon</surname>
+          <given-names>DB</given-names>
+        </name>
+        <name>
+          <surname>Gifford</surname>
+          <given-names>DK</given-names>
+        </name>
+        <name>
+          <surname>Stormo</surname>
+          <given-names>GD</given-names>
+        </name>
+        <name>
+          <surname>Fraenkel</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>An improved map of conserved regulatory sites for <italic>Saccharomyces cerevisiae</italic></article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2006</year>
+        <volume>7</volume>
+        <fpage>113</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-7-113</pub-id>
+        <pub-id pub-id-type="pmid">16522208</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B36">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lee</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Shibata</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Rao</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Strahl</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Lieb</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Evidence for nucleosome depletion at active regulatory regions genome-wide</article-title>
+        <source>Nature Genetics</source>
+        <year>2004</year>
+        <volume>36</volume>
+        <issue>8</issue>
+      </mixed-citation>
+    </ref>
+    <ref id="B37">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yuan</surname>
+          <given-names>GC</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>YJ</given-names>
+        </name>
+        <name>
+          <surname>Dion</surname>
+          <given-names>MF</given-names>
+        </name>
+        <name>
+          <surname>Slack</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>Wu</surname>
+          <given-names>LF</given-names>
+        </name>
+        <name>
+          <surname>Altschuler</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Rando</surname>
+          <given-names>OJ</given-names>
+        </name>
+        <article-title>Genome-scale identification of nucleosome positions in <italic>S cerevisiae</italic></article-title>
+        <source>Science</source>
+        <year>2005</year>
+        <volume>309</volume>
+        <issue>5734</issue>
+        <fpage>626</fpage>
+        <lpage>630</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1112178</pub-id>
+        <pub-id pub-id-type="pmid">15961632</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B38">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Segal</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Fondufe-Mittendorf</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Thåström</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Field</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Moore</surname>
+          <given-names>IK</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>JPZ</given-names>
+        </name>
+        <name>
+          <surname>Widom</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>A genomic code for nucleosome positioning</article-title>
+        <source>Nature</source>
+        <year>2006</year>
+        <volume>442</volume>
+        <issue>7104</issue>
+        <fpage>772</fpage>
+        <lpage>778</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature04979</pub-id>
+        <pub-id pub-id-type="pmid">16862119</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B39">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Pavesi</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Mereghetti</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Mauri</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Pesole</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Weeder Web: discovery of transcription factor binding sites in a set of sequences from co-regulated genes</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2004</year>
+        <issue>32 Web-Server</issue>
+        <fpage>199</fpage>
+        <lpage>203</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B40">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Matys</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Kel-Margoulis</surname>
+          <given-names>OV</given-names>
+        </name>
+        <name>
+          <surname>Fricke</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Liebich</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Land</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Barre-Dirrie</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Reuter</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Chekmenev</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Krull</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hornischer</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Voss</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Stegmaier</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Lewicki-Potapov</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Saxel</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Kel</surname>
+          <given-names>AE</given-names>
+        </name>
+        <name>
+          <surname>Wingender</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>TRANSFACompel: transcriptional gene regulation in eukaryotes</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2006</year>
+        <issue>34 Database</issue>
+        <fpage>108</fpage>
+        <lpage>110</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B41">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wasserman</surname>
+          <given-names>WW</given-names>
+        </name>
+        <name>
+          <surname>Sandelin</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Applied bioinformatics for the identification of regulatory elements</article-title>
+        <source>Nature reviews</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <issue>4</issue>
+        <fpage>276</fpage>
+        <lpage>287</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg1315</pub-id>
+        <pub-id pub-id-type="pmid">15131651</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B42">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Daenen</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>van Roy</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Bleser</surname>
+          <given-names>PJD</given-names>
+        </name>
+        <article-title>Low nucleosome occupancy is encoded around functional human transcription factor binding sites</article-title>
+        <source>BMC Genomics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <issue>332</issue>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

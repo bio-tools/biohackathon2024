@@ -1,0 +1,1147 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2864574</article-id>
+    <article-id pub-id-type="publisher-id">gb-2010-11-3-r34</article-id>
+    <article-id pub-id-type="pmid">20236510</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2010-11-3-r34</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Method</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Global and unbiased detection of splice junctions from RNA-seq data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Ameur</surname>
+          <given-names>Adam</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>adam.ameur@genpat.uu.se</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Wetterbom</surname>
+          <given-names>Anna</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>anna.wetterbom@genpat.uu.se</email>
+      </contrib>
+      <contrib contrib-type="author" id="A3">
+        <name>
+          <surname>Feuk</surname>
+          <given-names>Lars</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>lars.feuk@genpat.uu.se</email>
+      </contrib>
+      <contrib contrib-type="author" id="A4">
+        <name>
+          <surname>Gyllensten</surname>
+          <given-names>Ulf</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>ulf.gyllensten@genpat.uu.se</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Genetics and Pathology, Rudbeck laboratory, Uppsala University, SE-751 85 Uppsala, Sweden</aff>
+    <pub-date pub-type="ppub">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>17</day>
+      <month>3</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <issue>3</issue>
+    <fpage>R34</fpage>
+    <lpage>R34</lpage>
+    <history>
+      <date date-type="received">
+        <day>23</day>
+        <month>10</month>
+        <year>2009</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>8</day>
+        <month>3</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>17</day>
+        <month>3</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Ameur et al.; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Ameur et al.; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an open access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/2010/11/3/R34"/>
+    <abstract abstract-type="short">
+      <p>SplitSeek can be used to detect novel splicing events in SOLiD RNA-seq data without the need for a pre-defined library.</p>
+    </abstract>
+    <abstract>
+      <p>We have developed a new strategy for <italic>de novo </italic>prediction of splice junctions in short-read RNA-seq data, suitable for detection of novel splicing events and chimeric transcripts. When tested on mouse RNA-seq data, &gt;31,000 splice events were predicted, of which 88% bridged between two regions separated by ≤100 kb, and 74% connected two exons of the same RefSeq gene. Our method also reports genomic rearrangements such as insertions and deletions.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Introduction</title>
+    <p>High-throughput sequencing of mRNA opens unprecedented opportunities to identify the spectrum of splice events in a sample on a global scale. The typical approach for detecting splicing in RNA-seq experiments has been to map the reads to a junction library consisting of predefined exon-exon boundaries [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B6">6</xref>]. Although these strategies can successfully recover many splice events, they do not analyze splicing from a truly global and unprejudiced perspective. Only splice junctions present in the library can be identified, and it is simply not feasible to match against all possible combinations of exons. For example, a genome with 100,000 (10<sup>5</sup>) exons, which is a low estimate for mammalian genomes, would yield 10<sup>10 </sup>combinations. To address this problem, the size of the junction library must be reduced dramatically, and consequently, most methods consider only the candidates involving known exons within the same gene. A severe limitation with this approach is that splicing events involving previously unknown exons cannot be identified. Also, this type of analysis is restricted to the relatively small number of species in which coordinates of genes and exons have been found.</p>
+    <p>To overcome some of these limitations, the splice-junction library can instead be created directly from the RNA-seq data without relying on any genome annotations. This approach is taken by the two packages G-Mo.R-Se [<xref ref-type="bibr" rid="B7">7</xref>] and TopHat [<xref ref-type="bibr" rid="B8">8</xref>]. With these methods, all reads are first mapped to the reference genome, and transcribed fragments are identified through analysis of the coverage profile. The ends of these fragments are then combined into a library of putative exon boundaries to which the previously unmapped reads are aligned. Although this strategy has some advantages over methods that construct the library from known annotations, the problem of analyzing all possible exon combinations remains. G-Mo.R-Se and TopHat solve this problem by considering only putative junctions that span between neighboring (but not necessarily adjacent) transcribed fragments and those that contain a canonic (GT/C-AG) splice site. These restrictions imply that a substantial number of true splice junctions (for example, those with long introns or noncanonic splice sites) are outside of the detection range. A further limitation is that these methods are based on accurate <italic>de novo </italic>identification of exon boundaries from raw RNA-seq data, which in itself is a computationally challenging task, especially for transcripts expressed at lower levels.</p>
+    <p>An important application of deep RNA sequencing is the discovery of fusion transcripts in cancer, and two consecutive methods have been proposed by Maher and colleagues [<xref ref-type="bibr" rid="B9">9</xref>]. Initially the authors used a combination of long reads (&gt;200 bp) from the Roche 454 sequencer and shorter reads from the Illumina (Solexa) platform, and later they shifted to using paired-end sequencing (2 × 50 bp) [<xref ref-type="bibr" rid="B10">10</xref>]. Although these strategies can successfully discover fusion transcripts, they have a number of important drawbacks. First, it is both costly and labor intensive to use two different sequencing platforms, as was done in their primary study. Second, the mate-pair approach complicates the analysis, because the expected insert size must be taken into account when estimating the expected distance between two mates in the sequenced transcript. This will be particularly problematic for mates that span over several splice junctions. Also, preparation of mate-pair libraries require larger amounts of RNA than the fragment libraries used in most RNA-seq experiments. The amount of RNA can be a crucial limitation, especially when studying clinical samples.</p>
+    <p>Here we present an alternative approach to identify splice junctions. The junctions are predicted <italic>de novo </italic>without any preassumed set of allowed exon boundaries. This implies that all types of splicing events in the RNA sample can be detected in a completely unbiased way, including previously unknown splice junctions and fusion transcripts. Also, we rely entirely on short reads (~50 bp) from fragment libraries, which is the type of RNA-seq data normally generated by using the Illumina or SOLiD platforms. By applying our method to available RNA-seq data from mouse cells [<xref ref-type="bibr" rid="B6">6</xref>], we showed that splice junctions can be identified at almost nucleotide precision and with a very low false-discovery rate (FDR). Moreover, this strategy also allows unbiased detection of insertions, deletions, and other types of genomic rearrangements within transcribed sequences. Indels and coding repeat expansions are important in a large number of human disorders [<xref ref-type="bibr" rid="B11">11</xref>]. The potential for simultaneous detection of expression levels and coding-sequence variation in a single analysis pipeline will be beneficial for patient-sample analysis. We have implemented our method in a software called SplitSeek. The SplitSeek results can be directly uploaded to the UCSC genome browser [<xref ref-type="bibr" rid="B12">12</xref>] and used as input to the BEDTools software suite [<xref ref-type="bibr" rid="B13">13</xref>], which enables the user to visualize and analyze the predicted events in a genomic context.</p>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <p>Our strategy consists of a combination of a split-read alignment and the novel SplitSeek program (see Figure <xref ref-type="fig" rid="F1">1</xref>). In the alignment, every read is split into two nonoverlapping parts, or "anchors," that are aligned separately. The two anchors are then extended as long as they still match the reference sequence. If a splice junction is located in the gap between the two anchors, then the two parts are matched to different genomic positions (that is, the two exons in the junction). The SplitSeek program then performs a number of analysis steps to predict the exon boundaries. First, all instances of split reads are found, and their genomic positions and nucleotide sequence are recorded. They comprise the initial set of candidates, and all resulting splice events will be found among these. However, many reads exist in which the junction is located in one of the anchors rather than in the gap. To identify such additional junction reads, we scan all reads in which only one of the anchors was aligned. If such an anchor can be extended to the exact position as a previously identified candidate junction, and the sequence in the two reads aligns perfectly within the first five bases of the other exon (gray lines in Figure <xref ref-type="fig" rid="F1">1</xref>), then the read is considered to confirm the junction. This implies that SplitSeek can find junction reads in which as few as five bases overlap with the other exon. In the final step, all identified junction reads are grouped, and user-defined cut-offs are applied to obtain a final set of exon boundaries. Because this method is unbiased, it will report all types of events in which a read must be split to match the reference genome, including small insertions and deletions.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Overview of the split-read strategy</bold>. Each read is split into two pieces, or "anchors," of equal length (red and blue), with a gap between them. The anchors are aligned independently, and only the instances in which both align uniquely to the reference sequence are considered. Then, the alignments are extended as long as they still match the reference sequence. The SplitSeek program identifies all candidate junction reads from the split-read alignments where the boundary is located in the gap between the anchors. Then additional junction reads are detected from the set of reads that partly align to a previously detected candidate junction, and where the remaining, nonaligned, part of the read (grey lines) has a 5-bp identical sequence compared with the corresponding part of the same candidate read. SplitSeek then groups all potential junction reads, applies cut-offs, and reports the results.</p>
+      </caption>
+      <graphic xlink:href="gb-2010-11-3-r34-1"/>
+    </fig>
+    <p>In this study, we evaluated our method on public RNA-seq data from single mouse oocytes [<xref ref-type="bibr" rid="B6">6</xref>], sequenced on the SOLiD platform. The analysis was performed on two independent samples, oocyte1 (with 11.6 million reads) and oocyte2 (23.5 million reads), and oocyte1+2, a combination of all reads from the two samples. These data consist of 50-bp reads, and the alignment was performed by using the AB/SOLiD whole-transcriptome-alignment software with anchor lengths in the range between 21 and 24 (see Methods for details). The highest number of uniquely mapped split reads was obtained for lengths 22 and 23 (see Table <xref ref-type="table" rid="T1">1</xref>), probably because shorter splits do not align uniquely to the genome, whereas the longer do not give a sufficiently large gap. We therefore selected 22 as the anchor length in the remaining analysis.</p>
+    <table-wrap id="T1" position="float">
+      <label>Table 1</label>
+      <caption>
+        <p>Number of split read alignments</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th/>
+            <th align="left">Oocyte 1</th>
+            <th align="left">Oocyte 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left">Anchor length 21</td>
+            <td align="left">110468</td>
+            <td align="left">203159</td>
+          </tr>
+          <tr>
+            <td colspan="3">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Anchor length 22</td>
+            <td align="left">157138</td>
+            <td align="left">284468</td>
+          </tr>
+          <tr>
+            <td colspan="3">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Anchor length 23</td>
+            <td align="left">158487</td>
+            <td align="left">284579</td>
+          </tr>
+          <tr>
+            <td colspan="3">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Anchor length 24</td>
+            <td align="left">143293</td>
+            <td align="left">257316</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+    <p>We required each junction to be supported by at least two uniquely positioned reads in the SplitSeek analysis, and a summary of the results is presented in Table <xref ref-type="table" rid="T2">2</xref>. Between 17,397 and 31,532 junctions were predicted in the three samples, with 93% to 88% of them bridging between regions on the same chromosome, separated by ≤100 kb, and ≥74% mapping within five bases of a known exon-exon boundary in an RefSeq gene. The numbers suggest that our method has a very low false-positive rate, and to support this further, we estimated the false-discovery rate (FDR) for all junctions within 1 Mb and 100 kb, respectively (see Methods for details). The FDR was &lt;1 in 1,000 for junctions within 1 Mb and &lt;1/10,000 for those within 100 kb. Naturally, the FDR will be higher for splicing events that are farther apart than 1 Mb or on different chromosomes. However, such instances comprise a small subset of all junctions, and they can either be disregarded or be examined individually, depending on the aim of the study. Also, it is possible to increase the specificity by requiring three uniquely positioned reads or more for each predicted junction.</p>
+    <table-wrap id="T2" position="float">
+      <label>Table 2</label>
+      <caption>
+        <p>Splice junctions and insertions reported by SplitSeek with anchor length 22</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th/>
+            <th align="center">Oocyte 1</th>
+            <th align="center">Oocyte 2</th>
+            <th align="center">Oocyte 1+2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left">Number processed reads</td>
+            <td align="center">11,565,660</td>
+            <td align="center">23,488,851</td>
+            <td align="center">35,054,511</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Predicted splice junctions</td>
+            <td align="center">17,397</td>
+            <td align="center">23,703</td>
+            <td align="center">31,532</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Within chromosome</td>
+            <td align="center">16,205 (93.1%)</td>
+            <td align="center">21,495 (90.7%)</td>
+            <td align="center">27,957 (88.7%)</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Within 1 Mb</td>
+            <td align="center">16,128 (92.7%)</td>
+            <td align="center">21,374 (90.2%)</td>
+            <td align="center">27,757 (88.0%)</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Within 100 kb</td>
+            <td align="center">16,094 (92.5%)</td>
+            <td align="center">21,323 (90.0%)</td>
+            <td align="center">27,685 (87.8%)</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Match to a RefSeq exon-exon boundary<sup>a</sup></td>
+            <td align="center">14,264 (82.0%)</td>
+            <td align="center">18,139 (76.5%)</td>
+            <td align="center">23,235 (73.7%)</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Expected false within 1 Mb (FDR)</td>
+            <td align="center">12.9 (8.0·10<sup>-4</sup>)</td>
+            <td align="center">17.6 (8.2·10<sup>-4</sup>)</td>
+            <td align="center">23.4 (8.4·10<sup>-4</sup>)</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Expected false within 100 kb (FDR)</td>
+            <td align="center">1.3 (8.0·10<sup>-5</sup>)</td>
+            <td align="center">1.8 (8.2·10<sup>-5</sup>)</td>
+            <td align="center">2.3 (8.4·10<sup>-5</sup>)</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Predicted insertions</td>
+            <td align="center">275</td>
+            <td align="center">553</td>
+            <td align="center">834</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p><sup>a</sup>Each of the exon boundaries located within 5 bp of predicted junction.</p>
+      </table-wrap-foot>
+    </table-wrap>
+    <p>The SplitSeek predictions show high specificity, but we were also interested to evaluate the sensitivity. Therefore, we compared the SplitSeek results with RNA-MATE [<xref ref-type="bibr" rid="B5">5</xref>], a method that recursively maps reads to a junction library of known exons. By applying the RNA-MATE program to the oocyte1 dataset (see Methods for details), we found 20,562 exon boundaries supported by at least two reads, slightly more than the 17,397 junctions predicted by SplitSeek (see Table <xref ref-type="table" rid="T2">2</xref>). As shown in Figure <xref ref-type="fig" rid="F2">2a</xref>, 11,395 splice junctions were detected in common, meaning that SplitSeek confirms 55% of the RNA-MATE predictions. There could be several possible reasons that the remaining 45% are not detected by SplitSeek and we believe it is due to a combination of (a) junctions at which no read is centered over the boundary and thereby is undetectable by SplitSeek; (b) junctions uniquely mappable when using an exon-junction library but not with the anchor-extend alignment; and (c) junctions falsely detected by RNA-MATE. Of the SplitSeek boundaries, 6,420 were not found by RNA-MATE, and 1,007 (16%) of these were long-range splicings of ≥100 kb, a number that could be indicative of the false-positive rate among the junctions predicted only by SplitSeek. Interestingly, as many as 4,069 (63%) of the 6,420 SplitSeek-only predictions coincide with RefSeq exon boundaries. These can be explained partly by the fact that the RNA-MATE library was not completely up to date (see Methods), but as many as 2,519 of these junctions were present in the library file, which demonstrates that a substantial number of splice events are detectable only by SplitSeek. However, a large number of exon boundaries were reported by both methods, and for these, we could see a clear correlation in the number of reads predicted to cover the junctions (see Figure <xref ref-type="fig" rid="F2">2b</xref>). The scatterplot shows a systematic bias toward more reads/junction for SplitSeek, probably because SplitSeek can use reads in which only five nucleotides are sequenced from the other exon, whereas this overhang must be longer for library-based methods. A peculiar observation is a group of points in the upper left corner, with many reads for SplitSeek and few for RNA-MATE. We think that these largely represent cases in which RNA-MATE predicts two or more highly similar splice events located only a few bases apart, whereas SplitSeek groups them into one single junction. In such cases, the RNA-MATE junctions, each with varying number of reads, will be compared with one single SplitSeek prediction based on all junction reads, and consequently, some of the points might end in the top-left corner of Figure <xref ref-type="fig" rid="F2">2b</xref>. However, it remains unclear whether these highly similar junctions reflect real splicing events or if they are artifacts from the library construction and mapping procedures. In conclusion, this comparison suggests that junction library-based methods and SplitSeek can complement each other to detect more splice variants in known genes.</p>
+    <fig id="F2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Comparison of predictions from RNA-MATE and SplitSeek</bold>. <bold>(a)</bold> Venn diagram showing the number of predicted junctions by the two methods. <bold>(b)</bold> Predicted number of junction reads for all for all 11,395 exon boundaries reported by both RNA-MATE (x-axis) and SplitSeek (y-axis).</p>
+      </caption>
+      <graphic xlink:href="gb-2010-11-3-r34-2"/>
+    </fig>
+    <p>As seen in Figure <xref ref-type="fig" rid="F3">3</xref>, an almost a linear correlation exists between the number of SplitSeek predictions and the total number of reads in the three samples. This demonstrates that we have not yet reached saturation and would detect many more splice junctions by deeper sequencing, as indicated by extrapolated dotted lines in Figure <xref ref-type="fig" rid="F3">3</xref>. The SplitSeek results can be viewed in the UCSC genome browser [<xref ref-type="bibr" rid="B14">14</xref>], as illustrated by two example regions in Figure <xref ref-type="fig" rid="F4">4</xref>. The first example shows a gene with many predicted exon-exon boundaries, including alternative splicing (Figure <xref ref-type="fig" rid="F4">4a</xref>), whereas the second demonstrates the possibility of detecting insertions/deletions in the sample (Figure <xref ref-type="fig" rid="F4">4b</xref>). In both cases, the SplitSeek predictions agree with annotated splice junctions, insertions, and deletions almost at nucleotide resolution. The reason that the position is not always exact is that the first few nucleotides in an intron may coincide with the first bases of the next exon, thereby resulting in a slight overextension of the anchor during the alignment procedure.</p>
+    <fig id="F3" position="float">
+      <label>Figure 3</label>
+      <caption>
+        <p><bold>Number of predicted splice junctions (y-axis) as a function of the total number of processed reads (x-axis)</bold>. The number of predicted junctions (black line) increases almost linearly with the number of reads. The green and orange lines represent two subgroups of predicted junctions: those where the two boundaries are separated by ≤100 kb, and those connecting two exon boundaries of a RefSeq gene. Predicted insertions and deletions are combined and represented by the red line.</p>
+      </caption>
+      <graphic xlink:href="gb-2010-11-3-r34-3"/>
+    </fig>
+    <fig id="F4" position="float">
+      <label>Figure 4</label>
+      <caption>
+        <p><bold>SplitSeek results viewed in the UCSC genome browser</bold>. <bold>(a) </bold>Predicted splice junctions in the gene <italic>Fpgs</italic>. <bold>(b) </bold>The two grey boxes give a schematic view of how deletions and insertions are detected. The genome browser image below shows the SplitSeek results in the last exon and 3' UTR of the <italic>Nol10 </italic>gene on chromosome 12. Three events are predicted, a splice junction (to the left), a deletion (in the middle,) and an insertion (to the right). The predicted insertion and deletion are both supported by the mRNA AK148210, as indicated by the orange arrows at the bottom.</p>
+      </caption>
+      <graphic xlink:href="gb-2010-11-3-r34-4"/>
+    </fig>
+    <p>As mentioned earlier, a special feature of our split-read strategy is that it also can find indels (see Figure <xref ref-type="fig" rid="F4">4b</xref>). In these oocyte RNA samples, SplitSeek predicted 834 small insertions of up to six nucleotides, supported by at least two unique reads (Table <xref ref-type="table" rid="T2">2</xref>), and 647 of these were found inside RefSeq exons. More specifically, 502 (78%) of these 647 insertions are located in the 3'UTR (see Table <xref ref-type="table" rid="T3">3</xref>), where a higher degree of genetic variation is expected compared with the coding regions, because such events do not affect the amino acid sequence of the translated protein. By comparison, the combined lengths of 3'UTRs make up 46% of the total length of RefSeq exons, indicating a selective constraint against small insertions in coding sequence compared to untranslated regions. Deletions are somewhat more complicated to identify since they appear identical to splice junctions. Here we considered only the cases in which the two alignments are located within the same exon to represent a putative deletion, because it is unlikely that this would correspond to a true splicing event. In this manner, we predicted 536 deletions, with 343 (64%) located in the 3'UTRs (Table <xref ref-type="table" rid="T3">3</xref>). The lower percentage of deletions in 3'UTRs compared with insertions could be due to a small proportion of splice events being reported as deletions. SplitSeek can also output other types of rearrangements, including inversions and translocations, although such events will typically not be found in RNA-seq data.</p>
+    <table-wrap id="T3" position="float">
+      <label>Table 3</label>
+      <caption>
+        <p>Number of predicted small insertions and deletions within RefSeq exons and 3'UTRs</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th/>
+            <th align="center">Oocyte 1</th>
+            <th align="center">Oocyte 2</th>
+            <th align="center">Oocyte 1+2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left">Insertions in RefSeq exons</td>
+            <td align="center">222</td>
+            <td align="center">412</td>
+            <td align="center">647</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Insertions in 3' UTR</td>
+            <td align="center">174 (78.4%)</td>
+            <td align="center">320 (77.7%)</td>
+            <td align="center">502 (77.6%)</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Deletions in RefSeq exons</td>
+            <td align="center">169</td>
+            <td align="center">355</td>
+            <td align="center">536</td>
+          </tr>
+          <tr>
+            <td colspan="4">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Deletions in 3' UTR</td>
+            <td align="center">113 (66.9%)</td>
+            <td align="center">229 (64.5%)</td>
+            <td align="center">343 (64.0%)</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>Deletions are required to be &gt;5 bp from any RefSeq exon boundary.</p>
+      </table-wrap-foot>
+    </table-wrap>
+    <p>In the SplitSeek results, ~12% of the junctions bridged between regions separated by ≥100 kb, and 26% did not connect two RefSeq exon boundaries (see Table <xref ref-type="table" rid="T2">2</xref>). In many studies, these types of predictions might be the ones of highest interest because they could reveal novel and unexpected splicing. Up until now, it has been difficult (if at all possible) to study such events on a global scale, and therefore, we screened the SplitSeek results to see whether we could find any example of novel and long-range splicing. Interestingly, several of these predictions have strong evidence. Figure <xref ref-type="fig" rid="F5">5</xref> shows two examples of long-range junctions (&gt;100 kb) that bridge between RefSeq exons and regions that were previously annotated by gene prediction and EST data. Both examples in Figure <xref ref-type="fig" rid="F5">5</xref> strongly suggest that an exon is missing in the current RefSeq annotations. This demonstrates that SplitSeek can detect novel splice events and be used as a way to extend known gene models.</p>
+    <fig id="F5" position="float">
+      <label>Figure 5</label>
+      <caption>
+        <p><bold>Two long-range SplitSeek predictions (&gt;100 kb) that extend known gene models</bold>. <bold>(a) </bold>A predicted junction that connects an exon in the Ensembl Gene Prediction database with the second exon of the <italic>Phactr3 </italic>gene, suggesting the presence of an alternative transcription start site. <bold>(b) </bold>A putative novel exon in the <italic>Sorcs2 </italic>gene that is currently only supported by EST data.</p>
+      </caption>
+      <graphic xlink:href="gb-2010-11-3-r34-5"/>
+    </fig>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <p>Our results demonstrate that SplitSeek has a high specificity, and the number of false positives could be reduced even further by requiring more unique reads to cover each junction. A more difficult task is to increase the sensitivity, but our comparison with the RNA-MATE program [<xref ref-type="bibr" rid="B5">5</xref>] suggests that one possible way is to use SplitSeek in combination with a complementary method that aligns the reads to a library of known exon boundaries. However, this comparison is focused only on splicing between annotated exons, whereas one of the strengths of SplitSeek is that it can perform other types of analysis in which RNA-MATE or other available tools cannot be directly applied. These include identification of splice sites in uncharacterized transcripts, detection of long-range fusion transcripts, and detection of small indels in transcribed sequences.</p>
+    <p>About 12% of the predicted junctions bridge between regions separated by ≥100 kb (see Table <xref ref-type="table" rid="T2">2</xref>). Although a few of them can probably be explained by long introns (for example, Figure <xref ref-type="fig" rid="F5">5</xref>), this can not account for all detected long-range splicing and especially not the junctions bridging between different chromosomes. Instead, it is likely that many of them are false positives because of alignment issues or properties of the genome sequence. As an example, we may falsely detect splicing between different genes that belong to the same family just because of high sequence similarity in the exons. However, we cannot rule out that a substantial number of these unexpected splicing events are indeed true, and these would be interesting to investigate further. In that case, it might be reasonable to consider only the events bridging between regions identified as significantly transcribed from the RNA-seq data to filter out a large part of the false-positive long-range splicings.</p>
+    <p>The main limiting factor in the SplitSeek method is that there must be at least one read almost centered over an exon boundary; otherwise, it will not be detectable. When using 50-bp reads and 22-bp anchors as in this study, seven (14%) of 50 of the junction reads have this property. With a length of 75 bp and still splitting into 2 × 22 bp, this proportion would increase to 32 (43%) of 75, and this would likely increase the number of detected splicing events significantly. Another benefit of longer reads is that they could allow longer anchor lengths in the alignment, which might be necessary to discover junctions that are not uniquely mappable with shorter reads. However, it also is possible to increase the throughput by simply performing a deeper sequencing by using more of the 50-bp reads, and it is not obvious which is the optimal approach for this application. Although several benefits exist of using longer reads, some drawbacks might also occur, such as lower-quality base calls at the ends of the reads and difficulties in identifying splicing between very short exons.</p>
+    <p>Because of the recent improvements in throughput of the next-generation sequencing platforms, we believe that this strategy will make it feasible to investigate the entire spectrum of splicing events or gene fusions in an RNA sample in a completely unbiased way. We also want to emphasize the possibility of finding insertions, deletions, and other types of genetic rearrangements with the SplitSeek approach. This moves beyond the scope of RNA-seq data analysis, because it can equally well be used for DNA samples sequenced with high coverage.</p>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>We have developed a strategy for <italic>de novo </italic>detection of splice junctions in RNA-seq data. The exon-exon boundaries are identified almost at nucleotide resolution and with a low false-positive rate, &lt;1 in 10,000 for junctions within 100 kb. Our method makes it possible to study splice junctions and fusion genes while also quantifying the gene expression, all from the same RNA-seq data. In addition, our method reports insertions and deletions in coding and noncoding parts of transcripts. We expect this to be an important application in a wide range of RNA-seq projects.</p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec>
+      <title>Data acquisition and alignment</title>
+      <p>The raw RNA-seq data on mouse oocytes were downloaded from Gene Expression Omnibus [<xref ref-type="bibr" rid="B15">15</xref>], with accession number GSE:14605. The reads were aligned and extended by using version 1.0 of the whole transcriptome analysis tool available from Applied Biosystems [<xref ref-type="bibr" rid="B16">16</xref>]. This software splits each read into two parts, or "anchors," which are aligned separately and extended as far as possible while still matching the reference sequence. We matched the reads by splitting into two parts of lengths 21 to 24, allowing up to two "color space" mismatches in each alignment. The minimum score required for an alignment to be reported in the final output was set to 20.</p>
+    </sec>
+    <sec>
+      <title>The SplitSeek program</title>
+      <p>Splice junctions were predicted from the alignment output files by using the SplitSeek software, which consists of two programs that are executed sequentially. In the first step, all candidate junction reads are identified and written to an intermediate BEDPE file. BEDPE is a file format that was recently introduced to give a concise description of paired-end sequence alignments [<xref ref-type="bibr" rid="B13">13</xref>]. This intermediate file is then used as input to a second script that performs the remaining analysis. The algorithm is split into two parts because the first program is specific to the next-generation sequencing platform, in this case, SOLiD, whereas the second script is more general.</p>
+      <p>SplitSeek finds exon-exon boundaries that are supported by several split reads. In this case, we required each junction to be covered by at least two reads with unique starting points. Other parameters that may be specified by the user include the total number of reads required to cover a predicted junction, and the maximum allowed distance between two candidate junction reads that belong to the same predicted splice junction. SplitSeek groups candidate junction reads by traversing them in the order of their genomic coordinates and joining those where the two exon boundaries are both within the allowed distance. All groups in which the number of reads is greater than the user-defined threshold are then reported in the SplitSeek output. In some cases, SplitSeek may require an additional "chrmap" input file to ensure that the chromosome names of SplitSeek predictions agree with those in the genome databases. The user is allowed to specify an upper limit on the distance between the junctions (for example, 100 kb), so that longer splicing events are not reported.</p>
+      <p>The SplitSeek results are presented in two different formats, as a BED file and a BEDPE file. The BED file can be uploaded and viewed in the UCSC genome browser, whereas the BEDPE file can be used as input to BEDTools [<xref ref-type="bibr" rid="B13">13</xref>] or other analysis software for comparing genomic features. SplitSeek is implemented in perl, and the program is available as Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>. The code also can be downloaded from the SOLiD software-development community [<xref ref-type="bibr" rid="B17">17</xref>]. The current version is available for data generated by the SOLiD system, but it could be adapted to Illumina or other next-generation sequencing platforms. What then would be required is to perform a split read alignment and to write all candidate junction reads into a BEDPE formatted file to be processed by SplitSeek.</p>
+    </sec>
+    <sec>
+      <title>Calculating False Discovery Rate</title>
+      <p>To make an estimate of the false discovery rate (FDR) in our results, we assume a null hypothesis in which the two parts of a splice event are uniformly distributed over the genome sequence. We then estimated an FDR for all splicing events within 1 Mb by comparing the observed values with the expected. To calculate the number of expected events, we assume that the first anchor has already been randomly mapped to the genome. In that case, the second anchor must be mapped within a ± 1-Mb window surrounding the first anchor for the criteria to be fulfilled. The size of this window is 2 × 10<sup>6 </sup>bases. Because the mouse reference sequence (mm9) used in the alignment consists of about 2.7 × 10<sup>9 </sup>bases, the probability that two randomly placed splicing boundaries are located within 1 Mb is ~2 × 10<sup>6</sup>/2.7 × 10<sup>9 </sup>≈ 7.4 × 10<sup>-4</sup>. Under the null hypothesis, the number of expected splicing events within 1 Mb can therefore be estimated by N × 7.4 × 10<sup>-4</sup>, where N is the total number of predicted junctions. The FDR is then calculated as the ratio between expected/observed events. In the same way, we calculated the FDR for results within 100 kb. The results are presented in Table <xref ref-type="table" rid="T2">2</xref>.</p>
+    </sec>
+    <sec>
+      <title>Comparing SplitSeek to RNA-MATE</title>
+      <p>Version 1.01 of the RNA-MATE program was downloaded from the SOLiD software-development web page [<xref ref-type="bibr" rid="B18">18</xref>], along with junction library files constructed from all known genes, gene predictions, mRNA evidence, and EST evidence available at the time of creation (early 2007). The library files contains ~430,000 putative junctions, each of length 60 bp. The RNA-MATE program was then executed on the same set of reads from the oocyte1 dataset, as was used for SplitSeek. Matching in RNA-MATE was done recursively with 50-bp and 45-bp tag lengths using three allowed mismatches and default settings for all other parameters. The RNA-seq data in this experiment is not strand specific, and therefore, all junction reads from both strands were combined in the RNA-MATE output. All RNA-MATE exon boundaries with at least two reads were considered positive. A positive RNA-MATE junction was considered to coincide with a SplitSeek prediction if the difference was at most 5 bp at both ends of the junction.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>EST: expressed sequence tag; FDR: false discovery rate; RNA-seq: high-throughput sequencing of RNA; 3' UTR: three prime untranslated region.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>AA and UG designed the research; AA implemented the software and conducted the analysis; and AA, AW, LF, and UG interpreted the results and wrote the manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>SplitSeek</bold>. The SplitSeek program code, released as free software under version 3 of the GNU General Public License [<xref ref-type="bibr" rid="B19">19</xref>].</p>
+      </caption>
+      <media xlink:href="gb-2010-11-3-r34-S1.gz" mimetype="application" mime-subtype="x-zip-compressed">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>We thank Jonathan Mangion, Applied Biosystems UK, for his helpful suggestions regarding the software implementation. This work was supported by the Swedish Natural Sciences Research Council.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Cloonan</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Forrest</surname>
+          <given-names>AR</given-names>
+        </name>
+        <name>
+          <surname>Kolle</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Gardiner</surname>
+          <given-names>BB</given-names>
+        </name>
+        <name>
+          <surname>Faulkner</surname>
+          <given-names>GJ</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>MK</given-names>
+        </name>
+        <name>
+          <surname>Taylor</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Steptoe</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Wani</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Bethel</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Robertson</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Perkins</surname>
+          <given-names>AC</given-names>
+        </name>
+        <name>
+          <surname>Bruce</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>CC</given-names>
+        </name>
+        <name>
+          <surname>Ranade</surname>
+          <given-names>SS</given-names>
+        </name>
+        <name>
+          <surname>Peckham</surname>
+          <given-names>HE</given-names>
+        </name>
+        <name>
+          <surname>Manning</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>McKernan</surname>
+          <given-names>KJ</given-names>
+        </name>
+        <name>
+          <surname>Grimmond</surname>
+          <given-names>SM</given-names>
+        </name>
+        <article-title>Stem cell transcriptome profiling via massive-scale mRNA sequencing.</article-title>
+        <source>Nat Methods</source>
+        <year>2008</year>
+        <volume>5</volume>
+        <fpage>613</fpage>
+        <lpage>619</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1223</pub-id>
+        <pub-id pub-id-type="pmid">18516046</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pan</surname>
+          <given-names>Q</given-names>
+        </name>
+        <name>
+          <surname>Shai</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>LJ</given-names>
+        </name>
+        <name>
+          <surname>Frey</surname>
+          <given-names>BJ</given-names>
+        </name>
+        <name>
+          <surname>Blencowe</surname>
+          <given-names>BJ</given-names>
+        </name>
+        <article-title>Deep surveying of alternative splicing complexity in the human transcriptome by high-throughput sequencing.</article-title>
+        <source>Nat Genet</source>
+        <year>2008</year>
+        <volume>40</volume>
+        <fpage>1413</fpage>
+        <lpage>1415</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng.259</pub-id>
+        <pub-id pub-id-type="pmid">18978789</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sultan</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Schulz</surname>
+          <given-names>MH</given-names>
+        </name>
+        <name>
+          <surname>Richard</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Magen</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Klingenhoff</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Scherf</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Seifert</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Borodina</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Soldatov</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Parkhomchuk</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Schmidt</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>O'Keeffe</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Haas</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Vingron</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Lehrach</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Yaspo</surname>
+          <given-names>ML</given-names>
+        </name>
+        <article-title>A global view of gene activity and alternative splicing by deep sequencing of the human transcriptome.</article-title>
+        <source>Science</source>
+        <year>2008</year>
+        <volume>321</volume>
+        <fpage>956</fpage>
+        <lpage>960</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1160342</pub-id>
+        <pub-id pub-id-type="pmid">18599741</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wang</surname>
+          <given-names>ET</given-names>
+        </name>
+        <name>
+          <surname>Sandberg</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Luo</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Khrebtukova</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Mayr</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Kingsmore</surname>
+          <given-names>SF</given-names>
+        </name>
+        <name>
+          <surname>Schroth</surname>
+          <given-names>GP</given-names>
+        </name>
+        <name>
+          <surname>Burge</surname>
+          <given-names>CB</given-names>
+        </name>
+        <article-title>Alternative isoform regulation in human tissue transcriptomes.</article-title>
+        <source>Nature</source>
+        <year>2008</year>
+        <volume>456</volume>
+        <fpage>470</fpage>
+        <lpage>476</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature07509</pub-id>
+        <pub-id pub-id-type="pmid">18978772</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Cloonan</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>Q</given-names>
+        </name>
+        <name>
+          <surname>Faulkner</surname>
+          <given-names>GJ</given-names>
+        </name>
+        <name>
+          <surname>Taylor</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Tang</surname>
+          <given-names>DT</given-names>
+        </name>
+        <name>
+          <surname>Kolle</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Grimmond</surname>
+          <given-names>SM</given-names>
+        </name>
+        <article-title>RNA-MATE: A recursive mapping strategy for high-throughput RNA-sequencing data.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2615</fpage>
+        <lpage>2616</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp459</pub-id>
+        <pub-id pub-id-type="pmid">19648138</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tang</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Barbacioru</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Nordman</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Bodeau</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Tuch</surname>
+          <given-names>BB</given-names>
+        </name>
+        <name>
+          <surname>Siddiqui</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lao</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Surani</surname>
+          <given-names>MA</given-names>
+        </name>
+        <article-title>mRNA-Seq whole-transcriptome analysis of a single cell.</article-title>
+        <source>Nat Methods</source>
+        <year>2009</year>
+        <volume>6</volume>
+        <fpage>377</fpage>
+        <lpage>382</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1315</pub-id>
+        <pub-id pub-id-type="pmid">19349980</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Denoeud</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Aury</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Da Silva</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Noel</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Rogier</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Delledonne</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Morgante</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Valle</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Wincker</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Scarpelli</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Jaillon</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Artiguenave</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>Annotating genomes with massive-scale RNA sequencing.</article-title>
+        <source>Genome Biol</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>R175</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2008-9-12-r175</pub-id>
+        <pub-id pub-id-type="pmid">19087247</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>TopHat: discovering splice junctions with RNA-Seq.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1105</fpage>
+        <lpage>1111</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp120</pub-id>
+        <pub-id pub-id-type="pmid">19289445</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Maher</surname>
+          <given-names>CA</given-names>
+        </name>
+        <name>
+          <surname>Kumar-Sinha</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Cao</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Kalyana-Sundaram</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Han</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Jing</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Sam</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Barrette</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Palanisamy</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Chinnaiyan</surname>
+          <given-names>AM</given-names>
+        </name>
+        <article-title>Transcriptome sequencing to detect gene fusions in cancer.</article-title>
+        <source>Nature</source>
+        <year>2009</year>
+        <volume>458</volume>
+        <fpage>97</fpage>
+        <lpage>101</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature07638</pub-id>
+        <pub-id pub-id-type="pmid">19136943</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Maher</surname>
+          <given-names>CA</given-names>
+        </name>
+        <name>
+          <surname>Palanisamy</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Brenner</surname>
+          <given-names>JC</given-names>
+        </name>
+        <name>
+          <surname>Cao</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Kalyana-Sundaram</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Luo</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Khrebtukova</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Barrette</surname>
+          <given-names>TR</given-names>
+        </name>
+        <name>
+          <surname>Grasso</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Yu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Lonigro</surname>
+          <given-names>RJ</given-names>
+        </name>
+        <name>
+          <surname>Schroth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Kumar-Sinha</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Chinnaiyan</surname>
+          <given-names>AM</given-names>
+        </name>
+        <article-title>Chimeric transcript discovery by paired-end transcriptome sequencing.</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2009</year>
+        <volume>106</volume>
+        <fpage>12353</fpage>
+        <lpage>12358</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.0904720106</pub-id>
+        <pub-id pub-id-type="pmid">19592507</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Chuzhanova</surname>
+          <given-names>NA</given-names>
+        </name>
+        <name>
+          <surname>Anassis</surname>
+          <given-names>EJ</given-names>
+        </name>
+        <name>
+          <surname>Ball</surname>
+          <given-names>EV</given-names>
+        </name>
+        <name>
+          <surname>Krawczak</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Cooper</surname>
+          <given-names>DN</given-names>
+        </name>
+        <article-title>Meta-analysis of indels causing human genetic disease: mechanisms of mutagenesis and the role of local DNA sequence complexity.</article-title>
+        <source>Hum Mutat</source>
+        <year>2003</year>
+        <volume>21</volume>
+        <fpage>28</fpage>
+        <lpage>44</lpage>
+        <pub-id pub-id-type="doi">10.1002/humu.10146</pub-id>
+        <pub-id pub-id-type="pmid">12497629</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kent</surname>
+          <given-names>WJ</given-names>
+        </name>
+        <name>
+          <surname>Sugnet</surname>
+          <given-names>CW</given-names>
+        </name>
+        <name>
+          <surname>Furey</surname>
+          <given-names>TS</given-names>
+        </name>
+        <name>
+          <surname>Roskin</surname>
+          <given-names>KM</given-names>
+        </name>
+        <name>
+          <surname>Pringle</surname>
+          <given-names>TH</given-names>
+        </name>
+        <name>
+          <surname>Zahler</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Haussler</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>The human genome browser at UCSC.</article-title>
+        <source>Genome Res</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>996</fpage>
+        <lpage>1006</lpage>
+        <pub-id pub-id-type="pmid">12045153</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Quinlan</surname>
+          <given-names>AR</given-names>
+        </name>
+        <name>
+          <surname>Hall</surname>
+          <given-names>IM</given-names>
+        </name>
+        <article-title>BEDTools: A flexible suite of utilities for comparing genomic features.</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>841</fpage>
+        <lpage>842</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq033</pub-id>
+        <pub-id pub-id-type="pmid">20110278</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="other">
+        <article-title>UCSC Genome Bioinformatics</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://genome.ucsc.edu">http://genome.ucsc.edu</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Edgar</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Domrachev</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Lash</surname>
+          <given-names>AE</given-names>
+        </name>
+        <article-title>Gene Expression Omnibus: NCBI gene expression and hybridization array data repository.</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>207</fpage>
+        <lpage>210</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/30.1.207</pub-id>
+        <pub-id pub-id-type="pmid">11752295</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="other">
+        <article-title>AB WT Analysis Pipeline</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://solidsoftwaretools.com/gf/project/transcriptome">http://solidsoftwaretools.com/gf/project/transcriptome</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="other">
+        <article-title>SplitSeek</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://solidsoftwaretools.com/gf/project/splitseek">http://solidsoftwaretools.com/gf/project/splitseek</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="other">
+        <article-title>RNA-MATE</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://solidsoftwaretools.com/gf/project/rnamate">http://solidsoftwaretools.com/gf/project/rnamate</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="other">
+        <article-title>GNU Operating System Licences</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.gnu.org/licenses">http://www.gnu.org/licenses</ext-link>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

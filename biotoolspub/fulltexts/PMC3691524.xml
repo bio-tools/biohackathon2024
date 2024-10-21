@@ -1,0 +1,3928 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3691524</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-14-142</article-id>
+    <article-id pub-id-type="pmid">23621982</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-14-142</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Methodology Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Incorporating phylogenetic-based covarying mutations into RNAalifold for RNA consensus structure prediction</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Ge</surname>
+          <given-names>Ping</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>pge@eecs.ucf.edu</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A2">
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Shaojie</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>shzhang@eecs.ucf.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Electrical Engineering and Computer Science, University of Central Florida, Orlando, FL 32816-2362, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>27</day>
+      <month>4</month>
+      <year>2013</year>
+    </pub-date>
+    <volume>14</volume>
+    <fpage>142</fpage>
+    <lpage>142</lpage>
+    <history>
+      <date date-type="received">
+        <day>29</day>
+        <month>11</month>
+        <year>2012</year>
+      </date>
+      <date date-type="accepted">
+        <day>4</day>
+        <month>4</month>
+        <year>2013</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2013 Ge and Zhang; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2013</copyright-year>
+      <copyright-holder>Ge and Zhang; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/14/142"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>RNAalifold, a popular computational method for RNA consensus structure prediction, incorporates covarying mutations into a thermodynamic model to fold the aligned RNA sequences. When quantifying covariance, it evaluates conserved signals of two aligned columns with base-pairing rules. This scoring scheme performs better than some other approaches, such as mutual information. However it ignores the phylogenetic history of the aligned sequences, which is an important criterion to evaluate the level of sequence covariance.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>In this article, in order to improve the accuracy of consensus structure folding, we propose a novel approach named PhyloRNAalifold. It incorporates the number of covarying mutations on the phylogenetic tree of the aligned sequences into the covariance scoring of RNAalifold. The benchmarking results show that the new scoring scheme of PhyloRNAalifold can improve the consensus structure detection of RNAalifold.</p>
+      </sec>
+      <sec>
+        <title>Conclusion</title>
+        <p>Incorporating additional phylogenetic information of aligned sequences into the covariance scoring of RNAalifold can improve its performance of consensus structures folding. This improvement is correlated with alignment characteristics, such as pair-wise identity and the number of sequences in the alignment.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>The discovery of novel non-coding RNA (ncRNA) families expanded our understanding of RNAs, which not only carry genetic codes for protein synthesis but also participate in other functions, especially the regulatory processes, such as localization, replication, translation and degradation [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B4">4</xref>]. In mammals, a substantial amount of transcripts (above 90%) are non-protein-coding, and most of them are functional [<xref ref-type="bibr" rid="B5">5</xref>,<xref ref-type="bibr" rid="B6">6</xref>]. What’s more, the non-coding regions in the human genome are crucially important. For example, microRNA (miRNA) is used as a marker to differ normal tissues from tumors [<xref ref-type="bibr" rid="B7">7</xref>-<xref ref-type="bibr" rid="B9">9</xref>]; long non-coding RNA (lncRNA) also contributes to human disease etiology [<xref ref-type="bibr" rid="B10">10</xref>]. These findings fuel the research of RNA and also pose new challenges.</p>
+    <p>Unlike protein-coding genes, whose primary sequences can be applied for accurate functional prediction with statistical signals, RNAs’ functions depend on their secondary structures. Many computational methods have been proposed to fold RNA structures. One type of popular algorithms adopts Minimum Free Energy (MFE) model to fold a single RNA sequence, which has been implemented in Mfold [<xref ref-type="bibr" rid="B11">11</xref>] and RNAfold [<xref ref-type="bibr" rid="B12">12</xref>]. However, the structure prediction accuracy of this approach is limited. One major reason is that the precise energy parameters are hard to obtain experimentally [<xref ref-type="bibr" rid="B13">13</xref>]; on the other hand, the functional RNA structure may not be the one with the minimum energy [<xref ref-type="bibr" rid="B4">4</xref>]. What’s more, single sequence folding may not be applied to discover new RNA families even if the predicted structures are correct, because the statistical signals in an RNA secondary structure are not strong enough to distinguish itself from the stable structures folding from random sequences [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B15">15</xref>].</p>
+    <p>Comparative methods can solve these problems by folding a consensus structure from multiple sequences, which not only improve the structure prediction accuracy, but also provide additional signals to discover novel RNAs [<xref ref-type="bibr" rid="B16">16</xref>]. The idea of this approach is that RNA secondary structures are conserved through evolution. Therefore, a consensus structure detected by comparing related RNA sequences should be more accurate and significant than the structure folded from a single sequence. With a consistent consensus structure, the specific structure of each sequence in the alignment can be obtained by constraint folding. A classic comparative method is the Sankoff algorithm [<xref ref-type="bibr" rid="B17">17</xref>]. Because constructing a precise structural alignment of RNA sequences is also a challenging problem, the Sankoff algorithm computes alignment and fold structure simultaneously. Excessive computational resources (<italic>O</italic>(<italic>n</italic><sup>6</sup>)) are required by the Sankoff algorithm for a large-scale problem. Some implementations of this approach, such as Dynalign [<xref ref-type="bibr" rid="B18">18</xref>], Foldalign [<xref ref-type="bibr" rid="B19">19</xref>], LocARNA [<xref ref-type="bibr" rid="B20">20</xref>] and Conan [<xref ref-type="bibr" rid="B21">21</xref>], attempt to restrict its solution space by limiting the number of possible sub-structures. However these methods are still computationally expensive (<italic>O</italic>(<italic>n</italic><sup>4</sup>)).</p>
+    <p>To reduce the computation complexity, comparative methods may align related sequences first and then detect conserved signals in the alignment to infer a consensus structure. One type of these methods extends the energy-based model from single sequences to alignments. Based on the assumption that high covariance of two aligned columns implies the conservation of pairing, all potential pairing columns in an alignment can be determined. After that the optimal consensus structure with minimum average free energy can be folded just as a single sequence structure. An example of covariance scoring scheme is Mutual Information (MI), which can measure the dependence of two columns in the alignments [<xref ref-type="bibr" rid="B22">22</xref>-<xref ref-type="bibr" rid="B24">24</xref>]. RNAalifold [<xref ref-type="bibr" rid="B25">25</xref>] adopts the basic idea of MI scoring and imports the pairing rules of RNA into the measurement of covariance. Another type of comparative methods is evolution-based. In these methods, no thermodynamic parameters but statistical learning algorithms are used. The evolutionary history of the aligned sequences is reformed with probability theories [<xref ref-type="bibr" rid="B26">26</xref>,<xref ref-type="bibr" rid="B27">27</xref>], and the RNA secondary structures are modeled as stochastic context-free grammar (SCFG) [<xref ref-type="bibr" rid="B28">28</xref>-<xref ref-type="bibr" rid="B30">30</xref>]. Both strategies have their own strengths and weaknesses [<xref ref-type="bibr" rid="B31">31</xref>]. Some methods try to integrate both approaches. For example, PETfold extends Pfold [<xref ref-type="bibr" rid="B30">30</xref>], an evolution-based algorithm, to consider the energetically favorable base-pairs [<xref ref-type="bibr" rid="B32">32</xref>]. However, PETfold utilizes a Nussinov style model [<xref ref-type="bibr" rid="B33">33</xref>], which does not make full use of the energy parameters. RNAalifold also tested two other covariance scoring schemes to incorporate evolutionary information [<xref ref-type="bibr" rid="B25">25</xref>,<xref ref-type="bibr" rid="B34">34</xref>], but neither of them yielded a better result.</p>
+    <p>In this article, we propose a novel method called PhyloRNAalifold. It improves RNAalifold by explicitly incorporating the phylogenetic tree of the aligned sequences into the computation of covariance scores. Like RNAalifold, PhyloRNAalifold detects pairing columns by evaluating covarying mutations and folds RNA structures through an MFE model. Unlike RNAalifold, which does not consider the relative positions of sequences in the phylogeny, PhyloRNAalifold counts the number of covarying mutations on the phylogenetic tree for each pair of columns with a parsimony approach. What’s more, comparing with PETfold, PhyloRNAalifold retains the Turner’s model [<xref ref-type="bibr" rid="B35">35</xref>] in RNAalifold, which describes RNA structures with many thermodynamic parameters derived from physical studies. With the supports of both energy-based model and evolution-based model, PhyloRNAalifold may detect consensus structures more precisely.</p>
+    <p>The rest of the article is organized as follows: in the methods section, we discuss the basic mechanism of RNAalifold, its shortcomings, and details of the PhyloRNAalifold algorithm. In the results section, we describe the benchmark datasets, experimental results, and the effect of parameters and alignment characteristics on our algorithm. In the discussion and conclusion section, we summarize our existing works and propose directions for future research.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>Consensus folding energy and covariance score in RNAalifold</title>
+      <p>The basic approach of RNAalifold [<xref ref-type="bibr" rid="B25">25</xref>] is to integrate covarying mutation into the thermodynamic model to predict consensus structures. First, covariance scores are computed for all pairs of columns to determine possible pairing positions in the consensus structure. Then, based on the MFE model, the minimum average folding energy is computed with dynamic programming. Assume the given alignment is denoted by <inline-formula><inline-graphic xlink:href="1471-2105-14-142-i1.gif"/></inline-formula> , which contains <italic>N</italic> sequences <inline-formula><mml:math id="M1" name="1471-2105-14-142-i2" overflow="scroll"><mml:mi mathvariant="double-struck">A</mml:mi><mml:mo>=</mml:mo><mml:mo>{</mml:mo><mml:msup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mn>1</mml:mn></mml:mrow></mml:msup><mml:mo>,</mml:mo><mml:msup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msup><mml:mo>,</mml:mo><mml:mo>…</mml:mo><mml:mo>,</mml:mo><mml:msup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>N</mml:mi></mml:mrow></mml:msup><mml:mo>}</mml:mo></mml:math></inline-formula>. Each sequence contains <italic>L</italic> symbols, including nucleotides and gaps, and <inline-formula><mml:math id="M2" name="1471-2105-14-142-i3" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup></mml:math></inline-formula> represents the <italic>i</italic><sup><italic>t</italic><italic>h</italic></sup> symbol (1≤<italic>i</italic>≤<italic>L</italic>) at the <italic>k</italic><sup><italic>t</italic><italic>h</italic></sup> (1≤<italic>k</italic>≤<italic>N</italic>) RNA sequence. The minimization of free energy is computed by using the following recursive functions:</p>
+      <p>
+        <disp-formula id="bmcM1">
+          <label>(1)</label>
+          <mml:math id="M3" name="1471-2105-14-142-i4" overflow="scroll">
+            <mml:mtable columnalign="left">
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mspace width="1.9em"/>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>F</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>=</mml:mo>
+                  <mml:mtext>min</mml:mtext>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>F</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>+</mml:mo>
+                      <mml:mn>1</mml:mn>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>,</mml:mo>
+                  <mml:munder>
+                    <mml:mrow>
+                      <mml:mtext>min</mml:mtext>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>&lt;</mml:mo>
+                      <mml:mi>k</mml:mi>
+                      <mml:mo>≤</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:munder>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>C</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>k</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>+</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>F</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>k</mml:mi>
+                      <mml:mo>+</mml:mo>
+                      <mml:mn>1</mml:mn>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mtd>
+              </mml:mtr>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mspace width="2.1em"/>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>C</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>=</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>ϕ</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>γ</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>+</mml:mo>
+                  <mml:mtext>min</mml:mtext>
+                  <mml:mspace width="3pt"/>
+                  <mml:mfenced open="{">
+                    <mml:mrow>
+                      <mml:mtable columnalign="left">
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:munder>
+                              <mml:mrow>
+                                <mml:mi mathsize="big">∑</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:msup>
+                                  <mml:mrow>
+                                    <mml:mi>s</mml:mi>
+                                  </mml:mrow>
+                                  <mml:mrow>
+                                    <mml:mi>k</mml:mi>
+                                  </mml:mrow>
+                                </mml:msup>
+                                <mml:mo>∈</mml:mo>
+                                <mml:mi mathvariant="double-struck">A</mml:mi>
+                              </mml:mrow>
+                            </mml:munder>
+                            <mml:mi>H</mml:mi>
+                            <mml:mo stretchy="false">(</mml:mo>
+                            <mml:mi>i</mml:mi>
+                            <mml:mo>,</mml:mo>
+                            <mml:mi>j</mml:mi>
+                            <mml:mo>,</mml:mo>
+                            <mml:msup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>k</mml:mi>
+                              </mml:mrow>
+                            </mml:msup>
+                            <mml:mo stretchy="false">)</mml:mo>
+                          </mml:mtd>
+                        </mml:mtr>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:munder>
+                              <mml:mrow>
+                                <mml:mtext>min</mml:mtext>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo>&lt;</mml:mo>
+                                <mml:mi>p</mml:mi>
+                                <mml:mo>&lt;</mml:mo>
+                                <mml:mi>q</mml:mi>
+                                <mml:mo>&lt;</mml:mo>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:munder>
+                            <mml:mfenced open="(" close=")">
+                              <mml:mrow>
+                                <mml:munder>
+                                  <mml:mrow>
+                                    <mml:mi mathsize="big">∑</mml:mi>
+                                  </mml:mrow>
+                                  <mml:mrow>
+                                    <mml:msup>
+                                      <mml:mrow>
+                                        <mml:mi>s</mml:mi>
+                                      </mml:mrow>
+                                      <mml:mrow>
+                                        <mml:mi>k</mml:mi>
+                                      </mml:mrow>
+                                    </mml:msup>
+                                    <mml:mo>∈</mml:mo>
+                                    <mml:mi mathvariant="double-struck">A</mml:mi>
+                                  </mml:mrow>
+                                </mml:munder>
+                                <mml:mi>I</mml:mi>
+                                <mml:mo stretchy="false">(</mml:mo>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo>,</mml:mo>
+                                <mml:mi>j</mml:mi>
+                                <mml:mo>,</mml:mo>
+                                <mml:mi>p</mml:mi>
+                                <mml:mo>,</mml:mo>
+                                <mml:mi>q</mml:mi>
+                                <mml:mo>,</mml:mo>
+                                <mml:msup>
+                                  <mml:mrow>
+                                    <mml:mi>s</mml:mi>
+                                  </mml:mrow>
+                                  <mml:mrow>
+                                    <mml:mi>k</mml:mi>
+                                  </mml:mrow>
+                                </mml:msup>
+                                <mml:mo stretchy="false">)</mml:mo>
+                                <mml:mo>+</mml:mo>
+                                <mml:msub>
+                                  <mml:mrow>
+                                    <mml:mi>C</mml:mi>
+                                  </mml:mrow>
+                                  <mml:mrow>
+                                    <mml:mi>p</mml:mi>
+                                    <mml:mo>,</mml:mo>
+                                    <mml:mi>q</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                              </mml:mrow>
+                            </mml:mfenced>
+                          </mml:mtd>
+                        </mml:mtr>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:munder>
+                              <mml:mrow>
+                                <mml:mtext>min</mml:mtext>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo>&lt;</mml:mo>
+                                <mml:mi>p</mml:mi>
+                                <mml:mo>&lt;</mml:mo>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:munder>
+                            <mml:mfenced open="(" close=")">
+                              <mml:mrow>
+                                <mml:mi>F</mml:mi>
+                                <mml:msub>
+                                  <mml:mrow>
+                                    <mml:mi>M</mml:mi>
+                                  </mml:mrow>
+                                  <mml:mrow>
+                                    <mml:mi>i</mml:mi>
+                                    <mml:mo>,</mml:mo>
+                                    <mml:mi>p</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                                <mml:mo>+</mml:mo>
+                                <mml:mtext mathvariant="italic">FM</mml:mtext>
+                                <mml:msub>
+                                  <mml:mrow>
+                                    <mml:mn>1</mml:mn>
+                                  </mml:mrow>
+                                  <mml:mrow>
+                                    <mml:mi>p</mml:mi>
+                                    <mml:mo>+</mml:mo>
+                                    <mml:mn>1</mml:mn>
+                                    <mml:mo>,</mml:mo>
+                                    <mml:mi>j</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                                <mml:mo>+</mml:mo>
+                                <mml:msub>
+                                  <mml:mrow>
+                                    <mml:mi>M</mml:mi>
+                                  </mml:mrow>
+                                  <mml:mrow>
+                                    <mml:mi>a</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                              </mml:mrow>
+                            </mml:mfenced>
+                          </mml:mtd>
+                        </mml:mtr>
+                      </mml:mtable>
+                    </mml:mrow>
+                  </mml:mfenced>
+                  <mml:mspace width="3pt"/>
+                </mml:mtd>
+              </mml:mtr>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mspace width="1em"/>
+                  <mml:mi>F</mml:mi>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>M</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>=</mml:mo>
+                  <mml:mtext>min</mml:mtext>
+                  <mml:mspace width="3pt"/>
+                  <mml:mfenced open="{">
+                    <mml:mrow>
+                      <mml:mtable columnalign="left">
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mi>F</mml:mi>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>M</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo>+</mml:mo>
+                                <mml:mn>1</mml:mn>
+                                <mml:mo>,</mml:mo>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo>+</mml:mo>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>M</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mtd>
+                        </mml:mtr>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:munder>
+                              <mml:mrow>
+                                <mml:mtext>min</mml:mtext>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo>&lt;</mml:mo>
+                                <mml:mi>p</mml:mi>
+                                <mml:mo>&lt;</mml:mo>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:munder>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>C</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo>,</mml:mo>
+                                <mml:mi>p</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo>+</mml:mo>
+                            <mml:mi>F</mml:mi>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>M</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>p</mml:mi>
+                                <mml:mo>+</mml:mo>
+                                <mml:mn>1</mml:mn>
+                                <mml:mo>,</mml:mo>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo>+</mml:mo>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>M</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>b</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mtd>
+                        </mml:mtr>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mtext mathvariant="italic">FM</mml:mtext>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mo>,</mml:mo>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mtd>
+                        </mml:mtr>
+                      </mml:mtable>
+                    </mml:mrow>
+                    <mml:mspace width="3pt"/>
+                  </mml:mfenced>
+                </mml:mtd>
+              </mml:mtr>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mspace width="3pt"/>
+                  <mml:mtext mathvariant="italic">FM</mml:mtext>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>=</mml:mo>
+                  <mml:mtext>min</mml:mtext>
+                  <mml:mspace width="3pt"/>
+                  <mml:mfenced open="(" close=")">
+                    <mml:mrow>
+                      <mml:mtext mathvariant="italic">FM</mml:mtext>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mn>1</mml:mn>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mo>,</mml:mo>
+                          <mml:mi>j</mml:mi>
+                          <mml:mo>−</mml:mo>
+                          <mml:mn>1</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>+</mml:mo>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>M</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>c</mml:mi>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>,</mml:mo>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>C</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mo>,</mml:mo>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                      </mml:msub>
+                    </mml:mrow>
+                    <mml:mspace width="3pt"/>
+                  </mml:mfenced>
+                </mml:mtd>
+              </mml:mtr>
+            </mml:mtable>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>F</italic><sub><italic>i</italic>,<italic>j</italic></sub>,<italic>C</italic><sub><italic>i</italic>,<italic>j</italic></sub>,<italic>F</italic><italic>M</italic><sub><italic>i</italic>,<italic>j</italic></sub>,<italic>F</italic><italic>M</italic>1<sub><italic>i</italic>,<italic>j</italic></sub> denote the minimum free energies for the region between <italic>i</italic><sup><italic>t</italic><italic>h</italic></sup> column and <italic>j</italic><sup><italic>t</italic><italic>h</italic></sup> column with unconstrained structure, with enclosed structure, with a multi-loop, and with a multi-loop containing a single branch, respectively. <italic>H</italic>(<italic>i</italic>,<italic>j</italic>,<italic>s</italic>) is the free energy for a hairpin loop enclosed by <italic>s</italic><sub><italic>i</italic></sub> and <italic>s</italic><sub><italic>j</italic></sub>, and <italic>I</italic>(<italic>i</italic>,<italic>j</italic>,<italic>p</italic>,<italic>q</italic>,<italic>s</italic>) is the free energy for an internal loop containing two base-pairs, one is between <italic>s</italic><sub><italic>i</italic></sub> and <italic>s</italic><sub><italic>j</italic></sub> and the other is between <italic>s</italic><sub><italic>p</italic></sub> and <italic>s</italic><sub><italic>q</italic></sub>. <italic>M</italic><sub><italic>a</italic></sub>,<italic>M</italic><sub><italic>c</italic></sub> are penalties for closing bases and non-pairing bases in multi-loops. <italic>M</italic><sub><italic>b</italic></sub> is the bonus for branch bases in multi-loops.</p>
+      <p>The recursive functions were derived from the Turner’s model [<xref ref-type="bibr" rid="B35">35</xref>]. One major change made by RNAalifold for consensus folding is the usage of covariance score <italic>γ</italic>. It is not only a factor in the computing of free energy, but also determines the possible pairing columns in the alignment. Two parts, one is bonus and the other is penalty, are in this score. The first part of the covariance score is called the conservation score. For <inline-formula><mml:math id="M4" name="1471-2105-14-142-i5" overflow="scroll"><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula> and <inline-formula><mml:math id="M5" name="1471-2105-14-142-i6" overflow="scroll"><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>l</mml:mi></mml:mrow></mml:msubsup><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>l</mml:mi></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula>, three levels of confidence for pairing are assessed: base-pairs without mutation, base-pairs with one mutation, and base-pairs with two mutations. In the latest version of Vienna RNA package (v2.0) [<xref ref-type="bibr" rid="B36">36</xref>], the recursive function for computing conservation score is:</p>
+      <p>
+        <disp-formula id="bmcM2">
+          <label>(2)</label>
+          <mml:math id="M6" name="1471-2105-14-142-i7" overflow="scroll">
+            <mml:mtable columnalign="left">
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>V</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mspace width="0.3em"/>
+                  <mml:mo>=</mml:mo>
+                  <mml:mspace width="0.3em"/>
+                  <mml:mfrac>
+                    <mml:mrow>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>N</mml:mi>
+                    </mml:mrow>
+                  </mml:mfrac>
+                  <mml:mspace width="0.3em"/>
+                  <mml:mspace width="0.3em"/>
+                  <mml:munder>
+                    <mml:mrow>
+                      <mml:mi mathsize="big">∑</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>1</mml:mn>
+                      <mml:mo>≤</mml:mo>
+                      <mml:mi>k</mml:mi>
+                      <mml:mo>&lt;</mml:mo>
+                      <mml:mi>l</mml:mi>
+                      <mml:mo>≤</mml:mo>
+                      <mml:mi>N</mml:mi>
+                    </mml:mrow>
+                  </mml:munder>
+                  <mml:mspace width="0.3em"/>
+                  <mml:mspace width="0.3em"/>
+                  <mml:mfenced open="{">
+                    <mml:mrow>
+                      <mml:mtable columnalign="left">
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mspace width="0.3em"/>
+                            <mml:mi>h</mml:mi>
+                            <mml:mo stretchy="false">(</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>k</mml:mi>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo>,</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>l</mml:mi>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo stretchy="false">)</mml:mo>
+                            <mml:mspace width="0.3em"/>
+                            <mml:mo>+</mml:mo>
+                            <mml:mi>h</mml:mi>
+                            <mml:mo stretchy="false">(</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>k</mml:mi>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo>,</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>l</mml:mi>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo stretchy="false">)</mml:mo>
+                          </mml:mtd>
+                          <mml:mtd>
+                            <mml:mtext>if</mml:mtext>
+                            <mml:mspace width="1em"/>
+                            <mml:mo stretchy="false">(</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>k</mml:mi>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo>,</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>k</mml:mi>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo stretchy="false">)</mml:mo>
+                            <mml:mspace width="0.3em"/>
+                            <mml:mo>∈</mml:mo>
+                            <mml:mspace width="0.3em"/>
+                            <mml:mi mathvariant="double-struck">B</mml:mi>
+                            <mml:mspace width="1em"/>
+                            <mml:mtext>and</mml:mtext>
+                            <mml:mspace width="1em"/>
+                            <mml:mo stretchy="false">(</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>l</mml:mi>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo>,</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>s</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>l</mml:mi>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo stretchy="false">)</mml:mo>
+                            <mml:mspace width="0.3em"/>
+                            <mml:mo>∈</mml:mo>
+                            <mml:mspace width="0.3em"/>
+                            <mml:mi mathvariant="double-struck">B</mml:mi>
+                          </mml:mtd>
+                        </mml:mtr>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mn>0</mml:mn>
+                          </mml:mtd>
+                          <mml:mtd>
+                            <mml:mtext>otherwise</mml:mtext>
+                          </mml:mtd>
+                        </mml:mtr>
+                      </mml:mtable>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mtd>
+              </mml:mtr>
+            </mml:mtable>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>h</italic>(<italic>x</italic>,<italic>y</italic>) is the Hamming distance between base <italic>x</italic> and base <italic>y</italic>, and <inline-formula><inline-graphic xlink:href="1471-2105-14-142-i8.gif"/></inline-formula> ={‘AU’, ‘UA’, ‘CG’, ‘GC’, ‘GU’, ‘UG’} is the set of all possible base-pairs. The second part is the penalty score <italic>Q</italic><sub><italic>i</italic>,<italic>j</italic></sub>, which deals with a pair of symbols that cannot form a base-pair:</p>
+      <p>
+        <disp-formula id="bmcM3">
+          <label>(3)</label>
+          <mml:math id="M7" name="1471-2105-14-142-i9" overflow="scroll">
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>Q</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:munder>
+              <mml:mrow>
+                <mml:mi mathsize="big">∑</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mn>1</mml:mn>
+                <mml:mo>≤</mml:mo>
+                <mml:mi>k</mml:mi>
+                <mml:mo>≤</mml:mo>
+                <mml:mi>N</mml:mi>
+              </mml:mrow>
+            </mml:munder>
+            <mml:mfenced open="{">
+              <mml:mrow>
+                <mml:mtable columnalign="left">
+                  <mml:mtr>
+                    <mml:mtd>
+                      <mml:mn>0</mml:mn>
+                    </mml:mtd>
+                    <mml:mtd>
+                      <mml:mspace width="1em"/>
+                      <mml:mtext>if</mml:mtext>
+                      <mml:mspace width="3pt"/>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:msubsup>
+                        <mml:mrow>
+                          <mml:mi>s</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                      </mml:msubsup>
+                      <mml:mo>,</mml:mo>
+                      <mml:msubsup>
+                        <mml:mrow>
+                          <mml:mi>s</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>j</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                      </mml:msubsup>
+                      <mml:mo stretchy="false">)</mml:mo>
+                      <mml:mo>∈</mml:mo>
+                      <mml:mi mathvariant="double-struck">B</mml:mi>
+                    </mml:mtd>
+                  </mml:mtr>
+                  <mml:mtr>
+                    <mml:mtd>
+                      <mml:mn>0</mml:mn>
+                      <mml:mi>.</mml:mi>
+                      <mml:mn>25</mml:mn>
+                    </mml:mtd>
+                    <mml:mtd>
+                      <mml:mspace width="1em"/>
+                      <mml:mtext>if</mml:mtext>
+                      <mml:mspace width="3pt"/>
+                      <mml:msubsup>
+                        <mml:mrow>
+                          <mml:mi>s</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                      </mml:msubsup>
+                      <mml:mspace width="3pt"/>
+                      <mml:mtext>and</mml:mtext>
+                      <mml:mspace width="3pt"/>
+                      <mml:msubsup>
+                        <mml:mrow>
+                          <mml:mi>s</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>j</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                      </mml:msubsup>
+                      <mml:mtext>are gaps</mml:mtext>
+                    </mml:mtd>
+                  </mml:mtr>
+                  <mml:mtr>
+                    <mml:mtd>
+                      <mml:mn>1</mml:mn>
+                    </mml:mtd>
+                    <mml:mtd>
+                      <mml:mspace width="6pt"/>
+                      <mml:mtext>otherwise</mml:mtext>
+                    </mml:mtd>
+                  </mml:mtr>
+                </mml:mtable>
+              </mml:mrow>
+            </mml:mfenced>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>Overall, the covariance score is:</p>
+      <p>
+        <disp-formula id="bmcM4">
+          <label>(4)</label>
+          <mml:math id="M8" name="1471-2105-14-142-i10" overflow="scroll">
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>γ</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>V</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>−</mml:mo>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>ϕ</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>×</mml:mo>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>Q</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>ϕ</italic><sub>1</sub>=<italic>ϕ</italic><sub>2</sub>=1. A threshold value <italic>γ</italic><sub><italic>t</italic></sub>=−2 is defined for <italic>γ</italic><sub><italic>i</italic>,<italic>j</italic></sub>. If <italic>γ</italic><sub><italic>i</italic>,<italic>j</italic></sub>&gt;<italic>γ</italic><sub><italic>t</italic></sub>, <italic>i</italic><sup><italic>t</italic><italic>h</italic></sup> column and <italic>j</italic><sup><italic>t</italic><italic>h</italic></sup> column are considered to be pairing columns. In the final output, the minimum average folding energy, including the covariance score, is normalized by dividing <italic>N</italic>.</p>
+    </sec>
+    <sec>
+      <title>Phylogenetic-based covarying mutation</title>
+      <p>RNAalifold incorporates covarying mutations into consensus folding to improve the detection of pairing columns. From Equation (2), it can be seen that RNAalifold counts the level of covariance by treating all sequences equally and try all possible combinations of base-pairs. In short, RNAalifold models the relationship of sequences as a complete graph. As a result, the specific evolutionary relationship among sequences in the phylogenetic history is ignored. Take the RNA structural alignment in Figure <xref ref-type="fig" rid="F1">1</xref> as an example. The red and green columns achieve the same covariance score (2) in RNAalifold. However, as described in [<xref ref-type="bibr" rid="B37">37</xref>], the conservation evidence in Figure <xref ref-type="fig" rid="F1">1</xref>(c) is stronger than that in Figure <xref ref-type="fig" rid="F1">1</xref>(b) because at least two mutations occur at the green columns while only one is required to form the red ones.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Covarying mutations in an RNA alignment.</bold> (<bold>a</bold>) A multiple RNA alignment and its phylogenetic tree. Three pairs of columns, which are marked with different colors, are analyzed in the following three sub-figures. (<bold>b</bold>) Possible covarying mutations in the red columns. In this case, only one pair-wise mutation is required at the root node. (<bold>c</bold>) Possible covarying mutations in the green columns. At least two pair-wise mutations occur at the internal nodes in this case; (<bold>d</bold>) Possible covarying mutations in the blue columns. There are non-pairing bases, ‘AG’ and ‘A-’. The label inference of the internal nodes does not depend on them. So in this case, the number of mutations is one.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-142-1"/>
+      </fig>
+      <p>PhyloRNAalifold models the relationship of aligned sequences as a tree by introducing the phylogenetic history of the alignment into the computation of covariance scores. The level of structural conservation is measured by the number of covarying mutations on the tree. Our assumption is that more covarying mutations on the tree mean stronger evidence of conservation. In addition, PhyloRNAalifold does not discard the original scoring scheme of RNAalifold, because experimental results showed this scheme can infer significant RNA structural aspects with high sensitivity and selectivity [<xref ref-type="bibr" rid="B38">38</xref>]. Assume <italic>m</italic><sub><italic>i</italic>,<italic>j</italic></sub> covarying mutations occur between <italic>i</italic><sup><italic>t</italic><italic>h</italic></sup> and <italic>j</italic><sup><italic>t</italic><italic>h</italic></sup> columns on the alignment <inline-formula><inline-graphic xlink:href="1471-2105-14-142-i11.gif"/></inline-formula>’s phylogenetic tree and the number of base-pairs on those columns is <italic>b</italic><sub><italic>i</italic>,<italic>j</italic></sub>. The value of <italic>m</italic><sub><italic>i</italic>,<italic>j</italic></sub> depends on the size of the alignment. Since our approach focuses on improving the bonus part of the covariance scores, the number of covarying mutations is normalized with its upper bound: <inline-formula><mml:math id="M9" name="1471-2105-14-142-i12" overflow="scroll"><mml:mfrac><mml:mrow><mml:msub><mml:mrow><mml:mi>m</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>j</mml:mi></mml:mrow></mml:msub></mml:mrow><mml:mrow><mml:msub><mml:mrow><mml:mi>b</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>j</mml:mi></mml:mrow></mml:msub><mml:mo>−</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:mfrac></mml:math></inline-formula>. A new factor for the conservation score is proposed:</p>
+      <p>
+        <disp-formula id="bmcM5">
+          <label>(5)</label>
+          <mml:math id="M10" name="1471-2105-14-142-i13" overflow="scroll">
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>∊</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>=</mml:mo>
+            <mml:mn>1</mml:mn>
+            <mml:mo>+</mml:mo>
+            <mml:mi>β</mml:mi>
+            <mml:mo>×</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>m</mml:mi>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mrow>
+                    <mml:mi>b</mml:mi>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>−</mml:mo>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+            </mml:mfrac>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>β</italic> is the scale parameter for the normalized covarying mutation numbers. PhyloRNAalifold computes covariance scores with the following formula:</p>
+      <p>
+        <disp-formula id="bmcM6">
+          <label>(6)</label>
+          <mml:math id="M11" name="1471-2105-14-142-i14" overflow="scroll">
+            <mml:msubsup>
+              <mml:mrow>
+                <mml:mi>γ</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>p</mml:mi>
+              </mml:mrow>
+            </mml:msubsup>
+            <mml:mo>=</mml:mo>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>∊</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>×</mml:mo>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>V</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>−</mml:mo>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>ϕ</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mn>1</mml:mn>
+              </mml:mrow>
+            </mml:msub>
+            <mml:mo>×</mml:mo>
+            <mml:msub>
+              <mml:mrow>
+                <mml:mi>Q</mml:mi>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:mi>i</mml:mi>
+                <mml:mo>,</mml:mo>
+                <mml:mi>j</mml:mi>
+              </mml:mrow>
+            </mml:msub>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>All the other parameters and their default values in RNAalifold are retained. Due to the fact that <inline-formula><mml:math id="M12" name="1471-2105-14-142-i15" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>γ</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>p</mml:mi></mml:mrow></mml:msubsup><mml:mo>≥</mml:mo><mml:msub><mml:mrow><mml:mi>γ</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>j</mml:mi></mml:mrow></mml:msub></mml:math></inline-formula> (<italic>∊</italic><sub><italic>i</italic>,<italic>j</italic></sub>≥1), two columns would be marked as pairing in PhyloRNAalifold if their covariance score in RNAalifold is greater than the threshold <italic>γ</italic><sub><italic>t</italic></sub> (the default value of <italic>γ</italic><sub><italic>t</italic></sub> is -2). Thus the advantage of PhyloRNAalifold is to import more potentially pairing positions with high mutation numbers.</p>
+    </sec>
+    <sec>
+      <title>Computing the number of covarying mutations</title>
+      <p>Given a phylogenetic tree and labels at its leaves, the Fitch algorithm can optimize nucleotide assignment of the internal nodes to minimize the number of mutations [<xref ref-type="bibr" rid="B39">39</xref>]. If we model solving phylogeny as a maximum parsimony problem, this number can be taken as the actual number of mutations. The Fitch algorithm consists of a forward phase and a backward phase. In the forward phase, all possible labels at each internal node are inferred. In addition, the number of mutations is estimated during a bottom-up traversal. In the backward phase, a top-down pass is performed to find the optimal label at each internal node. Only the forward algorithm is applied to PhyloRNAalifold, since we do not need the exact labels at the internal nodes, but only the number of mutations on the tree. Without loss of generality, we require <inline-formula><inline-graphic xlink:href="1471-2105-14-142-i16.gif"/></inline-formula> to be a rooted binary tree. <italic>r</italic> denotes the root of <inline-formula><inline-graphic xlink:href="1471-2105-14-142-i17.gif"/></inline-formula> and <italic>v</italic>, <italic>v</italic><sub><italic>l</italic></sub>, <italic>v</italic><sub><italic>r</italic></sub> denote a node, left child of <italic>v</italic>, and right child of <italic>v</italic> respectively. <italic>F</italic>(<italic>v</italic>) is the set of possible labels at node <italic>v</italic>, and <italic>c</italic><italic>o</italic><italic>s</italic><italic>t</italic>(<italic>v</italic>) is the number of mutations on the sub-tree which is rooted at <italic>v</italic>. Then the forward phase can be described with the following recursive functions:</p>
+      <p>
+        <disp-formula id="bmcM7">
+          <label>(7)</label>
+          <mml:math id="M13" name="1471-2105-14-142-i18" overflow="scroll">
+            <mml:mtable columnalign="left">
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mtable columnalign="left">
+                    <mml:mtr>
+                      <mml:mtd>
+                        <mml:mspace width="1.2em"/>
+                        <mml:mi>F</mml:mi>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mi>v</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                        <mml:mo>=</mml:mo>
+                        <mml:mfenced open="{">
+                          <mml:mrow>
+                            <mml:mtable columnalign="left">
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>∩</mml:mo>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>if</mml:mtext>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>∩</mml:mo>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>≠</mml:mo>
+                                  <mml:mi>∅</mml:mi>
+                                </mml:mtd>
+                              </mml:mtr>
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>∪</mml:mo>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>otherwise</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                            </mml:mtable>
+                          </mml:mrow>
+                        </mml:mfenced>
+                      </mml:mtd>
+                    </mml:mtr>
+                    <mml:mtr>
+                      <mml:mtd>
+                        <mml:mspace width="-6em"/>
+                        <mml:mtext mathvariant="italic">cost</mml:mtext>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mi>v</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                        <mml:mo>=</mml:mo>
+                        <mml:mfenced open="{">
+                          <mml:mrow>
+                            <mml:mtable columnalign="left">
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>+</mml:mo>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mtext>if</mml:mtext>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>∩</mml:mo>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>≠</mml:mo>
+                                  <mml:mi>∅</mml:mi>
+                                </mml:mtd>
+                              </mml:mtr>
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>+</mml:mo>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>+</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mtext>otherwise</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                            </mml:mtable>
+                          </mml:mrow>
+                        </mml:mfenced>
+                      </mml:mtd>
+                    </mml:mtr>
+                  </mml:mtable>
+                </mml:mtd>
+              </mml:mtr>
+            </mml:mtable>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>For each leaf, <italic>F</italic>(<italic>v</italic>) is a base at the corresponding sequence. After the computation is finished, <italic>c</italic><italic>o</italic><italic>s</italic><italic>t</italic>(<italic>r</italic>) shows the minimum number of mutations on the phylogenetic tree. The optimization of this algorithm was proved in [<xref ref-type="bibr" rid="B40">40</xref>].</p>
+      <p>In Equation 5, the computation of <italic>∊</italic><sub><italic>i</italic>,<italic>j</italic></sub> does not depend on non-pairing bases. Therefore, in the revised Fitch algorithm non-pairing bases need not to be considered when the number of covarying mutations is computed. We changed the original Fitch algorithm in two ways: (1) at any leaf node, if <inline-formula><mml:math id="M14" name="1471-2105-14-142-i19" overflow="scroll"><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo><mml:mo>∉</mml:mo><mml:mi mathvariant="double-struck">B</mml:mi></mml:math></inline-formula>, set <inline-formula><mml:math id="M15" name="1471-2105-14-142-i20" overflow="scroll"><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo></mml:math></inline-formula> (‘-’, ‘-’); (2) for one internal node <italic>v</italic>, if the bases at <italic>v</italic><sub><italic>l</italic></sub>(<italic>v</italic><sub><italic>r</italic></sub>) is (‘-’, ‘-’), <italic>v</italic> will obtain <italic>F</italic>(<italic>v</italic><sub><italic>r</italic></sub>)(<italic>F</italic>(<italic>v</italic><sub><italic>l</italic></sub>)) as its label. One example of this algorithm is shown in Figure <xref ref-type="fig" rid="F1">1</xref>(d). The revised Fitch algorithm can be described by using the following functions:</p>
+      <p>
+        <disp-formula id="bmcM8">
+          <label>(8)</label>
+          <mml:math id="M16" name="1471-2105-14-142-i21" overflow="scroll">
+            <mml:mtable>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mtable columnalign="left">
+                    <mml:mtr>
+                      <mml:mtd>
+                        <mml:mspace width="1.2em"/>
+                        <mml:mi>F</mml:mi>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mi>v</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                        <mml:mo>=</mml:mo>
+                        <mml:mfenced open="{">
+                          <mml:mrow>
+                            <mml:mtable columnalign="left">
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>∩</mml:mo>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>if</mml:mtext>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>∩</mml:mo>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>≠</mml:mo>
+                                  <mml:mi>∅</mml:mi>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>and</mml:mtext>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>≠</mml:mo>
+                                  <mml:mtext>(‘-’, ‘-’)</mml:mtext>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>and</mml:mtext>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>≠</mml:mo>
+                                  <mml:mtext>(‘-’, ‘-’)</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>if</mml:mtext>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mtext>(‘-’, ‘-’)</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>if</mml:mtext>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mtext>(‘-’, ‘-’)</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>∪</mml:mo>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>otherwise</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                            </mml:mtable>
+                          </mml:mrow>
+                        </mml:mfenced>
+                      </mml:mtd>
+                    </mml:mtr>
+                    <mml:mtr>
+                      <mml:mtd>
+                        <mml:mtext mathvariant="italic">cost</mml:mtext>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mi>v</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                        <mml:mo>=</mml:mo>
+                        <mml:mfenced open="{">
+                          <mml:mrow>
+                            <mml:mtable columnalign="left">
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>+</mml:mo>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mtext>if</mml:mtext>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>∩</mml:mo>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>≠</mml:mo>
+                                  <mml:mi>∅</mml:mi>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>and</mml:mtext>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>≠</mml:mo>
+                                  <mml:mtext>(‘-’, ‘-’)</mml:mtext>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mtext>and</mml:mtext>
+                                  <mml:mspace width="1em"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>≠</mml:mo>
+                                  <mml:mtext>(‘-’, ‘-’)</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mtext>if</mml:mtext>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mtext>(‘-’, ‘-’)</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mtext>if</mml:mtext>
+                                  <mml:mspace width="2.77626pt"/>
+                                  <mml:mi>F</mml:mi>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mtext>(‘-’, ‘-’)</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                              <mml:mtr>
+                                <mml:mtd>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>l</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>+</mml:mo>
+                                  <mml:mtext mathvariant="italic">cost</mml:mtext>
+                                  <mml:mo stretchy="false">(</mml:mo>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>v</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                  <mml:mo stretchy="false">)</mml:mo>
+                                  <mml:mo>+</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mtd>
+                                <mml:mtd>
+                                  <mml:mtext>otherwise</mml:mtext>
+                                </mml:mtd>
+                              </mml:mtr>
+                            </mml:mtable>
+                          </mml:mrow>
+                        </mml:mfenced>
+                      </mml:mtd>
+                    </mml:mtr>
+                  </mml:mtable>
+                </mml:mtd>
+              </mml:mtr>
+            </mml:mtable>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>It is easy to see that our algorithm is optimal, because it only excludes non-pairing bases from the computation of the original Fitch algorithm.</p>
+      <p>In PhyloRNAalifold, the tree structure is an input variable and the clients can use any phylogenetic tree construction algorithm to build it. The time complexity of the original RNAalifold algorithm is <italic>O</italic>(<italic>m</italic>×<italic>n</italic><sup>2</sup>+<italic>n</italic><sup>3</sup>) [<xref ref-type="bibr" rid="B41">41</xref>], where <italic>n</italic> is the length of the alignment and <italic>m</italic> is the number of sequences in the alignment. The extra computation in PhyloRNAalifold is caused by the revised Fitch algorithm, whose time complexity ranges from <italic>O</italic>(log<italic>m</italic>) to <italic>O</italic>(<italic>m</italic>). In addition, PhyloRNAalifold needs to compute <italic>∊</italic><sub><italic>i</italic>,<italic>j</italic></sub> for each pair of columns in the alignment. Thus the overall time consumption of the revised Fitch algorithm is <italic>O</italic>(log<italic>m</italic>×<italic>n</italic><sup>2</sup>) or <italic>O</italic>(<italic>m</italic>×<italic>n</italic><sup>2</sup>). Neither of them increases the time complexity of RNAalifold.</p>
+    </sec>
+  </sec>
+  <sec sec-type="results">
+    <title>Results</title>
+    <sec>
+      <title>Benchmarking datasets</title>
+      <p>The 19 Rfam [<xref ref-type="bibr" rid="B42">42</xref>] families used in the CMfinder paper [<xref ref-type="bibr" rid="B43">43</xref>] were selected as our first benchmarking dataset. It captures the diversity of known families by excluding highly conserved ones. Other programs, such as PETfold [<xref ref-type="bibr" rid="B32">32</xref>] and RNAalifold [<xref ref-type="bibr" rid="B34">34</xref>], also adopted it in their experiments. All the testing families came from Rfam version 11.0 and their seed alignments were used. In order to evaluate the dependence of our folding algorithm on the alignment quality, we also realigned the seeds with ClustalW [<xref ref-type="bibr" rid="B44">44</xref>] to generate the second benchmarking dataset. For this dataset, the predicted structure of the first sequence in each alignment was compared with its real consensus structure to measure the accuracy. Pair-wise identity and the number of sequences in an alignment are two important alignment characteristics. Pair-wise identity is related to the performance of consensus structure folding, while the number of members is important for inferring an accurate evolutionary history. To analyze these two factors, we generated the third benchmarking dataset which consisted of alignments with different number of sequences and identities. Member sequences were randomly picked from each seed alignment. For each family, we generated three sets. Each set included 50 alignments, and the alignments contained 5 sequences, 10 sequences and 20 sequences respectively. 7 families (ctRNA_pGA1, glmS, lin-4, Lysine, mir-10, s2m, Tymo_tRNA-like), whose sequences are less than 50, were excluded from this dataset because the diversity of generated alignments was too small.</p>
+      <p>PhyloRNAalifold requires a phylogenetic tree of the alignment to infer the consensus structural aspects. In our experiments, DNADIST and KITSCH in the PHYLIP package [<xref ref-type="bibr" rid="B45">45</xref>] were used to generate phylogenies. First DNADIST computed a distance matrix of the sequences. After that, KITSCH estimated a phylogenetic tree from the output matrix of DNADIST. The reason of using KITSCH was that it can generate rooted binary trees, which were required by PhyloRNAalifold. Another notable issue in this process is that if two sequences differ in more than 75% of their positions, DNADIST would set the distance between them to -1, which represents infinity. KITSCH rejects negative distances. Thus -1 was replaced with 1000 in distance matrices. We have checked all the positive sequence distances in our experiments. None of them exceeded 10, so 1000 is large enough to represent infinity.</p>
+      <p>The implementation of PhyloRNAalifold was on the top of program RNAalifold in the Vienna RNA package 2.0.7 [<xref ref-type="bibr" rid="B36">36</xref>]. The major change made by PhyloRNAalifold is to incorporate our Fitch module into the scoring scheme of RNAalifold. To test our idea, Matthews correlation coefficient (MCC) [<xref ref-type="bibr" rid="B46">46</xref>] was used to measure the accuracy of consensus structure prediction. Its definition is:</p>
+      <p>
+        <disp-formula id="bmcM9">
+          <label>(9)</label>
+          <mml:math id="M17" name="1471-2105-14-142-i22" overflow="scroll">
+            <mml:mspace width="-12.0pt"/>
+            <mml:mtext mathvariant="italic">MCC</mml:mtext>
+            <mml:mo>=</mml:mo>
+            <mml:mfrac>
+              <mml:mrow>
+                <mml:mtext mathvariant="italic">TP</mml:mtext>
+                <mml:mo>×</mml:mo>
+                <mml:mtext mathvariant="italic">TN</mml:mtext>
+                <mml:mo>−</mml:mo>
+                <mml:mtext mathvariant="italic">FP</mml:mtext>
+                <mml:mo>×</mml:mo>
+                <mml:mtext mathvariant="italic">FN</mml:mtext>
+              </mml:mrow>
+              <mml:mrow>
+                <mml:msqrt>
+                  <mml:mrow>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mtext mathvariant="italic">TP</mml:mtext>
+                    <mml:mo>+</mml:mo>
+                    <mml:mtext mathvariant="italic">FP</mml:mtext>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mtext mathvariant="italic">TP</mml:mtext>
+                    <mml:mo>+</mml:mo>
+                    <mml:mtext mathvariant="italic">FN</mml:mtext>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mtext mathvariant="italic">TN</mml:mtext>
+                    <mml:mo>+</mml:mo>
+                    <mml:mtext mathvariant="italic">FP</mml:mtext>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mtext mathvariant="italic">TN</mml:mtext>
+                    <mml:mo>+</mml:mo>
+                    <mml:mtext mathvariant="italic">FN</mml:mtext>
+                    <mml:mo stretchy="false">)</mml:mo>
+                  </mml:mrow>
+                </mml:msqrt>
+              </mml:mrow>
+            </mml:mfrac>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>T</italic><italic>P</italic>,<italic>T</italic><italic>N</italic>,<italic>F</italic><italic>P</italic>,<italic>F</italic><italic>N</italic> represent the number of true positives, true negatives, false positives, and false negatives, respectively. Additional predicted base-pairs that are not in the reference structure fall into two categories. Some base-pairs contradict reference, the others are compatible with it. Compatible base-pairs can be inserted into the known consensus structure, while adding contradictory base-pairs breaks the pairing rules. Only contradictory base-pairs were counted as false positive predictions.</p>
+      <p>Five algorithms, RNAalifold, RIBOSUM-based RNAalifold, PhyloRNAalifold, RIBOSUM-based PhyloRNAalifold, and PETfold, have been tested on the first two datasets. The first four have also been benchmarked on the third dataset. The RIBOSUM scoring scheme [<xref ref-type="bibr" rid="B47">47</xref>] is used in the latest version of Vienna RNA package. In this scheme, the sum of Hamming distance <inline-formula><mml:math id="M18" name="1471-2105-14-142-i23" overflow="scroll"><mml:mi>h</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>l</mml:mi></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo><mml:mo>+</mml:mo><mml:mi>h</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>l</mml:mi></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula> in conservation score was replaced by an entry in the RIBOSUM matrix <italic>R</italic>: <inline-formula><mml:math id="M19" name="1471-2105-14-142-i24" overflow="scroll"><mml:mi>R</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msubsup><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mi>l</mml:mi></mml:mrow></mml:msubsup><mml:msubsup><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mrow><mml:mi>j</mml:mi></mml:mrow><mml:mrow><mml:mi>l</mml:mi></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula>. The experiment results in [<xref ref-type="bibr" rid="B34">34</xref>] showed that RIBOSUM-based RNAalifold outperformed the orignal RNAalifold in most of cases. In addition, the authors of [<xref ref-type="bibr" rid="B34">34</xref>] used <italic>ϕ</italic><sub>1</sub>=0.6 and <italic>ϕ</italic><sub>2</sub>=0.5 as the default parameters in their experiments. We applied their settings to make the comparison fair. The performance of PETfold was tested in our experiments too. We used the web-server of PETfold [<xref ref-type="bibr" rid="B48">48</xref>] and its default parameters.</p>
+    </sec>
+    <sec>
+      <title>Effect of parameter <bold><italic>β</italic></bold></title>
+      <p>In the first experiment, we compared the structure prediction results of PhyloRNAalifold with RNAalifold on the original CMfinder dataset. Default values for <italic>ϕ</italic><sub>1</sub>, <italic>ϕ</italic><sub>2</sub> and <italic>γ</italic><sub><italic>t</italic></sub> were used, and <italic>β</italic> was a variable ranging from 1 to 15. Figure <xref ref-type="fig" rid="F2">2</xref> shows that the novel scoring scheme of PhyloRNAalifold improves the performance of RNAalifold in nearly all cases, except <italic>β</italic>=1. The differences of average MCC in both cases, with or without using RIBOSUM matrix, become larger when <italic>β</italic> is increased, and they are maximized at <italic>β</italic>=10. The largest differences are 0.079 and 0.033 for RIBOSUM supported and non-RIBOSUM supported algorithms. After that, the performance of PhyloRNAalifold is not boosted with the increasing of <italic>β</italic>. In the following experiments, we select 10 as a default value for <italic>β</italic>.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>MCC on the CMfinder dataset as a function of the </bold><bold><italic>β </italic></bold><bold>parameter.</bold> The MCC results of PhyloRNAalifold, with and without RIBOSUM matrix support, are shown in this figure. The dash lines are references for the curves, which show the performance of RNAalifold on the same dataset. It can be seen that except for <italic>β</italic>=1, the new phylogenetic-based covariance scoring scheme improves the performance of RNAalifold.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-142-2"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Benchmarking with other methods</title>
+      <p>Table <xref ref-type="table" rid="T1">1</xref> summarizes all results of the consensus structure predictions on the structural alignments. PhyloRNAalifold with RIBOSUM support achieves the best average MCC score. When RIBOSUM matrix is incorporated, the score difference between PhyloRNAalifold and RNAalifold becomes smaller. This may suggest that by using RIBOSUM matrix, RNAalifold quantifies the conservation among base-pairs more precisely than its original solution. The advantage of using phylogenetic history is swamped by this strategy to some extent. The average specificity scores of five algorithms are the same, while PhyloRNAalifold and PETfold have two largest average sensitivity scores. It is evidence of evolutionary information helping the energy-based folding algorithms to detect more base-pairs with introducing very few errors. An interesting observation is that Cobalamin has relative low MCC scores for RNAalifold. PhyloRNAalifold improves the accuracy of the consensus structure prediction of Cobalamin greatly. In addition, PETfold has the best performance on this family among all five algorithms. We checked the consensus structure of Cobalamin and the predicted results of RNAalifold. One possible reason is that there are too many gaps and non-pairing bases at its pairing columns, which decrease the covariance scores of those columns in RNAalifold greatly. Without the bonus from evolutionary information, those columns cannot be detected by RNAalifold at all.</p>
+      <table-wrap position="float" id="T1">
+        <label>Table 1</label>
+        <caption>
+          <p>
+            <bold>The benchmarking results on the structural alignments of the CMfinder dataset (</bold>
+            <bold>
+              <italic>β=10)</italic>
+            </bold>
+          </p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left">
+                <bold>Family</bold>
+              </th>
+              <th align="right">
+                <bold>#seq</bold>
+              </th>
+              <th align="right">
+                <bold>MPI</bold>
+              </th>
+              <th align="right">
+                <bold>RNAalifold</bold>
+              </th>
+              <th align="right">
+                <bold>PhyloRNAalifold</bold>
+              </th>
+              <th align="right">
+                <bold>RNAalifold</bold>
+                <break/>
+                <bold>with RIBOSUM</bold>
+              </th>
+              <th align="right">
+                <bold>PhyloRNAalifold</bold>
+                <break/>
+                <bold>with RIBOSUM</bold>
+              </th>
+              <th align="right">
+                <bold>PETFold</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left" valign="bottom">Cobalamin<hr/></td>
+              <td align="right" valign="bottom">430<hr/></td>
+              <td align="right" valign="bottom">49.7<hr/></td>
+              <td align="right" valign="bottom">0.756<hr/></td>
+              <td align="right" valign="bottom">0.951<hr/></td>
+              <td align="right" valign="bottom">0.591<hr/></td>
+              <td align="right" valign="bottom">0.951<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.976</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ctRNA_pGA1<hr/></td>
+              <td align="right" valign="bottom">15<hr/></td>
+              <td align="right" valign="bottom">73.0<hr/></td>
+              <td align="right" valign="bottom">0.979<hr/></td>
+              <td align="right" valign="bottom">0.979<hr/></td>
+              <td align="right" valign="bottom">0.979<hr/></td>
+              <td align="right" valign="bottom">0.979<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Entero_CRE<hr/></td>
+              <td align="right" valign="bottom">56<hr/></td>
+              <td align="right" valign="bottom">81.7<hr/></td>
+              <td align="right" valign="bottom">0.912<hr/></td>
+              <td align="right" valign="bottom">0.912<hr/></td>
+              <td align="right" valign="bottom">0.916<hr/></td>
+              <td align="right" valign="bottom">0.916<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Entero_OriR<hr/></td>
+              <td align="right" valign="bottom">60<hr/></td>
+              <td align="right" valign="bottom">87.4<hr/></td>
+              <td align="right" valign="bottom">0.47<hr/></td>
+              <td align="right" valign="bottom">0.681<hr/></td>
+              <td align="right" valign="bottom">0.703<hr/></td>
+              <td align="right" valign="bottom">0.703<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.747</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">glmS<hr/></td>
+              <td align="right" valign="bottom">18<hr/></td>
+              <td align="right" valign="bottom">57.4<hr/></td>
+              <td align="right" valign="bottom">0.973<hr/></td>
+              <td align="right" valign="bottom">0.987<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.987<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Histone3<hr/></td>
+              <td align="right" valign="bottom">52<hr/></td>
+              <td align="right" valign="bottom">46.0<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Intron_gpII<hr/></td>
+              <td align="right" valign="bottom">98<hr/></td>
+              <td align="right" valign="bottom">52.3<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">IRE<hr/></td>
+              <td align="right" valign="bottom">62<hr/></td>
+              <td align="right" valign="bottom">76.8<hr/></td>
+              <td align="right" valign="bottom">0.814<hr/></td>
+              <td align="right" valign="bottom">0.854<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.965</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.965</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.965</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">let-7<hr/></td>
+              <td align="right" valign="bottom">67<hr/></td>
+              <td align="right" valign="bottom">66.4<hr/></td>
+              <td align="right" valign="bottom">0.861<hr/></td>
+              <td align="right" valign="bottom">0.967<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.915<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">lin-4<hr/></td>
+              <td align="right" valign="bottom">12<hr/></td>
+              <td align="right" valign="bottom">68.8<hr/></td>
+              <td align="right" valign="bottom">0.977<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.836<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Lysine<hr/></td>
+              <td align="right" valign="bottom">47<hr/></td>
+              <td align="right" valign="bottom">48.4<hr/></td>
+              <td align="right" valign="bottom">0.952<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.981</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.981</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.981</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.952<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">mir-10<hr/></td>
+              <td align="right" valign="bottom">36<hr/></td>
+              <td align="right" valign="bottom">67.9<hr/></td>
+              <td align="right" valign="bottom">0.789<hr/></td>
+              <td align="right" valign="bottom">0.865<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.957</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.957</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.935<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Purine<hr/></td>
+              <td align="right" valign="bottom">133<hr/></td>
+              <td align="right" valign="bottom">54.7<hr/></td>
+              <td align="right" valign="bottom">0.904<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.977<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">RFN<hr/></td>
+              <td align="right" valign="bottom">144<hr/></td>
+              <td align="right" valign="bottom">68.1<hr/></td>
+              <td align="right" valign="bottom">0.826<hr/></td>
+              <td align="right" valign="bottom">0.851<hr/></td>
+              <td align="right" valign="bottom">0.826<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Rhino_CRE<hr/></td>
+              <td align="right" valign="bottom">12<hr/></td>
+              <td align="right" valign="bottom">81.4<hr/></td>
+              <td align="right" valign="bottom">0.581<hr/></td>
+              <td align="right" valign="bottom">0.581<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.976</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.976</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.750<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">S_box<hr/></td>
+              <td align="right" valign="bottom">433<hr/></td>
+              <td align="right" valign="bottom">62.9<hr/></td>
+              <td align="right" valign="bottom">0.883<hr/></td>
+              <td align="right" valign="bottom">0.924<hr/></td>
+              <td align="right" valign="bottom">0.963<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.944<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">s2m<hr/></td>
+              <td align="right" valign="bottom">38<hr/></td>
+              <td align="right" valign="bottom">78.3<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">SECIS<hr/></td>
+              <td align="right" valign="bottom">61<hr/></td>
+              <td align="right" valign="bottom">41.0<hr/></td>
+              <td align="right" valign="bottom">0.972<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.972<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Tymo_tRNA-like<hr/></td>
+              <td align="right" valign="bottom">28<hr/></td>
+              <td align="right" valign="bottom">68.2<hr/></td>
+              <td align="right" valign="bottom">0.908<hr/></td>
+              <td align="right" valign="bottom">0.908<hr/></td>
+              <td align="right" valign="bottom">0.910<hr/></td>
+              <td align="right" valign="bottom">0.910<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.975</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom"> <hr/></td>
+              <td align="right" valign="bottom"> <hr/></td>
+              <td align="right" valign="bottom">Mean<hr/></td>
+              <td align="right" valign="bottom">0.871<hr/></td>
+              <td align="right" valign="bottom">0.918<hr/></td>
+              <td align="right" valign="bottom">0.935<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.965</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.944<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom"> <hr/></td>
+              <td align="right" valign="bottom"> <hr/></td>
+              <td align="right" valign="bottom">Specificity<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"> </td>
+              <td align="right"> </td>
+              <td align="right">Sensitivity</td>
+              <td align="right">0.802</td>
+              <td align="right">0.881</td>
+              <td align="right">0.919</td>
+              <td align="right">
+                <bold>0.952</bold>
+              </td>
+              <td align="right">0.922</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>The MCC on structural alignments of the CMfinder dataset is compared among PhyloRNAalifold, RNAalifold and PETfold. The parameter <italic>β</italic> of PhyloRNAalifold is 10. Best performance on the same family is set to <bold>bold</bold>.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Table <xref ref-type="table" rid="T2">2</xref> shows the results on the non-structural alignments of the CMfinder dataset. In this case, RIBOSUM-based PhyloRNAalifold still achieves the highest average MCC score. The performance of RNAalifold with RIBOSUM support is almost the same as that of the top one algorithm. What’s more, PETfold, which has a larger average MCC score in the previous experiment than RIBOSUM-based RNAalifold, falls to third place. This suggests that the evolutionary information at the pairing columns may be disrupted by ClustalW, whose alignment function does not consider secondary structures.</p>
+      <table-wrap position="float" id="T2">
+        <label>Table 2</label>
+        <caption>
+          <p>
+            <bold>The benchmarking results on the non-structural alignments of the CMfinder dataset (</bold>
+            <bold>
+              <italic>β=10)</italic>
+            </bold>
+          </p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left">
+                <bold>Family</bold>
+              </th>
+              <th align="right">
+                <bold>MPI</bold>
+              </th>
+              <th align="right">
+                <bold>RNAalifold</bold>
+              </th>
+              <th align="right">
+                <bold>PhyloRNAalifold</bold>
+              </th>
+              <th align="right">
+                <bold>RNAalifold</bold>
+                <break/>
+                <bold>with RIBOSUM</bold>
+              </th>
+              <th align="right">
+                <bold>PhyloRNAalifold</bold>
+                <break/>
+                <bold>with RIBOSUM</bold>
+              </th>
+              <th align="right">
+                <bold>PETFold</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left" valign="bottom">Cobalamin<hr/></td>
+              <td align="right" valign="bottom">43.2<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>-0.001</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>-0.001</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">-0.002<hr/></td>
+              <td align="right" valign="bottom">-0.002<hr/></td>
+              <td align="right" valign="bottom">-0.002<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ctRNA_pGA1<hr/></td>
+              <td align="right" valign="bottom">66.5<hr/></td>
+              <td align="right" valign="bottom">0.865<hr/></td>
+              <td align="right" valign="bottom">0.889<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.979</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.979</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.936<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Entero_CRE<hr/></td>
+              <td align="right" valign="bottom">81.7<hr/></td>
+              <td align="right" valign="bottom">0.912<hr/></td>
+              <td align="right" valign="bottom">0.912<hr/></td>
+              <td align="right" valign="bottom">0.916<hr/></td>
+              <td align="right" valign="bottom">0.916<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Entero_OriR<hr/></td>
+              <td align="right" valign="bottom">87.5<hr/></td>
+              <td align="right" valign="bottom">0.694<hr/></td>
+              <td align="right" valign="bottom">0.830<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.965</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.965</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.910<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">glmS<hr/></td>
+              <td align="right" valign="bottom">55.2<hr/></td>
+              <td align="right" valign="bottom">0.445<hr/></td>
+              <td align="right" valign="bottom">0.566<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.873</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.784<hr/></td>
+              <td align="right" valign="bottom">0.811<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Histone3<hr/></td>
+              <td align="right" valign="bottom">45.1<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Intron_gpII<hr/></td>
+              <td align="right" valign="bottom">46.2<hr/></td>
+              <td align="right" valign="bottom">0.760<hr/></td>
+              <td align="right" valign="bottom">0.794<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.826</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.826</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.794<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">IRE<hr/></td>
+              <td align="right" valign="bottom">77.3<hr/></td>
+              <td align="right" valign="bottom">0.480<hr/></td>
+              <td align="right" valign="bottom">0.480<hr/></td>
+              <td align="right" valign="bottom">0.710<hr/></td>
+              <td align="right" valign="bottom">0.710<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.816</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">let-7<hr/></td>
+              <td align="right" valign="bottom">66.7<hr/></td>
+              <td align="right" valign="bottom">0.760<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.761</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.666<hr/></td>
+              <td align="right" valign="bottom">0.666<hr/></td>
+              <td align="right" valign="bottom">0.742<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">lin-4<hr/></td>
+              <td align="right" valign="bottom">64.6<hr/></td>
+              <td align="right" valign="bottom">0.523<hr/></td>
+              <td align="right" valign="bottom">0.521<hr/></td>
+              <td align="right" valign="bottom">0.712<hr/></td>
+              <td align="right" valign="bottom">0.712<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.739</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Lysine<hr/></td>
+              <td align="right" valign="bottom">44.0<hr/></td>
+              <td align="right" valign="bottom">0.307<hr/></td>
+              <td align="right" valign="bottom">0.414<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.513</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.484<hr/></td>
+              <td align="right" valign="bottom">0.388<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">mir-10<hr/></td>
+              <td align="right" valign="bottom">68.4<hr/></td>
+              <td align="right" valign="bottom">0.741<hr/></td>
+              <td align="right" valign="bottom">0.820<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.957</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.957</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.935<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Purine<hr/></td>
+              <td align="right" valign="bottom">53.8<hr/></td>
+              <td align="right" valign="bottom">0.852<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.977</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.977</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.977</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.953<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">RFN<hr/></td>
+              <td align="right" valign="bottom">64.2<hr/></td>
+              <td align="right" valign="bottom">0.342<hr/></td>
+              <td align="right" valign="bottom">0.309<hr/></td>
+              <td align="right" valign="bottom">0.302<hr/></td>
+              <td align="right" valign="bottom">0.433<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.477</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Rhino_CRE<hr/></td>
+              <td align="right" valign="bottom">81.4<hr/></td>
+              <td align="right" valign="bottom">0.581<hr/></td>
+              <td align="right" valign="bottom">0.581<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.976</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.976</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.750<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">S_box<hr/></td>
+              <td align="right" valign="bottom">56.5<hr/></td>
+              <td align="right" valign="bottom">0.430<hr/></td>
+              <td align="right" valign="bottom">0.430<hr/></td>
+              <td align="right" valign="bottom">0.817<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.860</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.750<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">s2m<hr/></td>
+              <td align="right" valign="bottom">78.3<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>1.000</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">SECIS<hr/></td>
+              <td align="right" valign="bottom">36.5<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.000</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">-0.003<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Tymo_tRNA-like<hr/></td>
+              <td align="right" valign="bottom">64.1<hr/></td>
+              <td align="right" valign="bottom">0.691<hr/></td>
+              <td align="right" valign="bottom">0.703<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.768</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.768</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.596<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom"> <hr/></td>
+              <td align="right" valign="bottom">Mean<hr/></td>
+              <td align="right" valign="bottom">0.599<hr/></td>
+              <td align="right" valign="bottom">0.631<hr/></td>
+              <td align="right" valign="bottom">0.735<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.737</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.715<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom"> <hr/></td>
+              <td align="right" valign="bottom">Specificity<hr/></td>
+              <td align="right" valign="bottom">0.947<hr/></td>
+              <td align="right" valign="bottom">0.947<hr/></td>
+              <td align="right" valign="bottom">0.947<hr/></td>
+              <td align="right" valign="bottom">0.947<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.999</bold>
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left"> </td>
+              <td align="right">Sensitivity</td>
+              <td align="right">0.486</td>
+              <td align="right">0.545</td>
+              <td align="right">0.689</td>
+              <td align="right">
+                <bold>0.704</bold>
+              </td>
+              <td align="right">0.655</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>The MCC on non-structural alignments of the CMfinder dataset is compared between PhyloRNAalifold, RNAalifold and PETfold. The parameter <italic>β</italic> of PhyloRNAalifold is 10. Best performance on the same family is set to <bold>bold</bold>.</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+    <sec>
+      <title>Effects of identity and the number of sequences</title>
+      <p>In this experiment, we try to analyze the correlation of two alignment characteristics, pair-wise identity and the number of sequences, with the performance of PhyloRNAalifold. Figure <xref ref-type="fig" rid="F3">3</xref> shows the experiment results. It can be seen that all four algorithms have similar performance when the number of sequences in the alignments is 5. With the increasing of the members in the alignments, the average MCC difference between PhyloRNAalifold and RNAalifold becomes larger. Using more sequences provides a more precise phylogenetic history, so it is reasonable that PhyloRNAalifold achieves its best performance on alignments with 20 sequences. In addition, for experiments on the alignments of 10 sequences and 20 sequences, the maximum performance difference exists between the pair-wise identities 65 and 80. If the pair-wise identity of an alignment is small, the original covariance scoring scheme of RNAalifold works well enough because a large number of different base-pairs at the pairing columns provide substantial conservational signals. On the other hand, when the alignment’s pair-wise identity is too large, all the symbols at the pairing columns are almost the same. The effect of our new covariance scoring scheme is reduced due to the lack of evolutionary information.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>The effect of alignment pair-wise identity and sequence number on the structural prediction of PhyloRNAalifold (</bold><bold><italic>β=10</italic></bold><bold>).</bold> The MCC results of PhyloRNAalifold and RNAalifold on the third benchmarking dataset are shown in this figure. It can be seen that the performance difference between PhyloRNAalifold and RNAalifold increases with the increasing of the sequence number in the alignments. In addition, the maximum MCC difference is achieved in the range of 65∼75 identities.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-142-3"/>
+      </fig>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion and conclusion</title>
+    <p>We have proposed a novel approach, PhyloRNAalifold, to fold RNA consensus structures by evaluating the level of conservation in aligned RNA sequences. With an evolution-based covariance scoring scheme, PhyloRNAalifold can detect more potential pairing columns than RNAalifold. The benchmark testing shows that PhyloRNAalifold can improve the performance of RNAalifold, as well as PETfold.</p>
+    <p>There are two possible directions for further research. The first direction is to analyze the dependence of PhyloRNAalifold on the phylogenetic tree construction algorithms. Tree structures have great effect on the RNA structure prediction of PhyloRNAalifold. Besides DNADIST and KITSCH, there are other algorithms, such as UPGMA [<xref ref-type="bibr" rid="B49">49</xref>], PAUP [<xref ref-type="bibr" rid="B50">50</xref>] and MrBayes [<xref ref-type="bibr" rid="B51">51</xref>], which can construct alternative trees. Finding or design an optimal algorithm for detecting the phylogenetic information in the pairing columns is an open question. Ideally, structure conservation should be considered because it is crucial for evaluating the similarity between two RNA sequences. The second direction deals with incorporating the phylogenetic information of non-pairing bases into the folding algorithm. Only covarying mutations among base-pairs are considered in PhyloRNAalifold. In probabilistic methods, all the possible mutations, including mutations in loop regions and stack regions, are modeled with HMM. Our goal is to incorporate both types of mutations into PhyloRNAalifold, while still keep the simplicity of the scoring scheme.</p>
+  </sec>
+  <sec>
+    <title>Availability</title>
+    <p>The latest version of PhyloRNAalifold can be downloaded at: <ext-link ext-link-type="uri" xlink:href="http://genome.ucf.edu/PhyloRNAalifold">http://genome.ucf.edu/PhyloRNAalifold</ext-link>.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>Both authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors’ contributions</title>
+    <p>SZ conceived of the study and designed the algorithm. PG implemented the algorithm and carried out the benchmarking tests. Both authors wrote and approved the manuscript.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>This work is supported in part by a University of Central Florida In-House Award and the National Institute of General Medical Sciences of the National Institutes of Health (R01GM102515).</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Eddy</surname>
+          <given-names>SR</given-names>
+        </name>
+        <article-title>Non-coding RNA genes and the modern RNA world</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2001</year>
+        <volume>2</volume>
+        <issue>12</issue>
+        <fpage>919</fpage>
+        <lpage>929</lpage>
+        <pub-id pub-id-type="doi">10.1038/35103511</pub-id>
+        <?supplied-pmid 11733745?>
+        <pub-id pub-id-type="pmid">11733745</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mattick</surname>
+          <given-names>JS</given-names>
+        </name>
+        <article-title>Challenging the dogma: the hidden layer of non-protein-coding RNAs in complex organisms</article-title>
+        <source>Bioessays</source>
+        <year>2003</year>
+        <volume>25</volume>
+        <issue>10</issue>
+        <fpage>930</fpage>
+        <lpage>939</lpage>
+        <pub-id pub-id-type="doi">10.1002/bies.10332</pub-id>
+        <?supplied-pmid 14505360?>
+        <pub-id pub-id-type="pmid">14505360</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>He</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Hannon</surname>
+          <given-names>GJ</given-names>
+        </name>
+        <article-title>MicroRNAs: small RNAs with a big role in gene regulation</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <issue>7</issue>
+        <fpage>522</fpage>
+        <lpage>531</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg1379</pub-id>
+        <?supplied-pmid 15211354?>
+        <pub-id pub-id-type="pmid">15211354</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mandal</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Breaker</surname>
+          <given-names>RR</given-names>
+        </name>
+        <article-title>Gene regulation by riboswitches</article-title>
+        <source>Nat Rev Mol Cell Biol</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <issue>6</issue>
+        <fpage>451</fpage>
+        <lpage>463</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrm1403</pub-id>
+        <?supplied-pmid 15173824?>
+        <pub-id pub-id-type="pmid">15173824</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>The ENCODE Project</surname>
+          <given-names>Consortium</given-names>
+        </name>
+        <article-title>An integrated encyclopedia of DNA elements in the human genome</article-title>
+        <source>Nature</source>
+        <year>2012</year>
+        <volume>489</volume>
+        <issue>7414</issue>
+        <fpage>57</fpage>
+        <lpage>74</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature11247</pub-id>
+        <?supplied-pmid 22955616?>
+        <pub-id pub-id-type="pmid">22955616</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <collab>The FANTOM Consortium</collab>
+        <article-title>The transcriptional landscape of the mammalian genome</article-title>
+        <source>Science</source>
+        <year>2005</year>
+        <volume>309</volume>
+        <issue>5740</issue>
+        <fpage>1559</fpage>
+        <lpage>1563</lpage>
+        <?supplied-pmid 16141072?>
+        <pub-id pub-id-type="pmid">16141072</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Esquela-Kerscher</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Slack</surname>
+          <given-names>FJ</given-names>
+        </name>
+        <article-title>Oncomirs - microRNAs with a role in cancer</article-title>
+        <source>Nat Rev Cancer</source>
+        <year>2006</year>
+        <volume>6</volume>
+        <issue>4</issue>
+        <fpage>259</fpage>
+        <lpage>269</lpage>
+        <?supplied-pmid 16557279?>
+        <pub-id pub-id-type="pmid">16557279</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Croce</surname>
+          <given-names>CM</given-names>
+        </name>
+        <article-title>Causes and consequences of microRNA dysregulation in cancer</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <issue>10</issue>
+        <fpage>704</fpage>
+        <lpage>714</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg2634</pub-id>
+        <?supplied-pmid 19763153?>
+        <pub-id pub-id-type="pmid">19763153</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Nicoloso</surname>
+          <given-names>MS</given-names>
+        </name>
+        <name>
+          <surname>Spizzo</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Shimizu</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Rossi</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Calin</surname>
+          <given-names>GA</given-names>
+        </name>
+        <article-title>MicroRNAs–the micro steering wheel of tumour metastases</article-title>
+        <source>Nat Rev Cancer</source>
+        <year>2009</year>
+        <volume>9</volume>
+        <issue>4</issue>
+        <fpage>293</fpage>
+        <lpage>302</lpage>
+        <?supplied-pmid 19262572?>
+        <pub-id pub-id-type="pmid">19262572</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mercer</surname>
+          <given-names>TR</given-names>
+        </name>
+        <name>
+          <surname>Dinger</surname>
+          <given-names>ME</given-names>
+        </name>
+        <name>
+          <surname>Mattick</surname>
+          <given-names>JS</given-names>
+        </name>
+        <article-title>Long non-coding RNAs insights into functions</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <issue>3</issue>
+        <fpage>155</fpage>
+        <lpage>159</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg2521</pub-id>
+        <?supplied-pmid 19188922?>
+        <pub-id pub-id-type="pmid">19188922</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zuker</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Stiegler</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Optimal computer folding of large RNA sequences using thermodynamics and auxiliary information</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1981</year>
+        <volume>9</volume>
+        <fpage>133</fpage>
+        <lpage>148</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/9.1.133</pub-id>
+        <?supplied-pmid 6163133?>
+        <pub-id pub-id-type="pmid">6163133</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hofacker</surname>
+          <given-names>IL</given-names>
+        </name>
+        <name>
+          <surname>Fontana</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Stadler</surname>
+          <given-names>PF</given-names>
+        </name>
+        <name>
+          <surname>Bonhoeffer</surname>
+          <given-names>SL</given-names>
+        </name>
+        <name>
+          <surname>Tacker</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Schuster</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Fast folding and comparison of RNA secondary structures</article-title>
+        <source>Monatsh Chem</source>
+        <year>1994</year>
+        <volume>125</volume>
+        <fpage>167</fpage>
+        <lpage>188</lpage>
+        <pub-id pub-id-type="doi">10.1007/BF00818163</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Jaeger</surname>
+          <given-names>JA</given-names>
+        </name>
+        <name>
+          <surname>Turner</surname>
+          <given-names>DH</given-names>
+        </name>
+        <name>
+          <surname>Zuker</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Improved predictions of secondary structures for RNA</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>1989</year>
+        <volume>86</volume>
+        <issue>20</issue>
+        <fpage>7706</fpage>
+        <lpage>7710</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.86.20.7706</pub-id>
+        <?supplied-pmid 2479010?>
+        <pub-id pub-id-type="pmid">2479010</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Workman</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Krogh</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>No evidence that mRNAs have lower folding free energies than random sequences with the same dinucleotide distribution</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <issue>24</issue>
+        <fpage>4816</fpage>
+        <lpage>4822</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/27.24.4816</pub-id>
+        <?supplied-pmid 10572183?>
+        <pub-id pub-id-type="pmid">10572183</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rivas</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Eddy</surname>
+          <given-names>SR</given-names>
+        </name>
+        <article-title>Secondary structure alone is generally not statistically significant for the detection of noncoding RNAs</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <issue>7</issue>
+        <fpage>583</fpage>
+        <lpage>605</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/16.7.583</pub-id>
+        <?supplied-pmid 11038329?>
+        <pub-id pub-id-type="pmid">11038329</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Woese</surname>
+          <given-names>CR</given-names>
+        </name>
+        <name>
+          <surname>Pace</surname>
+          <given-names>NR</given-names>
+        </name>
+        <article-title>4 Probing RNA structure, function, and history by comparative analysis</article-title>
+        <source>Cold Spring Harbor Monograph Archive</source>
+        <year>1993</year>
+        <volume>24</volume>
+        <fpage>91</fpage>
+        <lpage>117</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sankoff</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Simultaneous solution of the RNA folding, alignment and protosequence problems</article-title>
+        <source>SIAM J Appl Math</source>
+        <year>1985</year>
+        <volume>45</volume>
+        <issue>5</issue>
+        <fpage>810</fpage>
+        <lpage>825</lpage>
+        <pub-id pub-id-type="doi">10.1137/0145048</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Harmanci</surname>
+          <given-names>AO</given-names>
+        </name>
+        <name>
+          <surname>Sharma</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Mathews</surname>
+          <given-names>DH</given-names>
+        </name>
+        <article-title>Efficient pairwise RNA structure prediction using probabilistic alignment constraints in Dynalign</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2007</year>
+        <volume>8</volume>
+        <fpage>130</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-8-130</pub-id>
+        <?supplied-pmid 17445273?>
+        <pub-id pub-id-type="pmid">17445273</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Havgaard</surname>
+          <given-names>JH</given-names>
+        </name>
+        <name>
+          <surname>Torarinsson</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Gorodkin</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Fast pairwise structural RNA alignments by pruning of the dynamical programming matrix</article-title>
+        <source>PLoS Comput Biol</source>
+        <year>2007</year>
+        <volume>3</volume>
+        <issue>10</issue>
+        <fpage>1896</fpage>
+        <lpage>1908</lpage>
+        <?supplied-pmid 17937495?>
+        <pub-id pub-id-type="pmid">17937495</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Will</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Reiche</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Hofacker</surname>
+          <given-names>IL</given-names>
+        </name>
+        <name>
+          <surname>Stadler</surname>
+          <given-names>PF</given-names>
+        </name>
+        <name>
+          <surname>Backofen</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Inferring noncoding RNA families and classes by means of genome-scale structure-based clustering</article-title>
+        <source>PLoS Comput Biol</source>
+        <year>2007</year>
+        <volume>3</volume>
+        <issue>4</issue>
+        <fpage>e65</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pcbi.0030065</pub-id>
+        <?supplied-pmid 17432929?>
+        <pub-id pub-id-type="pmid">17432929</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Dowell</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Eddy</surname>
+          <given-names>SR</given-names>
+        </name>
+        <article-title>Efficient pairwise RNA structure prediction and alignment using sequence alignment constraints</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2006</year>
+        <volume>7</volume>
+        <fpage>400</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-7-400</pub-id>
+        <?supplied-pmid 16952317?>
+        <pub-id pub-id-type="pmid">16952317</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Chiu</surname>
+          <given-names>DKY</given-names>
+        </name>
+        <name>
+          <surname>Kolodziejczak</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Inferring consensus structure from nucleic acid sequences</article-title>
+        <source>Comput Appl Biosci : CABIOS</source>
+        <year>1991</year>
+        <volume>7</volume>
+        <issue>3</issue>
+        <fpage>347</fpage>
+        <lpage>352</lpage>
+        <?supplied-pmid 1913217?>
+        <pub-id pub-id-type="pmid">1913217</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gutell</surname>
+          <given-names>RR</given-names>
+        </name>
+        <name>
+          <surname>Woese</surname>
+          <given-names>CR</given-names>
+        </name>
+        <article-title>Higher order structural elements in ribosomal RNAs: pseudo-knots and the use of noncanonical pairs</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>1990</year>
+        <volume>87</volume>
+        <issue>2</issue>
+        <fpage>663</fpage>
+        <lpage>667</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.87.2.663</pub-id>
+        <?supplied-pmid 2300554?>
+        <pub-id pub-id-type="pmid">2300554</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gutell</surname>
+          <given-names>RR</given-names>
+        </name>
+        <name>
+          <surname>Power</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Hertz</surname>
+          <given-names>GZ</given-names>
+        </name>
+        <name>
+          <surname>Putz</surname>
+          <given-names>EJ</given-names>
+        </name>
+        <name>
+          <surname>Stormo</surname>
+          <given-names>GD</given-names>
+        </name>
+        <article-title>Identifying constraints on the higher-order structure of RNA: continued development and application of comparative sequence analysis methods</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1992</year>
+        <volume>20</volume>
+        <issue>21</issue>
+        <fpage>5785</fpage>
+        <lpage>5795</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/20.21.5785</pub-id>
+        <?supplied-pmid 1454539?>
+        <pub-id pub-id-type="pmid">1454539</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hofacker</surname>
+          <given-names>IL</given-names>
+        </name>
+        <name>
+          <surname>Fekete</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Stadler</surname>
+          <given-names>PF</given-names>
+        </name>
+        <article-title>Secondary structure prediction for aligned RNA sequences</article-title>
+        <source>J Mol Biol</source>
+        <year>2002</year>
+        <volume>319</volume>
+        <issue>5</issue>
+        <fpage>1059</fpage>
+        <lpage>1066</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0022-2836(02)00308-X</pub-id>
+        <?supplied-pmid 12079347?>
+        <pub-id pub-id-type="pmid">12079347</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Eddy</surname>
+          <given-names>SR</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>RNA sequence analysis using covariance models</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1994</year>
+        <volume>22</volume>
+        <issue>11</issue>
+        <fpage>2079</fpage>
+        <lpage>2088</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/22.11.2079</pub-id>
+        <?supplied-pmid 8029015?>
+        <pub-id pub-id-type="pmid">8029015</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pedersen</surname>
+          <given-names>JS</given-names>
+        </name>
+        <name>
+          <surname>Bejerano</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Siepel</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Rosenbloom</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Lindblad-Toh</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <name>
+          <surname>Kent</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Haussler</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Identification and classification of conserved RNA secondary structures in the human genome</article-title>
+        <source>PLoS Comput Biol</source>
+        <year>2006</year>
+        <volume>2</volume>
+        <issue>4</issue>
+        <fpage>e33</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pcbi.0020033</pub-id>
+        <?supplied-pmid 16628248?>
+        <pub-id pub-id-type="pmid">16628248</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sakakibara</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hughey</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Mian</surname>
+          <given-names>IS</given-names>
+        </name>
+        <name>
+          <surname>Sjolander</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Underwood</surname>
+          <given-names>RC</given-names>
+        </name>
+        <name>
+          <surname>Haussler</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Stochastic context-free grammars for tRNA modeling</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1994</year>
+        <volume>22</volume>
+        <issue>23</issue>
+        <fpage>5112</fpage>
+        <lpage>5120</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/22.23.5112</pub-id>
+        <?supplied-pmid 7800507?>
+        <pub-id pub-id-type="pmid">7800507</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Knudsen</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Hein</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>RNA secondary structure prediction using stochastic context-free grammars and evolutionary history</article-title>
+        <source>Bioinformatics</source>
+        <year>1999</year>
+        <volume>15</volume>
+        <issue>6</issue>
+        <fpage>446</fpage>
+        <lpage>454</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/15.6.446</pub-id>
+        <?supplied-pmid 10383470?>
+        <pub-id pub-id-type="pmid">10383470</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Knudsen</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Hein</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Pfold: RNA secondary structure prediction using stochastic context-free grammars</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <issue>13</issue>
+        <fpage>3423</fpage>
+        <lpage>3428</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkg614</pub-id>
+        <?supplied-pmid 12824339?>
+        <pub-id pub-id-type="pmid">12824339</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Do</surname>
+          <given-names>CB</given-names>
+        </name>
+        <name>
+          <surname>Woods</surname>
+          <given-names>DA</given-names>
+        </name>
+        <name>
+          <surname>Batzoglou</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>CONTRAfold: RNA secondary structure prediction without physics-based models</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <issue>14</issue>
+        <fpage>e90</fpage>
+        <lpage>e98</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btl246</pub-id>
+        <?supplied-pmid 16873527?>
+        <pub-id pub-id-type="pmid">16873527</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Seemann</surname>
+          <given-names>SE</given-names>
+        </name>
+        <name>
+          <surname>Gorodkin</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Backofen</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Unifying evolutionary and thermodynamic information for RNA folding of multiple alignments</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2008</year>
+        <volume>36</volume>
+        <issue>20</issue>
+        <fpage>6355</fpage>
+        <lpage>6362</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkn544</pub-id>
+        <?supplied-pmid 18836192?>
+        <pub-id pub-id-type="pmid">18836192</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B33">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Nussinov</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Pieczenik</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Griggs</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Kleitman</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Algorithms for Loop matchings</article-title>
+        <source>SIAM J Appl Math</source>
+        <year>1978</year>
+        <volume>35</volume>
+        <fpage>68</fpage>
+        <lpage>82</lpage>
+        <pub-id pub-id-type="doi">10.1137/0135006</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B34">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bernhart</surname>
+          <given-names>SH</given-names>
+        </name>
+        <name>
+          <surname>Hofacker</surname>
+          <given-names>IL</given-names>
+        </name>
+        <name>
+          <surname>Will</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Gruber</surname>
+          <given-names>AR</given-names>
+        </name>
+        <name>
+          <surname>Stadler</surname>
+          <given-names>PF</given-names>
+        </name>
+        <article-title>RNAalifold: improved consensus structure prediction for RNA alignments</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>474</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-9-474</pub-id>
+        <?supplied-pmid 19014431?>
+        <pub-id pub-id-type="pmid">19014431</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B35">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zuker</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>On finding all suboptimal foldings of an RNA molecule</article-title>
+        <source>Science</source>
+        <year>1989</year>
+        <volume>244</volume>
+        <issue>4900</issue>
+        <fpage>48</fpage>
+        <lpage>52</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.2468181</pub-id>
+        <?supplied-pmid 2468181?>
+        <pub-id pub-id-type="pmid">2468181</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B36">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lorenz</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Bernhart</surname>
+          <given-names>SH</given-names>
+        </name>
+        <name>
+          <surname>Honer Zu Siederdissen</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Tafer</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Flamm</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Stadler</surname>
+          <given-names>PF</given-names>
+        </name>
+        <name>
+          <surname>Hofacker</surname>
+          <given-names>IL</given-names>
+        </name>
+        <article-title>ViennaRNA Package 2.0</article-title>
+        <source>Algorithms Mol Biol</source>
+        <year>2011</year>
+        <volume>6</volume>
+        <fpage>26</fpage>
+        <pub-id pub-id-type="doi">10.1186/1748-7188-6-26</pub-id>
+        <?supplied-pmid 22115189?>
+        <pub-id pub-id-type="pmid">22115189</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B37">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Gulko</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Haussler</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Using multiple alignments and phylogenetic trees to detect RNA secondary structure</article-title>
+        <source>Biocomputing: Proceedings of the 1996 Pacific Symposium</source>
+        <year>1996</year>
+        <fpage>350</fpage>
+        <lpage>367</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B38">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Washietl</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Hofacker</surname>
+          <given-names>IL</given-names>
+        </name>
+        <article-title>Consensus folding of aligned sequences as a new measure for the detection of functional RNAs by comparative genomics</article-title>
+        <source>J Mol Biol</source>
+        <year>2004</year>
+        <volume>342</volume>
+        <fpage>19</fpage>
+        <lpage>30</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.jmb.2004.07.018</pub-id>
+        <?supplied-pmid 15313604?>
+        <pub-id pub-id-type="pmid">15313604</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B39">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Fitch</surname>
+          <given-names>WM</given-names>
+        </name>
+        <name>
+          <surname>Margoliash</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Construction of phylogenetic trees</article-title>
+        <source>Science</source>
+        <year>1967</year>
+        <volume>155</volume>
+        <issue>3760</issue>
+        <fpage>279</fpage>
+        <lpage>284</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.155.3760.279</pub-id>
+        <?supplied-pmid 5334057?>
+        <pub-id pub-id-type="pmid">5334057</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B40">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Waterman</surname>
+          <given-names>MS</given-names>
+        </name>
+        <source>Introduction to Computational Biology: Maps, Sequences and Genomes</source>
+        <year>1995</year>
+        <publisher-name>London: Chapman and Hall</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B41">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Xia</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Dou</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Zhou</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>Fine-grained parallel RNAalifold algorithm for RNA secondary structure prediction on FPGA</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <issue>Suppl 1</issue>
+        <fpage>S37</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-10-S1-S37</pub-id>
+        <?supplied-pmid 19208138?>
+        <pub-id pub-id-type="pmid">19208138</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B42">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gardner</surname>
+          <given-names>PP</given-names>
+        </name>
+        <name>
+          <surname>Daub</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Tate</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Moore</surname>
+          <given-names>BL</given-names>
+        </name>
+        <name>
+          <surname>Osuch</surname>
+          <given-names>IH</given-names>
+        </name>
+        <name>
+          <surname>Griffiths-Jones</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Finn</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Nawrocki</surname>
+          <given-names>EP</given-names>
+        </name>
+        <name>
+          <surname>Kolbe</surname>
+          <given-names>DL</given-names>
+        </name>
+        <name>
+          <surname>Eddy</surname>
+          <given-names>SR</given-names>
+        </name>
+        <name>
+          <surname>Bateman</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Rfam: Wikipedia, clans and the “decimal” release</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2011</year>
+        <volume>39</volume>
+        <issue>Database issue</issue>
+        <fpage>D141</fpage>
+        <lpage>D145</lpage>
+        <?supplied-pmid 21062808?>
+        <pub-id pub-id-type="pmid">21062808</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B43">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yao</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Weinberg</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Ruzzo</surname>
+          <given-names>WL</given-names>
+        </name>
+        <article-title>CMfinder–a covariance model based RNA motif finding algorithm</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <issue>4</issue>
+        <fpage>445</fpage>
+        <lpage>452</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btk008</pub-id>
+        <?supplied-pmid 16357030?>
+        <pub-id pub-id-type="pmid">16357030</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B44">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Larkin</surname>
+          <given-names>MA</given-names>
+        </name>
+        <name>
+          <surname>Blackshields</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>NP</given-names>
+        </name>
+        <name>
+          <surname>Chenna</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>McGettigan</surname>
+          <given-names>PA</given-names>
+        </name>
+        <name>
+          <surname>McWilliam</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Valentin</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Wallace</surname>
+          <given-names>IM</given-names>
+        </name>
+        <name>
+          <surname>Wilm</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lopez</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Thompson</surname>
+          <given-names>JD</given-names>
+        </name>
+        <name>
+          <surname>Gibson</surname>
+          <given-names>TJ</given-names>
+        </name>
+        <name>
+          <surname>Higgins</surname>
+          <given-names>DG</given-names>
+        </name>
+        <article-title>Clustal W and Clustal X version 2.0</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <issue>21</issue>
+        <fpage>2947</fpage>
+        <lpage>2948</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btm404</pub-id>
+        <?supplied-pmid 17846036?>
+        <pub-id pub-id-type="pmid">17846036</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B45">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Felsenstein</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>PHYLIP - Phylogeny Inference Package (Version 3.2)</article-title>
+        <source>Cladistics</source>
+        <year>1989</year>
+        <volume>5</volume>
+        <fpage>164</fpage>
+        <lpage>166</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B46">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gardner</surname>
+          <given-names>PP</given-names>
+        </name>
+        <name>
+          <surname>Giegerich</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>A comprehensive comparison of comparative RNA structure prediction approaches</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>140</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-5-140</pub-id>
+        <?supplied-pmid 15458580?>
+        <pub-id pub-id-type="pmid">15458580</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B47">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Klein</surname>
+          <given-names>RJ</given-names>
+        </name>
+        <name>
+          <surname>Eddy</surname>
+          <given-names>SR</given-names>
+        </name>
+        <article-title>RSEARCH: finding homologs of single structured RNA sequences</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2003</year>
+        <volume>4</volume>
+        <fpage>44</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-4-44</pub-id>
+        <?supplied-pmid 14499004?>
+        <pub-id pub-id-type="pmid">14499004</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B48">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Seemann</surname>
+          <given-names>SE</given-names>
+        </name>
+        <name>
+          <surname>Menzel</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Backofen</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Gorodkin</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>The PETfold and PETcofold web servers for intra- and intermolecular structures of multiple RNA sequences</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2011</year>
+        <volume>39</volume>
+        <issue>Web Server issue</issue>
+        <fpage>W107</fpage>
+        <lpage>W111</lpage>
+        <?supplied-pmid 21609960?>
+        <pub-id pub-id-type="pmid">21609960</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B49">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sokal</surname>
+          <given-names>RR</given-names>
+        </name>
+        <name>
+          <surname>Michener</surname>
+          <given-names>CD</given-names>
+        </name>
+        <article-title>A statistical method for evaluating systematic relationships</article-title>
+        <source>University Kansas Scienti Bull</source>
+        <year>1958</year>
+        <volume>28</volume>
+        <fpage>1409</fpage>
+        <lpage>1438</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B50">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Swofford</surname>
+          <given-names>DL</given-names>
+        </name>
+        <source>PAUP: Phylogenetic Analysis Using Parsimony (and other Methods)</source>
+        <year>2002</year>
+        <publisher-name>Sunderland Massachusettss: Sinauer Associates</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B51">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Huelsenbeck</surname>
+          <given-names>JP</given-names>
+        </name>
+        <name>
+          <surname>Ronquist</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>MRBAYES: Bayesian inference of phylogenetic trees</article-title>
+        <source>Bioinformatics</source>
+        <year>2001</year>
+        <volume>17</volume>
+        <issue>8</issue>
+        <fpage>754</fpage>
+        <lpage>755</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/17.8.754</pub-id>
+        <?supplied-pmid 11524383?>
+        <pub-id pub-id-type="pmid">11524383</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

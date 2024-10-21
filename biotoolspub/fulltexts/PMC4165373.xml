@@ -1,0 +1,2026 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//Springer-Verlag//DTD A++ V2.4//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName A++V2.4.dtd?>
+<?SourceDTD.Version 2.4?>
+<?ConverterInfo.XSLTName springer2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">4165373</article-id>
+    <article-id pub-id-type="pmid">25063469</article-id>
+    <article-id pub-id-type="publisher-id">410</article-id>
+    <article-id pub-id-type="doi">10.1186/s13059-014-0410-6</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Method</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Corset: enabling differential gene expression analysis for <italic>de novo</italic> assembled transcriptomes</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Davidson</surname>
+          <given-names>Nadia M</given-names>
+        </name>
+        <address>
+          <email>nadia.davidson@mcri.edu.au</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1"/>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes">
+        <name>
+          <surname>Oshlack</surname>
+          <given-names>Alicia</given-names>
+        </name>
+        <address>
+          <email>alicia.oshlack@mcri.edu.au</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1"/>
+        <xref ref-type="aff" rid="Aff2"/>
+      </contrib>
+      <aff id="Aff1"><label/>Murdoch Childrens Research Institute, Royal Children’s Hospital, Flemington Road, Parkville 3052, Melbourne, VIC Australia </aff>
+      <aff id="Aff2"><label/>Department of Genetics, University of Melbourne, Melbourne, VIC Australia </aff>
+    </contrib-group>
+    <pub-date pub-type="epub">
+      <day>26</day>
+      <month>7</month>
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>26</day>
+      <month>7</month>
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <year>2014</year>
+    </pub-date>
+    <volume>15</volume>
+    <issue>7</issue>
+    <elocation-id>410</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>21</day>
+        <month>2</month>
+        <year>2014</year>
+      </date>
+      <date date-type="accepted">
+        <day>26</day>
+        <month>7</month>
+        <year>2014</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© Davidson and Oshlack; licensee BioMed Central Ltd 2014</copyright-statement>
+      <license license-type="open-access">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0">http://creativecommons.org/licenses/by/4.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly credited. The Creative Commons Public Domain Dedication waiver (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</ext-link>) applies to the data made available in this article, unless otherwise stated.</license-p>
+      </license>
+    </permissions>
+    <abstract id="Abs1">
+      <p>Next generation sequencing has made it possible to perform differential gene expression studies in non-model organisms. For these studies, the need for a reference genome is circumvented by performing <italic>de novo</italic> assembly on the RNA-seq data. However, transcriptome assembly produces a multitude of contigs, which must be clustered into genes prior to differential gene expression detection. Here we present Corset, a method that hierarchically clusters contigs using shared reads and expression, then summarizes read counts to clusters, ready for statistical testing. Using a range of metrics, we demonstrate that Corset out-performs alternative methods. Corset is available from <ext-link ext-link-type="uri" xlink:href="https://code.google.com/p/corset-project/">https://code.google.com/p/corset-project/</ext-link>.</p>
+      <sec>
+        <title>Electronic supplementary material</title>
+        <p>The online version of this article (doi:10.1186/s13059-014-0410-6) contains supplementary material, which is available to authorized users.</p>
+      </sec>
+    </abstract>
+    <custom-meta-group>
+      <custom-meta>
+        <meta-name>issue-copyright-statement</meta-name>
+        <meta-value>© The Author(s) 2014</meta-value>
+      </custom-meta>
+    </custom-meta-group>
+  </article-meta>
+</front>
+<body>
+  <sec id="Sec1" sec-type="introduction">
+    <title>Background</title>
+    <p>Next-generation sequencing of RNA, RNA-seq, is a powerful technology for studying various aspects of the transcriptome; it has a broad range of applications, including gene discovery, detection of alternative splicing events, differential expression analysis, fusion detection and identification of variants such as SNPs and post-transcriptional editing [<xref ref-type="bibr" rid="CR1">1</xref>,<xref ref-type="bibr" rid="CR2">2</xref>]. One of the advantages of RNA-seq over older technology, such as microarrays, is that it enables the transcriptome-wide analysis of non-model organisms because a reference genome and annotation are not required for generating and analyzing the data. When no reference genome is available, the transcriptome is <italic>de novo</italic> assembled directly from RNA-seq reads [<xref ref-type="bibr" rid="CR3">3</xref>]. Several programs exist for <italic>de novo</italic> transcriptome assembly: Oases [<xref ref-type="bibr" rid="CR4">4</xref>] and Trans-abyss [<xref ref-type="bibr" rid="CR5">5</xref>], which extend the Velvet [<xref ref-type="bibr" rid="CR6">6</xref>] and Abyss [<xref ref-type="bibr" rid="CR7">7</xref>] genomic assemblers, respectively, as well as purpose built transcriptome assemblers such as Trinity [<xref ref-type="bibr" rid="CR8">8</xref>]. These programs are capable of assembling millions of short reads into transcript sequences - called contigs.</p>
+    <p>One common and biologically important application of RNA-seq is identifying genes that are differentially expressed between two or more conditions [<xref ref-type="bibr" rid="CR9">9</xref>]. However, performing a differential expression analysis on a <italic>de novo</italic> assembled transcriptome is challenging because multiple contigs per gene are reported. Multiple contigs, with shared sequence, arise because transcriptome assemblers differentiate between isoforms of the same gene, and report each separately. Furthermore, they often report contigs that are not truly representative of different isoforms but arise from artifacts such as sequencing errors, repeats, variation in coverage or genetic variation within a diploid individual or pooled population. As a result, transcriptome assemblers often report fragmented versions of a transcript, or repeated contigs that differ only by a SNP or indel. Surprisingly, simulations have shown that even the assembly of data without any sequencing errors, SNPs or alternative splicing can generate multiple contigs per gene [<xref ref-type="bibr" rid="CR10">10</xref>]. Hence, the number of contigs produced by a <italic>de novo</italic> assembly is typically large; for example, assemblies with 80 million reads can produce hundreds of thousands of contigs [<xref ref-type="bibr" rid="CR11">11</xref>].</p>
+    <p>The inevitably long list of contigs generated by <italic>de novo</italic> transcriptome assembly causes several issues for differential expression analysis: i) reads cannot be aligned unambiguously to duplicated sequences and determining the origin of ambiguously aligned reads is error prone; ii) the statistical power of the test for differential expression is reduced as reads must be allocated amongst a greater number of contigs, thus reducing the average counts per contig; iii), the adjustment for multiple testing is more severe; and iv), once differentially expressed contigs have been identified, interpretation is difficult, as many genes will be present in the list multiple times. Performing a differential expression analysis on genes, rather than contigs, would overcome these difficulties. However, the procedure for estimating gene-level expression from a set of <italic>de novo</italic> assembled contigs is not straightforward and has not been thoroughly examined in the literature.</p>
+    <p>Several steps are involved in identifying differentially expressed genes from a <italic>de novo</italic> assembled transcriptome (Figure <xref rid="Fig1" ref-type="fig">1</xref>): RNA-seq reads are first assembled, reads are next mapped back to contigs, contigs are then clustered into genes, after which the expression level for each gene cluster is summarized, and statistical testing is performed to detect differential expression.<fig id="Fig1"><label>Figure 1</label><caption><p><bold>The pipeline for performing a count-based gene-level differential expression analysis on non-model organisms.</bold> Cleaned RNA-seq reads are first <italic>de novo</italic> assembled into contig sequences. Reads are mapped back to the transcriptome and the association between contigs and genes must be established (clustering of contigs). Then the abundance of each gene is estimated. Finally, statistical testing is performed on the count data to determine which genes are differentially expressed. Corset performs the clustering and counting (dashed box) in a single step.</p></caption><graphic xlink:href="13059_2014_410_Fig1_HTML" id="MO1"/></fig></p>
+    <p>Several studies have compared individual steps in this analysis pipeline. For example, the relative merits of different <italic>de novo</italic> assemblers and steps prior to assembly, such as quality control, have been examined [<xref ref-type="bibr" rid="CR12">12</xref>–<xref ref-type="bibr" rid="CR15">15</xref>]. Similarly, the choice of method for performing count-based statistical testing for differential expression has been evaluated [<xref ref-type="bibr" rid="CR16">16</xref>,<xref ref-type="bibr" rid="CR17">17</xref>]. However, few studies have compared or even suggested a path for obtaining gene-level counts from transcriptome assemblies [<xref ref-type="bibr" rid="CR18">18</xref>,<xref ref-type="bibr" rid="CR19">19</xref>] and only a single automated pipeline has thus far been implemented to address this need [<xref ref-type="bibr" rid="CR20">20</xref>]; it is provided by Trinity to run RSEM [<xref ref-type="bibr" rid="CR21">21</xref>] followed by edgeR [<xref ref-type="bibr" rid="CR22">22</xref>] or DESeq [<xref ref-type="bibr" rid="CR23">23</xref>]. This pipeline is inflexible, however, to the choice of assembler.</p>
+    <p>In this paper we present Corset, a method and software for obtaining gene-level counts from any <italic>de novo</italic> transcriptome assembly. Corset takes a set of reads that have been multi-mapped (multiple alignments per read are reported) to the <italic>de novo</italic> assembled transcriptome and hierarchically clusters the contigs based on the proportion of shared reads and expression patterns. Expression patterns allow for discrimination between genes that share sequence, such as paralogues, if the expression levels between groups are different. Using the mapped reads, Corset then outputs gene-level counts. The gene-level counts can then easily be tested for differential expression using count-based frameworks such as edgeR and DESeq. We demonstrate that Corset consistently performs well compared to alternative clustering methods on a range of metrics. Moreover, as it is an assembler-independent method, it allows contigs and transcripts from various sources to be combined. It is also simpler to use, with the clustering and counting steps encompassed in a single run of the software.</p>
+  </sec>
+  <sec id="Sec2" sec-type="results">
+    <title>Results and discussion</title>
+    <sec id="Sec3">
+      <title>Corset clusters contigs and counts reads</title>
+      <p>The first step in performing a gene-level differential expression analysis for a non-model organism is to assemble the contigs, which can be performed using a variety of software. As previously outlined, this process produces multiple sequences or contigs per gene. Consequently, the next step is to group, or cluster, the contigs into genes to facilitate downstream differential expression analysis. This clustering step is the first step of Corset.</p>
+      <p>Corset requires that, after transcriptome assembly, reads are mapped back to the contigs allowing reads to map to multiple contigs (multi-mapping). These multi-mapped reads are then used as a proxy for detecting sequence similarity between contigs, as well as providing information about the expression level of the contigs. Corset also uses the read information to filter out contigs with a low number of mapped read (less than 10 reads by default). Corset’s approach is in contrast to other tools used for clustering contigs as the majority of other tools only use the sequence information from the assembly.</p>
+      <p>Corset works by clustering contigs based on shared reads, but separates contigs when different expression patterns between samples are observed. This is implemented using an agglomerative hierarchical clustering algorithm. The distance between any two contigs is defined in relation to the number of reads that are shared between contigs, such that a lower proportion of shared reads results in a larger distance (see <xref rid="Sec10" ref-type="sec">Materials and methods</xref>). Genes that share sequence, such as paralogues, are likely to have small distances, as many reads are shared. As we do not want these contigs to be clustered, Corset performs a test to detect whether the relative expression levels between the pair of contigs is constant across conditional groups (or experimental groups). If the relative expression between the two contigs is not constant, the distance between the two contigs is set to the maximum. This is incorporated into the algorithm as a likelihood ratio test where the null hypothesis assumes that the ratio between counts from the two contigs are equal across conditional groups, whereas the alternative hypothesis allows this ratio to vary with conditional group. The count data for this contig ratio test are modeled as Poisson distributed and a <italic>P</italic>-value threshold of approximately &lt;10<sup>-5</sup> is applied by default (see <xref rid="Sec10" ref-type="sec">Materials and methods</xref> for a detailed description and justification of thresholds).</p>
+      <p>The contig ratio test that separates contigs with shared sequence but differing expression ratios is one of the novel features of the Corset clustering algorithm. Although this feature can be switched off - for example, to ensure differentially spliced isoforms are clustered together - we find it is effective in separating contigs from different genes (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S7). For example, Figure <xref rid="Fig2" ref-type="fig">2</xref> shows the human <italic>ATP5J</italic> and <italic>GABPA</italic> genes, which reside on opposite strands but have overlapping UTRs. The assembly of human primary lung fibroblast data produced eight contigs for this region (see <xref rid="Sec10" ref-type="sec">Materials and methods</xref>). While there are contigs for each of the genes separately (contigs 1 to 3, and 8) the use of a non-stranded protocol results in contigs with the two genes assembled together (contigs 4 to 6). When the contig ratio test is not implemented, all these contigs are assigned to the same cluster and no significant differential expression is detected between the knock-down and wild-type conditions (false discovery rate (FDR) = 0.053). However, examining the contig count ratios between pairs of contigs tells a different story (Figure <xref rid="Fig2" ref-type="fig">2</xref>B). The count ratios of contig 3 and contig 2 are constant across samples, implying they should be in the same cluster. By contrast, the contig ratio between contig 3 and contig 4 is significantly different across conditions and so Corset splits them into different clusters. When tests for all pairwise combinations are performed, these eight contigs are separated into four different clusters and statistical testing for differential expression reveals cluster a and d are significantly differentially expressed in opposite directions (FDR = 10<sup>-11</sup> and 10<sup>-7</sup>, respectively).<fig id="Fig2"><label>Figure 2</label><caption><p><bold>Corset uses expression information to tease apart contigs from different genes. (A)</bold> Assembled contigs from a region of the human genome containing the two genes <italic>ATP5J</italic> and <italic>GABPA</italic>. Trinity assembles 8 contigs (bottom track), which are grouped into one cluster if the contig ratio test is not applied. Including this test allows corset to separate this region into four clusters (boxes). Notably, contigs 4 to 6 are false chimeras, caused by the overlapping UTRs of <italic>ATP5J</italic> and <italic>GABPA</italic>. These genes are differentially expressed, as shown by base-level coverage, averaged over replicates (top track). <bold>(B)</bold> When clustering, Corset checks for equal expression ratios between conditions when calculating distances between pairs of contigs: here we consider pairs contigs 2 and 3 (top) and contigs 3 and 4 (bottom). The ratio of the number of reads aligning to each contig is plotted for each sample (dots). It can be seen that contig 2 and contig 3 have the same expression ratio across groups and so are clustered together while contig 3 and contig 4 have different expression ratios between conditions and so are split. This feature helps Corset separate contigs that share sequence but are from different genes.</p></caption><graphic xlink:href="13059_2014_410_Fig2_HTML" id="MO2"/></fig></p>
+      <p>Once Corset is applied to the full dataset the contig groupings that are representative of genes are reported and will be referred to henceforth as clusters. Corset also reports the number of read counts associated with each cluster. All the reads are uniquely assigned to a cluster (see <xref rid="Sec10" ref-type="sec">Materials and methods</xref>); hence, each read is only counted once, even though the reads were originally multi-mapped to contigs. The read counts table can be supplied to count-based differential expression programs for statistical testing.</p>
+    </sec>
+    <sec id="Sec4">
+      <title>Testing Corset on model organism datasets</title>
+      <p>We tested the performance of Corset against other clustering and counting methods using three RNA-seq datasets: chicken male and female embryonic tissue [<xref ref-type="bibr" rid="CR24">24</xref>], human primary lung fibroblasts, with and without a small interfering RNA (siRNA) knock down of <italic>HOXA1</italic> [<xref ref-type="bibr" rid="CR25">25</xref>], and yeast grown under batch and chemostat conditions [<xref ref-type="bibr" rid="CR26">26</xref>]. We selected three model organisms in order to compare our <italic>de novo</italic> differential gene expression (DGE) results against a genome-based analysis (referred to herein as the truth dataset). In the chicken dataset we tested for DGE between males and females. The homology between chicken genes, which is around 90% on the sex chromosomes [<xref ref-type="bibr" rid="CR24">24</xref>], offered a challenging test for clustering algorithms. The human dataset was selected because human is one of the best annotated species and the yeast was used to assess whether clustering is beneficial for organisms with minimal splicing. Each dataset was assembled using Trinity and Oases, which have different underlying assembly strategies, to ensure that the results were consistent. Overall, six different assemblies were used as a starting point for the evaluation of Corset.</p>
+    </sec>
+    <sec id="Sec5">
+      <title>Corset clustering results in a good balance between precision and recall</title>
+      <p>We were initially interested in comparing the clustering produced by Corset with other available methods. Both Trinity and Oases provide some clustering information with their output, which is based on the partitioning of the de Bruijn graphs during the assembly (referred to as components and locus, respectively). Standalone tools based on sequence similarity are also frequently used [<xref ref-type="bibr" rid="CR27">27</xref>,<xref ref-type="bibr" rid="CR28">28</xref>], with CD-HIT-EST a popular choice [<xref ref-type="bibr" rid="CR29">29</xref>,<xref ref-type="bibr" rid="CR30">30</xref>].</p>
+      <p>We evaluated Corset’s clustering against CD-HIT-EST and the assemblers’ own clustering. For chicken, over 300,000 contigs were assembled while for human, over 100,000 contigs were assembled (Table <xref rid="Tab1" ref-type="table">1</xref>). A large number of clusters were reported by Trinity and CD-HIT-EST - for example, over 200,000 clusters on the chicken dataset. By default, Corset removes contigs with a very low number of reads supporting them, to give fewer clusters in all cases (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S1). This makes the cluster list more manageable, without compromising sensitivity to detect differential expression. Oases also gave fewer clusters than CD-HIT-EST, but it grouped many unrelated contigs together, with the largest clusters containing many thousands of contigs (Table <xref rid="Tab1" ref-type="table">1</xref>).<table-wrap id="Tab1"><label>Table 1</label><caption><p><bold>Statistics on the number of clusters for various clustering options compared to Corset</bold></p></caption><table frame="hsides" rules="groups"><thead><tr valign="top"><th colspan="2"/><th colspan="2"><bold>Chicken</bold></th><th colspan="2"><bold>Human</bold></th><th colspan="2"><bold>Yeast</bold></th></tr><tr valign="top"><th colspan="2"/><th><bold>Trinity</bold></th><th><bold>Oases</bold></th><th><bold>Trinity</bold></th><th><bold>Oases</bold></th><th><bold>Trinity</bold></th><th><bold>Oases</bold></th></tr><tr valign="top"><th colspan="2"><bold>Contigs</bold></th><th><bold>335,377</bold></th><th><bold>540,933</bold></th><th><bold>107,389</bold></th><th><bold>239,426</bold></th><th><bold>7,353</bold></th><th><bold>27,013</bold></th></tr></thead><tbody><tr valign="top"><td>Trinity</td><td>Clusters (Max.)</td><td>230,924 (302)</td><td/><td>73,258 (91)</td><td/><td>6,690 (45)</td><td/></tr><tr valign="top"><td>Oases</td><td>Clusters (Max.)</td><td/><td>87,639 (93,103)</td><td/><td>55,746 (16,881)</td><td/><td>3,140 (5,987)</td></tr><tr valign="top"><td>CD-HIT-EST</td><td>Clusters (Max.)</td><td>282,285 (81)</td><td>202,636 (116)</td><td>90,115 (29)</td><td>96,965 (74)</td><td>7,117 (8)</td><td>5,586 (39)</td></tr><tr valign="top"><td>Corset</td><td>Clusters (Max.)</td><td>91,653 (290)</td><td>67,826 (208)</td><td>43,663 (90)</td><td>38,476 (59)</td><td>3,796 (45)</td><td>4,324 (65)</td></tr></tbody></table><table-wrap-foot><p>Shown are the number of contigs (bold), number of clusters and the maximum number of contigs in a cluster (in parentheses). Corset removes contigs that have less than 10 reads mapping to them by default, and hence has the least number of clusters in 5 out of 6 assemblies. This makes the final list of clusters more manageable, with no detriment to the final DGE results. Oases grossly over-clusters as shown by the maximum contigs in a cluster.</p></table-wrap-foot></table-wrap></p>
+      <p>Clustering was evaluated using precision (True positives/(True positives + False positives)) and recall (True positives/(True positives + False negatives)) for each of the six <italic>de novo</italic> assemblies. Positives and negatives were calculated by taking all pairwise combinations of contigs and evaluating if the contigs were correctly placed in the same cluster (true positives), correctly separated into different clusters (true negatives), incorrectly placed in the same cluster (false positives) or incorrectly separated (false negatives) [<xref ref-type="bibr" rid="CR31">31</xref>]. Truth information was derived using the appropriate reference genome annotation (see <xref rid="Sec10" ref-type="sec">Materials and methods</xref>). Contigs filtered out by Corset due to a low number of mapped reads were also filtered out for the assessment of competing methods.</p>
+      <p>We found that CD-HIT-EST was generally high in precision but poorer in recall. In contrast, Oases’ clustering performed well in recall but had a precision around zero in all cases. Conceptually, this again indicates that Oases groups many unrelated contigs into the same cluster (over-clustering). The clustering from Trinity showed a better balance between precision and recall. Corset outperformed both CD-HIT-EST in recall and the assembler’s clustering in precision in all cases (Figure <xref rid="Fig3" ref-type="fig">3</xref>), indicating that it provides a good balance between precision and recall. In addition, in two out of the six assemblies, Corset was the most precise (chicken-Oases and yeast-Oases).<fig id="Fig3"><label>Figure 3</label><caption><p><bold>A comparison of the performance of different clustering approaches.</bold> For the assembler’s own clustering (Trinity or Oases), CD-HIT-EST and Corset we show the precision against the recall. The precision is the ratio of true positives over true positives plus false positives and the recall is the ratio of true positives over true positives plus false negatives. We show the results for six different assemblies: <bold>(A)</bold> chicken data assembled with Trinity; <bold>(B)</bold> chicken data assembled with Oases; <bold>(C)</bold> human data assembled with Trinity; <bold>(D)</bold> human data assembled with Oases; <bold>(E)</bold> yeast data assembled with Trinity; and <bold>(F)</bold> yeast data assembled with Oases. The X indicates perfect clustering.</p></caption><graphic xlink:href="13059_2014_410_Fig3_HTML" id="MO3"/></fig></p>
+      <p>Clustering performance is influenced by not only the choice of clustering algorithms but also the choice of assembler and the quality of the RNA-seq dataset. We briefly investigated how certain aspects of the assembly quality affect clustering recall and precision. We found that recall decreases with greater fragmentation of genes in the assembly. Contigs from a common gene that share no sequence are unlikely to be clustered together by any algorithm, whereas contigs that are almost fully redundant should always be clustered together. The majority of genes fall into one of these two extremes (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S2B). The assemblers’ clustering and Corset behaved as expected, giving close to perfect recall for genes with fully overlapping contig sequence and zero recall when the contigs were disjointed. However, CD-HIT-EST failed to achieve good recall even for genes with no fragmentation (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S4). The fraction of fully disjointed contigs appears to dictate an upper bound on the best possible recall that can be achieved by any clustering algorithm.</p>
+      <p>We found that poor clustering precision, whereby contigs from different genes are grouped together, happens when genes share sequence, such as paralogues, a common domain, overlapping UTRs or repeats. In some cases, this can also result in a chimeric contig being erroneously assembled (for example, Figure <xref rid="Fig2" ref-type="fig">2</xref>). It has previously been illustrated that there is a high rate of false chimeras in <italic>de novo</italic> transcriptome assemblies [<xref ref-type="bibr" rid="CR32">32</xref>] and we also observed a high rate of false chimeras in our assemblies, around 5 to 15% of contigs for chicken and human, and 40% of contigs for yeast (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S3). Oases’ clustering precision on genes that share sequence or have chimeric contigs was consistently worse than that of Corset and CD-HIT-EST. Trinity was marginally worse than Corset. For genes that had no shared sequence, perfect clustering precision was seen for Corset and CD-HIT-EST (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S5).</p>
+      <p>These results indicate that clustering performance is influenced by the underlying assembly quality (which in turn depends on the dataset), but that Corset clustering is robust over a range of assembly qualities.</p>
+    </sec>
+    <sec id="Sec6">
+      <title>The effect of clustering on differential gene expression results</title>
+      <p>Poor precision is akin to over-clustering, making some differentially expressed genes impossible to detect because contigs with different relative expressions are combined. Moreover, the functional annotation of clusters becomes ambiguous. Poor recall, however, is akin to under-clustering. It extends the total length of the list of clusters, which has several consequences: it is inconvenient for follow-on studies (such as gene ontology), leads to greater multiple testing corrections and increases statistical uncertainty. To assess the extent of these effects on differential expression results, we performed a gene-level differential expression analysis using each of the clustering options. The remaining steps in the pipeline, including count-based abundance estimation, were identical in each case (see <xref rid="Sec10" ref-type="sec">Materials and methods</xref>) and testing for DGE was performed using edgeR. Significantly differentially expressed clusters were compared to genes tested for differential expression using a genome-based mapping approach. A cluster was deemed to be a true positive if it matched a differentially expressed gene from the genome-based analysis. Regardless of the statistical test used to generate true differentially expressed genes from the genome based analysis, Cuffdiff 2 [<xref ref-type="bibr" rid="CR25">25</xref>] (Figure <xref rid="Fig4" ref-type="fig">4</xref>) or edgeR (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S10), we found similar results in the comparison of Corset to other contig clustering options.<fig id="Fig4"><label>Figure 4</label><caption><p><bold>The effect of clustering on differential gene expression rankings.</bold> The cumulative number of unique true positive differentially expressed clusters against the number of top ranked clusters in the <italic>de novo</italic> analysis is shown. A unique true positive refers to only counting the first instance of a gene that appears multiple times in the ranked list. Corset performed the same or better than CD-HIT-EST and the assembler’s own clustering, in all cases: <bold>(A)</bold> chicken data assembled with Trinity; <bold>(B)</bold> chicken data assembled with Oases; <bold>(C)</bold> human data assembled with Trinity; <bold>(D)</bold> human data assembled with Oases; <bold>(E)</bold> yeast data assembled with Trinity; and <bold>(F)</bold> yeast data assembled with Oases. For comparison, we also show the results of no clustering, where the analysis was performed at the level of contigs rather than clusters.</p></caption><graphic xlink:href="13059_2014_410_Fig4_HTML" id="MO4"/></fig></p>
+      <p>We looked at three different measures to assess the impact of clustering on DGE results. Firstly, we examined the cumulative number of unique true positive clusters as a function of the total number of clusters (Figure <xref rid="Fig4" ref-type="fig">4</xref>). A unique true positive refers to only counting the top ranked cluster when there is more than one cluster assigned to a gene. In four cases Corset performed better than the alternatives (chicken-Trinity, chicken-Oases, human-Oases, yeast-Oases) and in the remaining two cases it performed equally well (human-Trinity, yeast-Trinity). This metric penalized for reporting multiple clusters for a given gene (that is, poor recall). It was also informative to examine an alternative version of this metric that does not penalize in this way: the number of unique true positives as a function of the number of unique false positives (Figure <xref rid="Fig5" ref-type="fig">5</xref>). In this instance, clustering algorithms with better precision do better than the assembler’s clustering, which performed better in recall. As a final assessment of clustering we looked at the correlation in fold change between differentially expressed genes from the truth analysis, and those from the <italic>de novo</italic> assembly (Table <xref rid="Tab2" ref-type="table">2</xref>). Corset was consistently the most concordant with the genome-based truth analysis.<fig id="Fig5"><label>Figure 5</label><caption><p><bold>The effect of clustering on differential gene expression receiver operating characteristic (ROC) curves.</bold> The unique true positive differentially expressed clusters against unique false positive clusters in the <italic>de novo</italic> analysis is shown. A unique positive refers to only counting the first instance of a gene that appears multiple times in the ranked list. Corset performed similarly to or better than CD-HIT-EST and the assembler’s own clustering, in all cases: <bold>(A)</bold> chicken data assembled with Trinity; <bold>(B)</bold> chicken data assembled with Oases; <bold>(C)</bold> human data assembled with Trinity; <bold>(D)</bold> human data assembled with Oases; <bold>(E)</bold> yeast data assembled with Trinity; and <bold>(F)</bold> yeast data assembled with Oases. For comparison, we also show the results of no clustering, where the analysis was performed at the level of contigs rather than clusters.</p></caption><graphic xlink:href="13059_2014_410_Fig5_HTML" id="MO5"/></fig><table-wrap id="Tab2"><label>Table 2</label><caption><p><bold>Pearson correlation in gene-level log</bold><sub><bold>2</bold></sub><bold>fold changes</bold></p></caption><table frame="hsides" rules="groups"><thead><tr valign="top"><th rowspan="2"/><th colspan="2"><bold>Chicken</bold></th><th colspan="2"><bold>Human</bold></th><th colspan="2"><bold>Yeast</bold></th></tr><tr valign="top"><th><bold>Trinity</bold></th><th><bold>Oases</bold></th><th><bold>Trinity</bold></th><th><bold>Oases</bold></th><th><bold>Trinity</bold></th><th><bold>Oases</bold></th></tr></thead><tbody><tr valign="top"><td>No clustering</td><td>0.720</td><td>0.734</td><td>0.884</td><td>0.835</td><td><bold>0.968</bold></td><td>0.958</td></tr><tr valign="top"><td>Trinity</td><td>0.820</td><td/><td>0.933</td><td/><td>0.934</td><td/></tr><tr valign="top"><td>Oases</td><td/><td>0.447</td><td/><td>0.888</td><td/><td>0.760</td></tr><tr valign="top"><td>CD-HIT-EST</td><td>0.751</td><td>0.756</td><td>0.919</td><td>0.929</td><td><bold>0.968</bold></td><td>0.903</td></tr><tr valign="top"><td>Corset</td><td><bold>0.874</bold></td><td><bold>0.850</bold></td><td><bold>0.936</bold></td><td><bold>0.956</bold></td><td><bold>0.968</bold></td><td><bold>0.974</bold></td></tr></tbody></table><table-wrap-foot><p>In previous validation results, we assessed clustering by examining the ranking of true positives. Here we assess how well the fold change between experimental conditions is recovered. For each contig matching a gene with true differential expression, we compared its cluster-level log2 fold change against its true gene-level log2 fold change. The Pearson correlation between these quantities is shown. We assessed each clustering method in this way and found corset clustering gave the highest correlation in all cases. The highest Pearson correlation for each assembly is displayed in bold.</p></table-wrap-foot></table-wrap></p>
+      <p>The DGE results also illustrate the general importance of clustering contigs into genes; the differential expression analysis on contigs with no clustering resulted in a much longer list for the same number of unique true positives compared to clustering (Figure <xref rid="Fig4" ref-type="fig">4</xref>). This was even the case for the Oases assembly from yeast, an organism with little alternative splicing (Figure <xref rid="Fig4" ref-type="fig">4</xref>F), highlighting the importance of removing redundancy from the assembly, even for genomes where minimal alternative splicing is expected. By all metrics, Corset was the best or close to best method available. This indicates that the balance between precision and recall that Corset achieves translates into more accurate DGE results.</p>
+    </sec>
+    <sec id="Sec7">
+      <title>Corset allows multiple transcriptomes to be combined</title>
+      <p>An ideal clustering tool would allow transcriptomes generated from different sources to be combined because multiple transcripts from the same gene will be clustered together regardless of their origin. However, this is only possible for clustering that is independent of the <italic>de novo</italic> assembler. While several publications have used CD-HIT-EST for combining multiple transcriptome assemblies [<xref ref-type="bibr" rid="CR12">12</xref>,<xref ref-type="bibr" rid="CR14">14</xref>,<xref ref-type="bibr" rid="CR29">29</xref>], we have already shown that CD-HIT-EST is not the most effective contig clustering tool. Corset, however, provides a convenient method to cluster contigs generated from different sources. Reads are first multi-mapped to each transcriptome separately, and then all bam files are processed together in one run of Corset.</p>
+      <p>Different assemblers have strengths and weaknesses and it is often advantageous to combine the results from several <italic>de novo</italic> assemblers. To demonstrate the utility of Corset for this purpose we clustered together the Trinity and Oases assemblies from the human dataset. This combined dataset effectively doubled the number of contigs. Corset was able to handle this level of redundancy to give a combined transcriptome with fewer clusters, 37,741, than either of the Trinity or Oases assemblies individually, 43,664 and 38,477, respectively. Furthermore, this combined transcriptome contained contigs annotating approximately 200 additional genes not detected using either constituent transcriptome alone. By contrast CD-HIT-EST produced 115,980 clusters on the same combined dataset.</p>
+      <p>Another application for combining transcriptomes is when a partially assembled genome or annotation is available. Supplementing <italic>de novo</italic> assembled data with genome-based data has several advantages: i) it increases the amount of known transcript sequence, for example, because genes, or regions of genes in the annotation, that have little or no read coverage are absent from the assembly; ii) <italic>de novo</italic> assembled contigs can be easily annotated if they cluster with a known gene; and iii) it allows disconnected fragments in the assembly to be clustered together if a transcript from the reference annotation overlaps both. We demonstrated this final benefit by combining the Trinity transcriptome from the human RNA-seq dataset with the human Ensembl version 73 annotation using Corset. We randomly sampled 50%, 25%, 12% and 6% (approximately 100, 50, 25 and 12.5 thousand transcripts) of the full Ensembl transcriptome to emulate a partial annotation. A significant improvement in clustering recall is seen for Trinity contigs with no detriment to clustering precision (Figure <xref rid="Fig6" ref-type="fig">6</xref>A).<fig id="Fig6"><label>Figure 6</label><caption><p><bold>Supplementing a</bold><bold><italic>de novo</italic></bold><bold>assembly with additional transcriptomes.</bold> Supplementing a <italic>de novo</italic> assembly with contigs from either <bold>(A)</bold> a partial annotation or <bold>(B)</bold> related species improves clustering recall of the <italic>de novo</italic> assembled contigs. We show the recall and precision, calculated for Trinity contigs. <bold>(A)</bold> We randomly sampled transcripts from the human annotation from Ensembl at 100%, 50%, 25%, 12.5% and 6% of all transcripts to emulate a partial annotation, mapped the human RNA-seq reads to each set and clustered the reads together with those mapped to the Trinity assembly using Corset. <bold>(B)</bold> We mapped human RNA-seq reads onto the Ensembl annotation for chimp, orangutan, macaque, marmoset and bushbaby, then clustered the reads together with those mapped to the Trinity assembly using Corset. 'None' in both plots indicates the Trinity assembly on its own.</p></caption><graphic xlink:href="13059_2014_410_Fig6_HTML" id="MO6"/></fig></p>
+      <p>Finally, we extended this idea to the use of a reference annotation from a related species [<xref ref-type="bibr" rid="CR33">33</xref>]. The human RNA-seq reads were mapped independently to the Trinity assembly and Ensembl version 73 transcript sequences for chimp, orangutan, macaque, marmoset and bushbaby, with lower mapping stringency used for the related species (see <xref rid="Sec10" ref-type="sec">Materials and methods</xref>). Our results demonstrate that an improvement in clustering recall is obtained even using annotation from a related species, again without loss of precision (Figure <xref rid="Fig6" ref-type="fig">6</xref>B). The effectiveness of this strategy will depend on the divergence between species, which in this example ranged from approximately 6 million years ago (My; chimp), 15 My (orangutan), 32 My (macaque), 46 My (marmoset) to 68 My (bushbaby) [<xref ref-type="bibr" rid="CR34">34</xref>]. In addition, the improvement will also depend on the completeness of the annotation (these species had half to one-third as many transcripts as the human Ensembl annotation).</p>
+    </sec>
+    <sec id="Sec8">
+      <title>Corset summarizes reads into gene-level counts</title>
+      <p>As previously mentioned, Corset not only clusters contigs but also produces expression levels for each cluster, in the form of read counts that can be directly used by DGE analysis software. This feature is provided as a convenience because it replaces the two-step process of clustering contigs and estimating abundances with a single step.</p>
+      <p>We compared the performance of the counting aspect of our software against three other pipelines for gene-level count estimations: (1) RSEM [<xref ref-type="bibr" rid="CR21">21</xref>]; (2) selecting the longest contig from each cluster as a representative sequence and mapping to that; and (3) mapping each read to all contigs, allowing only a single alignment, then aggregating the counts within a cluster (see <xref rid="Sec10" ref-type="sec">Materials and methods</xref>). In each case, the Corset clustering was used. We found that, in general, all counting methods produced similar results to Corset; the Pearson correlation between counts produced by Corset and other methods was consistently high (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S2). Despite RSEM and Corset reporting identical counts for up to 95% of clusters (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S3), we found a significant difference in counts for a small number of clusters. In these clusters RSEM tended to report fewer counts (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S11A). Furthermore, for these clusters Corset counts exhibited less variability between biological replicates (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S4 and Figure S11B), suggesting that they were more precise. As a final assessment of the discrepancy, we compared RSEM cluster-level counts against a truth set where the truth was constructed by running RSEM on reads mapped to the gene annotation (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S12A). This confirmed that RSEM was underestimating the counts for a small proportion of clusters, resulting in missing true differential expression in the downstream analysis (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S12B).</p>
+      <p>Hence, we found no evidence that there was a disadvantage in using the counts produced by Corset over other programs, such as RSEM, for gene-level analysis. On the contrary, we found subtle hints that simple count-based abundance estimation methods may be more robust for detecting differential expression on <italic>de novo</italic> assembled transcriptomes than methods that attempt to infer abundance at the transcript level first. However, we reiterate that all counting methods gave similar results.</p>
+    </sec>
+  </sec>
+  <sec id="Sec9" sec-type="conclusion">
+    <title>Conclusions</title>
+    <p>Recently, there has been a focus on the potential for using RNA-seq to analyze the transcriptomes of non-model organisms, with a number of studies exploring various steps in the analysis pipeline, such as the effect of cleaning reads [<xref ref-type="bibr" rid="CR13">13</xref>], digital normalization [<xref ref-type="bibr" rid="CR35">35</xref>], different assemblers [<xref ref-type="bibr" rid="CR12">12</xref>] and post-assembly improvements [<xref ref-type="bibr" rid="CR36">36</xref>]. However, in many applications of RNA-seq the outcome of interest is not the transcriptome itself, but the detection of differentially expressed genes between samples. To this end, there are few tools or even guidelines on how to progress from the assembled transcriptome to a list of differentially expressed genes. This study presents a novel algorithm, Corset, for clustering <italic>de novo</italic> assembled contigs and generating gene-level counts. This study is also the first to compare various pipelines for DGE analysis of <italic>de novo</italic> assembled transciptomes, demonstrating that it is advantageous to perform a gene-level rather than transcript-level analysis, even on species such as yeast, with minimal alternative splicing.</p>
+    <p>However, performing a gene-level analysis requires the <italic>de novo</italic> contigs to be clustered into genes. Prior to the algorithm presented here, clustering options were limited to either the assembler’s own groupings or a sequence-based clustering tool. Furthermore, it was not clear how well these methods performed in the context of a <italic>de novo</italic> assembled transcriptome; specifically, their ability to deal with issues such as the fragmentation of genes, erroneous chimeras and repeats, all of which may lead to the miss-clustering of contigs.</p>
+    <p>Our method, Corset, makes use of both the sequence similarity and expression data available to cluster contigs. The use of expression data means Corset has the power to separate paralogues and contigs with erroneous chimeras into different clusters. A possible consequence of separating contigs based on relative expression is that differentially spliced isoforms of a gene may be split into separate clusters. For gene-level differential expression analysis, we see no disadvantage in this; either or both isoform clusters should be detected as differentially expressed. However, this option can be turned off should the user want to ensure isoforms are clustered together. Overall, we found the clustering provided by Corset performed better than alternative approaches in several metrics we examined. Similarly, the expression data provided as counts by Corset gave results equal to, and sometimes marginally more accurate than, all alternative estimates.</p>
+    <p>Thus, Corset provides new methods in a single software tool that effectively replaces the often ambiguous, cumbersome, multi-step process required to go from a <italic>de novo</italic> assembled transcriptome to gene-level counts. Corset is easy to run as no indexing or sorting of the bam files is required and it can process single-end, paired-end or mixed reads. Finally, Corset provides a convenient way to merge the results from different <italic>de novo</italic> assemblies, reference annotations or genome-guided assemblies. We believe these features will be of great benefit to RNA-seq analysis in non-model organisms.</p>
+  </sec>
+  <sec id="Sec10" sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec id="Sec11">
+      <title>Datasets</title>
+      <p>We performed differential gene expression analysis using publicly available RNA-seq data from three model organisms: chicken, human and yeast. All datasets consisted of 100-bp paired-end reads from an Illumina HiSeq 2000. For each dataset we trimmed the reads [<xref ref-type="bibr" rid="CR37">37</xref>] and then performed three analyses: two on <italic>de novo</italic> transcriptomes assembled using Oases and Trinity and one genome-based analysis - the 'truth' - which was used for comparison. The chicken dataset from Ayers <italic>et al</italic>. [<xref ref-type="bibr" rid="CR24">24</xref>], Short Read Archive (SRA) accession number SRA055442, consisted of approximately 1.2 billion reads. For the <italic>de novo</italic> analyses we used only one lane of this data (approximately 320 million reads) because the full dataset was computationally too large to assemble. However, all the data were used for the genome-based 'truth' analysis. This dataset consists of eight samples - male and female blastoderms, and male and female day 4.5 gonad tissue, in duplicate. The dataset published by Trapnell <italic>et al</italic>. [<xref ref-type="bibr" rid="CR25">25</xref>], Gene Expression Omnibus accession GSE37704, is from human primary lung fibroblasts with an siRNA knock-down of <italic>HOXA1</italic>. The dataset contains three replicates of the knockdown and three controls with more than 231 million reads in total. Finally, we included a yeast dataset, SRA accession numbers SRR453566 to SRR453571, published in Nookaew <italic>et al</italic>. [<xref ref-type="bibr" rid="CR26">26</xref>]. The dataset consists of approximately 36 million reads. Three replicates were grown under batch conditions and three under chemostat conditions.</p>
+    </sec>
+    <sec id="Sec12">
+      <title>Genome-based 'truth' analysis</title>
+      <p>To gauge the performance of different clustering and abundance estimation algorithms, we derived a 'truth' set using genome-based analysis.</p>
+      <p>To determine the correspondence between <italic>de novo</italic> assembled contigs and reference annotation genes, we aligned the assembled contigs against the annotation using BLAT [<xref ref-type="bibr" rid="CR38">38</xref>] (minimum length of 200 bases and minimum identity of 98%). Chimeric contigs were treated as having an unknown origin. We identified chimeric contigs as those that matched two or more truth genes (as above) with an overlap between the genes of less than 100 bases. For other cases where a contig aligned to multiple genes, it was assigned to the gene with the longest alignment length. When comparing the differentially expressed 'truth' genes to <italic>de novo</italic> clusters, we assigned a cluster to the same 'truth' gene as the majority of its contigs. Any contig or cluster that could not be found in the 'truth' set was excluded from the results shown. Contigs that were removed by Corset due to a low number of reads mapping were also excluded.</p>
+      <p>To calculate 'true' differential expression, reads were first mapped using TopHat v2.0.6 [<xref ref-type="bibr" rid="CR39">39</xref>] to either the hg19, galGal3 or sacCer3 versions of the human, chicken and yeast genomes, respectively. In all cases we provided the gene annotation (RefSeq for human, Ensembl (v.70) for chicken and Saccharomyces Genome Database for yeast) to TopHat to support splice site detection. These same gene annotations were processed by 'gffread --merge' to give locus level annotations. Cuffdiff 2.1.1 was run to detect differential gene expression (with the -<italic>u</italic> option). We used 'significant' locus in 'gene_exp.diff' as true positives. As an alternative to cuffdiff 2 we also defined truth using a genome based edgeR analysis (results shown in Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S10). EdgeR was run in the same way as for the <italic>de novo</italic> assembly (see '<xref rid="Sec21" ref-type="sec">Statistical testing</xref>' below).</p>
+    </sec>
+    <sec id="Sec13">
+      <title><italic>De novo</italic> assembly</title>
+      <p>Oases 0.2.06 (with Velvet version 1.2.07) was used to assemble the human and yeast data with kmer lengths of 19, 23, 27 and 31. For the chicken dataset we used kmer lengths of 31, 41, 51, 61 and 71. The chicken Trinity assembly was created using Trinity-r2012-10-05 and the human and yeast assemblies using Trinity-r2013-02-25. Default parameters were used in all cases, with a minimum contig length of 200 bases. Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figures S1, S2 and S3 show the assembly quality.</p>
+    </sec>
+    <sec id="Sec14">
+      <title>Mapping</title>
+      <p>Reads were mapped to the <italic>de novo</italic> assemblies as paired-end alignments using bowtie [<xref ref-type="bibr" rid="CR40">40</xref>]. For single-mapping, where only one alignment was allowed, we used the bowtie option <italic>--best</italic>. For multi-mapped alignment, we used the option <italic>--all</italic>. When mapping to related species we used the bowtie settings, -<italic>-all -m 6 -n 3 -e 1000 -X 1000</italic>, to allow for a great number of mismatches. For the human dataset, this resulted in between 30% (bushbaby) and 70% (chimp) of read pairs mapping, compared to about 75% for the Trinity assembly.</p>
+    </sec>
+    <sec id="Sec15">
+      <title>Clustering</title>
+      <p>We clustered the transcriptomes using CD-HIT-EST with default parameters. For the assembler clustering, we extracted the clusters from the contig names in the assembly fasta file. For example, for Trinity, the contig 'comp1_c2_seq3' belonged to the cluster 'comp1_c2'. For Oases, 'Locus_1_Transcript_3/10_Confidence_0.000_Length_268' belonged to cluster 'Locus_1'. To obtain the Corset clustering we multi-mapped the reads to the transcriptome and executed Corset with the experimental groups included as a parameter (-<italic>g</italic> option). For the differential expression results presented in Figures <xref rid="Fig4" ref-type="fig">4</xref> and <xref rid="Fig5" ref-type="fig">5</xref> and Table <xref rid="Tab2" ref-type="table">2</xref>, we estimated the counts using the 'single-mapping then summation' method described below.</p>
+    </sec>
+    <sec id="Sec16">
+      <title>Abundance estimation analysis</title>
+      <p>The four methods described below were compared to assess which gave the best DGE results. In all cases the clustering was identical and was generated using Corset with the experimental groups passed through the -<italic>g</italic> options and using the -<italic>m 0</italic> option (so that all contigs were reported). The statistical testing was performed using edgeR.</p>
+      <sec id="Sec17">
+        <title>RSEM</title>
+        <p>Multi-mapped bam files were converted to the format required by RSEM using the command, 'convert-sam-for-rsem'. The transcriptome was prepared using 'rsem-prepare-reference --no-polyA --no-bowtie --transcript-to-gene-map' with Corset clustering passed as a parameter. The gene abundance was estimated using 'rsem-calculate-expression --bam --paired-end' and the 'expected_counts' were extracted from the '.genes.results' files.</p>
+      </sec>
+      <sec id="Sec18">
+        <title>Representative contig method</title>
+        <p>The longest contig was selected to represent each cluster. Reads were single-mapped back to these contigs. The number of reads mapping to each representative contig was counted using the samtools idxstats command. Because these count data were per read, we divided by two to get the counts per fragment.</p>
+      </sec>
+      <sec id="Sec19">
+        <title>Single-mapping then summation</title>
+        <p>We single-mapped reads to all contigs and counted the number overlapping each using samtools idxstats [<xref ref-type="bibr" rid="CR41">41</xref>]. To obtain gene-level counts, we summed the counts for all contigs within a cluster. Because these count data were per read, we divided by two to get the counts per fragment.</p>
+      </sec>
+      <sec id="Sec20">
+        <title>Corset</title>
+        <p>We multi-mapped the reads to the transcriptome and executed Corset with the options described above.</p>
+      </sec>
+    </sec>
+    <sec id="Sec21">
+      <title>Statistical testing</title>
+      <p>The cluster-level count data were processed using edgeR. For the chicken data, we modeled the data with four conditional groups (two sex and two time-points) as in Ayers <italic>at al</italic>. [<xref ref-type="bibr" rid="CR24">24</xref>], but tested for a difference between males and females from the later time-point only. The other datasets had two conditional groups each (with three replicates for a total of six samples) and the statistical testing was performed for differences between these groups. We used the edgeR GLM framework in all cases with tagwise dispersion estimation [<xref ref-type="bibr" rid="CR42">42</xref>]. The statistical testing was performed in the same way for all <italic>de novo</italic> assemblies. Statistical testing for the 'truth' genome-based analysis was done using Cuffdiff 2 (Figures <xref rid="Fig4" ref-type="fig">4</xref> and <xref rid="Fig5" ref-type="fig">5</xref>) and edgeR (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S10). While these gave a slightly different list of significant truth genes, the results comparing Corset to alternative clustering methods were similar.</p>
+    </sec>
+    <sec id="Sec22">
+      <title>The Corset algorithm</title>
+      <p>Our software accepts a set of multi-mapped read alignments in bam format (one or more files per sample) as input. The algorithm then proceeds in the following way:<list list-type="order"><list-item><p>Each read alignment is parsed and the read and contig IDs are extracted. For each read we store the set of contigs that it maps to.</p></list-item><list-item><p>Contigs with 10 or fewer reads are filtered out. This step is not essential to the algorithm, but has the effect of reducing the final total number of clusters as well as the average number of contigs per clusters, which can simplify the subsequent steps in the analysis.</p></list-item><list-item><p>The read data are parsed and super clusters are formed. Each super cluster contains all contigs that share one or more reads with another contig in the same super cluster.</p></list-item><list-item><p>Then for each super cluster we perform agglomerative hierarchical clustering similar to the algorithm in [<xref ref-type="bibr" rid="CR43">43</xref>], but with distance and linkage described below. Hierarchical clustering is used rather than other clustering approaches because it is computationally tractable.</p></list-item></list><list list-type="simple"><list-item><label>4.1</label><p> We create a distance matrix using the metric:</p></list-item></list><disp-formula id="Equa"><alternatives><tex-math id="M1">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ distance = \left\{\begin{array}{c}\hfill 1-\frac{R_{a b}}{ \min \left({R}_a,{R}_b\right)}, contig\  ratio\  the\  same\hfill \\ {}\hfill 1, contig\  ratio\  different\hfill \end{array}\right. $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Equa.gif" position="anchor"/></alternatives></disp-formula></p>
+      <p>where, <italic>R</italic><sub><italic>a</italic></sub> is the total number of reads that map to contig <italic>a</italic> across all samples, and <italic>R</italic><sub><italic>ab</italic></sub> is the total number of reads that map to both contig <italic>a</italic> and contig <italic>b</italic>, across all samples. The distance is therefore bounded between zero and one, with zero indicating a pair of redundant contigs and one indicating no similarity. 'Contig ratio' refers to the expression of contigs <italic>a</italic> and <italic>b</italic> being proportional to each other as measured across conditional groups. We make the assumption that this is true when two contigs originate from the same gene, and there is no alternative splicing. Alternatively, if the contigs do not come from the same gene or if there is alternative splicing, then their expression is not necessarily proportional, as can happen if one contig is differentially expressed. We test these scenarios using the 'contig ratio test', which proceeds in the following way. Let <italic>r</italic><sub><italic>aij</italic></sub> be the number of reads that map to contig <italic>a</italic> under condition <italic>i</italic>, for the <italic>j</italic>th replicate. We then approximate the number of reads that map to contig <italic>a</italic>, under condition <italic>i</italic> as:<disp-formula id="Equb"><alternatives><tex-math id="M2">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ {X}_{ai}=1+{\displaystyle \sum_j}\left({r}_{ai j}+0.5{r}_{abij}\right) $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Equb.gif" position="anchor"/></alternatives></disp-formula></p>
+      <p>The shared reads term, <italic>r</italic><sub><italic>abij</italic></sub>, is used here to avoid double counting of reads. One is added as an offset to ensure that <italic>X</italic> &gt; 0.</p>
+      <p>The contig-wise counts are then modeled as Poisson distributed. Note that we used a Poisson model for computational speed:<disp-formula id="Equc"><alternatives><tex-math id="M3">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ {X}_{ai} \sim \kern0.5em \mathrm{Pois}\left({\mu}_{ai} = {f}_i{\mu}_{bi}\right) $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Equc.gif" position="anchor"/></alternatives></disp-formula><disp-formula id="Equd"><alternatives><tex-math id="M4">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ {X}_{bi} \sim \kern0.5em \mathrm{Pois}\left({\mu}_{bi}\right), $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Equd.gif" position="anchor"/></alternatives></disp-formula>where <italic>μ</italic><sub><italic>ai</italic></sub> is the mean count for contig <italic>a</italic> under condition <italic>i</italic> and <italic>f</italic> is a proportionality constant. Define <italic>f</italic><sub><italic>i =</italic></sub><italic>μ</italic><sub><italic>ai/</italic></sub><italic>μ</italic><sub><italic>bi</italic></sub> as the true measure of proportional expression between contig <italic>a</italic> and <italic>b</italic> under condition <italic>i.</italic> We want to test the null hypothesis, <italic>H</italic><sub><italic>0</italic></sub><italic>: f</italic><sub><italic>i</italic></sub> 
+<italic>= f</italic><sub><italic>i’</italic></sub> 
+<italic>= f,</italic> that the proportionality constant is independent of condition, against the alternative, <italic>H</italic><sub><italic>1</italic></sub><italic>: f</italic><sub><italic>i</italic></sub> ≠ <italic>f</italic><sub><italic>i’</italic></sub>.</p>
+      <p>Estimates of the proportionality constants for condition <italic>i</italic> are obtained from the contig-wise counts, that is:<disp-formula id="Eque"><alternatives><tex-math id="M5">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ {\widehat{f}}_i=\frac{X_{ai}}{X_{bi}} $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Eque.gif" position="anchor"/></alternatives></disp-formula>and the common proportionality constant is estimated by:<disp-formula id="Equf"><alternatives><tex-math id="M6">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ \widehat{f}=\frac{{\displaystyle {\sum}_i}{X}_{ai}}{{\displaystyle {\sum}_i}{X}_{bi}} $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Equf.gif" position="anchor"/></alternatives></disp-formula></p>
+      <p>We can test the null hypothesis using a likelihood ratio test with test statistic:<disp-formula id="Equg"><alternatives><tex-math id="M7">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ \mathrm{D} = -2\left( \ln {l}_0- \ln {l}_1\right), $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Equg.gif" position="anchor"/></alternatives></disp-formula></p>
+      <p>which is approximately chi-square distributed on <italic>n</italic><sub><italic>conditions</italic></sub> - 1 degrees of freedom under the null hypothesis. Here <italic>n</italic><sub><italic>conditions</italic></sub> is the total number of conditions, <italic>l</italic><sub><italic>0</italic></sub> is the likelihood under the null hypothesis and <italic>l</italic><sub><italic>1</italic></sub> is the likelihood under the alternative hypothesis.</p>
+      <p>Any pair of contigs for which the null hypothesis is rejected is defined as having a 'contig ratio difference' and will have its distance increased to the maximum value of 1. We found it convenient in terms of computation time to set a threshold on D that is equivalent to a <italic>P</italic>-value threshold of 10<sup>-5</sup>. The relationship between threshold and number of conditions is parameterized as <italic>D</italic><sub><italic>threshold</italic></sub> = 15 + 2.5 × <italic>n</italic><sub><italic>conditions</italic></sub>. This relationship is only approximate and is valid when <italic>n</italic><sub><italic>conditions</italic></sub> &lt; 10. This approximation should not affect the clustering, as we found the DGE results to be robust over a wide range of <italic>P</italic>-values (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S7).<list list-type="simple"><list-item><label>4.2</label><p> The hierarchical clustering proceeds by merging the two contigs with the smallest distance together. The number of reads that align to this new cluster is then updated, using the linkage criterion below, and the distance matrix is recalculated (as in step 3). Note that the linkage used by Corset differs from standard linkage approaches, such as single linkage, because it relies on information outside the distance matrix:</p></list-item></list><disp-formula id="Equh"><alternatives><tex-math id="M8">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ {R}_{a'} = {R}_a + {R}_b\hbox{--} {R}_{a b} $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Equh.gif" position="anchor"/></alternatives></disp-formula><disp-formula id="Equi"><alternatives><tex-math id="M9">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$$ {R}_{a' c} = {R}_{a c} + {R}_{bc}-{R}_{a bc} $$
+						\end{document}</tex-math><graphic xlink:href="13059_2014_410_Article_Equi.gif" position="anchor"/></alternatives></disp-formula></p>
+      <p>where contigs <italic>a</italic> and <italic>b</italic> are those being merged into cluster <italic>a’. R</italic><sub><italic>abc</italic></sub> is the number of reads mapping to all of contigs <italic>a</italic>, <italic>b</italic>, and <italic>c</italic>.<list list-type="simple"><list-item><label>4.3</label><p> Steps 4.1 and 4.2 are iteratively repeated until either all the contigs have been grouped into a single cluster or the current minimum distance increases over the distance threshold. The clustering and number of reads per cluster is then output. Reads that align to multiple clusters are randomly assigned to one of the groups they align to. This accounted for only 1 to 5% of the 100-bp paired-end reads in our tests.</p></list-item></list></p>
+      <p>Our results were robust against the choice of distance threshold. The default value of 0.3 was chosen empirically because it was subtly better for DGE results (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S9), but did not give significantly different results from any threshold between 0.1 and 0.9 (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figures S8 and S9). The robustness with respect to threshold can be explain by most contigs pairs having a distance close to either 0 or 1 (for example, Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S2B).</p>
+      <p>The default <italic>P</italic>-value threshold for the likelihood ratio test, 10<sup>-5</sup>, was selected to account for the high level of multiple testing. This value was designed around the number of genes expected in a typical annotation. Again, we found that our results were robust against the choice of this parameter over a wide range, 10<sup>-3</sup> to 10<sup>-8</sup> (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Figure S7).</p>
+      <p>Our software is open source and is available as a C++ source code tar ball from [<xref ref-type="bibr" rid="CR44">44</xref>]. It has been compiled and tested on Linux x86 and Mac OS X 10.7 operating systems. The duration of time needed for the code to complete varied from 5 minutes to 5 hours using one core of an Intel Xeon E7-8837 and was generally faster than the alternative pipelines. Memory consumption was less than 60 GB in the worst case, where over 200 GB of bam files were parsed by the program. The memory requirements were higher than other clustering and abundance estimation tools, but considerably less than the requirements for <italic>de novo</italic> assembly of the datasets we tested.</p>
+    </sec>
+  </sec>
+</body>
+<back>
+  <app-group>
+    <app id="App1">
+      <sec id="Sec23">
+        <title>Additional file</title>
+        <p>
+          <media position="anchor" xlink:href="13059_2014_410_MOESM1_ESM.docx" id="MOESM1">
+            <label>Additional file 1:</label>
+            <caption>
+              <p>
+                <bold>Supplementary figures and tables.</bold>
+              </p>
+            </caption>
+          </media>
+        </p>
+      </sec>
+    </app>
+  </app-group>
+  <glossary>
+    <title>Abbreviations</title>
+    <def-list>
+      <def-list>
+        <def-item>
+          <term>bp</term>
+          <def>
+            <p>base pair</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>DGE</term>
+          <def>
+            <p>differential gene expression</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>FDR</term>
+          <def>
+            <p>false discovery rate</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>My</term>
+          <def>
+            <p>million years ago</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>ROC</term>
+          <def>
+            <p>receiver operating characteristic</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>siRNA</term>
+          <def>
+            <p>small interfering RNA</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>SNP</term>
+          <def>
+            <p>single-nucleotide polymorphism</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>UTR</term>
+          <def>
+            <p>untranslated region</p>
+          </def>
+        </def-item>
+      </def-list>
+    </def-list>
+  </glossary>
+  <fn-group>
+    <fn>
+      <p>
+        <bold>Competing interests</bold>
+      </p>
+      <p>The authors declare that they have no competing interests.</p>
+    </fn>
+    <fn>
+      <p>
+        <bold>Authors’ contributions</bold>
+      </p>
+      <p>ND and AO developed the concept for Corset. ND wrote the software and ran the analyses for validation. ND and AO wrote the manuscript. Both authors read and approved the final manuscript.</p>
+    </fn>
+  </fn-group>
+  <ack>
+    <title>Acknowledgements</title>
+    <p>We would like to thank the Victorian Life Sciences Computation Initiative (VLSCI) and Life Science Computation Centre (LSCC) for access to high performance computing facilities. We would also like to thank Jovana Maksimovic, Belinda Phipson, Mark Robinson and Katrina Bell for giving feedback on this manuscript, and Simon Sadedin for testing the software. AO is supported by an NHMRC Career Development Fellowship APP1051481.</p>
+  </ack>
+  <ref-list id="Bib1">
+    <title>References</title>
+    <ref id="CR1">
+      <label>1.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wang</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Gerstein</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Snyder</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA-Seq: a revolutionary tool for transcriptomics</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>57</fpage>
+        <lpage>63</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg2484</pub-id>
+        <?supplied-pmid 19015660?>
+        <pub-id pub-id-type="pmid">19015660</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR2">
+      <label>2.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ozsolak</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Milos</surname>
+            <given-names>PM</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA sequencing: advances, challenges and opportunities</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>87</fpage>
+        <lpage>98</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg2934</pub-id>
+        <?supplied-pmid 21191423?>
+        <pub-id pub-id-type="pmid">21191423</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR3">
+      <label>3.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Martin</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>Z</given-names>
+          </name>
+        </person-group>
+        <article-title>Next-generation transcriptome assembly</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>671</fpage>
+        <lpage>682</lpage>
+        <pub-id pub-id-type="doi">10.1038/nrg3068</pub-id>
+        <?supplied-pmid 21897427?>
+        <pub-id pub-id-type="pmid">21897427</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR4">
+      <label>4.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schulz</surname>
+            <given-names>MH</given-names>
+          </name>
+          <name>
+            <surname>Zerbino</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Vingron</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Birney</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Oases: robust de novo RNA-seq assembly across the dynamic range of expression levels</article-title>
+        <source>Bioinformatics</source>
+        <year>2012</year>
+        <volume>28</volume>
+        <fpage>1086</fpage>
+        <lpage>1092</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bts094</pub-id>
+        <?supplied-pmid 22368243?>
+        <pub-id pub-id-type="pmid">22368243</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR5">
+      <label>5.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Robertson</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Schein</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Chiu</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Corbett</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Field</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Jackman</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Mungall</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Okada</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Qian</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Griffith</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Raymond</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Thiessen</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Cezard</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Butterfield</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Newsome</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Chan</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>She</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Varhol</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Kamoh</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Prabhu</surname>
+            <given-names>A-L</given-names>
+          </name>
+          <name>
+            <surname>Tam</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Zhao</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Moore</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Hirst</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Marra</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Jones</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Hoodless</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Birol</surname>
+            <given-names>I</given-names>
+          </name>
+        </person-group>
+        <article-title>De novo assembly and analysis of RNA-seq data</article-title>
+        <source>Nat Methods</source>
+        <year>2010</year>
+        <volume>7</volume>
+        <fpage>909</fpage>
+        <lpage>912</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1517</pub-id>
+        <?supplied-pmid 20935650?>
+        <pub-id pub-id-type="pmid">20935650</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR6">
+      <label>6.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zerbino</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Birney</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Velvet: algorithms for de novo short read assembly using de Bruijn graphs</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>821</fpage>
+        <lpage>829</lpage>
+        <?supplied-pmid 18349386?>
+        <pub-id pub-id-type="pmid">18349386</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR7">
+      <label>7.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Simpson</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wong</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Jackman</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Schein</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Jones</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Birol</surname>
+            <given-names>I</given-names>
+          </name>
+        </person-group>
+        <article-title>ABySS: a parallel assembler for short read sequence data</article-title>
+        <source>Genome Res</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1117</fpage>
+        <lpage>1123</lpage>
+        <?supplied-pmid 19251739?>
+        <pub-id pub-id-type="pmid">19251739</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR8">
+      <label>8.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Grabherr</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Haas</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Yassour</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Levin</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Thompson</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Amit</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Adiconis</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Fan</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Raychowdhury</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Zeng</surname>
+            <given-names>Q</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Mauceli</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Hacohen</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Gnirke</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Rhind</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>di Palma</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Birren</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Nusbaum</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Lindblad-Toh</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Friedman</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Regev</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Full-length transcriptome assembly from RNA-Seq data without a reference genome</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2011</year>
+        <volume>29</volume>
+        <fpage>644</fpage>
+        <lpage>652</lpage>
+        <?supplied-pmid 21572440?>
+        <pub-id pub-id-type="pmid">21572440</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR9">
+      <label>9.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Oshlack</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Robinson</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Young</surname>
+            <given-names>MD</given-names>
+          </name>
+        </person-group>
+        <article-title>From RNA-seq reads to differential expression results</article-title>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>220</fpage>
+        <?supplied-pmid 21176179?>
+        <pub-id pub-id-type="pmid">21176179</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR10">
+      <label>10.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Vijay</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Poelstra</surname>
+            <given-names>JW</given-names>
+          </name>
+          <name>
+            <surname>Künstner</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Wolf</surname>
+            <given-names>JBW</given-names>
+          </name>
+        </person-group>
+        <article-title>Challenges and strategies in transcriptome assembly and differential gene expression quantification. A comprehensive in silico assessment of RNA-seq experiments</article-title>
+        <source>Mol Ecol</source>
+        <year>2013</year>
+        <volume>22</volume>
+        <fpage>620</fpage>
+        <lpage>634</lpage>
+        <?supplied-pmid 22998089?>
+        <pub-id pub-id-type="pmid">22998089</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR11">
+      <label>11.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Francis</surname>
+            <given-names>WR</given-names>
+          </name>
+          <name>
+            <surname>Christianson</surname>
+            <given-names>LM</given-names>
+          </name>
+          <name>
+            <surname>Kiko</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Powers</surname>
+            <given-names>ML</given-names>
+          </name>
+          <name>
+            <surname>Shaner</surname>
+            <given-names>NC</given-names>
+          </name>
+          <name>
+            <surname>Haddock</surname>
+            <given-names>SHD</given-names>
+          </name>
+        </person-group>
+        <article-title>A comparison across non-model animals suggests an optimal sequencing depth for de novo transcriptome assembly</article-title>
+        <source>BMC Genomics</source>
+        <year>2013</year>
+        <volume>14</volume>
+        <fpage>167</fpage>
+        <?supplied-pmid 23496952?>
+        <pub-id pub-id-type="pmid">23496952</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR12">
+      <label>12.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhao</surname>
+            <given-names>Q-Y</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Kong</surname>
+            <given-names>Y-M</given-names>
+          </name>
+          <name>
+            <surname>Luo</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Hao</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Optimizing de novo transcriptome assembly from short-read RNA-Seq data: a comparative study</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2011</year>
+        <volume>12 Suppl 1</volume>
+        <fpage>S2</fpage>
+        <?supplied-pmid 21342549?>
+        <pub-id pub-id-type="pmid">21342549</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR13">
+      <label>13.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Garg</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Patel</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Tyagi</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Jain</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>De novo assembly of chickpea transcriptome using short reads for gene discovery and marker identification</article-title>
+        <source>DNA Res</source>
+        <year>2011</year>
+        <volume>18</volume>
+        <fpage>53</fpage>
+        <lpage>63</lpage>
+        <?supplied-pmid 21217129?>
+        <pub-id pub-id-type="pmid">21217129</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR14">
+      <label>14.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Duan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Xia</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Zhao</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Jia</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Kong</surname>
+            <given-names>X</given-names>
+          </name>
+        </person-group>
+        <article-title>Optimizing de novo common wheat transcriptome assembly using short-read RNA-Seq data</article-title>
+        <source>BMC Genomics</source>
+        <year>2012</year>
+        <volume>13</volume>
+        <fpage>392</fpage>
+        <?supplied-pmid 22891638?>
+        <pub-id pub-id-type="pmid">22891638</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR15">
+      <label>15.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhang</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Yang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Tang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Shang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Shen</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>A practical comparison of de novo genome assembly software tools for next-generation sequencing technologies</article-title>
+        <source>PLoS One</source>
+        <year>2011</year>
+        <volume>6</volume>
+        <fpage>e17915</fpage>
+        <?supplied-pmid 21423806?>
+        <pub-id pub-id-type="pmid">21423806</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR16">
+      <label>16.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kvam</surname>
+            <given-names>VM</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Si</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>A comparison of statistical methods for detecting differentially expressed genes from RNA-seq data</article-title>
+        <source>Am J Bot</source>
+        <year>2012</year>
+        <volume>99</volume>
+        <fpage>248</fpage>
+        <lpage>256</lpage>
+        <?supplied-pmid 22268221?>
+        <pub-id pub-id-type="pmid">22268221</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR17">
+      <label>17.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Soneson</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Delorenzi</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>A comparison of methods for differential expression analysis of RNA-seq data</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2013</year>
+        <volume>14</volume>
+        <fpage>91</fpage>
+        <?supplied-pmid 23497356?>
+        <pub-id pub-id-type="pmid">23497356</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR18">
+      <label>18.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sandmann</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Vogg</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Owlarn</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Boutros</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Bartscherer</surname>
+            <given-names>K</given-names>
+          </name>
+        </person-group>
+        <article-title>The head-regeneration transcriptome of the planarian Schmidtea mediterranea</article-title>
+        <source>Genome Biol</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>R76</fpage>
+        <?supplied-pmid 21846378?>
+        <pub-id pub-id-type="pmid">21846378</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR19">
+      <label>19.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Oono</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Kobayashi</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Kawahara</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Yazawa</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Handa</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Itoh</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Matsumoto</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>Characterisation of the wheat (triticum aestivum L.) transcriptome by de novo assembly for the discovery of phosphate starvation-responsive genes: gene expression in Pi-stressed wheat</article-title>
+        <source>BMC Genomics</source>
+        <year>2013</year>
+        <volume>14</volume>
+        <fpage>77</fpage>
+        <?supplied-pmid 23379779?>
+        <pub-id pub-id-type="pmid">23379779</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR20">
+      <label>20.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Haas</surname>
+            <given-names>BJ</given-names>
+          </name>
+          <name>
+            <surname>Papanicolaou</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Yassour</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Grabherr</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Blood</surname>
+            <given-names>PD</given-names>
+          </name>
+          <name>
+            <surname>Bowden</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Couger</surname>
+            <given-names>MB</given-names>
+          </name>
+          <name>
+            <surname>Eccles</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Lieber</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Macmanes</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Ott</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Orvis</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Pochet</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Strozzi</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Weeks</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Westerman</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>William</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Dewey</surname>
+            <given-names>CN</given-names>
+          </name>
+          <name>
+            <surname>Henschel</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Leduc</surname>
+            <given-names>RD</given-names>
+          </name>
+          <name>
+            <surname>Friedman</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Regev</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>De novo transcript sequence reconstruction from RNA-seq using the Trinity platform for reference generation and analysis</article-title>
+        <source>Nat Protoc</source>
+        <year>2013</year>
+        <volume>8</volume>
+        <fpage>1494</fpage>
+        <lpage>1512</lpage>
+        <?supplied-pmid 23845962?>
+        <pub-id pub-id-type="pmid">23845962</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR21">
+      <label>21.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Dewey</surname>
+            <given-names>CN</given-names>
+          </name>
+        </person-group>
+        <article-title>RSEM: accurate transcript quantification from RNA-Seq data with or without a reference genome</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>323</fpage>
+        <?supplied-pmid 21816040?>
+        <pub-id pub-id-type="pmid">21816040</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR22">
+      <label>22.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Robinson</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>McCarthy</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Smyth</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>edgeR: a Bioconductor package for differential expression analysis of digital gene expression data</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>139</fpage>
+        <lpage>140</lpage>
+        <?supplied-pmid 19910308?>
+        <pub-id pub-id-type="pmid">19910308</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR23">
+      <label>23.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Anders</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Huber</surname>
+            <given-names>W</given-names>
+          </name>
+        </person-group>
+        <article-title>Differential expression analysis for sequence count data</article-title>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>R106</fpage>
+        <?supplied-pmid 20979621?>
+        <pub-id pub-id-type="pmid">20979621</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR24">
+      <label>24.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ayers</surname>
+            <given-names>KL</given-names>
+          </name>
+          <name>
+            <surname>Davidson</surname>
+            <given-names>NM</given-names>
+          </name>
+          <name>
+            <surname>Demiyah</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Roeszler</surname>
+            <given-names>KN</given-names>
+          </name>
+          <name>
+            <surname>Grutzner</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Sinclair</surname>
+            <given-names>AH</given-names>
+          </name>
+          <name>
+            <surname>Oshlack</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Smith</surname>
+            <given-names>CA</given-names>
+          </name>
+        </person-group>
+        <article-title>RNA sequencing reveals sexually dimorphic gene expression before gonadal differentiation in chicken embryos and allows comprehensive annotation of W-chromosome genes</article-title>
+        <source>Genome Biol</source>
+        <year>2013</year>
+        <volume>14</volume>
+        <fpage>R26</fpage>
+        <?supplied-pmid 23531366?>
+        <pub-id pub-id-type="pmid">23531366</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR25">
+      <label>25.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Trapnell</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Hendrickson</surname>
+            <given-names>DG</given-names>
+          </name>
+          <name>
+            <surname>Sauvageau</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Goff</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Rinn</surname>
+            <given-names>JL</given-names>
+          </name>
+          <name>
+            <surname>Pachter</surname>
+            <given-names>L</given-names>
+          </name>
+        </person-group>
+        <article-title>Differential analysis of gene regulation at transcript resolution with RNA-seq</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2013</year>
+        <volume>31</volume>
+        <fpage>46</fpage>
+        <lpage>53</lpage>
+        <?supplied-pmid 23222703?>
+        <pub-id pub-id-type="pmid">23222703</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR26">
+      <label>26.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nookaew</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Papini</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Pornputtapong</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Scalcinati</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Fagerberg</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Uhlén</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Nielsen</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>A comprehensive comparison of RNA-Seq-based transcriptome analysis from reads to differential gene expression and cross-comparison with microarrays: a case study in Saccharomyces cerevisiae</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2012</year>
+        <volume>40</volume>
+        <fpage>10084</fpage>
+        <lpage>10097</lpage>
+        <?supplied-pmid 22965124?>
+        <pub-id pub-id-type="pmid">22965124</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR27">
+      <label>27.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McGinnis</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Madden</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>BLAST: at the core of a powerful and diverse set of sequence analysis tools</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2004</year>
+        <volume>32</volume>
+        <fpage>W20</fpage>
+        <lpage>W25</lpage>
+        <?supplied-pmid 15215342?>
+        <pub-id pub-id-type="pmid">15215342</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR28">
+      <label>28.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pertea</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Huang</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Liang</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Antonescu</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Sultana</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Karamycheva</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>White</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Cheung</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Parvizi</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Tsai</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Quackenbush</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>TIGR Gene Indices clustering tools (TGICL): a software system for fast clustering of large EST datasets</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <fpage>651</fpage>
+        <lpage>652</lpage>
+        <?supplied-pmid 12651724?>
+        <pub-id pub-id-type="pmid">12651724</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR29">
+      <label>29.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Haznedaroglu</surname>
+            <given-names>BZ</given-names>
+          </name>
+          <name>
+            <surname>Reeves</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Rismani-Yazdi</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Peccia</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Optimization of de novo transcriptome assembly from high-throughput short read sequencing data improves functional annotation for non-model organisms</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2012</year>
+        <volume>13</volume>
+        <fpage>170</fpage>
+        <?supplied-pmid 22808927?>
+        <pub-id pub-id-type="pmid">22808927</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR30">
+      <label>30.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fu</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Niu</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Zhu</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>W</given-names>
+          </name>
+        </person-group>
+        <article-title>CD-HIT: accelerated for clustering the next-generation sequencing data</article-title>
+        <source>Bioinformatics</source>
+        <year>2012</year>
+        <volume>28</volume>
+        <fpage>3150</fpage>
+        <lpage>3152</lpage>
+        <?supplied-pmid 23060610?>
+        <pub-id pub-id-type="pmid">23060610</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR31">
+      <label>31.</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Manning</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Raghavan</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Schütze</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Flat clustering</article-title>
+        <source>Introduction to Information Retrieval</source>
+        <year>2008</year>
+        <publisher-loc>New York</publisher-loc>
+        <publisher-name>Cambridge University Press</publisher-name>
+        <fpage>356</fpage>
+        <lpage>360</lpage>
+      </element-citation>
+    </ref>
+    <ref id="CR32">
+      <label>32.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Smith</surname>
+            <given-names>SA</given-names>
+          </name>
+        </person-group>
+        <article-title>Optimizing de novo assembly of short-read RNA-seq data for phylogenomics</article-title>
+        <source>BMC Genomics</source>
+        <year>2013</year>
+        <volume>14</volume>
+        <fpage>328</fpage>
+        <?supplied-pmid 23672450?>
+        <pub-id pub-id-type="pmid">23672450</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR33">
+      <label>33.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hornett</surname>
+            <given-names>EA</given-names>
+          </name>
+          <name>
+            <surname>Wheat</surname>
+            <given-names>CW</given-names>
+          </name>
+        </person-group>
+        <article-title>Quantitative RNA-Seq analysis in non-model species: assessing transcriptome assemblies as a scaffold and the utility of evolutionary divergent genomic reference species</article-title>
+        <source>BMC Genomics</source>
+        <year>2012</year>
+        <volume>13</volume>
+        <fpage>361</fpage>
+        <?supplied-pmid 22853326?>
+        <pub-id pub-id-type="pmid">22853326</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR34">
+      <label>34.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Finstermeier</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Zinner</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Brameier</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Meyer</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Kreuz</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Hofreiter</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Roos</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>A mitogenomic phylogeny of living primates</article-title>
+        <source>PLoS One</source>
+        <year>2013</year>
+        <volume>8</volume>
+        <fpage>e69504</fpage>
+        <?supplied-pmid 23874967?>
+        <pub-id pub-id-type="pmid">23874967</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR35">
+      <label>35.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brown</surname>
+            <given-names>CT</given-names>
+          </name>
+          <name>
+            <surname>Howe</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Q</given-names>
+          </name>
+          <name>
+            <surname>Pyrkosz</surname>
+            <given-names>AB</given-names>
+          </name>
+          <name>
+            <surname>Brom</surname>
+            <given-names>TH</given-names>
+          </name>
+        </person-group>
+        <article-title>A reference-free algorithm for computational normalization of shotgun sequencing data</article-title>
+        <source>arXiv</source>
+        <year>2012</year>
+        <volume>1203</volume>
+        <fpage>4802</fpage>
+      </element-citation>
+    </ref>
+    <ref id="CR36">
+      <label>36.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Surget-Groba</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Montoya-Burgos</surname>
+            <given-names>JI</given-names>
+          </name>
+        </person-group>
+        <article-title>Optimization of de novo transcriptome assembly from next-generation sequencing data</article-title>
+        <source>Genome Res</source>
+        <year>2010</year>
+        <volume>20</volume>
+        <fpage>1432</fpage>
+        <lpage>1440</lpage>
+        <?supplied-pmid 20693479?>
+        <pub-id pub-id-type="pmid">20693479</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR37">
+      <label>37.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Smeds</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Künstner</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>ConDeTri–a content dependent read trimmer for Illumina data</article-title>
+        <source>PLoS One</source>
+        <year>2011</year>
+        <volume>6</volume>
+        <fpage>e26314</fpage>
+        <?supplied-pmid 22039460?>
+        <pub-id pub-id-type="pmid">22039460</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR38">
+      <label>38.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kent</surname>
+            <given-names>WJ</given-names>
+          </name>
+        </person-group>
+        <article-title>BLAT - the BLAST-like alignment tool</article-title>
+        <source>Genome Res</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>656</fpage>
+        <lpage>664</lpage>
+        <?supplied-pmid 11932250?>
+        <pub-id pub-id-type="pmid">11932250</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR39">
+      <label>39.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Trapnell</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Pachter</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>TopHat: discovering splice junctions with RNA-Seq</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1105</fpage>
+        <lpage>1111</lpage>
+        <?supplied-pmid 19289445?>
+        <pub-id pub-id-type="pmid">19289445</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR40">
+      <label>40.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Langmead</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Trapnell</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Pop</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>SL</given-names>
+          </name>
+        </person-group>
+        <article-title>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R25</fpage>
+        <?supplied-pmid 19261174?>
+        <pub-id pub-id-type="pmid">19261174</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR41">
+      <label>41.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Handsaker</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Wysoker</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Fennell</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Ruan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Homer</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Marth</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Abecasis</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>The Sequence Alignment/Map format and SAMtools</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2078</fpage>
+        <lpage>2079</lpage>
+        <?supplied-pmid 19505943?>
+        <pub-id pub-id-type="pmid">19505943</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR42">
+      <label>42.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McCarthy</surname>
+            <given-names>DJ</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Smyth</surname>
+            <given-names>GK</given-names>
+          </name>
+        </person-group>
+        <article-title>Differential expression analysis of multifactor RNA-Seq experiments with respect to biological variation</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2012</year>
+        <volume>40</volume>
+        <fpage>4288</fpage>
+        <lpage>4297</lpage>
+        <?supplied-pmid 22287627?>
+        <pub-id pub-id-type="pmid">22287627</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR43">
+      <label>43.</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>De Hoon</surname>
+            <given-names>MJL</given-names>
+          </name>
+          <name>
+            <surname>Imoto</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Nolan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Miyano</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Open source clustering software</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>1453</fpage>
+        <lpage>1454</lpage>
+        <?supplied-pmid 14871861?>
+        <pub-id pub-id-type="pmid">14871861</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR44">
+      <label>44.</label>
+      <mixed-citation publication-type="other"><bold>Corset.</bold> [<ext-link ext-link-type="uri" xlink:href="https://code.google.com/p/corset-project/">https://code.google.com/p/corset-project/</ext-link>]</mixed-citation>
+    </ref>
+  </ref-list>
+</back>

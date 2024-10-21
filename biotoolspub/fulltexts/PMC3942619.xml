@@ -1,0 +1,727 @@
+<?DTDIdentifier.IdentifierValue http://www.biomedcentral.com/xml/article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Res Notes</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Res Notes</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Research Notes</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1756-0500</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3942619</article-id>
+    <article-id pub-id-type="publisher-id">1756-0500-7-68</article-id>
+    <article-id pub-id-type="pmid">24479665</article-id>
+    <article-id pub-id-type="doi">10.1186/1756-0500-7-68</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Simulating a population genomics data set using FlowSim</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Malde</surname>
+          <given-names>Ketil</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>ketil.malde@imr.no</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Institute of Marine Research, Nordnesgaten 50, Bergen, Norway</aff>
+    <pub-date pub-type="collection">
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>31</day>
+      <month>1</month>
+      <year>2014</year>
+    </pub-date>
+    <volume>7</volume>
+    <fpage>68</fpage>
+    <lpage>68</lpage>
+    <history>
+      <date date-type="received">
+        <day>21</day>
+        <month>11</month>
+        <year>2013</year>
+      </date>
+      <date date-type="accepted">
+        <day>21</day>
+        <month>1</month>
+        <year>2014</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2014 Malde; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2014</copyright-year>
+      <copyright-holder>Malde; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited. The Creative Commons Public Domain Dedication waiver (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</ext-link>) applies to the data made available in this article, unless otherwise stated.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1756-0500/7/68"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>The field of population genetics use the genetic composition of populations to study the effects of ecological and evolutionary factors, including selection, genetic drift, mating structure, and migration. Until recently, these studies were usually based upon the analysis of relatively few (typically 10–20) DNA markers on samples from multiple populations. In contrast, high-throughput sequencing provides large amounts of data and consequently very high resolution genetic information. Recent technological developments are rapidly making this a cost-effective alternative. In addition, sequencing allows both the direct study of genomic differences between population, and the discovery of single nucleotide polymorphism marker that can be subsequently used in high-throughput genotyping. Much of the analysis in population genetics was developed before large scale sequencing became feasible. Methods often do not take into account the characteristics of the different sequencing technologies, and consequently, may not always be well suited to this kind of data.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>Although the FlowSim suite of tools originally targeted simulation of <italic>de novo</italic> 454 genomics data, recent developments and enhancements makes it suitable also for simulating other kinds of data. We examine its application to population genomics, and provide examples and supplementary scripts and utilities to aid in this task.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>Simulation is an important tool to study and develop methods in many fields, and here we demonstrate how to simulate a high-throughput sequencing dataset for population genomics.</p>
+      </sec>
+    </abstract>
+    <kwd-group>
+      <kwd>Simulation</kwd>
+      <kwd>Second-generation sequencing</kwd>
+      <kwd>Population genomics</kwd>
+      <kwd>Shotgun metagenomics</kwd>
+      <kwd>SNP</kwd>
+    </kwd-group>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Simulation is an important tool for developing and experimenting with methods for analysis of sequencing data. Several simulators exist, usually targeting specific data types or analyses. For instance, MetaSim [<xref ref-type="bibr" rid="B1">1</xref>] targets metagenomic samples, and SimSeq (St. John, unpublished) and Wgsim [<xref ref-type="bibr" rid="B2">2</xref>] target Illumina sequences.</p>
+    <p>As implied by the name, FlowSim [<xref ref-type="bibr" rid="B3">3</xref>] was originally developed for simulation of <italic>de novo</italic> genomics data on the 454 platform. Since its inception, it has grown into a flexible suite of tools that can be applied to a number of different uses, and here we demonstrate how it can simulate a population genomics data set consisting of Illumina reads.</p>
+    <p>A sequencing dataset for population genomics typically consists of reads from pools of individuals from a species, where each pool is taken from a specific populations or subpopulation of interest. By identifying and quantifying variants in the different pools, one can calculate the degree of divergence and population structure between the populations. In turn, this information can be used to study evolution [<xref ref-type="bibr" rid="B4">4</xref>,<xref ref-type="bibr" rid="B5">5</xref>], quantitative traits [<xref ref-type="bibr" rid="B6">6</xref>], and also constitutes an important tool for estimating biological diversity.</p>
+  </sec>
+  <sec>
+    <title>The FlowSim suite</title>
+    <p>The current version of FlowSim (0.3.5) consists of several independent components, as illustrated in Figure <xref ref-type="fig" rid="F1">1</xref>. Each component is implemented as a separate tool, using FASTA-formatted sequences for input and output. (The exception is <monospace>flowsim</monospace>, which outputs the native SFF file format. FASTA-formatted sequence can be trivially extracted, e.g. using the <monospace>flower</monospace>[<xref ref-type="bibr" rid="B7">7</xref>] tool). This makes it easy for the user to construct a custom simulation pipeline tailored to his or her needs. Here, we will make use of <monospace>clonesim</monospace> to generate sets of reads, <monospace>mutator</monospace> to simulate genetic divergence in the form of SNPs as well as simulating sequencing errors in the simulated reads, and <monospace>duplicator</monospace> to introduce artificial duplicates.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Components of the FlowSim pipeline.</bold> For a typical 454 sequencing simulation application, first the clonesim component takes a FASTA-formatted input genome and extracts random fragments representing the clones to be sequenced. The user can specify the statistical distribution to use for clone lengths. gelfilter then simulates filtering by sequence length (i.e. molecule size). kitsim simulates the attachment of 454-specific <italic>adapters</italic>, synthetic sequence fragments that are used in the sequencing process. mutator introduces random substitutions and indels into sequences. duplicator randomly increases the multiplicity of sequences, simulating the artificial duplicates that occur with most second generation technologies. Finally, flowsim simulates the 454 pyrosequencing process, and generates the final SFF file.</p>
+      </caption>
+      <graphic xlink:href="1756-0500-7-68-1"/>
+    </fig>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods and results</title>
+    <p>Under the current simulations, a population consists of a number of individuals with specific genetic variations. For simplicity, we will consider our populations as a sets of genome sequences, each similar to a reference genome, but differing in a set of locations with unique substitutions. We will refer to these genomes as the <italic>haplotypes</italic> of the population. Each haplotype (and thus its specific genomic variants) occurs with a specific frequency in the population as a whole.</p>
+    <p>Starting with a single haplotype (i.e., a reference genome or chromosome), we generate the new haplotypes by introducing random mutations. The mutations are identified, and noted separately. The resulting haplotypes are then concatenated in desired multiplicities into a combined genome representing each population, and sets of simulated reads are generated by selecting fragments randomly from the the population genomes. Finally, to simulate sequencing errors, artifacts [<xref ref-type="bibr" rid="B8">8</xref>], and the occurrence of rare variants [<xref ref-type="bibr" rid="B9">9</xref>], the reads have additional variations introduced. Also, a random selection of reads are output multiple times in order to simulate the occurrence of artificial duplicates [<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B11">11</xref>].</p>
+  </sec>
+  <sec>
+    <title>Implementation</title>
+    <p>We will presume that our reference genome exists in a file called <monospace>genome.fasta</monospace>. First the set of haplotypes are generated by using <monospace>mutator</monospace> to randomly introduce on average five mutations per kilobase, using the option <monospace>-s 0.005</monospace>. To simplify analysis, we do not introduce indels (<monospace>-i 0</monospace>). The following script implements the analysis. <disp-formula><graphic xlink:href="1756-0500-7-68-i1.gif"/></disp-formula></p>
+    <p>Although here we generate intermediate files, each step can also read from standard input and write to standard output. Thus, intermediate files can be omitted using UNIX pipes.</p>
+    <p>The next step simply concatenates the haplotypes in different proportions to construct the population genomes, <monospace>p1.fasta</monospace> and <monospace>p2.fasta</monospace>. Here, we combined the three haplotypes <italic>H</italic><sub>1</sub>, <italic>H</italic><sub>2</sub> and <italic>H</italic><sub>3</sub> in proportions of 1:2:3 in population <italic>P</italic><sub>1</sub>, and 3:2:1 in population <italic>P</italic><sub>2</sub>, as shown in Figure <xref ref-type="fig" rid="F2">2</xref>. As a result, an allele present in <italic>H</italic><sub>1</sub> (i.e., <monospace>H1.fasta</monospace>) will have a minor allele frequency of 0.167 in population <italic>P</italic><sub>1</sub>, and 0.5 in <italic>P</italic><sub>2</sub>, giving it an <italic>a priori</italic><italic>F</italic><sub><italic>ST</italic></sub> of 0.125, while variant alleles in <italic>H</italic><sub>2</sub> will occur with an equal minor allele frequency (of 0.333) in either population, resulting in an <italic>F</italic><sub><italic>st</italic></sub> of 0.</p>
+    <fig id="F2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Generating population genomes from haplotypes.</bold> Three different haplotypes (labeled H1, H2, and H3) are generated from the reference genome by applying random mutations. The haplotypes are then concatenated in appropriate multiplicities so that mutations specific to each haplotype will occur with known frequencies in the population genomes (labeled P1 and P2).</p>
+      </caption>
+      <graphic xlink:href="1756-0500-7-68-2"/>
+    </fig>
+    <p>In step three, we can use <monospace>clonesim</monospace> to generate reads by extracting 20 M (<monospace>-c 2000000</monospace>) random fragments of exactly 100 bp length (using the <monospace>-l</monospace> option to set the length distribution to <monospace>Uniform 100 100</monospace>). The generated reads are exact copies of fragments of the reference genome, and in order to simulate sequencing errors and rare variants, in step four we again apply <monospace>mutator</monospace>, this time allowing indels as well as substitutions. Finally, we randomly duplicate some of the reads, using the <monospace>duplicator</monospace> tool.</p>
+  </sec>
+  <sec>
+    <title>Additional analysis</title>
+    <p>FlowSim provides the basic building blocks for simulating the sequencing process, but analysis often depends on additional information, and sometimes requires intermediate steps to adapt the data.</p>
+    <p>A natural step in the analysis of sequence reads, simulated or otherwise, is to map them to a reference genome. This is also useful to verify that the data exhibits the expected properties, like coverage distribution or error rates. The simulation here produces FASTA sequences, but most short read mapping software accept FASTQ as input. Converting from FASTA to FASTQ is a simple task, here a small tool (called <monospace>fasta2fastq</monospace>) was written to perform this conversion.</p>
+    <p>To separate the haplotype variants from simulated sequencing errors, another small tool (<monospace>snplist</monospace>) were written to generate the list of variants per haplotype. This compares each haplotype with the reference genome, and outputs a list of the variant positions with reference and alternative allele. To simplify this process, it is conveneint to add the variants identification to e.g. the output from VCFtools [<xref ref-type="bibr" rid="B12">12</xref>] or similar variant callers, the following script can be used for this purpose: <disp-formula><graphic xlink:href="1756-0500-7-68-i2.gif"/></disp-formula></p>
+  </sec>
+  <sec>
+    <title>Discussion and conclusion</title>
+    <p>As FlowSim is primarily targeted at accurate simulation of 454 sequencing, in the present study, we have applied a simplistic model for Illumina sequences. For instance, the probability of error is uniform along each read, and independent of base, and factors that can cause sequencing bias, like e.g. the read’s GC content [<xref ref-type="bibr" rid="B13">13</xref>] or strand [<xref ref-type="bibr" rid="B14">14</xref>], are not taken into account. Sometimes a simple model suffices, and it can also make analysis simpler. However, the individual components of FlowSim can easily be replaced by custom tools, and if a more accurate sequencing model is required, it can be implemented separately, and integrated into the simulation pipeline.</p>
+    <p>Similarly, we could conceive of a more realistic model for the reference genome, in order to explore properties likely to affect our analysis. For instance, repeats caused by recent duplications (common in many plants and teleosts), transposons, or low complexity regions could have dramatic impacts on analysis. Also artifacts of the reference assembly, where chimeric contigs, collapsed repeats, and contamination could have substantial effects on the result. Again, the user is free to implement appropriate designs and insert them as separate stages in the simulation pipeline.</p>
+    <p>Here we have explored the use of FlowSim for a population genetics study. A similar approach would also allow it to be used for shotgun metagenomics. In that case, the populations would consist of genomes (haplotypes) from different species, instead of originating in a single reference genome. One might also consider mutations of haplotypes in more complex arrangements to emulate evolution of closely related species.</p>
+  </sec>
+  <sec>
+    <title>Availability and requirements</title>
+    <p>All materials are available on-line, see Table <xref ref-type="table" rid="T1">1</xref> for details. The scripts as well as other tools mentioned are released into the public domain. The documentation for the FlowSim pipeline is available from the Biohaskell Wiki. FlowSim itself is available as Open Source software under the General Public License (GPL) version 2.0.</p>
+    <table-wrap position="float" id="T1">
+      <label>Table 1</label>
+      <caption>
+        <p>On-line resources and supporting materials</p>
+      </caption>
+      <table frame="hsides" rules="groups" border="1">
+        <colgroup>
+          <col align="left"/>
+          <col align="center"/>
+        </colgroup>
+        <thead valign="top">
+          <tr>
+            <th align="left" valign="bottom">FlowSim source<hr/></th>
+            <th align="left" valign="bottom">
+              <ext-link ext-link-type="uri" xlink:href="http://malde.org/~ketil/biohaskell/flowsim">http://malde.org/~ketil/biohaskell/flowsim</ext-link>
+              <hr/>
+            </th>
+          </tr>
+          <tr>
+            <th align="left">code repository</th>
+            <th align="left"> </th>
+          </tr>
+        </thead>
+        <tbody valign="top">
+          <tr>
+            <td align="left" valign="bottom">Documentation<hr/></td>
+            <td align="left" valign="bottom">
+              <ext-link ext-link-type="uri" xlink:href="http://biohaskell.org/Applications/FlowSim">http://biohaskell.org/Applications/FlowSim</ext-link>
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">Supporting scripts</td>
+            <td align="left">
+              <ext-link ext-link-type="uri" xlink:href="http://malde.org/~ketil/flowsim-extras">http://malde.org/~ketil/flowsim-extras</ext-link>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The author declare that he has no competing interests.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>Thanks to Kevin Glover for helpful comments on the manuscript. This article was funded in part by the Research Council of Norway through the SALMAT project (HAVBRUK 226221).</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Richter</surname>
+          <given-names>DC</given-names>
+        </name>
+        <name>
+          <surname>Ott</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Auch</surname>
+          <given-names>AF</given-names>
+        </name>
+        <name>
+          <surname>Schmid</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Huson</surname>
+          <given-names>DH</given-names>
+        </name>
+        <article-title>Metasim–a sequencing simulator for genomics and metagenomics</article-title>
+        <source>PLoS ONE</source>
+        <year>2008</year>
+        <volume>3</volume>
+        <issue>10</issue>
+        <fpage>3373</fpage>
+        <comment>doi:10.1371/journal.pone.0003373</comment>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0003373</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Handsaker</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Wysoker</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Fennell</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Homer</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Marth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <collab>1000 Genome Project Data Processing Subgroup</collab>
+        <article-title>The sequence alignment/map format and SAM tools</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <issue>16</issue>
+        <fpage>2078</fpage>
+        <lpage>2079</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp352</pub-id>
+        <?supplied-pmid 19505943?>
+        <pub-id pub-id-type="pmid">19505943</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Balzer</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Malde</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Lanzén</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Sharma</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Jonassen</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>Characteristics of 454 pyrosequencing data - enabling realistic simulation with flowsim</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <issue>18</issue>
+        <fpage>i420</fpage>
+        <lpage>i425</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq365</pub-id>
+        <?supplied-pmid 20823302?>
+        <pub-id pub-id-type="pmid">20823302</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tajima</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>Evolutionary relationship of dna sequences in finite populations</article-title>
+        <source>Genetics</source>
+        <year>1983</year>
+        <volume>105</volume>
+        <issue>2</issue>
+        <fpage>437</fpage>
+        <lpage>460</lpage>
+        <?supplied-pmid 6628982?>
+        <pub-id pub-id-type="pmid">6628982</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Turner</surname>
+          <given-names>TL</given-names>
+        </name>
+        <name>
+          <surname>Bourne</surname>
+          <given-names>EC</given-names>
+        </name>
+        <name>
+          <surname>Von Wettberg</surname>
+          <given-names>EJ</given-names>
+        </name>
+        <name>
+          <surname>Hu</surname>
+          <given-names>TT</given-names>
+        </name>
+        <name>
+          <surname>Nuzhdin</surname>
+          <given-names>SV</given-names>
+        </name>
+        <article-title>Population resequencing reveals local adaptation of arabidopsis lyrata to serpentine soils</article-title>
+        <source>Nat Genet</source>
+        <year>2010</year>
+        <volume>42</volume>
+        <issue>3</issue>
+        <fpage>260</fpage>
+        <lpage>263</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng.515</pub-id>
+        <?supplied-pmid 20101244?>
+        <pub-id pub-id-type="pmid">20101244</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Calvo</surname>
+          <given-names>SE</given-names>
+        </name>
+        <name>
+          <surname>Tucker</surname>
+          <given-names>EJ</given-names>
+        </name>
+        <name>
+          <surname>Compton</surname>
+          <given-names>AG</given-names>
+        </name>
+        <name>
+          <surname>Kirby</surname>
+          <given-names>DM</given-names>
+        </name>
+        <name>
+          <surname>Crawford</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Burtt</surname>
+          <given-names>NP</given-names>
+        </name>
+        <name>
+          <surname>Rivas</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Guiducci</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Bruno</surname>
+          <given-names>DL</given-names>
+        </name>
+        <name>
+          <surname>Goldberger</surname>
+          <given-names>OA</given-names>
+        </name>
+        <name>
+          <surname>Redman</surname>
+          <given-names>MC</given-names>
+        </name>
+        <name>
+          <surname>Wiltshire</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Wilson</surname>
+          <given-names>CJ</given-names>
+        </name>
+        <name>
+          <surname>Altshuler</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Gabriel</surname>
+          <given-names>SB</given-names>
+        </name>
+        <name>
+          <surname>Daly</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Thorburn</surname>
+          <given-names>DR</given-names>
+        </name>
+        <name>
+          <surname>Mootha</surname>
+          <given-names>VK</given-names>
+        </name>
+        <article-title>High-throughput, pooled sequencing identifies mutations in nubpl and foxred1 in human complex i deficiency</article-title>
+        <source>Nat Genet</source>
+        <year>2010</year>
+        <volume>42</volume>
+        <issue>10</issue>
+        <fpage>851</fpage>
+        <lpage>858</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng.659</pub-id>
+        <?supplied-pmid 20818383?>
+        <pub-id pub-id-type="pmid">20818383</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Malde</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Flower: extracting information from pyrosequencing data</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <issue>7</issue>
+        <fpage>1041</fpage>
+        <lpage>1042</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr063</pub-id>
+        <?supplied-pmid 21330287?>
+        <pub-id pub-id-type="pmid">21330287</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Balzer</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Malde</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Jonassen</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>Systematic exploration of error sources in pyrosequencing flowgram data</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <issue>13</issue>
+        <fpage>304</fpage>
+        <lpage>309</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr251</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bhatia</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Patterson</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Sankararaman</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Price</surname>
+          <given-names>AL</given-names>
+        </name>
+        <article-title>Estimating and interpreting fst: the impact of rare variants</article-title>
+        <source>Genome Res</source>
+        <year>2013</year>
+        <volume>23</volume>
+        <issue>9</issue>
+        <fpage>1514</fpage>
+        <lpage>1521</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.154831.113</pub-id>
+        <?supplied-pmid 23861382?>
+        <pub-id pub-id-type="pmid">23861382</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gomez-Alvarez</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Teal</surname>
+          <given-names>TK</given-names>
+        </name>
+        <name>
+          <surname>Schmidt</surname>
+          <given-names>TM</given-names>
+        </name>
+        <article-title>Systematic artifacts in metagenomes from complex microbial communities</article-title>
+        <source>ISME J</source>
+        <year>2009</year>
+        <volume>3</volume>
+        <fpage>1314</fpage>
+        <lpage>1317</lpage>
+        <pub-id pub-id-type="doi">10.1038/ismej.2009.72</pub-id>
+        <?supplied-pmid 19587772?>
+        <pub-id pub-id-type="pmid">19587772</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Balzer</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Malde</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Grohme</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Jonassen</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>Filtering duplicate reads from 454 pyrosequencing data</article-title>
+        <source>Bioinformatics</source>
+        <year>2013</year>
+        <volume>29</volume>
+        <issue>7</issue>
+        <fpage>830</fpage>
+        <lpage>836</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btt047</pub-id>
+        <?supplied-pmid 23376350?>
+        <pub-id pub-id-type="pmid">23376350</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Danecek</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Auton</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Albers</surname>
+          <given-names>CA</given-names>
+        </name>
+        <name>
+          <surname>Banks</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>DePristo</surname>
+          <given-names>MA</given-names>
+        </name>
+        <name>
+          <surname>Handsaker</surname>
+          <given-names>RE</given-names>
+        </name>
+        <name>
+          <surname>Lunter</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Marth</surname>
+          <given-names>GT</given-names>
+        </name>
+        <name>
+          <surname>Sherry</surname>
+          <given-names>ST</given-names>
+        </name>
+        <name>
+          <surname>McVean</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <collab>1000 Genomes Project Analysis Group</collab>
+        <article-title>The variant call format and vcftools</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <issue>15</issue>
+        <fpage>2156</fpage>
+        <lpage>2158</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr330</pub-id>
+        <?supplied-pmid 21653522?>
+        <pub-id pub-id-type="pmid">21653522</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ross</surname>
+          <given-names>MG</given-names>
+        </name>
+        <name>
+          <surname>Russ</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Costello</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hollinger</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lennon</surname>
+          <given-names>NJ</given-names>
+        </name>
+        <name>
+          <surname>Hegarty</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Nusbaum</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Jaffe</surname>
+          <given-names>DB</given-names>
+        </name>
+        <article-title>Characterizing and measuring bias in sequence data</article-title>
+        <source>Genome Biol</source>
+        <year>2013</year>
+        <volume>14</volume>
+        <fpage>R51</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2013-14-5-r51</pub-id>
+        <?supplied-pmid 23718773?>
+        <pub-id pub-id-type="pmid">23718773</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Guo1</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>C-I</given-names>
+        </name>
+        <name>
+          <surname>Long</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Samuels</surname>
+          <given-names>DC</given-names>
+        </name>
+        <name>
+          <surname>Shyr</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>The effect of strand bias in illumina short-read sequencing data</article-title>
+        <source>BMC Genomics</source>
+        <year>2012</year>
+        <volume>13</volume>
+        <fpage>666</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-13-666</pub-id>
+        <?supplied-pmid 23176052?>
+        <pub-id pub-id-type="pmid">23176052</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

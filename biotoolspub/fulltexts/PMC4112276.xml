@@ -1,0 +1,695 @@
+<?properties open_access?>
+<?properties manuscript?>
+<?origin nihpa?>
+<?iso-abbr Nat. Methods?>
+<?submitter-system nihms?>
+<?submitter-canonical-name Nature Publishing Group?>
+<?submitter-canonical-id NATURE-STRUCTUR?>
+<?submitter-userid 1045?>
+<?submitter-authority publisher?>
+<?submitter-login nature-structure?>
+<?submitter-name Nature Publishing Group (obsolete)?>
+<?domain nihpa?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-journal-id">101215604</journal-id>
+    <journal-id journal-id-type="pubmed-jr-id">32338</journal-id>
+    <journal-id journal-id-type="nlm-ta">Nat Methods</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Nat. Methods</journal-id>
+    <journal-title-group>
+      <journal-title>Nature methods</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1548-7091</issn>
+    <issn pub-type="epub">1548-7105</issn>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">4112276</article-id>
+    <article-id pub-id-type="pmid">24836921</article-id>
+    <article-id pub-id-type="doi">10.1038/nmeth.2967</article-id>
+    <article-id pub-id-type="manuscript">nihpa590625</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Bayesian approach to single-cell differential expression analysis</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Kharchenko</surname>
+          <given-names>Peter V.</given-names>
+        </name>
+        <xref ref-type="aff" rid="A1">1</xref>
+        <xref ref-type="aff" rid="A2">2</xref>
+        <xref ref-type="aff" rid="A3">3</xref>
+        <xref ref-type="corresp" rid="CR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Silberstein</surname>
+          <given-names>Lev</given-names>
+        </name>
+        <xref ref-type="aff" rid="A3">3</xref>
+        <xref ref-type="aff" rid="A4">4</xref>
+        <xref ref-type="aff" rid="A5">5</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Scadden</surname>
+          <given-names>David T.</given-names>
+        </name>
+        <xref ref-type="aff" rid="A3">3</xref>
+        <xref ref-type="aff" rid="A4">4</xref>
+        <xref ref-type="aff" rid="A5">5</xref>
+      </contrib>
+    </contrib-group>
+    <aff id="A1"><label>1</label> Center for Biomedical Informatics, Harvard Medical School, Boston, MA, USA</aff>
+    <aff id="A2"><label>2</label> Hematology/Oncology Program, Children's Hospital, Boston, MA, USA</aff>
+    <aff id="A3"><label>3</label> Harvard Stem Cell Institute, Cambridge, MA, USA</aff>
+    <aff id="A4"><label>4</label> Center for Regenerative Medicine, Massachusetts General Hospital, Boston, MA, USA</aff>
+    <aff id="A5"><label>5</label> Department of Stem Cell and Regenerative Biology, Harvard University, Cambridge, MA, USA</aff>
+    <author-notes>
+      <corresp id="CR1"><label>*</label> correspondence should be addressed to <email>peter.kharchenko@post.harvard.edu</email></corresp>
+    </author-notes>
+    <pub-date pub-type="nihms-submitted">
+      <day>6</day>
+      <month>6</month>
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>18</day>
+      <month>5</month>
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <month>7</month>
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>01</day>
+      <month>1</month>
+      <year>2015</year>
+    </pub-date>
+    <volume>11</volume>
+    <issue>7</issue>
+    <fpage>740</fpage>
+    <lpage>742</lpage>
+    <!--elocation-id from pubmed: 10.1038/nmeth.2967-->
+    <permissions>
+      <license xlink:href="http://www.nature.com/authors/editorial_policies/license.html#terms">
+        <license-p>Users may view, print, copy, and download text and data-mine the content in such documents, for the purposes of academic research, subject always to the full Conditions of use:<ext-link ext-link-type="uri" xlink:href="http://www.nature.com/authors/editorial_policies/license.html#terms">http://www.nature.com/authors/editorial_policies/license.html#terms</ext-link></license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p id="P1">Single-cell data provides means to dissect the composition of complex tissues and specialized cellular environments. However, the analysis of such measurements is complicated by high levels of technical noise and intrinsic biological variability. We describe a probabilistic model of expression magnitude distortions typical of single-cell RNA sequencing measurements, which enables detection of differential expression signatures and identification of subpopulations of cells in a way that is more tolerant of noise.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <p id="P2">Advances in DNA sequencing and increased sensitivity of RNA analysis methods (RNA-seq) are making it practical to examine transcriptional states of individual cells on a large scale<sup><xref rid="R1" ref-type="bibr">1</xref>-<xref rid="R4" ref-type="bibr">4</xref></sup>, facilitating unbiased analysis of cellular states in healthy and diseased tissues<sup><xref rid="R5" ref-type="bibr">5</xref>-<xref rid="R8" ref-type="bibr">8</xref></sup>. Profiling the low amounts of mRNA contained within individual cell typically requires more than a million-fold amplification, which leads to severe non-linear distortions of relative transcript abundance and accumulation of nonspecific byproducts. Low starting amount also makes it more likely that a transcript will be “missed” during the initial reverse transcription step, and consequently not detected during sequencing. This can lead to so-called “drop-out” events, where a gene is observed at moderate or even high expression level in one cell but is not detected in another cell (<xref ref-type="fig" rid="F1">Figure 1a</xref>). More fundamentally, gene expression is inherently stochastic, and some cell-to-cell variability will be an unavoidable consequence of transcriptional bursting of individual genes or coordinated fluctuations of multi-gene networks<sup><xref rid="R9" ref-type="bibr">9</xref></sup>. Such biological variability is of significant interest, and several methods have been proposed for detecting it from RNA-seq and other single-cell measurements<sup><xref rid="R10" ref-type="bibr">10</xref>-<xref rid="R12" ref-type="bibr">12</xref></sup>. Collectively, this multi-factorial variability in single-cell measurements substantially increases the apparent level of noise, posing challenges for differential expression and other downstream computational analyses. Noting that standard RNA-seq analysis approaches may be thrown off by the patterns of cell-to-cell variability, we modeled single-cell measurements as a probabilistic mixture of successful amplification and detection failure events. We find that such a representation is effective at identifying differential expression signatures between cell groups, and improves the ability to discern distinct subpopulations in the context of larger single-cell datasets, such as the 92-cell mouse embryonic fibroblast (MEF) embryonic stem cell (ES) study by Islam <italic>et al</italic><sup><xref rid="R2" ref-type="bibr">2</xref></sup>, or cells from different stages of early mouse embryos analyzed by Deng <italic>et al</italic><sup><xref rid="R12" ref-type="bibr">12</xref></sup>.</p>
+  <p id="P3">Comparisons of RNA-seq data obtained from individual cells tend to show higher variability than typically observed in biological replicates of bulk RNA-seq measurements. In addition to strong over-dispersion, there are notable occurrences of high-magnitude outliers, as well as “drop-out” events (<xref ref-type="fig" rid="F1">Figure 1a</xref>). Such types of variability are poorly accommodated by the standard RNA-seq analysis methods<sup><xref rid="R13" ref-type="bibr">13</xref>,<xref rid="R14" ref-type="bibr">14</xref></sup>, and the reported sets of top differentially expressed genes can include genes driven by high-magnitude outliers or drop-out events, showing poor consistency within each cell population (<xref ref-type="fig" rid="F1">Figure 1b</xref>). The abundance of the “drop-out” events has been previously noted in single-cell qPCR data and accommodated using zero-inflated distributions, such as the discrete/continuous model proposed by McDavid <italic>et al</italic><sup><xref rid="R15" ref-type="bibr">15</xref></sup>.</p>
+  <p id="P4">Two prominent characteristics of the drop-out events make them informative in further analysis of expression state. First, the overall drop-out rates are consistently higher in some single cell samples than others (Supplementary Figures 1,2), indicating that the contribution of an individual sample to the downstream cumulative analysis should be weighted accordingly. Second, the drop-out rate for a given cell depends on the average expression magnitude of a gene in a population, with drop-outs being more frequent for lower expression magnitude genes. This trend is a consequence of both amplification biases and inherent biological variability. Importantly, quantification of such dependency provides additional evidence about the true expression magnitude. For instance, drop-out of a gene that is observed at very high expression magnitude in other cells is more likely to be indicative of true expression differences between the cells than stochastic variability.</p>
+  <p id="P5">To accommodate high variability of single-cell data we model the measurement of each cell as a mixture of two probabilistic processes – one in which the transcript is amplified and detected at a level correlating with its abundance, and the other where a gene fails to amplify or is not detected for other reasons. The first, “correlated” component is modeled using a negative binomial distribution commonly used to describe overdispersed RNA-seq data<sup><xref rid="R13" ref-type="bibr">13</xref>,<xref rid="R16" ref-type="bibr">16</xref></sup>. The RNA-seq signal associated with the second, “drop-out” component could in principle be modeled as a constant zero (<italic>i.e.</italic> zero-inflated negative binomial process), however we use a low-magnitude Poisson process to account for some background signal that is typically detected for the drop-out and transcriptionally silent genes. Importantly, the mixing ratio between the correlated and drop-out processes depends on the magnitude of gene expression in a given cell population.</p>
+  <p id="P6">To fit the parameters of an error model for a particular single-cell measurement, we use a subset of genes for which an expected expression magnitude within the cell population can be reliably estimated (<xref ref-type="fig" rid="F1">Figure 1c</xref>). Briefly, pairs of all other single-cell samples from the same subpopulation (<italic>e.g.</italic> MEF cells) are analyzed using a similarly-structured three-component mixture containing one correlated component, and drop-out components for each cell (<xref ref-type="fig" rid="F1">Figure 1d</xref>, Supplementary Figures 1,2). A subset of genes that appears in correlated components in a sufficiently large fraction of pair-wise cell comparisons is deemed reliable, and their expected expression magnitude is estimated as a median magnitude observed across such correlated components. These expected magnitudes are used to fit the parameters of the negative binomial distribution as well as the dependency of the drop-out rate on the expression magnitude for a given single-cell measurement. We find that the drop-out rate dependency on the expected expression magnitude can be reliably approximated using logistic regression (Supplementary Figure 3). Notably, the drop-out rates vary among the cells, depending on the quality of a particular library, cell type, or RNA-seq protocol (<xref ref-type="fig" rid="F1">Figure 1e,f</xref>).</p>
+  <p id="P7">The error models of individual cells provide a basis for further statistical analysis of expression levels. A common task is the analysis of expression differences between pre-determined groups of single cells. We have implemented a Bayesian method for such differential expression analysis (single cell differential expression - SCDE) that incorporates evidence provided by the measurements of individual cells in order to estimate the likelihood of a gene being expressed at any given average level in each of the single-cell subpopulations, as well as the likelihood of expression fold change between them (<xref ref-type="fig" rid="F2">Figure 2a,b</xref>). The Bayesian approach provides a natural way of integrating uncertain information gained from individual measurements. For example, while an observation of a drop-out event in a particular cell does not provide a direct estimate of expression magnitude, it constrains the likelihood that a gene is expressed at high magnitude in accordance with the overall error characteristics of that cell measurement. To moderate the impact of high-magnitude outlier events, the joint posterior probability of expression in a cell group was calculated using bootstrap resampling. The resulting sets of top differentially expressed genes (can be browsed at <ext-link ext-link-type="uri" xlink:href="http://pklab.med.harvard.edu/scde/">http://pklab.med.harvard.edu/scde/</ext-link>) show high consistency and relevance to the examined cell types. To quantify the ability of the proposed approach to detect differentially expressed genes in single-cell RNA-seq, we evaluated false positive/false negative relationship bases on the expression differences observed in traditional bulk measurements of mouse ES and MEF cells<sup><xref rid="R17" ref-type="bibr">17</xref></sup> (<xref ref-type="fig" rid="F2">Figure 2c</xref>). We find that the proposed SCDE method shows higher sensitivity than the common RNA-seq differential expression methods (DESeq and CuffDiff) and the zero-inflated approach developed by McDavid <italic>et al.</italic> for qPCR data<sup><xref rid="R15" ref-type="bibr">15</xref></sup>. Higher SCDE sensitivity is particularly pronounced for genes that are expressed at higher magnitude in ES cells (Supplementary Figure 4), likely due to a lower total RNA abundance and higher noise levels observed in these cells.</p>
+  <p id="P8">A key promise of the single-cell approach is the ability to discern novel subpopulations of cells within complex mixtures in an unbiased manner, without a priori knowledge of which cells are which. While a variety of existing multivariate analysis techniques can be used to group single cells by transcriptional signatures<sup><xref rid="R2" ref-type="bibr">2</xref>,<xref rid="R5" ref-type="bibr">5</xref></sup>, drop-out and outlier events pose substantial problems for standard similarity and variability measures. The error models of individual cells can be used to derive more robust measures. For instance, Pearson linear correlation of gene expression magnitudes (on log scale) provides a good genome-wide similarity measure, and can be used in combination with hierarchical clustering methods to identify transcriptionally distinct subpopulations of cells. We compared the classification performance of the Pearson linear correlation measure with two modified correlation measures that take into account the likelihood of drop-out events. The first measure (“direct drop-out”) evaluates correlation over a simulated dataset where likely drop-out events are designated as missing data. The second (“reciprocal drop-out”) weights the contribution of each gene based on the probability that the gene will fail (drop-out) in the second cell given its expression level in the first cell (see Methods). Evaluating the performance of different correlation measures over increasingly difficult cell classification, we find that measures adjusted on the basis of the derived error models perform consistently better in resolving cell populations (<xref ref-type="fig" rid="F2">Figure 2d</xref>, Supplementary Figure 5).</p>
+  <p id="P9">Recent progress in single-cell assays and microfluidic manipulation techniques is enabling genome-wide transcriptional examination of cellular heterogeneity within complex tissues. Such studies will likely redefine the boundaries separating cell types or key cellular states in statistical terms<sup><xref rid="R18" ref-type="bibr">18</xref></sup>. Here we have used a simple mixture model, to capture the uncertainty in expression magnitude observed in a given cell, propagating this uncertainty into subsequent analyses. As single-cell studies gain in scope, such probabilistic views of the transcriptional state will become increasingly important. </p>
+  <sec sec-type="methods" id="S1">
+    <title>Online Methods</title>
+    <sec id="S2">
+      <title>Datasets and initial abundance estimates</title>
+      <p id="P10">ES and MEF single-cell measurements (96 cells) from Islam <italic>et al</italic><sup><xref rid="R2" ref-type="bibr">2</xref></sup> were used. The initial RPM estimates were obtained using TopHat<sup><xref rid="R21" ref-type="bibr">21</xref></sup> and HTSeq. The mouse embryo data was taken from Deng <italic>et al</italic>, using the read alignments described in the manuscript<sup><xref rid="R12" ref-type="bibr">12</xref></sup>.</p>
+    </sec>
+    <sec id="S3">
+      <title>Fitting individual error models</title>
+      <p id="P11">To identify a subset of genes that can be used to fit error models for a particular single-cell measurements, all pairs of individual cells belonging to a given subpopulation (<italic>e.g.</italic> all MEF cells) were analyzed using three-component mixture model. To do so, the observed abundance a given transcript in each cell was modeled as a mixture of the “drop-out” (Poisson) and “amplification” (negative binomial -NB) components. This way, the expression of a gene with observed RPM levels of <italic>r<sub>1</sub></italic> and <italic>r<sub>2</sub></italic> in cells <italic>c<sub>1</sub></italic> and <italic>c<sub>2</sub></italic> respectively was modeled as: <disp-formula id="FD1"><mml:math display="block" id="M1" overflow="scroll"><mml:mo stretchy="true">{</mml:mo><mml:mtable><mml:mtr><mml:mtd columnalign="left"><mml:mrow><mml:msub><mml:mi>r</mml:mi><mml:mn>1</mml:mn></mml:msub><mml:mo>∼</mml:mo><mml:mi>P</mml:mi><mml:mi>o</mml:mi><mml:mi>i</mml:mi><mml:mi>s</mml:mi><mml:mi>s</mml:mi><mml:mi>o</mml:mi><mml:mi>n</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>λ</mml:mi><mml:mn>0</mml:mn></mml:msub><mml:mo>)</mml:mo></mml:mrow><mml:mspace width="1em"/><mml:mi>d</mml:mi><mml:mi>r</mml:mi><mml:mi>o</mml:mi><mml:mi>p</mml:mi><mml:mi>o</mml:mi><mml:mi>u</mml:mi><mml:mi>t</mml:mi><mml:mspace width="thickmathspace"/><mml:mi>i</mml:mi><mml:mi>n</mml:mi><mml:mspace width="thickmathspace"/><mml:msub><mml:mi>c</mml:mi><mml:mn>1</mml:mn></mml:msub></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd columnalign="left"><mml:mo stretchy="true">{</mml:mo><mml:mtable><mml:mtr><mml:mtd columnalign="left"><mml:mrow><mml:msub><mml:mi>r</mml:mi><mml:mn>1</mml:mn></mml:msub><mml:mo>∼</mml:mo><mml:mi>N</mml:mi><mml:mi>B</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>r</mml:mi><mml:mn>2</mml:mn></mml:msub><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd columnalign="left"><mml:mrow><mml:msub><mml:mi>r</mml:mi><mml:mn>2</mml:mn></mml:msub><mml:mo>∼</mml:mo><mml:mi>N</mml:mi><mml:mi>B</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>r</mml:mi><mml:mn>1</mml:mn></mml:msub><mml:mo>)</mml:mo></mml:mrow><mml:mspace width="1em"/><mml:mspace width="1em"/><mml:mspace width="1em"/><mml:mspace width="1em"/><mml:mi>a</mml:mi><mml:mi>m</mml:mi><mml:mi>p</mml:mi><mml:mi>l</mml:mi><mml:mi>i</mml:mi><mml:mi>f</mml:mi><mml:mi>i</mml:mi><mml:mi>e</mml:mi><mml:mi>d</mml:mi></mml:mrow></mml:mtd></mml:mtr></mml:mtable><mml:mphantom><mml:mo stretchy="true">}</mml:mo></mml:mphantom></mml:mtd></mml:mtr><mml:mtr><mml:mtd columnalign="left"><mml:mrow><mml:msub><mml:mi>r</mml:mi><mml:mn>2</mml:mn></mml:msub><mml:mo>∼</mml:mo><mml:mi>P</mml:mi><mml:mi>o</mml:mi><mml:mi>i</mml:mi><mml:mi>s</mml:mi><mml:mi>s</mml:mi><mml:mi>o</mml:mi><mml:mi>n</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>λ</mml:mi><mml:mn>0</mml:mn></mml:msub><mml:mo>)</mml:mo></mml:mrow><mml:mspace width="1em"/><mml:mi>d</mml:mi><mml:mi>r</mml:mi><mml:mi>o</mml:mi><mml:mi>p</mml:mi><mml:mi>o</mml:mi><mml:mi>u</mml:mi><mml:mi>t</mml:mi><mml:mspace width="thickmathspace"/><mml:mi>i</mml:mi><mml:mi>n</mml:mi><mml:mspace width="thickmathspace"/><mml:msub><mml:mi>c</mml:mi><mml:mn>2</mml:mn></mml:msub></mml:mrow></mml:mtd></mml:mtr></mml:mtable><mml:mphantom><mml:mo stretchy="true">}</mml:mo></mml:mphantom></mml:math></disp-formula> The background read frequency for the dropout components was set at λ<sub>0</sub>0.1. The mixing between the three components was determined by a multinomial logistic regression on a mixing parameter <italic>m</italic> = log(<italic>r</italic><sub>1</sub>) + log(<italic>r</italic><sub>2</sub>). Pseudo-counts of 1 were added to <italic>r<sub>1</sub></italic> and <italic>r<sub>2</sub></italic> for log transformations. The mixture was fit using EM algorithm, implemented under the FlexMix framework<sup><xref rid="R22" ref-type="bibr">22</xref></sup>. Alternatively, the initial three-component segmentation can be determined based on a user-defined background threshold, which is a lot less computationally intensive. The genes that were assigned to the “amplified” components were noted, and a set of genes appearing in the “amplified” components in at least 20% of all pair-wise comparisons of cells of the same subpopulation (excluding the cell for which the model is being fit) was used to fit the individual error models, as described below. The expected expression magnitude of these genes was estimated as a median observed magnitude between all the cell measurements in which a gene was classified to be in the “amplified” component. The aim of the 20% threshold is to have a sufficiently large number of measurements for a given gene so that the median expression magnitude estimate would be reliable, and the model parameters resulting from the fitting procedure correlate well for a range of values corresponding to 6-12 cells (Supplementary Figure 3d).</p>
+      <p id="P12">To fit an individual error model Ω<sub><italic>c</italic></sub> for a measurement of a single cell <italic>c</italic>, the observed RPM values were modeled as a function of an expected expression magnitude, using the set of estimates for a subset of genes described in the previous paragraph. The RPM level <italic>r<sub>c</sub></italic> observed for a gene in cell <italic>c</italic> was modeled as a mixture of a “drop-out” and “amplified” components, as a function of an expected expression magnitude <italic>e</italic>: <disp-formula id="FD2"><mml:math display="block" id="M2" overflow="scroll"><mml:mo stretchy="true">{</mml:mo><mml:mtable><mml:mtr><mml:mtd columnalign="left"><mml:mrow><mml:mspace width="1em"/><mml:mspace width="1em"/><mml:msub><mml:mi>r</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:mo>∼</mml:mo><mml:mi>N</mml:mi><mml:mi>B</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mi>e</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mspace width="1em"/><mml:mi>a</mml:mi><mml:mi>m</mml:mi><mml:mi>p</mml:mi><mml:mi>l</mml:mi><mml:mi>i</mml:mi><mml:mi>f</mml:mi><mml:mi>i</mml:mi><mml:mi>e</mml:mi><mml:mi>d</mml:mi></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd columnalign="left"><mml:mrow><mml:msub><mml:mi>r</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:mo>∼</mml:mo><mml:mi>P</mml:mi><mml:mi>o</mml:mi><mml:mi>i</mml:mi><mml:mi>s</mml:mi><mml:mi>s</mml:mi><mml:mi>o</mml:mi><mml:mi>n</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>λ</mml:mi><mml:mn>0</mml:mn></mml:msub><mml:mo>)</mml:mo></mml:mrow><mml:mspace width="1em"/><mml:mi>d</mml:mi><mml:mi>r</mml:mi><mml:mi>o</mml:mi><mml:mi>p</mml:mi><mml:mi>o</mml:mi><mml:mi>u</mml:mi><mml:mi>t</mml:mi></mml:mrow></mml:mtd></mml:mtr></mml:mtable><mml:mphantom><mml:mo stretchy="true">}</mml:mo></mml:mphantom></mml:math></disp-formula> with the mixing parameter <italic>m</italic> = log(<italic>e</italic>), λ<sub>0</sub> = 0.1. For each cell the model Ω<sub><italic>c</italic></sub> was fit using EM algorithm based on the set of genes for which expected expression magnitudes have been obtained. The resulting estimates of parameters for the negative binomial and concomitant (mixing) regression were used as a description of an error model Ω<sub><italic>c</italic></sub> in the subsequent analysis.</p>
+    </sec>
+    <sec id="S4">
+      <title>Differential expression analysis</title>
+      <p id="P13">Following Bayesian approach, the posterior probability of a gene being expressed at an average level <italic>x</italic> in a subpopulation of cells <italic>S</italic>, was determined as an expected value (<italic>E</italic>): <disp-formula id="FD3"><mml:math display="block" id="M3" overflow="scroll"><mml:mrow><mml:msub><mml:mi>p</mml:mi><mml:mi>S</mml:mi></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:mi>x</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:mi>E</mml:mi><mml:mrow><mml:mo stretchy="true">[</mml:mo><mml:mrow><mml:munder><mml:mo>∏</mml:mo><mml:mrow><mml:mi>c</mml:mi><mml:mo>∈</mml:mo><mml:mi>B</mml:mi></mml:mrow></mml:munder><mml:mi>p</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mi>x</mml:mi><mml:mo>∣</mml:mo><mml:msub><mml:mi>r</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mi>Ω</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:mo>)</mml:mo></mml:mrow></mml:mrow><mml:mo stretchy="true">]</mml:mo></mml:mrow></mml:mrow></mml:math></disp-formula> where <italic>B</italic> is a bootstrap sample of <italic>S</italic>, and <italic>p</italic>(<italic>x</italic>|<italic>r<sub>c</sub></italic>, Ω<sub><italic>c</italic></sub>)is the posterior probability for a given cell <italic>c</italic>: <italic>p</italic>(<italic>x</italic>|<italic>r<sub>c</sub></italic>, Ω<sub><italic>c</italic></sub>) = <italic>p<sub>d</sub></italic>(<italic>x</italic>)<italic>p<sub>poisson</sub></italic> (<italic>x</italic> + (1 − <italic>p<sub>d</sub></italic> (<italic>x</italic>)<italic>p<sub>NB</sub></italic>(<italic>x</italic>|<italic>r<sub>c</sub></italic>), where <italic>p<sub>d</sub></italic> is the probability of observing a drop-out event in a cell <italic>c</italic> for a gene expressed at an average level <italic>x</italic> in <italic>S</italic>, <italic>p<sub>poisson</sub></italic>
+<italic>x</italic> and <italic>p<sub>NB</sub></italic>(<italic>x</italic>|<italic>r<sub>c</sub></italic>) are the probabilities of observing expression magnitude of <italic>r<sub>c</sub></italic> in case of a drop-out (Poisson) or successful amplification (NB) of a gene expressed at a level <italic>x</italic> in a cell <italic>c</italic>, with the parameters of the distributions determined by the Ω<sub><italic>c</italic></sub> fit. For the differential expression analysis, the posterior probability that the gene shows a fold expression difference of <italic>f</italic> between subpopulations <italic>S</italic> and <italic>G</italic> was evaluated as <inline-formula><mml:math display="inline" id="M4" overflow="scroll"><mml:mrow><mml:mi>p</mml:mi><mml:mrow><mml:mo>(</mml:mo><mml:mi>f</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mo>=</mml:mo><mml:msub><mml:mo>∑</mml:mo><mml:mrow><mml:mi>x</mml:mi><mml:mo>∈</mml:mo><mml:mi>X</mml:mi></mml:mrow></mml:msub><mml:msub><mml:mi>p</mml:mi><mml:mi>s</mml:mi></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:mi>x</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:msub><mml:mi>p</mml:mi><mml:mi>G</mml:mi></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:mi>f</mml:mi><mml:mi>x</mml:mi><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula>, where <italic>X</italic> is the valid range of expression levels. The posterior distributions were renormalized to unity, and an empirical P value was determined to test for significance of expression difference.</p>
+    </sec>
+    <sec id="S5">
+      <title>Comparison of differential expression performance</title>
+      <p id="P14">The results if SCDE, DESeq, CuffDiff2 and SingleCellAssay (SCA) were benchmarked against an expression dataset by Moliner <italic>et al.</italic><sup><xref rid="R17" ref-type="bibr">17</xref></sup> that measured bulk MEF and ES cells grown using the same suspension growth protocol<sup><xref rid="R23" ref-type="bibr">23</xref></sup> as used by Islam <italic>et al.</italic><sup><xref rid="R2" ref-type="bibr">2</xref></sup>. The ability to recover top 1000 genes showing highest expression difference in Moliner <italic>et al.</italic> was assessed using ROC/AUC (<xref ref-type="fig" rid="F2">Figure 2c</xref>, Supplementary Figure 4) ranking genes by significance of differential expression as determined by different methods.</p>
+    </sec>
+    <sec id="S6">
+      <title>Similarity measures and subpopulation analysis</title>
+      <p id="P15">Standard measure of the genome-wide similarity between two single-cell measurements was determined as a Pearson linear coefficient on log-transformed RPM values. Genes that did not show expression signals in any of the cells were excluded from the analysis. The Bray-Curtis similarity measure was also calculated on log-transformed values (linear-based values showed lower performance).</p>
+      <p id="P16">The “direct drop-out” similarity measure aims to estimate Pearson linear correlation excluding likely “drop-out” events in any given cell. To achieve that we evaluate average correlation across 1000 sampling rounds, in each round probabilistically excluding likely drop-out observations. Specifically, in each round, an observation of a given gene at an expression level <italic>x</italic> in a particular cell was substituted with a missing value with probability <italic>p<sub>d</sub></italic>(<italic>x</italic>)<italic>k</italic>, where <italic>p<sub>d</sub></italic>(<italic>x</italic>) is the probability of a drop-out event in the current cell at an expression magnitude level <italic>x</italic>, and <italic>k=0.9</italic> is additional factor (to stabilize similarity measure in cases when drop out rates are very high in a given cell). The overall similarity between any two cells was then calculated as an average (across 1000 sampling rounds) Pearson linear correlation between log-transformed values of observations that are valid (not missing) in both cells.</p>
+      <p id="P17">The “reciprocal drop-out” similarity measure aims to reduce the impact of drop-out events on the Pearson linear correlation measure by weighting down the contribution of genes that are not likely to be reliably measured in both cells. For instance, if a gene was observed at a level <italic>x<sub>1</sub></italic> in the first cell, we will weigh its contribution by the likelihood that such level of expression can be reliably detected (<italic>i.e.</italic> without drop-out) in the second cell. This kind of reciprocal weighting minimizes the contribution of discrepant (<italic>i.e.</italic> amplified <italic>vs.</italic> drop-out) measurements to the overall similarity. Specifically, the “reciprocal drop-out” similarity was calculated as a weighted Pearson linear correlation on log-transformed RPM values, weighting the contribution of each gene by <inline-formula><mml:math display="inline" id="M5" overflow="scroll"><mml:mrow><mml:mi>k</mml:mi><mml:msqrt><mml:mrow><mml:mrow><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msubsup><mml:mi>p</mml:mi><mml:mi>d</mml:mi><mml:mn>1</mml:mn></mml:msubsup><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>x</mml:mi><mml:mn>2</mml:mn></mml:msub><mml:mo>)</mml:mo></mml:mrow><mml:mo>)</mml:mo></mml:mrow><mml:mrow><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msubsup><mml:mi>p</mml:mi><mml:mi>d</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>x</mml:mi><mml:mn>2</mml:mn></mml:msub><mml:mo>)</mml:mo></mml:mrow><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:msqrt><mml:mo>+</mml:mo><mml:mrow><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>k</mml:mi><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula>, where <inline-formula><mml:math display="inline" id="M6" overflow="scroll"><mml:mrow><mml:msubsup><mml:mi>p</mml:mi><mml:mi>d</mml:mi><mml:mn>1</mml:mn></mml:msubsup><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>x</mml:mi><mml:mn>2</mml:mn></mml:msub><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula> is a probability of observing a dropout event in cell 1 for an expression magnitude <italic>x<sub>2</sub></italic> at which the gene was observed in the cell 2. <italic>k=0.95</italic> was used in calculating reciprocal drop-out similarity. We find that both direct and reciprocal similarity measures show robust improvements in classification performance for a range of <italic>k</italic> values between above 0.85 (see Supplementary Figure 3e).</p>
+      <p id="P18">All similarity measures do well when all 90+ cells and a complete gene set are considered. To provide a meaningful comparison we measured performance on more challenging classification problems based on partial data. Specifically, a subset of 20 random ES and 20 MEF single-cell measurements was sampled in each iteration. Furthermore, increasing fraction of top differentially-expressed genes was excluded from the analysis (<xref ref-type="fig" rid="F2">Figure 2d</xref>, x-axis) to pose a more challenging classification problem. The cells were clustered using Ward method. The fraction of correctly classified cells was determined based on the top-level split of the resulting clustering. The performance was evaluated based on 200 such random sampling iterations.</p>
+    </sec>
+  </sec>
+  <sec sec-type="supplementary-material" id="SM">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="SD1">
+      <label>1</label>
+      <media xlink:href="NIHMS590625-supplement-1.pdf" orientation="portrait" xlink:type="simple" id="d37e1167" position="anchor"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack id="S7">
+    <title>Acknowledgements</title>
+    <p>We thank X. Wang (Harvard Medical School) for help with packaging the implementation, Francesco Ferrari (Harvard Medical School) and Matthew B. Johnson (Children's Hospital, Boston) for critical review of the manuscript and SCDE implementation. This work was supported by National Institutes of Health (NIH) grant K25AG037596 to PVK, fellowship awards from Leukemia and Lymphoma Research UK and Leukemia and Lymphoma Society to LS, and NIH grants R01DK050234-15A1 and R01HL097794-03 to DTS.</p>
+  </ack>
+  <fn-group>
+    <fn id="FN1">
+      <p id="P19">Author Contributions</p>
+      <p id="P20">PVK conceived and implemented the computational approach. LS and DTS designed and carried out the initial experimental study that led to the development of the presented approach.</p>
+    </fn>
+    <fn id="FN2">
+      <p id="P21">Implementation</p>
+      <p id="P22">The algorithms were implemented as an R package, available for download at <ext-link ext-link-type="uri" xlink:href="http://pklab.med.harvard.edu/scde/">http://pklab.med.harvard.edu/scde/</ext-link></p>
+    </fn>
+    <fn id="FN3">
+      <p id="P23">Competing financial interests</p>
+      <p id="P24">David T Scadden is a shareholder in Fate Therapeutics and a consultant for Fate Therapeutics, Hospira, GSK, and Bone Therapeutics.</p>
+      <p id="P25">The remaining authors declare no competing financial interests.</p>
+    </fn>
+  </fn-group>
+  <ref-list>
+    <title>References</title>
+    <ref id="R1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tang</surname>
+            <given-names>F</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Nat Methods</source>
+        <year>2009</year>
+        <volume>6</volume>
+        <fpage>377</fpage>
+        <lpage>382</lpage>
+        <pub-id pub-id-type="pmid">19349980</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R2">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Islam</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Genome Res</source>
+        <year>2011</year>
+        <volume>21</volume>
+        <fpage>1160</fpage>
+        <lpage>1167</lpage>
+        <pub-id pub-id-type="pmid">21543516</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hashimshony</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Wagner</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Sher</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Yanai</surname>
+            <given-names>I</given-names>
+          </name>
+        </person-group>
+        <source>Cell Rep</source>
+        <year>2012</year>
+        <volume>2</volume>
+        <fpage>666</fpage>
+        <lpage>673</lpage>
+        <pub-id pub-id-type="pmid">22939981</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ramskold</surname>
+            <given-names>D</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Nat Biotechnol</source>
+        <year>2012</year>
+        <volume>30</volume>
+        <fpage>777</fpage>
+        <lpage>782</lpage>
+        <pub-id pub-id-type="pmid">22820318</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dalerba</surname>
+            <given-names>P</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Nat Biotechnol</source>
+        <year>2011</year>
+        <volume>29</volume>
+        <fpage>1120</fpage>
+        <lpage>1127</lpage>
+        <pub-id pub-id-type="pmid">22081019</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tang</surname>
+            <given-names>F</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>PLoS One</source>
+        <year>2011</year>
+        <volume>6</volume>
+        <fpage>e21208</fpage>
+        <pub-id pub-id-type="pmid">21731673</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brouilette</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Dev Dyn</source>
+        <year>2012</year>
+        <volume>241</volume>
+        <fpage>1584</fpage>
+        <lpage>1590</lpage>
+        <pub-id pub-id-type="pmid">22911638</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R8">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Buganim</surname>
+            <given-names>Y</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Cell</source>
+        <year>2012</year>
+        <volume>150</volume>
+        <fpage>1209</fpage>
+        <lpage>1222</lpage>
+        <pub-id pub-id-type="pmid">22980981</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Munsky</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Neuert</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>van Oudenaarden</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <source>Science</source>
+        <year>2012</year>
+        <volume>336</volume>
+        <fpage>183</fpage>
+        <lpage>187</lpage>
+        <pub-id pub-id-type="pmid">22499939</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brennecke</surname>
+            <given-names>P</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Nat Methods</source>
+        <year>2013</year>
+        <volume>10</volume>
+        <fpage>1093</fpage>
+        <lpage>1095</lpage>
+        <pub-id pub-id-type="pmid">24056876</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wills</surname>
+            <given-names>QF</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Nat Biotechnol</source>
+        <year>2013</year>
+        <volume>31</volume>
+        <fpage>748</fpage>
+        <lpage>752</lpage>
+        <pub-id pub-id-type="pmid">23873083</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R12">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Deng</surname>
+            <given-names>Q</given-names>
+          </name>
+          <name>
+            <surname>Ramskold</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Reinius</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Sandberg</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <source>Science</source>
+        <year>2014</year>
+        <volume>343</volume>
+        <fpage>193</fpage>
+        <lpage>196</lpage>
+        <pub-id pub-id-type="pmid">24408435</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Anders</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Huber</surname>
+            <given-names>W</given-names>
+          </name>
+        </person-group>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>R106</fpage>
+        <pub-id pub-id-type="pmid">20979621</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R14">
+      <label>14</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Trapnell</surname>
+            <given-names>C</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Nat Biotechnol</source>
+        <year>2013</year>
+        <volume>31</volume>
+        <fpage>46</fpage>
+        <lpage>53</lpage>
+        <pub-id pub-id-type="pmid">23222703</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McDavid</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Bioinformatics</source>
+        <year>2013</year>
+        <volume>29</volume>
+        <fpage>461</fpage>
+        <lpage>467</lpage>
+        <pub-id pub-id-type="pmid">23267174</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R16">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Robinson</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Smyth</surname>
+            <given-names>GK</given-names>
+          </name>
+        </person-group>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <fpage>2881</fpage>
+        <lpage>2887</lpage>
+        <pub-id pub-id-type="pmid">17881408</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Moliner</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Enfors</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Ibanez</surname>
+            <given-names>CF</given-names>
+          </name>
+          <name>
+            <surname>Andang</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <source>Stem Cells Dev</source>
+        <year>2008</year>
+        <volume>17</volume>
+        <fpage>233</fpage>
+        <lpage>243</lpage>
+        <pub-id pub-id-type="pmid">18447639</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R18">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tischler</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Surani</surname>
+            <given-names>MA</given-names>
+          </name>
+        </person-group>
+        <source>Curr Opin Biotechnol</source>
+        <year>2013</year>
+        <volume>24</volume>
+        <fpage>69</fpage>
+        <lpage>78</lpage>
+        <pub-id pub-id-type="pmid">23084076</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R19">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cauffman</surname>
+            <given-names>G</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Mol Hum Reprod</source>
+        <year>2005</year>
+        <volume>11</volume>
+        <fpage>405</fpage>
+        <lpage>411</lpage>
+        <pub-id pub-id-type="pmid">15879466</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R20">
+      <label>20</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pan</surname>
+            <given-names>HA</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Fertil Steril</source>
+        <year>2008</year>
+        <volume>89</volume>
+        <fpage>1324</fpage>
+        <lpage>1327</lpage>
+        <pub-id pub-id-type="pmid">17761180</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R21">
+      <label>21</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Trapnell</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Pachter</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>SL</given-names>
+          </name>
+        </person-group>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1105</fpage>
+        <lpage>1111</lpage>
+        <pub-id pub-id-type="pmid">19289445</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R22">
+      <label>22</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Grun</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Scharl</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Leisch</surname>
+            <given-names>F</given-names>
+          </name>
+        </person-group>
+        <source>Bioinformatics</source>
+        <year>2012</year>
+        <volume>28</volume>
+        <fpage>222</fpage>
+        <lpage>228</lpage>
+        <pub-id pub-id-type="pmid">22121159</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R23">
+      <label>23</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Andang</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Moliner</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Doege</surname>
+            <given-names>CA</given-names>
+          </name>
+          <name>
+            <surname>Ibanez</surname>
+            <given-names>CF</given-names>
+          </name>
+          <name>
+            <surname>Ernfors</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <source>Nat Protoc</source>
+        <year>2008</year>
+        <volume>3</volume>
+        <fpage>1013</fpage>
+        <lpage>1017</lpage>
+        <pub-id pub-id-type="pmid">18536648</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<floats-group>
+  <fig id="F1" orientation="portrait" position="float">
+    <label>Figure 1</label>
+    <caption>
+      <title>Modeling single-cell RNA-seq measurement as a mixture of two processes</title>
+      <p><bold>a.</bold> Types of cell-to-cell variability observed in single-cell RNA-seq measurements. A smoothed scatter plot compares gene expression estimates from two cells of the same type (MEF cells), illustrating prevalence of drop-out events, over-dispersion, and high-magnitude outliers.</p>
+      <p><bold>b.</bold> Single-cell variability throws off standard RNA-seq analysis methods, with top differentially expressed genes influenced by difference in drop-out (<italic>Rnaseh2a</italic>) or outlier (<italic>Bmp4</italic>) events. The examples are taken from CuffDiff2<sup><xref rid="R14" ref-type="bibr">14</xref></sup> comparison of 10 ESC and 10 MEF cells, with triangles showing expression magnitudes observed in different cells, and whiskers spanning the range of observed expression magnitudes.</p>
+      <p><bold>c.</bold> To identify a reliable set of genes for fitting model parameters, our approach initially uses cross-comparison of single-cell measurements (using cells of the same type, <italic>e.g.</italic> MEF), determining whether the transcript is likely to have been successfully amplified in both experiments (correlated component). The true expression magnitude of such genes is estimated as a median expression level across cells in which the gene appears in a correlated component.</p>
+      <p><bold>d.</bold> Each single-cell measurement is modeled as a mixture of drop-out and successful amplification processes. The parameters of the distributions and the magnitude-dependent mixing of the two processes are determined based on the expected population expression averages of genes appearing in many correlated components (c.).</p>
+      <p><bold>e.</bold> Drop-out rates vary between different cell types. The rate of transcript detection failures (drop-out events) depends on the average expression magnitude of a gene in the cell population, and varies among the cells. In Islam <italic>et al.</italic> dataset<sup><xref rid="R2" ref-type="bibr">2</xref></sup>, higher drop-out frequencies are observed for mouse ES cells compared to MEF cells.</p>
+      <p><bold>f.</bold> Drop-out rates for 4, 8 and 16-cell embryo samples examined by Deng <italic>et al.</italic><sup><xref rid="R12" ref-type="bibr">12</xref></sup> using a recently-developed protocol also show systematic differences.</p>
+    </caption>
+    <graphic xlink:href="nihms-590625-f0001"/>
+  </fig>
+  <fig id="F2" orientation="portrait" position="float">
+    <label>Figure 2</label>
+    <caption>
+      <title>Applying single-cell models for differential expression and subpopulation analyses</title>
+      <p><bold>a.</bold> The model fitted for each single cell is used to estimate the likelihood that a gene is expressed at any particular level (<italic>i.e.</italic> posterior distribution) given the observed data (colored curves). The approach estimates joint posterior distribution for the overall level with each cell type (black curves), and the expression fold difference between the cell types (middle plot). The example demonstrates expression differences of <italic>Sox2</italic> between all ES and MEF cells measured by Islam <italic>et al</italic><sup><xref rid="R2" ref-type="bibr">2</xref></sup>. The plots show posterior probability of expression magnitudes in proximal (top) and distal (bottom) cells. The posterior probability of the fold-expression difference magnitude is shown in the middle plot with the associated raw P-value of differential expression.</p>
+      <p><bold>b.</bold> Differential expression of <italic>Dazl</italic> between cells of 8-cell and 16-cell mouse embryo stages, as determined by SCDE method. A regulator factor expressed in mammalian embryos<sup><xref rid="R19" ref-type="bibr">19</xref>,<xref rid="R20" ref-type="bibr">20</xref></sup>
+<italic>, Dazl</italic> is expressed at earlier stages, and shows a drop-off between 8- and 16-cell stages.</p>
+      <p><bold>c.</bold> The ability of different analysis methods to detect differentially expressed genes is shown using the false/true positive rate relationship (ROC curve), using traditional bulk expression measurements as a benchmark. The SCDE method shows higher sensitivity at low false-positive range, as well as higher overall performance, as measured by area under the curve (AUC) scores.</p>
+      <p><bold>d.</bold> Performance of error-model-based transcriptional similarity measures in distinguishing ES and MEF cell types. The plot shows the fraction of correctly classified cells, assessed for increasingly difficult classification problem by iteratively excluding up to 7000 most informative genes (<italic>i.e.</italic> genes differentially expressed between ES and MEF, x-axis). The 95% confidence bands are shown in light shading. Transcriptional similarity measures that take into account direct or reciprocal drop-out event probability show consistently better classification performance than Pearson linear correlation or Bray-Curtis similarity measure.</p>
+    </caption>
+    <graphic xlink:href="nihms-590625-f0002"/>
+  </fig>
+</floats-group>

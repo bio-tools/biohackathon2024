@@ -1,0 +1,3005 @@
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title>BMC Bioinformatics</journal-title>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">385221</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-5-23</article-id>
+    <article-id pub-id-type="pmid">15070404</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-5-23</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Gene prediction using the Self-Organizing Map: automatic generation of multiple gene models</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib id="A1" corresp="yes" contrib-type="author">
+        <name>
+          <surname>Mahony</surname>
+          <given-names>Shaun</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>shaun.mahony@nuigalway.ie</email>
+      </contrib>
+      <contrib id="A2" contrib-type="author">
+        <name>
+          <surname>McInerney</surname>
+          <given-names>James O</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>james.o.mcinerney@may.ie</email>
+      </contrib>
+      <contrib id="A3" contrib-type="author">
+        <name>
+          <surname>Smith</surname>
+          <given-names>Terry J</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>terry.smith@nuigalway.ie</email>
+      </contrib>
+      <contrib id="A4" contrib-type="author">
+        <name>
+          <surname>Golden</surname>
+          <given-names>Aaron</given-names>
+        </name>
+        <xref ref-type="aff" rid="I3">3</xref>
+        <email>aaron.golden@nuigalway.ie</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>National Centre for Biomedical Engineering Science, NUI, Galway, Galway, Ireland</aff>
+    <aff id="I2"><label>2</label>Bioinformatics and Pharmacogenomics Laboratory, NUI, Maynooth, Co. Kildare, Ireland</aff>
+    <aff id="I3"><label>3</label>Department of Information Technology, NUI, Galway, Galway, Ireland</aff>
+    <pub-date pub-type="collection">
+      <year>2004</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>5</day>
+      <month>3</month>
+      <year>2004</year>
+    </pub-date>
+    <volume>5</volume>
+    <fpage>23</fpage>
+    <lpage>23</lpage>
+    <ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/1471-2105/5/23"/>
+    <history>
+      <date date-type="received">
+        <day>26</day>
+        <month>11</month>
+        <year>2003</year>
+      </date>
+      <date date-type="accepted">
+        <day>5</day>
+        <month>3</month>
+        <year>2004</year>
+      </date>
+    </history>
+    <copyright-statement>Copyright © 2004 Mahony et al; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL.</copyright-statement>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Many current gene prediction methods use only one model to represent protein-coding regions in a genome, and so are less likely to predict the location of genes that have an atypical sequence composition. It is likely that future improvements in gene finding will involve the development of methods that can adequately deal with intra-genomic compositional variation.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>This work explores a new approach to gene-prediction, based on the Self-Organizing Map, which has the ability to automatically identify multiple gene models within a genome. The current implementation, named RescueNet, uses relative synonymous codon usage as the indicator of protein-coding potential.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>While its raw accuracy rate can be less than other methods, RescueNet consistently identifies some genes that other methods do not, and should therefore be of interest to gene-prediction software developers and genome annotation teams alike. RescueNet is recommended for use in conjunction with, or as a complement to, other gene prediction methods.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Computational gene prediction methods have yet to achieve perfect accuracy, even in the relatively simple prokaryotic genomes. Problems in gene prediction centre on the fact that many protein families remain uncharacterised. As a result, it seems that only approximately half of an organism's genes can be confidently predicted on the basis of homology to other known genes [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B3">3</xref>], so <italic>ab initio </italic>prediction methods are usually employed to identify many protein-coding regions of DNA.</p>
+    <p>Currently, the most popular prokaryotic gene-prediction methods, such as GeneMark.hmm [<xref ref-type="bibr" rid="B4">4</xref>] and Glimmer2 [<xref ref-type="bibr" rid="B5">5</xref>], are based on probabilistic Markov models that aim to predict each base of a DNA sequence using a number of preceding bases in the sequence. These methods are undoubtedly very successful, with published sensitivity rates between 90% and 99% for most prokaryotic genomes. However, as the sensitivity rates of the methods rise, specificity generally tends to fall, and while the application of sophisticated post-processing rules can correct many false-positive predictions, no method has yet achieved 100% accuracy. This is especially the case in the more complex eukaryotic gene-finding problem, where less than 80% of exons in anonymous genomic sequences are correctly predicted by current methods [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B6">6</xref>-<xref ref-type="bibr" rid="B8">8</xref>].</p>
+    <p>For the foreseeable future it does not seem that the exact set of genes in any organism can be automatically predicted by any single computational method. In practice, this has meant that the best predictions are to be found by combining evidence from two or more independent methods [<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B9">9</xref>]. Genome annotation teams often compare the evidence offered by multiple gene-finders in order to predict the gene complement of a given genome. Because of the degree of 'manual' annotation that now takes place in the major genome sequencing centres, a gene-prediction tool will be of practical use if it can exclusively predict genes that other gene-finders cannot.</p>
+    <p>Many <italic>ab initio </italic>gene-prediction methods are based on single models of protein-coding regions and therefore make the implicit assumption that all protein-coding regions within a particular genome will share similar statistical properties. However, evidence has mounted that single gene models of intrinsic coding measures are no longer fully satisfying [<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B11">11</xref>]. The problem with single model methods centres on the degree of oligonucleotide composition variation that exists within most genomes. On the codon level, intra-genomic variation in codon bias has long been correlated with expression level [<xref ref-type="bibr" rid="B12">12</xref>]. Counterbalancing the translational selection theory of codon bias is the effect of mutational bias [<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>]. Many other, often more subtle levels of variation have been recognised over the years, with many disparate evolutionary pressures shown to be acting on codon usage bias [<xref ref-type="bibr" rid="B15">15</xref>]. For example, strand-specific codon usage biases have often been recognised [<xref ref-type="bibr" rid="B16">16</xref>-<xref ref-type="bibr" rid="B20">20</xref>], leading to more general studies of correlation between the location of the gene on the genome and codon bias [<xref ref-type="bibr" rid="B21">21</xref>], and the more specific discovery of a A+T skewed bias near the replication terminus of bacterial genomes [<xref ref-type="bibr" rid="B22">22</xref>]. Other effects shown to shape codon usage are gene length [<xref ref-type="bibr" rid="B23">23</xref>] and selection at the amino acid level [<xref ref-type="bibr" rid="B24">24</xref>]. It has also been suggested that content variation can occur at the exon level in eukaryotic genes, the possibility existing that some exons in a gene may have different codon usage patterns to others [<xref ref-type="bibr" rid="B1">1</xref>]. Given that some of the above pressures on codon usage have only recently been discovered, it is likely that some more subtle patterns have yet to be recognised, and therefore it is difficult to predict the level of compositional variation that will be present in an anonymous genomic sequence.</p>
+    <p>The need for gene-finding methods that can overcome the problems presented by intra-genomic variation was recognised and addressed in the case of prokaryotic genomes by GeneMark-Genesis [<xref ref-type="bibr" rid="B25">25</xref>], which derives two models for each genome according to typical and atypical codon usage clusters in that genome. This increase in the number of gene models led to an increase in accuracy of the GeneMark method. While Hayes &amp; Borodovsky experimented with a third ('highly-typical') codon usage cluster and an associated model in some cases, they did not see the need to further sub-cluster the atypical codon usage set in order to make even more models. Overly sub-clustering the training data would not be useful in the case of Markov-based methods, as the data contained in each sub-cluster may not allow for a good estimation of model parameters. However, generating more specific models for subtle patterns found in the training set can only be advantageous if it can be done in a way that minimises loss of overall accuracy and produces no extra false-positive predictions.</p>
+    <p>This paper aims to show how the Self-Organizing Map neural network algorithm can be used to automatically identify the major trends in oligonucleotide variation in a genome, and in doing so provide multiple gene models for use in gene prediction. It will be explained that this approach is an effective solution to the problem of intra-genomic variation. Specific examples of genes predicted only by this method are offered, thus demonstrating the usefulness of the approach in genome annotation.</p>
+    <p>A further advantage of using the Self-Organizing Map for gene prediction is the ability of the algorithm to use complex descriptors as measures of gene coding potential. We demonstrate this ability using relative synonymous codon usage (RSCU) as our measure of gene coding potential. Unlike other gene coding measures, RSCU is not based on the absolute frequency of k-mers, but instead describes the codon choice for each amino acid. Markov chains based on the RSCU measure would have transition probabilities that are conditioned on the underlying amino-acids. Although theoretically possible [<xref ref-type="bibr" rid="B26">26</xref>], the practical computation of such Markov chains would give rise to major difficulties. Therefore, the ability of our approach to make use of a sophisticated gene coding descriptor such as RSCU is a distinct advantage of our approach over Markov model based methods.</p>
+  </sec>
+  <sec>
+    <title>Implementation</title>
+    <sec>
+      <title>Coding measure</title>
+      <p>In this study, relative synonymous codon usage (RSCU) vectors are used as the measure of protein-coding potential for a given window of sequence. The RSCU value for a codon 'i' is defined as:</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-23-i1.gif"/>
+      </p>
+      <p>where Obs<sub>i </sub>is the observed number of occurrences of codon 'i', and Exp<sub>i </sub>is the expected number of occurrences of the same codon (based on the number of times the relevant amino acid is present in the gene and the number of synonymous alternatives to 'i', assuming a uniform choice of synonymous codons). In order to make the data more compatible with the mathematical methods used, the log of each RSCU<sub>i </sub>value is found so that the resulting value is positive if the codon is used more than expected in that gene, and negative if the codon is used less than expected. Values were capped at ± 10, and set to 0 in the case of the non-occurrence of an amino acid in the sample. Taking the RSCU values for each of the codons with synonymous alternatives (and ignoring the 3 stop codons and the Trp and Met codons), each sample can be represented by a vector of 59 values.</p>
+    </sec>
+    <sec>
+      <title>Self-Organizing Map</title>
+      <p>The Self-Organizing Map (SOM) is based around the concept of a lattice of interconnected nodes, each of which contains a model. The models begin as random values, but during the iterative training process they are modified to represent different subsets of the training set. In this work for example, the training set and the lattice node models are 59-dimensional RSCU vectors, and the models change during training to become similar to common or repeated patterns in the training set. The algorithm is fully described elsewhere [<xref ref-type="bibr" rid="B27">27</xref>], but we briefly summarize for our context:</p>
+      <p>(1) A vector (<italic>X</italic><sub><italic>i</italic></sub>), corresponding to a gene's RSCU values, is loaded from the training dataset.</p>
+      <p>(2) The lattice node is found whose model vector most closely resembles the input pattern. This node is denoted the 'winning node'.</p>
+      <p>(3) The winning node's model, <italic>W </italic>(as well as a certain number of 'neighbourhood bubble' node models) is changed to be more similar to the input vector by the equation:</p>
+      <p><italic>W</italic><sub><italic>new </italic></sub>= <italic>W</italic><sub><italic>old </italic></sub>+ η (<italic>X</italic><sub><italic>i </italic></sub>- <italic>W</italic><sub><italic>old</italic></sub>)     (2)</p>
+      <p>(4) If all the vectors in the training dataset are processed, we say that an epoch has been completed. In this study, all SOMs are trained for 3000 epochs.</p>
+      <p>The 'neighbourhood bubble' mentioned in step 3 is a group of nodes centered at the winning node. The radius of this bubble is initialised to be large and is linearly decreased during training until only the winning node's model is changed. Changing the models on the winning node's neighbours allows the clustering of similar patterns. The learning rate (η) in step 3 is initialised close to 1 and is also linearly decreased during training until it is held constant at a predefined fraction. The linear decrease in learning rate means that each node's model will not get changed as much or as often as training progresses. Two recognised phases of training result; an ordering phase where the lattice takes its general shape, and a convergence phase where the nodes get more specialised to respond to specific patterns.</p>
+      <p>In this work, similarity between two vectors is measured by finding the cosine of the angle between them. A cosine of 1 represents exactly similar vectors while a cosine of 0 represents exactly dissimilar vectors.</p>
+      <p>The SOM is used mainly in data visualisation, as it can be effectively used to reduce high-dimensional data to a two dimensional map. One of the main strengths of the method is the ability to automatically cluster similar patterns in its training set. In the context of codon usage data, the SOM has been previously used to cluster genes on the basis of similar codon usage [<xref ref-type="bibr" rid="B28">28</xref>-<xref ref-type="bibr" rid="B30">30</xref>]. However, the previous studies have concentrated on identifying genes with atypical codon usage and hypothesising their origin as horizontally transferred genes. It has since been shown that atypical codon usage is not sufficient evidence to show that a gene has origins in horizontal transfer events [<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B31">31</xref>]. In contrast, this study uses the fact that once a SOM has been trained using codon usage information, the nodes of the SOM encapsulate models that are representative of the major codon usage patterns within the training set.</p>
+      <p>If a new sequence is inputted to a trained SOM, we can easily be told which node's model is most similar to this new sequence, and most importantly, how similar. The similarity (cosine) score is then converted to the probability that the sequence is protein-coding. This is achieved by finding the mean cosine score received by a set of random length, random sequence genes that are generated using the same nucleotide bias as the mutational bias found in the genome. Using the mean score, each similarity score can be converted to a z-score, which is in effect the probability that the sequence is not a random sequence.</p>
+    </sec>
+    <sec>
+      <title>Using the SOM to find genes</title>
+      <p>Separate SOMs are trained for each of the 15 genomes under test. The SOMs are each 15×15 nodes in size and trained for 3000 cycles. Finding genes via homology search is usually the first step to be carried out in a genome annotation process, so our training sets consist of all genes in the relevant organism that were previously confirmed by homology searches and are also at least 750 bp long. Note that unlike other gene-finding methods, no statistical knowledge of non-coding DNA is necessary as part of the SOM's training.</p>
+      <p>In analysing an entire genome sequence, a sliding window is used to split each of the six reading frames into small samples. The default window size is 110 triplets, which has been chosen as a balance between having a window size long enough to evaluate a meaningful RSCU vector, and short enough to predict short genes. Each window is offset from the next by 10 triplets. An arbitrary probability score of 0.1 is used as the threshold for deciding if a sequence was protein-coding, and all samples that scored higher than 0.1 are recorded as predictions. If a stop codon lies in the sample, the gene prediction is annotated as having ended at that point. Note, however, that no effort is made to find stop codons if they are not within the prediction, and no effort whatsoever is made to find any start codons in the prediction.</p>
+    </sec>
+    <sec>
+      <title>Post-processing the predictions</title>
+      <p>Once all the samples are processed, some simple post-processing is carried out. Naturally, all same-frame concurrent predictions are merged. Predictions that are totally overlapped by another prediction are deleted if they are less than 75% the length of the other. Similarly, any prediction in which more than half its length is overlapped is deleted if it is less than half the length of the other prediction. Alternatively, any prediction that is less than 90% as long as the overlapping prediction and receiving a lower score is deleted. Finally, any prediction that is overlapped on both ends to a total overlap of at least 70% is also deleted. A prediction size of 75 codons was found by trial and error to be the smallest gene-coding region that could accurately be found using RescueNet.</p>
+      <p>While the above rules aim to delete smaller erroneous predictions, it is recognised that the loose nature of the rules leave room for many other overlapping predictions. However, it was found that in many overlapping cases it was difficult to decide which prediction to delete. Therefore, the best solution is to leave both predictions rather than misleading an annotator by giving only one, possibly erroneous, prediction.</p>
+      <p>In assessing the accuracy of our method, we had to take into account that our method will not predict most start sites, and some stop sites, exactly. We assume that our method will be of most use to annotation teams who rigorously inspect the results of our method in conjunction with the results of other gene prediction programs. Such annotation teams base their final genome annotation on widespread evidence, so the fact that our method may produce inexact start and stop sites will not be a major disadvantage. Therefore, a correct prediction is defined here as one that predicts more than 50% of an annotated gene in the correct frame. This criterion means that only predictions that are useful to annotators are considered to be correct.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <sec>
+      <title>Evaluating accuracy rates</title>
+      <p>Previous studies discuss the possibility that the GenBank annotation of various genomes may be incomplete or incorrect in some cases [<xref ref-type="bibr" rid="B5">5</xref>,<xref ref-type="bibr" rid="B32">32</xref>]. Since many GenBank annotations are not experimentally corroborated, this possibility remains strong. Large-scale benchmarking of gene-prediction algorithms is therefore difficult, because few 'gold standard' annotations exist for prokaryotic genomes. Also, in most cases hypothetical gene annotations in the public databases have their roots in the predictions of an <italic>ab initio </italic>method, thus biasing any comparison of accuracy in favour of the particular method used in the annotation of that genome. However, for the purpose of defining accuracy in this study we must assume that all GenBank annotations are correct and complete. Sensitivity (Sn) is defined here as the percentage of GenBank gene records that are predicted correctly by our method. Specificity (Sp) is defined as the percentage of total RescueNet gene predictions that are correct.</p>
+      <p>Table <xref ref-type="table" rid="T1">1</xref> shows the results of RescueNet's predictions in 15 genomes. All results were generated using the default settings described above. Sensitivity and specificity values for each genome are shown, along with sensitivity values for those genes that are above the prediction length threshold of 75 codons (225 bp) and sensitivity values for those genes that have database matches.</p>
+      <p>Sequence data used in this study include the following 15 genomes and associated published genes available from the GenBank database: <italic>A. aeolicus </italic>[<xref ref-type="bibr" rid="B33">33</xref>], <italic>B. subtilis </italic>[<xref ref-type="bibr" rid="B34">34</xref>], <italic>Buchnera sp. </italic>[<xref ref-type="bibr" rid="B35">35</xref>], <italic>B. burgdorferi </italic>[<xref ref-type="bibr" rid="B36">36</xref>], <italic>C. jejuni </italic>[<xref ref-type="bibr" rid="B37">37</xref>], <italic>D. radiodurans </italic>(chromosome 1) [<xref ref-type="bibr" rid="B38">38</xref>], <italic>E. coli </italic>[<xref ref-type="bibr" rid="B39">39</xref>], <italic>H. influenzae </italic>[<xref ref-type="bibr" rid="B40">40</xref>], <italic>H. pylori </italic>[<xref ref-type="bibr" rid="B41">41</xref>], <italic>M. genitalium </italic>[<xref ref-type="bibr" rid="B42">42</xref>], <italic>M. jannaschii </italic>[<xref ref-type="bibr" rid="B43">43</xref>], <italic>R. solanacearum </italic>[<xref ref-type="bibr" rid="B44">44</xref>], <italic>S. coelicolor </italic>[<xref ref-type="bibr" rid="B45">45</xref>], <italic>Synechocystis sp. </italic>[<xref ref-type="bibr" rid="B46">46</xref>], and <italic>Y. pestis </italic>[<xref ref-type="bibr" rid="B47">47</xref>]. These genomes were chosen to be representative of a wide range of GC content.</p>
+    </sec>
+    <sec>
+      <title>High G+C content genomes</title>
+      <p>Three of the genomes tested have very high G+C content (<italic>D. radiodurans</italic>, <italic>R. solanacearum </italic>and <italic>S. coelicolor</italic>). High G+C content genomes present a problem to many gene-finding methods because of the relative infrequency of randomly occurring stop codons. The scarcity of stop codons has the effect of a large number of long, overlapping ORFs occurring in the sequence, relatively few of which are actually protein-coding. Many of the current gene-finders fail to discriminate accurately between coding and non-coding ORFs in this type of situation.</p>
+      <p>In our method, the relatively high specificity in each high G+C content genome suggests that RescueNet may have advantages in their annotation (see Table <xref ref-type="table" rid="T1">1</xref>). To illustrate a case where RescueNet may be of practical use, we can consider the ORF annotated as DR1142 (see Figure <xref ref-type="fig" rid="F1">1</xref>) from <italic>D. radiodurans</italic>. This ORF is annotated to be protein-coding on the basis of the Glimmer2 prediction only. The RescueNet prediction in this area overlaps DR1142, but on the opposite strand. This type of situation, where a RescueNet prediction directly contradicts a GenBank/Glimmer2 annotation, occurs at least 23 times in the <italic>D. radiodurans </italic>genome. It is entirely possible that the Glimmer2 predictions are wrong in some of these cases, and the RescueNet predictions correct, but this cannot be proven without biochemical characterisation of the relevant gene. However, in the specific case of the DR1142 annotation, the RescueNet prediction has a much stronger database match than the GenBank annotation, and so has a high possibility of being correct.</p>
+      <p>Another interesting pointer to the advantages of RescueNet in high G+C content genomes is the substantially higher percentage of genes with database matches that are correctly predicted by RescueNet (see Table <xref ref-type="table" rid="T1">1</xref>). In <italic>D. radiodurans</italic>, for example, 92.54% of genes with database matches are correctly predicted by RescueNet compared with only 84.28% of the total GenBank gene annotations. These figures suggest that hypothetical genes that are predicted only by Markov-based methods are poorly recognised by RescueNet, possibly because many hypothetical genes in high G+C content genomes may in fact be false gene predictions.</p>
+    </sec>
+    <sec>
+      <title>Predicting the location of frameshifts</title>
+      <p>The general location of frameshifts within a gene sequence can be found by our method. Two features of our approach facilitate this. Firstly, even though the overall codon usage of a frameshifted gene could seem unusual, the two coding sections of the gene should each retain the organism's native codon usage. Secondly, our approach does not require that a prediction be bounded by a start and a stop codon. The sliding window used in our algorithm can therefore predict the correct coding frames each side of the frameshift.</p>
+      <p>In an interesting example in Figure <xref ref-type="fig" rid="F1">1</xref>, two RescueNet predictions overlap the <italic>D. radiodurans </italic>gene DR1143 in such a way that it seems that there may be a frameshift that extends the protein-coding region of the gene past the annotated stop codon. In fact, combining the two RescueNet predictions offers a better database match to the same genes that the original annotation matches. This increases the possibility that the actual gene contains an authentic frameshift or at least that the extra RescueNet prediction is an evolutionary artefact.</p>
+      <p>Figure <xref ref-type="fig" rid="F2">2</xref> shows another example of frameshifts which are detected by RescueNet. In this case, the <italic>H. influenzae </italic>genes HI0218 and HI0220 both contain frameshifts, but both are handled by RescueNet's predictions. Note that the GeneMark algorithms are known to show the location of frameshifted regions in much the same manner as we have described, but our approach has required no modification to our basic algorithm in order to facilitate the prediction of frameshifted genes.</p>
+    </sec>
+    <sec>
+      <title>Comparison with a Markov-based method</title>
+      <p>There may be a perception that any method using codon usage as the coding measure will only give predictions that are a subset of the predictions given by a Markov-based method that uses a 4<sup>th </sup>or 5<sup>th </sup>order model. To counter this argument, we compared the predictions of our method in two genomes (<italic>H. influenzae </italic>and <italic>H. pylori</italic>) to those of the web-based version of GeneMark.hmm 2.1 for prokaryotes <ext-link ext-link-type="uri" xlink:href="http://opal.biology.gatech.edu/GeneMark/gmhmm2_prok.cgi"/>, which generated results using two models; the 'typical' and 'atypical' models.</p>
+      <p>The published sensitivity of GeneMark.hmm in the <italic>H. influenzae </italic>genome (96.2%, see [<xref ref-type="bibr" rid="B4">4</xref>]) is higher than that of our method, and the published specificity (89.8%) is lower, so GeneMark.hmm should give more predictions overall for this genome. However, 11 <italic>H. influenzae </italic>genes are predicted correctly by our method which are not predicted by GeneMark.hmm using 5<sup>th </sup>order models, and 14 genes are predicted correctly by our method which are not predicted by GeneMark.hmm using 4<sup>th </sup>order models. In the <italic>H. pylori </italic>genome, GeneMark.hmm has again a higher sensitivity and a lower specificity (94.0% &amp; 91.3% respectively), but even more genes are exclusively predicted by our method; 25 genes as compared to the 5<sup>th </sup>order GeneMark.hmm models and 30 genes as compared to the 4<sup>th </sup>order models. Although these genes represent a small proportion of the total number of genes in the respective organisms, the fact that they are only predicted by RescueNet gives some indication of the advantage of using RescueNet in conjunction with other gene prediction methods.</p>
+    </sec>
+    <sec>
+      <title>Possible future improvements</title>
+      <p>RSCU is only one of many possible criterion with which to measure coding potential (see [<xref ref-type="bibr" rid="B48">48</xref>] for a review of others). In-phase hexamers are accepted as the most accurate k-mer frequency based measure of coding potential, and so their use as the coding measure in a Self-Organizing Map may offer improvement in accuracy over RescueNet. However, the larger space dimension of the hexamer coding measure may force a larger sliding window to be used and therefore the use of hexamers could actually decrease the precision of gene prediction.</p>
+      <p>The future use of alternative coding measures with our approach may also help to overcome difficulties in recognising genes that are reputed to be horizontally transferred in origin. Horizontally transferred genes would be more likely to have dissimilar codon usage patterns to other genes in the genome. Since our approach currently relies on the codon usage patterns it finds in the training set, it is unlikely to mark areas of unseen codon usage as protein-coding regions. Note, however, we are not suggesting all genes that were not recognised by our approach are of horizontally transferred origin. There are many explanations for a gene displaying atypical codon usage, and codon usage cannot be used as an accurate indicator of horizontal transfer.</p>
+      <p>There may be other ways to improve the accuracy of our method. The current implementation has a rather simple post-processing step that does not rely on modifying the prediction in order to include start or stop codons. While the practise of not constraining a prediction to be bound by a start and stop codon stands in stark contrast to other methods, we did not wish to lengthen or shorten any predictions artificially, since doing so can mislead annotation teams (especially in start site annotation). Relatively simple post-processing steps may, in fact, be advantageous. Our predictions represent a raw account of regions of the genome that display typical or native codon usage patterns, and this in itself may be of interest to annotation teams who use codon usage plots as the basis for some genomic feature annotations.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusion</title>
+    <p>Gene-finding in prokaryotic genomes is still not a completely solved problem, partly because current methods use a limited number of models to represent the training data. In this paper, we have introduced an alternative, independent approach to the problem. The Self-Organizing Map approach has the potential to overcome the issue of variation in the statistical properties of the training set data, and can automatically train a representative number of gene-models, depending on the degree of variation within the training data.</p>
+    <p>While the current implementation of our approach produces lower raw sensitivity scores in comparison to established Markov-based techniques, we have clearly shown that our method can predict some genes that other methods cannot. We have also demonstrated advantages in annotating the traditionally 'difficult' high G+C content genomes. Annotation teams who are concerned with the complete and accurate annotation of a sequenced genome should find our method useful when used alongside other gene-finding methods. The relatively high specificity of our method, coupled with the independent nature of the algorithm, should make it a useful tool in confirming the predictions of other software programs and in some cases pointing out areas of conflicting or contradictory predictions that are worthy of further examination.</p>
+  </sec>
+  <sec>
+    <title>Availability</title>
+    <p>Project name: RescueNet</p>
+    <p>Project home page: <ext-link ext-link-type="uri" xlink:href="http://bioinf.nuigalway.ie/RescueNet/"/></p>
+    <p>Operating systems: Windows, Linux, IRIX, Digital Unix. Source code also available.</p>
+    <p>Programming Language: C++</p>
+    <p>Licence: GNU GPL</p>
+    <p>Restrictions to use by non-academics: Please contact the authors.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>SM conceived of the study, and designed, implemented and tested the RescueNet software. JMcI, TS and AG supervised, and participated in the design of, the study. All authors read and approved the final manuscript.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <sec>
+      <title>Acknowledgements</title>
+      <p>The authors would like to thank Kim Rutherford of the Welcome Trust Sanger Institute Pathogen Sequencing Group for his help and suggestions. We also thank the two anonymous reviewers for their useful comments. S.M. is funded by an EMBARK postgraduate fellowship from the Irish Research Council for Science, Engineering &amp; Technology.</p>
+    </sec>
+  </ack>
+  <ref-list>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mathe</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Sagot</surname>
+            <given-names>MF</given-names>
+          </name>
+          <name>
+            <surname>Schiex</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Rouze</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Current methods of gene prediction, their strengths and weaknesses</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>4103</fpage>
+        <lpage>4117</lpage>
+        <pub-id pub-id-type="pmid">12364589</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/gkf543</pub-id>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Claverie</surname>
+            <given-names>JM</given-names>
+          </name>
+        </person-group>
+        <article-title>Computational methods for the identification of genes in vertebrate genomic sequences</article-title>
+        <source>Hum Mol Genet</source>
+        <year>1997</year>
+        <volume>6</volume>
+        <fpage>1735</fpage>
+        <lpage>1744</lpage>
+        <pub-id pub-id-type="pmid">9300666</pub-id>
+        <pub-id pub-id-type="doi">10.1093/hmg/6.10.1735</pub-id>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fickett</surname>
+            <given-names>JW</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding genes by computer: the state of the art</article-title>
+        <source>Trends Genet</source>
+        <year>1996</year>
+        <volume>12</volume>
+        <fpage>316</fpage>
+        <lpage>320</lpage>
+        <pub-id pub-id-type="pmid">8783942</pub-id>
+        <pub-id pub-id-type="doi">10.1016/0168-9525(96)10038-X</pub-id>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lukashin</surname>
+            <given-names>AV</given-names>
+          </name>
+          <name>
+            <surname>Borodovsky</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>GeneMark.hmm: new solutions for gene finding</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1998</year>
+        <volume>26</volume>
+        <fpage>1107</fpage>
+        <lpage>1115</lpage>
+        <pub-id pub-id-type="pmid">9461475</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/26.4.1107</pub-id>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Delcher</surname>
+            <given-names>AL</given-names>
+          </name>
+          <name>
+            <surname>Harmon</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Kasif</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>White</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>SL</given-names>
+          </name>
+        </person-group>
+        <article-title>Improved microbial gene identification with GLIMMER</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <fpage>4636</fpage>
+        <lpage>4641</lpage>
+        <pub-id pub-id-type="pmid">10556321</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/27.23.4636</pub-id>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Guigo</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Agarwal</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Abril</surname>
+            <given-names>JF</given-names>
+          </name>
+          <name>
+            <surname>Burset</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Fickett</surname>
+            <given-names>JW</given-names>
+          </name>
+        </person-group>
+        <article-title>An assessment of gene prediction accuracy in large DNA sequences</article-title>
+        <source>Genome Res</source>
+        <year>2000</year>
+        <volume>10</volume>
+        <fpage>1631</fpage>
+        <lpage>1642</lpage>
+        <pub-id pub-id-type="pmid">11042160</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.122800</pub-id>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bork</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Powers and pitfalls in sequence analysis: the 70% hurdle</article-title>
+        <source>Genome Res</source>
+        <year>2000</year>
+        <volume>10</volume>
+        <fpage>398</fpage>
+        <lpage>400</lpage>
+        <pub-id pub-id-type="pmid">10779480</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.10.4.398</pub-id>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Reese</surname>
+            <given-names>MG</given-names>
+          </name>
+          <name>
+            <surname>Hartzell</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Harris</surname>
+            <given-names>NL</given-names>
+          </name>
+          <name>
+            <surname>Ohler</surname>
+            <given-names>U</given-names>
+          </name>
+          <name>
+            <surname>Abril</surname>
+            <given-names>JF</given-names>
+          </name>
+          <name>
+            <surname>Lewis</surname>
+            <given-names>SE</given-names>
+          </name>
+        </person-group>
+        <article-title>Genome annotation assessment in Drosophila melanogaster</article-title>
+        <source>Genome Res</source>
+        <year>2000</year>
+        <volume>10</volume>
+        <fpage>483</fpage>
+        <lpage>501</lpage>
+        <pub-id pub-id-type="pmid">10779488</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.10.4.483</pub-id>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rogic</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Ouellette</surname>
+            <given-names>BF</given-names>
+          </name>
+          <name>
+            <surname>Mackworth</surname>
+            <given-names>AK</given-names>
+          </name>
+        </person-group>
+        <article-title>Improving gene recognition accuracy by combining predictions from two gene-finding programs</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>1034</fpage>
+        <lpage>1045</lpage>
+        <pub-id pub-id-type="pmid">12176826</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/18.8.1034</pub-id>
+      </citation>
+    </ref>
+    <ref id="B10">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Borodovsky</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>McIninch</surname>
+            <given-names>JD</given-names>
+          </name>
+          <name>
+            <surname>Koonin</surname>
+            <given-names>EV</given-names>
+          </name>
+          <name>
+            <surname>Rudd</surname>
+            <given-names>KE</given-names>
+          </name>
+          <name>
+            <surname>Medigue</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Danchin</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Detection of new genes in a bacterial genome using Markov models for three gene classes</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1995</year>
+        <volume>23</volume>
+        <fpage>3554</fpage>
+        <lpage>3562</lpage>
+        <pub-id pub-id-type="pmid">7567469</pub-id>
+      </citation>
+    </ref>
+    <ref id="B11">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mathe</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Dehais</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Pavy</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Rombauts</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Van Montagu</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Rouze</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Gene prediction and gene classes in Arabidopsis thaliana</article-title>
+        <source>J Biotechnol</source>
+        <year>2000</year>
+        <volume>78</volume>
+        <fpage>293</fpage>
+        <lpage>299</lpage>
+        <pub-id pub-id-type="pmid">10751690</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0168-1656(00)00196-6</pub-id>
+      </citation>
+    </ref>
+    <ref id="B12">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ikemura</surname>
+            <given-names>Toshimichi</given-names>
+          </name>
+        </person-group>
+        <article-title>Correlation between the Abundance of Escherichia coli Transfer RNAs and the Occurance of the Respective Codons in its Protein Genes: A Proposal for a Synonymous Codon Choice that is Optimal for the E. coli Translational System</article-title>
+        <source>J Mol Biol</source>
+        <year>1981</year>
+        <volume>151</volume>
+        <fpage>389</fpage>
+        <lpage>409</lpage>
+        <pub-id pub-id-type="pmid">6175758</pub-id>
+      </citation>
+    </ref>
+    <ref id="B13">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bulmer</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>The selection-mutation-drift theory of synonymous codon usage</article-title>
+        <source>Genetics</source>
+        <year>1991</year>
+        <volume>129</volume>
+        <fpage>897</fpage>
+        <lpage>907</lpage>
+        <pub-id pub-id-type="pmid">1752426</pub-id>
+      </citation>
+    </ref>
+    <ref id="B14">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sharp</surname>
+            <given-names>Paul M.</given-names>
+          </name>
+          <name>
+            <surname>Stenico</surname>
+            <given-names>Michele</given-names>
+          </name>
+          <name>
+            <surname>Peden</surname>
+            <given-names>John F.</given-names>
+          </name>
+          <name>
+            <surname>Lloyd</surname>
+            <given-names>Andrew T.</given-names>
+          </name>
+        </person-group>
+        <article-title>Codon usage: mutational bias, translational selection, or both?</article-title>
+        <source>Biochem Soc Trans</source>
+        <year>1993</year>
+        <volume>21</volume>
+        <fpage>835</fpage>
+        <lpage>841</lpage>
+        <pub-id pub-id-type="pmid">8132077</pub-id>
+      </citation>
+    </ref>
+    <ref id="B15">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Duret</surname>
+            <given-names>L</given-names>
+          </name>
+        </person-group>
+        <article-title>Evolution of synonymous codon usage in metazoans</article-title>
+        <source>Curr Opin Genet Dev</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>640</fpage>
+        <lpage>649</lpage>
+        <pub-id pub-id-type="pmid">12433576</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0959-437X(02)00353-2</pub-id>
+      </citation>
+    </ref>
+    <ref id="B16">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lobry</surname>
+            <given-names>JR</given-names>
+          </name>
+        </person-group>
+        <article-title>Asymmetric substitution patterns in the two DNA strands of bacteria</article-title>
+        <source>Mol Biol Evol</source>
+        <year>1996</year>
+        <volume>13</volume>
+        <fpage>660</fpage>
+        <lpage>665</lpage>
+        <pub-id pub-id-type="pmid">8676740</pub-id>
+      </citation>
+    </ref>
+    <ref id="B17">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Francino</surname>
+            <given-names>MP</given-names>
+          </name>
+          <name>
+            <surname>Ochman</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Strand asymmetries in DNA evolution</article-title>
+        <source>Trends Genet</source>
+        <year>1997</year>
+        <volume>13</volume>
+        <fpage>240</fpage>
+        <lpage>245</lpage>
+        <pub-id pub-id-type="pmid">9196330</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0168-9525(97)01118-9</pub-id>
+      </citation>
+    </ref>
+    <ref id="B18">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McInerney</surname>
+            <given-names>James O.</given-names>
+          </name>
+        </person-group>
+        <article-title>Replicational and transcriptional selection on codon usage in Borrelia burgdorferi</article-title>
+        <source>Proc Natl Acad Sci</source>
+        <year>1998</year>
+        <volume>95</volume>
+        <fpage>10698</fpage>
+        <lpage>10703</lpage>
+        <pub-id pub-id-type="pmid">9724767</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.95.18.10698</pub-id>
+      </citation>
+    </ref>
+    <ref id="B19">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mrazek</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Karlin</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Strand compositional asymmetry in bacterial and large viral genomes</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>1998</year>
+        <volume>95</volume>
+        <fpage>3720</fpage>
+        <lpage>3725</lpage>
+        <pub-id pub-id-type="pmid">9520433</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.95.7.3720</pub-id>
+      </citation>
+    </ref>
+    <ref id="B20">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lafay</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Lloyd</surname>
+            <given-names>AT</given-names>
+          </name>
+          <name>
+            <surname>McLean</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Devine</surname>
+            <given-names>KM</given-names>
+          </name>
+          <name>
+            <surname>Sharp</surname>
+            <given-names>PM</given-names>
+          </name>
+          <name>
+            <surname>Wolfe</surname>
+            <given-names>KH</given-names>
+          </name>
+        </person-group>
+        <article-title>Proteome composition and codon usage in spirochaetes: species-specific and DNA strand-specific mutational biases</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <fpage>1642</fpage>
+        <lpage>1649</lpage>
+        <pub-id pub-id-type="pmid">10075995</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/27.7.1642</pub-id>
+      </citation>
+    </ref>
+    <ref id="B21">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McLean</surname>
+            <given-names>Michael J.</given-names>
+          </name>
+          <name>
+            <surname>Wolfe</surname>
+            <given-names>Kenneth H.</given-names>
+          </name>
+          <name>
+            <surname>Devine</surname>
+            <given-names>Kevin M.</given-names>
+          </name>
+        </person-group>
+        <article-title>Base Composition Skews, Replication Orientation, and Gene Orientation in 12 Prokaryote Genomes</article-title>
+        <source>J Mol Evol</source>
+        <year>1998</year>
+        <volume>47</volume>
+        <fpage>691</fpage>
+        <lpage>696</lpage>
+        <pub-id pub-id-type="pmid">9847411</pub-id>
+      </citation>
+    </ref>
+    <ref id="B22">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Guindon</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Perriere</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>Intragenomic base content variation is a potential source of biases when searching for horizontally transferred genes</article-title>
+        <source>Mol Biol Evol</source>
+        <year>2001</year>
+        <volume>18</volume>
+        <fpage>1838</fpage>
+        <lpage>1840</lpage>
+        <pub-id pub-id-type="pmid">11504864</pub-id>
+      </citation>
+    </ref>
+    <ref id="B23">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Duret</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Mouchiroud</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Expression pattern and, surprisingly, gene length shape codon usage in Caenorhabditis, Drosophila, and Arabidopsis</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>1999</year>
+        <volume>96</volume>
+        <fpage>4482</fpage>
+        <lpage>4487</lpage>
+        <pub-id pub-id-type="pmid">10200288</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.96.8.4482</pub-id>
+      </citation>
+    </ref>
+    <ref id="B24">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Morton</surname>
+            <given-names>BR</given-names>
+          </name>
+        </person-group>
+        <article-title>Selection at the amino acid level can influence synonymous codon usage: implications for the study of codon adaptation in plastid genes</article-title>
+        <source>Genetics</source>
+        <year>2001</year>
+        <volume>159</volume>
+        <fpage>347</fpage>
+        <lpage>358</lpage>
+        <pub-id pub-id-type="pmid">11560910</pub-id>
+      </citation>
+    </ref>
+    <ref id="B25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hayes</surname>
+            <given-names>WS</given-names>
+          </name>
+          <name>
+            <surname>Borodovsky</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>How to interpret an anonymous bacterial genome: machine learning approach to gene identification</article-title>
+        <source>Genome Res</source>
+        <year>1998</year>
+        <volume>8</volume>
+        <fpage>1154</fpage>
+        <lpage>1171</lpage>
+        <pub-id pub-id-type="pmid">9847079</pub-id>
+      </citation>
+    </ref>
+    <ref id="B26">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rodolphe</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Mathe</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Translation conditional models for protein coding sequences</article-title>
+        <source>J Comput Biol</source>
+        <year>2000</year>
+        <volume>7</volume>
+        <fpage>249</fpage>
+        <lpage>260</lpage>
+        <pub-id pub-id-type="pmid">10890400</pub-id>
+        <pub-id pub-id-type="doi">10.1089/10665270050081504</pub-id>
+      </citation>
+    </ref>
+    <ref id="B27">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kohonen</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <source>Self-Organizing Maps</source>
+        <year>1995</year>
+        <publisher-name>Berlin, Springer-Verlag</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B28">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kanaya</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Kinouchi</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Abe</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Kudo</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Yamada</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Nishi</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Mori</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Ikemura</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis of codon usage diversity of bacterial genes with a self-organizing map (SOM): characterization of horizontally transferred genes with emphasis on the E. coli O157 genome</article-title>
+        <source>Gene</source>
+        <year>2001</year>
+        <volume>276</volume>
+        <fpage>89</fpage>
+        <lpage>99</lpage>
+        <pub-id pub-id-type="pmid">11591475</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0378-1119(01)00673-4</pub-id>
+      </citation>
+    </ref>
+    <ref id="B29">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wang</surname>
+            <given-names>HC</given-names>
+          </name>
+          <name>
+            <surname>Badger</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Kearney</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis of codon usage patterns of bacterial genomes using the self-organizing map</article-title>
+        <source>Mol Biol Evol</source>
+        <year>2001</year>
+        <volume>18</volume>
+        <fpage>792</fpage>
+        <lpage>800</lpage>
+        <pub-id pub-id-type="pmid">11319263</pub-id>
+      </citation>
+    </ref>
+    <ref id="B30">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Abe</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Kanaya</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Kinouchi</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Ichiba</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Kozuki</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Ikemura</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>Informatics for unveiling hidden genome signatures</article-title>
+        <source>Genome Res</source>
+        <year>2003</year>
+        <volume>13</volume>
+        <fpage>693</fpage>
+        <lpage>702</lpage>
+        <pub-id pub-id-type="pmid">12671005</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.634603</pub-id>
+      </citation>
+    </ref>
+    <ref id="B31">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Koski</surname>
+            <given-names>Liisa B.</given-names>
+          </name>
+          <name>
+            <surname>Morton</surname>
+            <given-names>Richard A.</given-names>
+          </name>
+          <name>
+            <surname>Golding</surname>
+            <given-names>G. Brian</given-names>
+          </name>
+        </person-group>
+        <article-title>Codon Bias and Base Composition Are Poor Indicators of Horizontally Transferred Genes</article-title>
+        <source>Mol Biol Evol</source>
+        <year>2001</year>
+        <volume>18</volume>
+        <fpage>404</fpage>
+        <lpage>412</lpage>
+        <pub-id pub-id-type="pmid">11230541</pub-id>
+      </citation>
+    </ref>
+    <ref id="B32">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Besemer</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Lomsadze</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Borodovsky</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>GeneMarkS: a self-training method for prediction of gene starts in microbial genomes. Implications for finding sequence motifs in regulatory regions</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <fpage>2607</fpage>
+        <lpage>2618</lpage>
+        <pub-id pub-id-type="pmid">11410670</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/29.12.2607</pub-id>
+      </citation>
+    </ref>
+    <ref id="B33">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Deckert</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Warren</surname>
+            <given-names>PV</given-names>
+          </name>
+          <name>
+            <surname>Gaasterland</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Young</surname>
+            <given-names>WG</given-names>
+          </name>
+          <name>
+            <surname>Lenox</surname>
+            <given-names>AL</given-names>
+          </name>
+          <name>
+            <surname>Graham</surname>
+            <given-names>DE</given-names>
+          </name>
+          <name>
+            <surname>Overbeek</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Snead</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Keller</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Aujay</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Huber</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Feldman</surname>
+            <given-names>RA</given-names>
+          </name>
+          <name>
+            <surname>Short</surname>
+            <given-names>JM</given-names>
+          </name>
+          <name>
+            <surname>Olsen</surname>
+            <given-names>GJ</given-names>
+          </name>
+          <name>
+            <surname>Swanson</surname>
+            <given-names>RV</given-names>
+          </name>
+        </person-group>
+        <article-title>The complete genome of the hyperthermophilic bacterium Aquifex aeolicus</article-title>
+        <source>Nature</source>
+        <year>1998</year>
+        <volume>392</volume>
+        <fpage>353</fpage>
+        <lpage>358</lpage>
+        <pub-id pub-id-type="pmid">9537320</pub-id>
+        <pub-id pub-id-type="doi">10.1038/32831</pub-id>
+      </citation>
+    </ref>
+    <ref id="B34">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kunst</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Ogasawara</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Moszer</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Albertini</surname>
+            <given-names>AM</given-names>
+          </name>
+          <name>
+            <surname>Alloni</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Azevedo</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Bertero</surname>
+            <given-names>MG</given-names>
+          </name>
+          <name>
+            <surname>Bessieres</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Bolotin</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Borchert</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Borriss</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Boursier</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Brans</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Braun</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Brignell</surname>
+            <given-names>SC</given-names>
+          </name>
+          <name>
+            <surname>Bron</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Brouillet</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Bruschi</surname>
+            <given-names>CV</given-names>
+          </name>
+          <name>
+            <surname>Caldwell</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Capuano</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Carter</surname>
+            <given-names>NM</given-names>
+          </name>
+          <name>
+            <surname>Choi</surname>
+            <given-names>SK</given-names>
+          </name>
+          <name>
+            <surname>Codani</surname>
+            <given-names>JJ</given-names>
+          </name>
+          <name>
+            <surname>Connerton</surname>
+            <given-names>IF</given-names>
+          </name>
+          <name>
+            <surname>Danchin</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>The complete genome sequence of the gram-positive bacterium Bacillus subtilis</article-title>
+        <source>Nature</source>
+        <year>1997</year>
+        <volume>390</volume>
+        <fpage>249</fpage>
+        <lpage>256</lpage>
+        <pub-id pub-id-type="pmid">9384377</pub-id>
+        <pub-id pub-id-type="doi">10.1038/36786</pub-id>
+      </citation>
+    </ref>
+    <ref id="B35">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Shigenobu</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Watanabe</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Hattori</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Sakaki</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Ishikawa</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Genome sequence of the endocellular bacterial symbiont of aphids Buchnera sp. APS</article-title>
+        <source>Nature</source>
+        <year>2000</year>
+        <volume>407</volume>
+        <fpage>81</fpage>
+        <lpage>86</lpage>
+        <pub-id pub-id-type="pmid">10993077</pub-id>
+        <pub-id pub-id-type="doi">10.1038/35024074</pub-id>
+      </citation>
+    </ref>
+    <ref id="B36">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fraser</surname>
+            <given-names>CM</given-names>
+          </name>
+          <name>
+            <surname>Casjens</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Huang</surname>
+            <given-names>WM</given-names>
+          </name>
+          <name>
+            <surname>Sutton</surname>
+            <given-names>GG</given-names>
+          </name>
+          <name>
+            <surname>Clayton</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Lathigra</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>White</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Ketchum</surname>
+            <given-names>KA</given-names>
+          </name>
+          <name>
+            <surname>Dodson</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Hickey</surname>
+            <given-names>EK</given-names>
+          </name>
+          <name>
+            <surname>Gwinn</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Dougherty</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Tomb</surname>
+            <given-names>JF</given-names>
+          </name>
+          <name>
+            <surname>Fleischmann</surname>
+            <given-names>RD</given-names>
+          </name>
+          <name>
+            <surname>Richardson</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Peterson</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Kerlavage</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Quackenbush</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Hanson</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>van Vugt</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Palmer</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Adams</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Gocayne</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Venter</surname>
+            <given-names>JC</given-names>
+          </name>
+        </person-group>
+        <article-title>Genomic sequence of a Lyme disease spirochaete, Borrelia burgdorferi</article-title>
+        <source>Nature</source>
+        <year>1997</year>
+        <volume>390</volume>
+        <fpage>580</fpage>
+        <lpage>586</lpage>
+        <pub-id pub-id-type="pmid">9403685</pub-id>
+        <pub-id pub-id-type="doi">10.1038/37551</pub-id>
+      </citation>
+    </ref>
+    <ref id="B37">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Parkhill</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wren</surname>
+            <given-names>BW</given-names>
+          </name>
+          <name>
+            <surname>Mungall</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Ketley</surname>
+            <given-names>JM</given-names>
+          </name>
+          <name>
+            <surname>Churcher</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Basham</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Chillingworth</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Davies</surname>
+            <given-names>RM</given-names>
+          </name>
+          <name>
+            <surname>Feltwell</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Holroyd</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Jagels</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Karlyshev</surname>
+            <given-names>AV</given-names>
+          </name>
+          <name>
+            <surname>Moule</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Pallen</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Penn</surname>
+            <given-names>CW</given-names>
+          </name>
+          <name>
+            <surname>Quail</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Rajandream</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Rutherford</surname>
+            <given-names>KM</given-names>
+          </name>
+          <name>
+            <surname>van Vliet</surname>
+            <given-names>AH</given-names>
+          </name>
+          <name>
+            <surname>Whitehead</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Barrell</surname>
+            <given-names>BG</given-names>
+          </name>
+        </person-group>
+        <article-title>The genome sequence of the food-borne pathogen Campylobacter jejuni reveals hypervariable sequences</article-title>
+        <source>Nature</source>
+        <year>2000</year>
+        <volume>403</volume>
+        <fpage>665</fpage>
+        <lpage>668</lpage>
+        <pub-id pub-id-type="pmid">10688204</pub-id>
+        <pub-id pub-id-type="doi">10.1038/35001088</pub-id>
+      </citation>
+    </ref>
+    <ref id="B38">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>White</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Eisen</surname>
+            <given-names>JA</given-names>
+          </name>
+          <name>
+            <surname>Heidelberg</surname>
+            <given-names>JF</given-names>
+          </name>
+          <name>
+            <surname>Hickey</surname>
+            <given-names>EK</given-names>
+          </name>
+          <name>
+            <surname>Peterson</surname>
+            <given-names>JD</given-names>
+          </name>
+          <name>
+            <surname>Dodson</surname>
+            <given-names>RJ</given-names>
+          </name>
+          <name>
+            <surname>Haft</surname>
+            <given-names>DH</given-names>
+          </name>
+          <name>
+            <surname>Gwinn</surname>
+            <given-names>ML</given-names>
+          </name>
+          <name>
+            <surname>Nelson</surname>
+            <given-names>WC</given-names>
+          </name>
+          <name>
+            <surname>Richardson</surname>
+            <given-names>DL</given-names>
+          </name>
+          <name>
+            <surname>Moffat</surname>
+            <given-names>KS</given-names>
+          </name>
+          <name>
+            <surname>Qin</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Jiang</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Pamphile</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Crosby</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Shen</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Vamathevan</surname>
+            <given-names>JJ</given-names>
+          </name>
+          <name>
+            <surname>Lam</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>McDonald</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Utterback</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Zalewski</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Makarova</surname>
+            <given-names>KS</given-names>
+          </name>
+          <name>
+            <surname>Aravind</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Daly</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Fraser</surname>
+            <given-names>CM</given-names>
+          </name>
+        </person-group>
+        <article-title>Genome sequence of the radioresistant bacterium Deinococcus radiodurans R1</article-title>
+        <source>Science</source>
+        <year>1999</year>
+        <volume>286</volume>
+        <fpage>1571</fpage>
+        <lpage>1577</lpage>
+        <pub-id pub-id-type="pmid">10567266</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.286.5444.1571</pub-id>
+      </citation>
+    </ref>
+    <ref id="B39">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Blattner</surname>
+            <given-names>FR</given-names>
+          </name>
+          <name>
+            <surname>Plunkett</surname>
+            <given-names>G., 3rd</given-names>
+          </name>
+          <name>
+            <surname>Bloch</surname>
+            <given-names>CA</given-names>
+          </name>
+          <name>
+            <surname>Perna</surname>
+            <given-names>NT</given-names>
+          </name>
+          <name>
+            <surname>Burland</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Riley</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Collado-Vides</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Glasner</surname>
+            <given-names>JD</given-names>
+          </name>
+          <name>
+            <surname>Rode</surname>
+            <given-names>CK</given-names>
+          </name>
+          <name>
+            <surname>Mayhew</surname>
+            <given-names>GF</given-names>
+          </name>
+          <name>
+            <surname>Gregor</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Davis</surname>
+            <given-names>NW</given-names>
+          </name>
+          <name>
+            <surname>Kirkpatrick</surname>
+            <given-names>HA</given-names>
+          </name>
+          <name>
+            <surname>Goeden</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Rose</surname>
+            <given-names>DJ</given-names>
+          </name>
+          <name>
+            <surname>Mau</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Shao</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>The complete genome sequence of Escherichia coli K-12</article-title>
+        <source>Science</source>
+        <year>1997</year>
+        <volume>277</volume>
+        <fpage>1453</fpage>
+        <lpage>1474</lpage>
+        <pub-id pub-id-type="pmid">9278503</pub-id>
+        <pub-id pub-id-type="doi">10.1126/science.277.5331.1453</pub-id>
+      </citation>
+    </ref>
+    <ref id="B40">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fleischmann</surname>
+            <given-names>RD</given-names>
+          </name>
+          <name>
+            <surname>Adams</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>White</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Clayton</surname>
+            <given-names>RA</given-names>
+          </name>
+          <name>
+            <surname>Kirkness</surname>
+            <given-names>EF</given-names>
+          </name>
+          <name>
+            <surname>Kerlavage</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Bult</surname>
+            <given-names>CJ</given-names>
+          </name>
+          <name>
+            <surname>Tomb</surname>
+            <given-names>JF</given-names>
+          </name>
+          <name>
+            <surname>Dougherty</surname>
+            <given-names>BA</given-names>
+          </name>
+          <name>
+            <surname>Merrick</surname>
+            <given-names>JM</given-names>
+          </name>
+        </person-group>
+        <article-title>Whole-genome random sequencing and assembly of Haemophilus influenzae Rd</article-title>
+        <source>Science</source>
+        <year>1995</year>
+        <volume>269</volume>
+        <fpage>496</fpage>
+        <lpage>512</lpage>
+        <pub-id pub-id-type="pmid">7542800</pub-id>
+      </citation>
+    </ref>
+    <ref id="B41">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tomb</surname>
+            <given-names>JF</given-names>
+          </name>
+          <name>
+            <surname>White</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Kerlavage</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Clayton</surname>
+            <given-names>RA</given-names>
+          </name>
+          <name>
+            <surname>Sutton</surname>
+            <given-names>GG</given-names>
+          </name>
+          <name>
+            <surname>Fleischmann</surname>
+            <given-names>RD</given-names>
+          </name>
+          <name>
+            <surname>Ketchum</surname>
+            <given-names>KA</given-names>
+          </name>
+          <name>
+            <surname>Klenk</surname>
+            <given-names>HP</given-names>
+          </name>
+          <name>
+            <surname>Gill</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Dougherty</surname>
+            <given-names>BA</given-names>
+          </name>
+          <name>
+            <surname>Nelson</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Quackenbush</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Zhou</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Kirkness</surname>
+            <given-names>EF</given-names>
+          </name>
+          <name>
+            <surname>Peterson</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Loftus</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Richardson</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Dodson</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Khalak</surname>
+            <given-names>HG</given-names>
+          </name>
+          <name>
+            <surname>Glodek</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>McKenney</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Fitzegerald</surname>
+            <given-names>LM</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Adams</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Venter</surname>
+            <given-names>JC</given-names>
+          </name>
+        </person-group>
+        <article-title>The complete genome sequence of the gastric pathogen Helicobacter pylori</article-title>
+        <source>Nature</source>
+        <year>1997</year>
+        <volume>388</volume>
+        <fpage>539</fpage>
+        <lpage>547</lpage>
+        <pub-id pub-id-type="pmid">9252185</pub-id>
+        <pub-id pub-id-type="doi">10.1038/41483</pub-id>
+      </citation>
+    </ref>
+    <ref id="B42">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fraser</surname>
+            <given-names>CM</given-names>
+          </name>
+          <name>
+            <surname>Gocayne</surname>
+            <given-names>JD</given-names>
+          </name>
+          <name>
+            <surname>White</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Adams</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Clayton</surname>
+            <given-names>RA</given-names>
+          </name>
+          <name>
+            <surname>Fleischmann</surname>
+            <given-names>RD</given-names>
+          </name>
+          <name>
+            <surname>Bult</surname>
+            <given-names>CJ</given-names>
+          </name>
+          <name>
+            <surname>Kerlavage</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Sutton</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Kelley</surname>
+            <given-names>JM</given-names>
+          </name>
+        </person-group>
+        <article-title>The minimal gene complement of Mycoplasma genitalium</article-title>
+        <source>Science</source>
+        <year>1995</year>
+        <volume>270</volume>
+        <fpage>397</fpage>
+        <lpage>403</lpage>
+        <pub-id pub-id-type="pmid">7569993</pub-id>
+      </citation>
+    </ref>
+    <ref id="B43">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bult</surname>
+            <given-names>CJ</given-names>
+          </name>
+          <name>
+            <surname>White</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Olsen</surname>
+            <given-names>GJ</given-names>
+          </name>
+          <name>
+            <surname>Zhou</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Fleischmann</surname>
+            <given-names>RD</given-names>
+          </name>
+          <name>
+            <surname>Sutton</surname>
+            <given-names>GG</given-names>
+          </name>
+          <name>
+            <surname>Blake</surname>
+            <given-names>JA</given-names>
+          </name>
+          <name>
+            <surname>FitzGerald</surname>
+            <given-names>LM</given-names>
+          </name>
+          <name>
+            <surname>Clayton</surname>
+            <given-names>RA</given-names>
+          </name>
+          <name>
+            <surname>Gocayne</surname>
+            <given-names>JD</given-names>
+          </name>
+          <name>
+            <surname>Kerlavage</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Dougherty</surname>
+            <given-names>BA</given-names>
+          </name>
+          <name>
+            <surname>Tomb</surname>
+            <given-names>JF</given-names>
+          </name>
+          <name>
+            <surname>Adams</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Reich</surname>
+            <given-names>CI</given-names>
+          </name>
+          <name>
+            <surname>Overbeek</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Kirkness</surname>
+            <given-names>EF</given-names>
+          </name>
+          <name>
+            <surname>Weinstock</surname>
+            <given-names>KG</given-names>
+          </name>
+          <name>
+            <surname>Merrick</surname>
+            <given-names>JM</given-names>
+          </name>
+          <name>
+            <surname>Glodek</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Scott</surname>
+            <given-names>JL</given-names>
+          </name>
+          <name>
+            <surname>Geoghagen</surname>
+            <given-names>NS</given-names>
+          </name>
+          <name>
+            <surname>Venter</surname>
+            <given-names>JC</given-names>
+          </name>
+        </person-group>
+        <article-title>Complete genome sequence of the methanogenic archaeon, Methanococcus jannaschii</article-title>
+        <source>Science</source>
+        <year>1996</year>
+        <volume>273</volume>
+        <fpage>1058</fpage>
+        <lpage>1073</lpage>
+        <pub-id pub-id-type="pmid">8688087</pub-id>
+      </citation>
+    </ref>
+    <ref id="B44">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Salanoubat</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Genin</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Artiguenave</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Gouzy</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Mangenot</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Arlat</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Billault</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Brottier</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Camus</surname>
+            <given-names>JC</given-names>
+          </name>
+          <name>
+            <surname>Cattolico</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Chandler</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Choisne</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Claudel-Renard</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Cunnac</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Demange</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Gaspin</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Lavie</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Moisan</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Robert</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Saurin</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Schiex</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Siguier</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Thebault</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Whalen</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Wincker</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Levy</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Weissenbach</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Boucher</surname>
+            <given-names>CA</given-names>
+          </name>
+        </person-group>
+        <article-title>Genome sequence of the plant pathogen Ralstonia solanacearum</article-title>
+        <source>Nature</source>
+        <year>2002</year>
+        <volume>415</volume>
+        <fpage>497</fpage>
+        <lpage>502</lpage>
+        <pub-id pub-id-type="pmid">11823852</pub-id>
+        <pub-id pub-id-type="doi">10.1038/415497a</pub-id>
+      </citation>
+    </ref>
+    <ref id="B45">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bentley</surname>
+            <given-names>SD</given-names>
+          </name>
+          <name>
+            <surname>Chater</surname>
+            <given-names>KF</given-names>
+          </name>
+          <name>
+            <surname>Cerdeno-Tarraga</surname>
+            <given-names>AM</given-names>
+          </name>
+          <name>
+            <surname>Challis</surname>
+            <given-names>GL</given-names>
+          </name>
+          <name>
+            <surname>Thomson</surname>
+            <given-names>NR</given-names>
+          </name>
+          <name>
+            <surname>James</surname>
+            <given-names>KD</given-names>
+          </name>
+          <name>
+            <surname>Harris</surname>
+            <given-names>DE</given-names>
+          </name>
+          <name>
+            <surname>Quail</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Kieser</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Harper</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Bateman</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Chandra</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>CW</given-names>
+          </name>
+          <name>
+            <surname>Collins</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Cronin</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Fraser</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Goble</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Hidalgo</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Hornsby</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Howarth</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Huang</surname>
+            <given-names>CH</given-names>
+          </name>
+          <name>
+            <surname>Kieser</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Larke</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Murphy</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Oliver</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>O'Neil</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Rabbinowitsch</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Rajandream</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Rutherford</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Rutter</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Seeger</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Saunders</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Sharp</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Squares</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Squares</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Taylor</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Warren</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Wietzorrek</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Woodward</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Barrell</surname>
+            <given-names>BG</given-names>
+          </name>
+          <name>
+            <surname>Parkhill</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Hopwood</surname>
+            <given-names>DA</given-names>
+          </name>
+        </person-group>
+        <article-title>Complete genome sequence of the model actinomycete Streptomyces coelicolor A3(2)</article-title>
+        <source>Nature</source>
+        <year>2002</year>
+        <volume>417</volume>
+        <fpage>141</fpage>
+        <lpage>147</lpage>
+        <pub-id pub-id-type="pmid">12000953</pub-id>
+        <pub-id pub-id-type="doi">10.1038/417141a</pub-id>
+      </citation>
+    </ref>
+    <ref id="B46">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kaneko</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Sato</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Kotani</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Tanaka</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Asamizu</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Nakamura</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Miyajima</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Hirosawa</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Sugiura</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Sasamoto</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Kimura</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Hosouchi</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Matsuno</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Muraki</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Nakazaki</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Naruo</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Okumura</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Shimpo</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Takeuchi</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Wada</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Watanabe</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Yamada</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Yasuda</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Tabata</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Sequence analysis of the genome of the unicellular cyanobacterium Synechocystis sp. strain PCC6803. II. Sequence determination of the entire genome and assignment of potential protein-coding regions</article-title>
+        <source>DNA Res</source>
+        <year>1996</year>
+        <volume>3</volume>
+        <fpage>109</fpage>
+        <lpage>136</lpage>
+        <pub-id pub-id-type="pmid">8905231</pub-id>
+      </citation>
+    </ref>
+    <ref id="B47">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Parkhill</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wren</surname>
+            <given-names>BW</given-names>
+          </name>
+          <name>
+            <surname>Thomson</surname>
+            <given-names>NR</given-names>
+          </name>
+          <name>
+            <surname>Titball</surname>
+            <given-names>RW</given-names>
+          </name>
+          <name>
+            <surname>Holden</surname>
+            <given-names>MT</given-names>
+          </name>
+          <name>
+            <surname>Prentice</surname>
+            <given-names>MB</given-names>
+          </name>
+          <name>
+            <surname>Sebaihia</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>James</surname>
+            <given-names>KD</given-names>
+          </name>
+          <name>
+            <surname>Churcher</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Mungall</surname>
+            <given-names>KL</given-names>
+          </name>
+          <name>
+            <surname>Baker</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Basham</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Bentley</surname>
+            <given-names>SD</given-names>
+          </name>
+          <name>
+            <surname>Brooks</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Cerdeno-Tarraga</surname>
+            <given-names>AM</given-names>
+          </name>
+          <name>
+            <surname>Chillingworth</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Cronin</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Davies</surname>
+            <given-names>RM</given-names>
+          </name>
+          <name>
+            <surname>Davis</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Dougan</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Feltwell</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Hamlin</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Holroyd</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Jagels</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Karlyshev</surname>
+            <given-names>AV</given-names>
+          </name>
+          <name>
+            <surname>Leather</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Moule</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Oyston</surname>
+            <given-names>PC</given-names>
+          </name>
+          <name>
+            <surname>Quail</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Rutherford</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Simmonds</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Skelton</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Stevens</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Whitehead</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Barrell</surname>
+            <given-names>BG</given-names>
+          </name>
+        </person-group>
+        <article-title>Genome sequence of Yersinia pestis, the causative agent of plague</article-title>
+        <source>Nature</source>
+        <year>2001</year>
+        <volume>413</volume>
+        <fpage>523</fpage>
+        <lpage>527</lpage>
+        <pub-id pub-id-type="pmid">11586360</pub-id>
+        <pub-id pub-id-type="doi">10.1038/35097083</pub-id>
+      </citation>
+    </ref>
+    <ref id="B48">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fickett</surname>
+            <given-names>JW</given-names>
+          </name>
+          <name>
+            <surname>Tung</surname>
+            <given-names>CS</given-names>
+          </name>
+        </person-group>
+        <article-title>Assessment of protein coding measures</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>1992</year>
+        <volume>20</volume>
+        <fpage>6441</fpage>
+        <lpage>6450</lpage>
+        <pub-id pub-id-type="pmid">1480466</pub-id>
+      </citation>
+    </ref>
+    <ref id="B49">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rutherford</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Parkhill</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Crook</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Horsnell</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Rice</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Rajandream</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Barrell</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>Artemis: sequence visualization and annotation</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>944</fpage>
+        <lpage>945</lpage>
+        <pub-id pub-id-type="pmid">11120685</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/16.10.944</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig position="float" id="F1">
+      <label>Figure 1</label>
+      <caption>
+        <p>Screenshot from the Artemis sequence viewer [<xref ref-type="bibr" rid="B49">49</xref>] showing a sample region of <italic>D. radiodurans </italic>and accompanying RescueNet predictions. Annotated genes are shown as white blocks, and predictions are shown in-frame as shaded blocks. Note the relative infrequency of stop codons (vertical lines in each frame) and the many ORFs that are not protein-coding regions. Note also the selected gene DR1142 and the contradicting RescueNet prediction. DR1142 is a hypothetical gene, predicted to be so by Glimmer2, and there is a strong possibility that the CDS marked by RescueNet is the correct prediction. The possibility is also raised by RescueNet that the gene DR1143 may be longer than previously annotated and contains a frameshift.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-23-1"/>
+    </fig>
+    <fig position="float" id="F2">
+      <label>Figure 2</label>
+      <caption>
+        <p>Artemis screenshot showing a sample region of the <italic>H. influenzae </italic>genome and associated RescueNet predictions. As in Fig. <xref ref-type="fig" rid="F1">1</xref>, the annotated genes are shown as white blocks and the RescueNet predictions are shown in-frame as shaded blocks. Note that genes HI0218 and HI0220 contain authentic frameshifts. RescueNet gives two predictions that overlap each of these gene, and they meet near the frameshift point.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-23-2"/>
+    </fig>
+    <table-wrap position="float" id="T1">
+      <label>Table 1</label>
+      <caption>
+        <p>Accuracy of RescueNet in 15 bacterial genomes.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td align="left">
+              <bold>Organism</bold>
+            </td>
+            <td align="center">
+              <bold>GC %</bold>
+            </td>
+            <td align="center">
+              <bold>Number of Genes Annotated</bold>
+            </td>
+            <td align="center">
+              <bold>Training Set Size</bold>
+            </td>
+            <td align="center">
+              <bold>Sn. (%)</bold>
+            </td>
+            <td align="center">
+              <bold>Sn. &gt;225 bp (%)</bold>
+            </td>
+            <td align="center">
+              <bold>Sn. Conserved (%)</bold>
+            </td>
+            <td align="center">
+              <bold>Sp. (%)</bold>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>Buchnera</italic>
+              </bold>
+            </td>
+            <td align="center">26.2</td>
+            <td align="center">564</td>
+            <td align="center">292</td>
+            <td align="center">
+              <bold>88.65</bold>
+            </td>
+            <td align="center">
+              <bold>91.24</bold>
+            </td>
+            <td align="center">
+              <bold>89.97</bold>
+            </td>
+            <td align="center">
+              <bold>96.18</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>B. burgdorferi</italic>
+              </bold>
+            </td>
+            <td align="center">28.6</td>
+            <td align="center">857</td>
+            <td align="center">403</td>
+            <td align="center">
+              <bold>90.54</bold>
+            </td>
+            <td align="center">
+              <bold>96.39</bold>
+            </td>
+            <td align="center">
+              <bold>95.66</bold>
+            </td>
+            <td align="center">
+              <bold>98.02</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>C. jejuni</italic>
+              </bold>
+            </td>
+            <td align="center">30.6</td>
+            <td align="center">1654</td>
+            <td align="center">673</td>
+            <td align="center">
+              <bold>90.14</bold>
+            </td>
+            <td align="center">
+              <bold>95.08</bold>
+            </td>
+            <td align="center">
+              <bold>92.14</bold>
+            </td>
+            <td align="center">
+              <bold>99.23</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>M. jannaschii</italic>
+              </bold>
+            </td>
+            <td align="center">31.4</td>
+            <td align="center">1715</td>
+            <td align="center">692</td>
+            <td align="center">
+              <bold>88.39</bold>
+            </td>
+            <td align="center">
+              <bold>91.82</bold>
+            </td>
+            <td align="center">
+              <bold>91.02</bold>
+            </td>
+            <td align="center">
+              <bold>96.50</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>M. genitalium</italic>
+              </bold>
+            </td>
+            <td align="center">31.7</td>
+            <td align="center">483</td>
+            <td align="center">301</td>
+            <td align="center">
+              <bold>89.44</bold>
+            </td>
+            <td align="center">
+              <bold>91.52</bold>
+            </td>
+            <td align="center">
+              <bold>89.89</bold>
+            </td>
+            <td align="center">
+              <bold>92.32</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>H. influenzae</italic>
+              </bold>
+            </td>
+            <td align="center">38.0</td>
+            <td align="center">1754</td>
+            <td align="center">885</td>
+            <td align="center">
+              <bold>91.56</bold>
+            </td>
+            <td align="center">
+              <bold>96.34</bold>
+            </td>
+            <td align="center">
+              <bold>93.10</bold>
+            </td>
+            <td align="center">
+              <bold>98.01</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>H. pylori</italic>
+              </bold>
+            </td>
+            <td align="center">38.9</td>
+            <td align="center">1593</td>
+            <td align="center">712</td>
+            <td align="center">
+              <bold>91.39</bold>
+            </td>
+            <td align="center">
+              <bold>96.80</bold>
+            </td>
+            <td align="center">
+              <bold>95.70</bold>
+            </td>
+            <td align="center">
+              <bold>95.49</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>A. aeolicus</italic>
+              </bold>
+            </td>
+            <td align="center">43.3</td>
+            <td align="center">1517</td>
+            <td align="center">723</td>
+            <td align="center">
+              <bold>95.78</bold>
+            </td>
+            <td align="center">
+              <bold>96.54</bold>
+            </td>
+            <td align="center">
+              <bold>95.57</bold>
+            </td>
+            <td align="center">
+              <bold>87.80</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>B. subtilis</italic>
+              </bold>
+            </td>
+            <td align="center">43.5</td>
+            <td align="center">4220</td>
+            <td align="center">1832</td>
+            <td align="center">
+              <bold>87.93</bold>
+            </td>
+            <td align="center">
+              <bold>94.95</bold>
+            </td>
+            <td align="center">
+              <bold>89.86</bold>
+            </td>
+            <td align="center">
+              <bold>89.47</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>Synechocystis</italic>
+              </bold>
+            </td>
+            <td align="center">47.6</td>
+            <td align="center">3169</td>
+            <td align="center">954</td>
+            <td align="center">
+              <bold>93.18</bold>
+            </td>
+            <td align="center">
+              <bold>96.53</bold>
+            </td>
+            <td align="center">
+              <bold>91.55</bold>
+            </td>
+            <td align="center">
+              <bold>90.95</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>Y. pestis</italic>
+              </bold>
+            </td>
+            <td align="center">47.6</td>
+            <td align="center">4043</td>
+            <td align="center">1640</td>
+            <td align="center">
+              <bold>91.04</bold>
+            </td>
+            <td align="center">
+              <bold>94.84</bold>
+            </td>
+            <td align="center">
+              <bold>93.66</bold>
+            </td>
+            <td align="center">
+              <bold>88.29</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>E. coli</italic>
+              </bold>
+            </td>
+            <td align="center">50.8</td>
+            <td align="center">4290</td>
+            <td align="center">1983</td>
+            <td align="center">
+              <bold>89.39</bold>
+            </td>
+            <td align="center">
+              <bold>92.85</bold>
+            </td>
+            <td align="center">
+              <bold>92.54</bold>
+            </td>
+            <td align="center">
+              <bold>89.04</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>D. radiodurans</italic>
+              </bold>
+            </td>
+            <td align="center">67.0</td>
+            <td align="center">2622</td>
+            <td align="center">1436</td>
+            <td align="center">
+              <bold>84.28</bold>
+            </td>
+            <td align="center">
+              <bold>85.65</bold>
+            </td>
+            <td align="center">
+              <bold>92.61</bold>
+            </td>
+            <td align="center">
+              <bold>95.50</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>R. solanacearum</italic>
+              </bold>
+            </td>
+            <td align="center">67.0</td>
+            <td align="center">3442</td>
+            <td align="center">1748</td>
+            <td align="center">
+              <bold>84.74</bold>
+            </td>
+            <td align="center">
+              <bold>88.60</bold>
+            </td>
+            <td align="center">
+              <bold>89.82</bold>
+            </td>
+            <td align="center">
+              <bold>93.20</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <bold>
+                <italic>S. coelicolor</italic>
+              </bold>
+            </td>
+            <td align="center">72.1</td>
+            <td align="center">7851</td>
+            <td align="center">956</td>
+            <td align="center">
+              <bold>88.35</bold>
+            </td>
+            <td align="center">
+              <bold>91.55</bold>
+            </td>
+            <td align="center">
+              <bold>91.55</bold>
+            </td>
+            <td align="center">
+              <bold>90.10</bold>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>The genomes are listed according to ascending G+C content. For each genome, the table shows: Genome GC content (GC %), the number of genes annotated in GenBank for that genome, the number of genes in the RescueNet training set, overall RescueNet sensitivity (Sn.), the sensitivity of RescueNet in finding genes longer than the 225 bp minimum prediction size (Sn. &gt;225 bp), the sensitivity of RescueNet in finding genes that have been confirmed by homology with other genes in GenBank (Sn. Conserved), and finally, overall RescueNet specificity (Sp.)</p>
+      </table-wrap-foot>
+    </table-wrap>
+  </sec>
+</back>

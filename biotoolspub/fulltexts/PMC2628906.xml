@@ -1,0 +1,915 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2628906</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-9-523</article-id>
+    <article-id pub-id-type="pmid">19061503</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-9-523</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Methodology Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Empirical methods for controlling false positives and estimating confidence in ChIP-Seq peaks</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Nix</surname>
+          <given-names>David A</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>david.nix@hci.utah.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Courdy</surname>
+          <given-names>Samir J</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>samir.courdy@hci.utah.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A3">
+        <name>
+          <surname>Boucher</surname>
+          <given-names>Kenneth M</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>ken.boucher@hci.utah.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Huntsman Cancer Institute, Departments of Research Informatics, University of Utah, Salt Lake City, Utah, 84105, USA</aff>
+    <aff id="I2"><label>2</label>Oncological Sciences, University of Utah, Salt Lake City, Utah, 84105, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2008</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>5</day>
+      <month>12</month>
+      <year>2008</year>
+    </pub-date>
+    <volume>9</volume>
+    <fpage>523</fpage>
+    <lpage>523</lpage>
+    <history>
+      <date date-type="received">
+        <day>30</day>
+        <month>7</month>
+        <year>2008</year>
+      </date>
+      <date date-type="accepted">
+        <day>5</day>
+        <month>12</month>
+        <year>2008</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2008 Nix et al; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2008</copyright-year>
+      <copyright-holder>Nix et al; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/9/523"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>High throughput signature sequencing holds many promises, one of which is the ready identification of <italic>in vivo </italic>transcription factor binding sites, histone modifications, changes in chromatin structure and patterns of DNA methylation across entire genomes. In these experiments, chromatin immunoprecipitation is used to enrich for particular DNA sequences of interest and signature sequencing is used to map the regions to the genome (ChIP-Seq). Elucidation of these sites of DNA-protein binding/modification are proving instrumental in reconstructing networks of gene regulation and chromatin remodelling that direct development, response to cellular perturbation, and neoplastic transformation.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>Here we present a package of algorithms and software that makes use of control input data to reduce false positives and estimate confidence in ChIP-Seq peaks. Several different methods were compared using two simulated spike-in datasets. Use of control input data and a normalized difference score were found to more than double the recovery of ChIP-Seq peaks at a 5% false discovery rate (FDR). Moreover, both a binomial p-value/q-value and an empirical FDR were found to predict the true FDR within 2–3 fold and are more reliable estimators of confidence than a global Poisson p-value. These methods were then used to reanalyze Johnson et al.'s neuron-restrictive silencer factor (NRSF) ChIP-Seq data without relying on extensive qPCR validated NRSF sites and the presence of NRSF binding motifs for setting thresholds.</p>
+      </sec>
+      <sec>
+        <title>Conclusion</title>
+        <p>The methods developed and tested here show considerable promise for reducing false positives and estimating confidence in ChIP-Seq data without any prior knowledge of the chIP target. They are part of a larger open source package freely available from <ext-link ext-link-type="uri" xlink:href="http://useq.sourceforge.net/">http://useq.sourceforge.net/</ext-link>.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Chromatin immunoprecipitation (chIP) is a well-characterized technique for enriching regions of DNA that are marked with a modification (e.g. methylation), display a particular structure (e.g. DNase hypersensitivity), or are bound by a protein (e.g. transcription factor, polymerase, modified histone), <italic>in vivo</italic>, across an entire genome [<xref ref-type="bibr" rid="B1">1</xref>]. Chromatin is typically prepared by fixing live cells with a DNA-protein cross-linker, lysing the cells, and randomly fragmenting the DNA. An antibody that selectively binds the target of interest is then used to immunoprecipitate the target and any associated nucleic acid. The cross-linker is then reversed and DNA fragments of approximately 200–500 bp in size are isolated. The final chIP DNA sample contains primarily background input DNA plus a small amount (&lt;1%) of additional immunoprecipitated target DNA.</p>
+    <p>Several methods have been used to identify sequences enriched in chIP samples (e.g. SAGE, ChIP-PET, ChIP-chip [<xref ref-type="bibr" rid="B2">2</xref>-<xref ref-type="bibr" rid="B4">4</xref>]). One of the most recent utilizes high throughput signature sequencing to sequence the ends of a portion of the DNA fragments in the chIP sample. In a typical ChIP-Seq experiment, millions of short (e.g. 26 bp) sequences are read from the ends of the chIP DNA. The reads are mapped to a reference genome and enriched regions identified by looking for locations with a 'significant' accumulation of mapped reads. Calculating significance would be rather straight forward if the distribution of mapped reads were random in the absence of chIP (e.g. sequencing of input DNA). This does not appear to be true. The method of DNA fragmentation, preferential amplification in PCR, lack of independence in observations, the degree of repetitiveness, and error in the sequencing and alignment process are just a few of the known sources of systematic bias that confound naive expectation estimates.</p>
+    <p>Several methods have been developed to identify and estimate confidence in ChIP-Seq peaks. Johnson et al. used an ad hoc masking method based on their control input data and prior qPCR validated regions to set a threshold and assign confidence in their NRSF binding peaks [<xref ref-type="bibr" rid="B5">5</xref>]. Robertson et al. estimated global Poisson p-values for windowed data using a rate set to 90% the bp size of the genome. To estimate FDRs, a background model of binding peaks was generated by randomizing their STAT1 data and choosing a threshold that produced a 0.1% FDR [<xref ref-type="bibr" rid="B6">6</xref>]. Mikkelsen et al. took a remapping strategy that involved aligning every 27 mer in the mouse genome back onto itself to define unique and repetitive regions. For each ChIP-Seq dataset, "nominal" p-values were calculated by randomly assigning each read to a "unique region" and comparing the observed randomized 1 kb window sums to the real 1 kb window sums [<xref ref-type="bibr" rid="B7">7</xref>]. Mikkelsen et al. also employed a Hidden Markov Model that awaits description. Fejes et al. mention a Monte Carlo based FDR estimation based on read location randomization in their Find Peaks application note [<xref ref-type="bibr" rid="B8">8</xref>]. Lastly, Valouev et al. use a variety of promising enhancements (e.g. weighted windows/kernel density and read orientation) to call binding peaks from ChIP-Seq data and estimate FDRs base on control input [<xref ref-type="bibr" rid="B9">9</xref>]. Only the Johnson et al. method makes use of input data to control for localized systematic bias. This is unfortunate given the presence of clear systematic bias in ChIP-Seq data, see below. Additionally, none of the methods reported evaluation of their confidence estimations using spike-in data or simulated spike-in data where actual FDRs can be compared to estimated confidence metrics. This is critical for evaluating the usefulness of any novel ChIP-Seq peak discovery method.</p>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <p>In this paper we have 1) developed several methods to identify ChIP-Seq binding peaks while controlling for systematic bias 2) examined three methods for estimating statistical confidence in the peaks without prior knowledge 3) characterized these methods using both simulated spike-in data and a reanalysis of a published ChIP-Seq dataset and lastly, 4) created an open source software framework to support the development of next generation sequencing data analysis applications (see <ext-link ext-link-type="uri" xlink:href="http://useq.sourceforge.net/">http://useq.sourceforge.net/</ext-link>). Included in the current USeq package are the low level ChIP-Seq analysis applications described here for converting mapped reads into chromosome specific summary tracks and enriched regions as well as numerous high level analysis applications for intersecting genomic regions, finding neighbouring genes, scoring binding sites, etc. A user guide, table of available applications, and other supporting documentation are available on the project website and with this manuscript, [see Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>].</p>
+    <sec>
+      <title>Systematic bias</title>
+      <p>A visual inspection of several ChIP-Seq <italic>control input </italic>datasets [<xref ref-type="bibr" rid="B5">5</xref>,<xref ref-type="bibr" rid="B7">7</xref>,<xref ref-type="bibr" rid="B9">9</xref>] revealed clear evidence of non-random mapped read enrichment. The bias is in some cases obvious (e.g. spikes contained within most satellite repetitive regions adjacent to centromeric heterochromatin, figure <xref ref-type="fig" rid="F1">1A–C</xref>) and worth removing prior to analysis. The bias is also subtle (e.g. peaks within genes, figure <xref ref-type="fig" rid="F1">1D</xref>, at the transcription start sites of some genes, figure <xref ref-type="fig" rid="F1">1E</xref>, and peaks with no known associated annotation, figure <xref ref-type="fig" rid="F1">1B</xref>) and not so easily minimized. These false positives are seen in control input data and chIP data in both unamplified and PCR amplified datasets, figure <xref ref-type="fig" rid="F1">1A</xref>. If uncontrolled, the impact of these false positives can be quite substantial. Figure <xref ref-type="fig" rid="F2">2</xref> shows the number of false positives in the Johnson et al. control unamplified input data as a function of the number of window reads and Bonferroni corrected global Poisson p-values. At a conservative p-value threshold of 0.001 (&gt;10 reads per 350 bp window, by random chance &lt; 1 read is expected per window), more than 250 false positives are obtained, at a threshold of 2 × 10<sup>-14 </sup>(&gt;20 reads), &gt; 70 false positives are apparent.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Systematic bias</bold>. Integrated Genome Browser display of chromosome 1 showing four window read count tracks derived from Johnson et al.'s NRSF <italic>H. sapiens </italic>ChIP-Seq data (A). The datasets were sub sampled to contain matching number of reads and the number of reads falling within a sliding 100 bp window plotted across each chromosome. Both the unamplified and amplified control input datasets show both obvious and subtle regions with an above random number of mapped reads. Expanded views of the input data track pericentric heterochromatic regions on chromosomes 1 (B) and 7 (C) along with UCSC's RepeatMasker tracks show that satellite (red) repeats overlap some but not all regions of apparent mapped sequence enrichment. This systematic bias is also apparent within genes and at transcription start sites (D). The degree of bias varies by dataset. For example, figure E, derived from Valouev et al.'s GABP ChIP-Seq data, shows very pronounced transcription start site read enrichment in the control input and chIP sample.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-9-523-1"/>
+      </fig>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Impact of systematic bias on the number of false positives</bold>. The number of false positives due to systematic bias can be quite substantial. Figure 2 plots the number of false positives in the control unamplified input data from Johnson et al.'s NRSF study as a function of the number of window reads and Bonferroni corrected global Poisson p-values.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-9-523-2"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>ChIP-Seq peak detection methods</title>
+      <p>The need to control for systematic bias motivated us to develop and test several methods to minimize the number of false positives using spike-in datasets. Spike-in datasets have proven to be instrumental in evaluating novel ChIP-chip[<xref ref-type="bibr" rid="B10">10</xref>] and expression microarray[<xref ref-type="bibr" rid="B11">11</xref>] analysis methods. They provide a known truth. As such, one can ask how many spike-ins and non-spike-ins (false positives) are recovered using a particular method at a given threshold. By fixing an acceptable FDR (# non-spike-ins/total # recovered regions) the method that returns more spike-ins is, by definition, better. Spike-in data is also useful for measuring the accuracy and consistency of novel confidence estimators. Presently, experimentally derived ChIP-Seq spike-in datasets do not exist. Therefore, we generated a close approximation by adding simulated ChIP-Seq reads to experimentally derived input control data. Our test datasets included two spike-in simulations that were created by adding 900 spike-in regions containing 2–60 reads each to human input data from Johnson et al. and 870 spike-in regions containing 1–87 reads to a combination of mouse input data and data showing little to no enrichment from Mikkelsen et al. The two datasets were made deliberately different to test the robustness of our methods against different data density, different alignment methods, and different levels of noise. The human dataset (low) represents one with low coverage; 1.6 million reads in each of the three samples: input 1, input 2, and input 3 + simulated chIP reads. The mouse dataset (high) represents one with relatively high coverage, 16 million reads in each sample, and likely more noise due to the inclusion of some low-level chIP enrichment.</p>
+      <p>Four different peak identification methods were compared using the two simulated ChIP-Seq datasets. Each method made use of a sliding window (350 bp) to generate summary scores for all interrogated regions in the genome. Overlapping windows were combined into candidate binding peaks by merging those that exceed a given threshold. Binding peaks were then scored for intersection with the spike-in key and the true positive rate (TPR) and the FDR calculated. Figure <xref ref-type="fig" rid="F3">3</xref> shows a plot of TPRs against FDRs over a variety of thresholds for each of the four methods. The "sum" method uses no input control data but simply sums the number of reads falling within each window. The "difference" method is a subtraction of the sum of the reads in the chIP data minus the sum of the reads in the input control data for each window. The "normalized difference" method takes the difference and divides it by the square root of the sum, an estimation of the standard deviation. Lastly, binomial p-values were calculated as described in the methods. Of the four, the normalized difference and binomial p-value out performs the others at all FDRs with the normalized difference slightly better in the small dataset. In situations where control data is available, regions in the genome with significant global Poisson p-values can be identified and removed prior to windowing. Application of this pre filter significantly improved the difference window score making it essentially equivalent to the normalized difference score and slightly improved the performance of the other window tests (data not shown). However, the risk of picking an inappropriate p-value threshold for pre filtering the data may preclude its usefulness.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Performance of different window summary statistics</bold>. A comparison of the TPR against the FDR for four different window summary statistics associated with the low (A) and high (B) spike-in datasets. Each of the window scanning statistics (Sum: sum of the chIP reads within the window, no input; Diff: difference between the number of chIP reads and input reads; NormDiff: normalized difference, the difference divided by the square root of the sum; BinPVal: binomial p-value; BinPVal Min 10: binomial p-value using a prefiltered dataset where only windows with 10 or more total reads from the chIP and input datasets were used to score the mapped spike-in data. Multiple sets of enriched regions where generated over a range of thresholds. Each set was then intersected with the appropriate spike-in key and the TPR and FDR plotted.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-9-523-3"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>ChIP-Seq peak confidence estimations</title>
+      <p>A second goal in our study was to develop and evaluate methods for estimating confidence in ranked lists of putative binding peaks. Binding peaks passing a set threshold will contain both real and false positives. Estimating the degree of false positives in a given list, an FDR, is a critical step in generating useful ChIP-Seq data. We evaluated two methods for their accuracy and reliability using the two simulated spike-in datasets (Figure <xref ref-type="fig" rid="F4">4</xref>). The first makes use of normalized difference score window data to generate sets of enriched regions. Empirical FDRs (eFDRs) are calculated at each test normalized difference score by dividing the number of control enriched regions (input 1 vs. input 2) by the number of test enriched regions (chIP vs. input 2). Figure <xref ref-type="fig" rid="F4">4a</xref> compares the eFDRs against the actual FDRs for the two spike-in simulation datasets. In both cases, the eFDR underestimates the actual FDR by &lt; ~2 fold (e.g. an FDR of 0.01 = eFDRs of 0.005 – 0.009, an FDR of 0.05 = eFDRs of 0.02 – 0.05, an FDR of 0.1 = eFDRs of 0.045 – 0.01).</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Performance of two confidence estimations</bold>. A comparison of two FDR estimations against the real FDR for the two spike-in datasets with low and high number of reads. Empirical FDRs (eFDR) were calculated and plotted (A) for a variety of thresholds by dividing the number of control enriched regions (input1 vs. input2) by the number of chIP enriched regions (chIP vs. input2). The actual FDR was calculated by intersecting each enriched region set with the spike-in key. The q-value FDR estimation (B) is made by calculating binomial p-values for each window and applying the Storey q-value FDR approximation. For each of the spike-in datasets, windows were generated using two different minimum number of reads, either 1 or 10. The latter represents a filtered dataset that improves the q-value estimation at the cost of test sensitivity (see also Figure 2A).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-9-523-4"/>
+      </fig>
+      <p>The second FDR approximation (Figure <xref ref-type="fig" rid="F4">4b</xref>) uses Storey's [<xref ref-type="bibr" rid="B12">12</xref>] q-value method to convert window binomial p-values to q-values. At the core of the q-value conversion is the assumption that under the null, input p-values are uniformly distributed. This presents a problem with ChIP-Seq data. For small datasets, a significant number of regions contain &lt; 5 reads, their binomial p-values are not continuous but produce discrete values (e.g. 0.25, 0.5, 1), spikes in the p-value distribution, and a poor q-value FDR estimation, see figure <xref ref-type="fig" rid="F4">4b</xref>. To more closely approximate a uniform distribution, windows with &lt; 10 reads are removed prior to converting p-values. This significantly improves the q-value FDR estimation but does affect the test sensitivity with small datasets, see figure <xref ref-type="fig" rid="F3">3a</xref>. With both datasets, binomial p-values converted to q-values overestimated the actual FDR by &lt; ~3 fold (e.g. an FDR 0.01 = q-value 0.01 – 0.03, an FDR 0.05 = q-value 0.06 – 0.09, and an FDR of 0.1 = q-value 0.12–0.15).</p>
+      <p>Each of the two confidence estimators has its own advantages and disadvantages. The eFDR underestimates the actual FDR and requires twice the number of control input reads to generate a null distribution. Yet the eFDR has no set minimum data size and can thus be used with low read density datasets. The q-value FDR overestimates the true FDR, requires a minimum of 10 reads in each window, and half the input control data. It is most useful for high read density data with matching input control data. In practice, we use both FDR estimations to get an approximate range of likely confidence for a given list of enriched regions.</p>
+      <p>Lastly, the viability of using global Poisson p-values was assessed with the simulated spike-in data sets. This method assumes random read distribution under the null hypothesis. It does not make use of input control data to down weight localized systematic bias. As a result, it performed rather poorly. Real FDRs of &lt; 0.08 could not be achieved at any threshold due to the presence of high numbers of false positives. It is useful in situations where control data is unavailable but otherwise, it should be avoided.</p>
+    </sec>
+    <sec>
+      <title>Analysis of the Neuron-Restrictive Silencer Factor ChIP-Seq data</title>
+      <p>Using the methods developed here, we reanalyzed Johnson et al.'s NRSF ChIP-Seq data. Currently, this is the only published ChIP-Seq dataset with control input data and extensive qPCR validated regions. The authors did not perform an input subtraction but used the control data to exclude regions with high numbers of control reads (&gt; = 20%), a hard mask. To set a threshold, they constructed ROC curves using 83 known qPCR verified NRSF binding regions and 130 qPCR negative regions and chose a threshold (&gt; = 13 chIP reads) that gave high sensitivity and specificity. Their PCR amplified and non-amplified datasets were processed independently and those regions common to both were selected to represent likely NRSF binding regions.</p>
+      <p>To reanalyze the data, we combined the two datasets, ran them through ScanSeqs with a window size of 300 bp and selected a normalized difference score threshold that produced a ranked list of 1944 regions that were subsequently trimmed to match the number of non redundant regions found in Johnson et al.'s supplementary material, 1932. Intersections were then made between the enriched region lists to evaluate ScanSeqs performance. The two lists were quite similar (93%) and intersected the same number of NRSF qPCR positives (87%) and negatives (4%). The authors state that their list is likely a conservative estimate of the true number of NRSF binding regions. The eFDR and q-value FDR associated with the normalized score threshold used in generating the 1932 regions, 3.5 × 10<sup>-4 </sup>and 1.4 × 10<sup>-6</sup>, agree with this estimate. To get an idea of the number of regions with an FDR of less than 0.01 we set thresholds and generated enriched regions using an eFDR of 0.005 or a q-value of 0.01 to yield 3223 and 4731 regions respectively. These data and a reanalysis of Mikkelsen et al.'s [<xref ref-type="bibr" rid="B7">7</xref>] and Barski et al's [<xref ref-type="bibr" rid="B13">13</xref>] histone modification, RNA polymerase II, and CTCF data are posted on our DAS/2 server <ext-link ext-link-type="uri" xlink:href="http://bioserver.hci.utah.edu:8080/DAS2/das2">http://bioserver.hci.utah.edu:8080/DAS2/das2</ext-link> and best accessed using the Integrated Genome Browser (IGB, <ext-link ext-link-type="uri" xlink:href="http://bioserver.hci.utah.edu/BioInfo/index.php/Software:IGB">http://bioserver.hci.utah.edu/BioInfo/index.php/Software:IGB</ext-link>).</p>
+    </sec>
+    <sec>
+      <title>Implementation</title>
+      <p>The USeq package contains more than 25 command line applications written in Java for portability, speed, and collaborative development. It makes use of R <ext-link ext-link-type="uri" xlink:href="http://www.r-project.org/">http://www.r-project.org/</ext-link> and Storey's q-value package <ext-link ext-link-type="uri" xlink:href="http://genomics.princeton.edu/storeylab/qvalue/">http://genomics.princeton.edu/storeylab/qvalue/</ext-link>. In addition to generating standard text based data summary and result file types (e.g. gff, xls), extensive use of the Affymetrix binary bar file format has been made for direct viewing in IGB and optimized distribution using the DAS/2 protocol and the GenoViz DAS2 server, see <ext-link ext-link-type="uri" xlink:href="http://bioserver.hci.utah.edu/BioInfo/index.php/Software:IGB">http://bioserver.hci.utah.edu/BioInfo/index.php/Software:IGB</ext-link> and <ext-link ext-link-type="uri" xlink:href="http://genoviz.sourceforge.net/">http://genoviz.sourceforge.net/</ext-link>. USeq is distributed under an open source BSD license. Documentation related to analysis usage, available applications, command line menus, and output file type descriptions are included [see Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>] and on the USeq project web site <ext-link ext-link-type="uri" xlink:href="http://useq.sourceforge.net/">http://useq.sourceforge.net/</ext-link>.</p>
+    </sec>
+    <sec>
+      <title>Testing</title>
+      <p>USeq has been tested primarily on Red Hat Enterprise Linux 5 and Mac OS X with limited evaluation on Windows XP. A typical analysis run takes &lt; 2 hrs for 40 million mapped chIP and control reads on a dual processor 64 bit HP server with 8 Gb RAM. The majority of time is spent writing out the binary bar graph files. Run time without bar file write out is &lt; 20 min.</p>
+    </sec>
+  </sec>
+  <sec sec-type="conclusions">
+    <title>Conclusion</title>
+    <p>The ability to control for systematic bias and accurately estimate confidence in chIP peaks are two critical steps in generating useful data from chIP experiments. Here we have developed novel methods to reduced systematic bias by directly comparing mapped enrichment at each genomic loci in the chIP data against control input data. This allows proportional scoring of genomic regions without imposing a hard mask. More importantly, we developed and characterized two methods for estimating FDRs associated with chIP enrichment that do not rely on extensive qPCR validation. Much is unknown about this new ChIP-Seq data type. Empirical methods, such as detailed here, are proving to be a good first approximation. As more becomes known, modelling of the ChIP-Seq detection and mapping process may replace the need for input controls. Until that point, we strongly recommend the generation of input datasets to control for systematic bias and enable ChIP-Seq peak confidence estimation. These input control datasets are likely reusable barring major changes in the chIP sample preparation and alignment methods.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>Bonferroni corrected global Poisson p-values</title>
+      <p>To estimate confidence in ChIP-Seq data without using an input control, a p-value can be calculated using the Poisson formula.</p>
+      <p><inline-formula><mml:math id="M1" name="1471-2105-9-523-i1" overflow="scroll"><mml:semantics><mml:mrow><mml:msub><mml:mi>p</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mstyle displaystyle="true"><mml:munderover><mml:mo>∑</mml:mo><mml:mrow><mml:mi>j</mml:mi><mml:mo>=</mml:mo><mml:mn>0</mml:mn></mml:mrow><mml:mrow><mml:mi>Y</mml:mi><mml:mi>i</mml:mi><mml:mo>−</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:munderover><mml:mrow><mml:mfrac><mml:mrow><mml:mi>λ</mml:mi><mml:msup><mml:mi>e</mml:mi><mml:mrow><mml:mo>−</mml:mo><mml:mi>λ</mml:mi></mml:mrow></mml:msup></mml:mrow><mml:mrow><mml:mi>j</mml:mi><mml:mo>!</mml:mo></mml:mrow></mml:mfrac></mml:mrow></mml:mstyle></mml:mrow></mml:semantics></mml:math></inline-formula> where <bold>Y<sub>i </sub></bold>is equal to the number of reads falling within the window <bold>i </bold>and <bold>λ </bold>equal to the expected number of reads to map to the window by random chance (size of the window * total number reads/effective genome size (0.9 * genome size)), see also Robertson et al. A conservative multiple testing correction is made following Bonferroni [<xref ref-type="bibr" rid="B14">14</xref>] by multiplying each p-value by the number of window tests.</p>
+    </sec>
+    <sec>
+      <title>Spike-in Data Set Generation</title>
+      <p>An application was developed to simulate single binding site chIP regions. It works by randomly selecting center positions from a genome. These are expanded to a maximum defined size (500 bp) and then filtered to remove regions with a RepeatMasker base content of greater than 0.2 and a fraction of non GATC bases greater than 0.5. For each remaining region, random fragments are generated about each center position from 150 to 500 bp in size. From each simulated fragment, each end is taken as a read and each base in the read mutated according to the published per cycle error frequency[<xref ref-type="bibr" rid="B15">15</xref>]. Reads are then aligned to the genome.</p>
+      <p>For the human spike-in dataset, 1000 regions with 1000 simulated chIP fragments were selected producing 2000 reads each. These were mapped to hg17 using the ELAND Extended aligner from Illumina. Only those regions with greater than 1000 mapped reads were chosen for use in generating the spike-in set 60 groups containing 30 spike-in regions were created. For each of the groups, from 2 to 60 reads were randomly drawn from each of the 30 residing spike-in regions. These represent 900 spike-in regions containing 2 to 60 reads, 27,900 total. To create the actual spike-in datasets, Johnson et al.'s control input data was combine, randomized and split in thirds, 1,698,713 reads each. To one of the thirds, the reads from the 900 spike-in regions were added. This represents the simulated chIP data, the other two, input data sets.</p>
+      <p>In a similar fashion, the mouse spike-in dataset was generated. Reads from 1000 regions with 1000 fragments were mapped to mm8. Regions with greater than 500 mapped reads were used to derive 87 groups, each with 10 regions, 870 total containing 1 to 87 randomly drawn reads, 38,280 total. To generate a larger simulated input dataset, data from Mikkelsen et al. that showed little to no significant enrichment (ES.H3, ES.K9, ES.RPol, ESHyb.K9, MEF.K9, NP.K9, NP.K27, and NP.K36) were pooled along with their actual whole cell extract input data (ES.WCE, MEF.WCE, and NP.WCE), randomized, and split in thirds, 16,383,950 reads each. For download of the spike-in datasets, [see the website <ext-link ext-link-type="uri" xlink:href="http://bioserver.hci.utah.edu/SupplementalPaperInfo/2008/Nix_EmpiricalMethods/SpikeInData.zip">http://bioserver.hci.utah.edu/SupplementalPaperInfo/2008/Nix_EmpiricalMethods/SpikeInData.zip</ext-link> for additional file 2].</p>
+    </sec>
+    <sec>
+      <title>Window Scoring Datasets</title>
+      <p>The following procedure was followed for processing mapped ChIP-Seq data.</p>
+      <p>1) Mapped reads were sorted by chromosome and strand and their centered positions saved to disk using the binary bar file format. When sequencing the termini of chIP fragments, a bimodal distribution of mapped reads is created that needs to be centered to approximate the true IP site by shifting the read positions 3' by 1/2 the mean fragment length. For simulated spike-in datasets, the mean fragment length is known and read positions were shifted, 175 bp. For real ChIP-Seq datasets, Solexa sequencing displays a significant bias toward sequencing shorter fragments (data not shown). As such, the number of bases needed to center the chIP data needs to be determined using stranded datasets (60 bp for the Johnson et al. NRSF dataset, 110 bp for the Mikkelsen datasets).</p>
+      <p>2) The first step ScanSeqs takes to compare two mapped datasets is to trim one of the datasets to match the other by randomly removing reads. For calculating an empirical FDR, the number of reads in the input dataset needs to be twice the number of reads in the chIP data. For other comparisons, the number of reads needs to be made equal between the datasets.</p>
+      <p>3) To score regions for accumulation of mapped reads, overlapping windows with a maximum size are created as follows. All the data, treatment and control, are merged. The first mapped read is identified and the last read within a defined maximum window size (e.g. 350 bp) is used to define the start and stop of the window. The window is then advanced to the next mapped read and the last read falling within the maximum window size examined. If its position is the same as the prior window termini, the window is skipped since this collection of reads is a subset of the prior. The start and stop positions for "unique" window on each chromosome are then used to calculate several window level statistics from the chIP and input datasets.</p>
+      <p><italic>a. Sum of chIP read scores and the sum of input read scores: </italic>In this first implementation of ScanSeqs, each read score is set to 1. The sum is thus the number of reads.</p>
+      <p><italic>b. Window level binomial p-</italic>values: Let <bold>Y </bold>be the number of test reads and <bold>X </bold>the number of input reads within a particular region and <bold>S </bold>= <bold>X </bold>+ <bold>Y</bold>.</p>
+      <p>Given <bold>S</bold>, the <bold>Y </bold>data is assumed to have a binomial distribution with a probability parameter of 0.5 and number of observations <bold>S</bold>. A conditional one-sided p-value can be calculated using the R function, <bold>P </bold>= pbinom (<bold>Y</bold>-1, <bold>S</bold>, 0.5, lower.tail = FALSE).</p>
+      <p><italic>c. A normalized window score: </italic>when <bold>N = M</bold>, a normalized score is given by <bold>S<sub>i </sub></bold>= <bold>(Y<sub>i</sub>- X<sub>i</sub>)/(Y<sub>i</sub>+ X<sub>i</sub>)<sup>1/2 </sup></bold>where the denominator is an estimation of the standard deviation.</p>
+      <p><italic>d. eFDR: </italic>Empirical FDRs are calculated for each normalized window score by generating enriched regions, see below, from two datasets, the test dataset (chIP vs. input2) and the control dataset (input1 vs. input2). The <bold>eFDR </bold>at <bold>S<sub>i </sub></bold>= <bold>(# control enriched regions)/(# test enriched regions)</bold>. At extreme thresholds, the eFDR can actually increase with increasing stringency. In these cases, the previous, lower stringency eFDR is assigned.</p>
+      <p>4) To create lists of enriched regions/candidate binding peaks, a threshold and a maximum gap are chosen. Windows passing the threshold and with ends within the maximum gap are merged. Scores from the best window are assigned to the enriched region and used to create a ranked list of binding peaks.</p>
+    </sec>
+    <sec>
+      <title>Comparison of Spike-in Simulated ChIP Datasets with the Key</title>
+      <p>To evaluate the performance of different window summary statistics and confidence estimators, rank lists of candidate binding peaks were created at multiple thresholds and intersected with the known list of spike-in regions. An intersection was scored if the known binding region abutted or overlapped the predicted binding region. For each list, the TPR and FDR were calculated. TPR is simply the number of intersected spike-in regions divided by the total. The FDR is the total number of predicted binding regions minus the number of intersected spike-in regions divided by the total number of predicted binding regions. As with the eFDRs, lists made with increasing stringent thresholds occasionally show an increased FDR. In these cases, the previous FDR is assigned to the list.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>DN developed the methods, the spike-ins, the USeq software package, and drafted the manuscript. SC participated in the design and coordination of the study and reviewed the manuscript. KB provided key statistical insight and pilot implementation of the binomial p-value and normalized difference scoring metrics as well as in the design of the study and review of the paper. All authors have read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional File 1</title>
+        <p><bold>A variety of html documents from the USeq web site detailing the available applications, their best usage, output file type descriptions, command line menus, etc</bold>.</p>
+      </caption>
+      <media xlink:href="1471-2105-9-523-S1.zip" mimetype="application" mime-subtype="x-zip-compressed">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>The authors would like to thank David S. Johnson for providing the raw mapped NRSF ChIP-Seq data. Brett A. Milash, Paola Dal Santo, Evan Johnson, and Dean Billheimer were most helpful with critical comments and suggestions regarding ChIP-Seq analysis and preparation of this manuscript. This study was funded by the Huntsman Cancer Institute and a grant to the institute from the National Institutes of Health (P01CA24014).</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Collas</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Dahl</surname>
+          <given-names>JA</given-names>
+        </name>
+        <article-title>Chop it, ChIP it, check it: the current status of chromatin immunoprecipitation</article-title>
+        <source>Front Biosci</source>
+        <volume>13</volume>
+        <fpage>929</fpage>
+        <lpage>43</lpage>
+        <pub-id pub-id-type="doi">10.2741/2733</pub-id>
+        <pub-id pub-id-type="pmid">17981601</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bhinge</surname>
+          <given-names>AA</given-names>
+        </name>
+        <name>
+          <surname>Kim</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Euskirchen</surname>
+          <given-names>GM</given-names>
+        </name>
+        <name>
+          <surname>Snyder</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Iyer</surname>
+          <given-names>VR</given-names>
+        </name>
+        <article-title>Mapping the chromosomal targets of STAT1 by Sequence Tag Analysis of Genomic Enrichment (STAGE)</article-title>
+        <source>Genome Res</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <issue>6</issue>
+        <fpage>910</fpage>
+        <lpage>6</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.5574907</pub-id>
+        <pub-id pub-id-type="pmid">17568006</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ng</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Wei</surname>
+          <given-names>CL</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>Paired-end diTagging for transcriptome and genome analysis</article-title>
+        <source>Curr Protoc Mol Biol</source>
+        <year>2007</year>
+        <volume>Chapter 21</volume>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bulyk</surname>
+          <given-names>ML</given-names>
+        </name>
+        <article-title>DNA microarray technologies for measuring protein-DNA interactions</article-title>
+        <source>Curr Opin Biotechnol</source>
+        <year>2006</year>
+        <volume>17</volume>
+        <issue>4</issue>
+        <fpage>422</fpage>
+        <lpage>30</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.copbio.2006.06.015</pub-id>
+        <pub-id pub-id-type="pmid">16839757</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Johnson</surname>
+          <given-names>DS</given-names>
+        </name>
+        <name>
+          <surname>Mortazavi</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>RM</given-names>
+        </name>
+        <name>
+          <surname>Wold</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Genome-wide mapping of in vivo protein-DNA interactions</article-title>
+        <source>Science</source>
+        <volume>316</volume>
+        <issue>5830</issue>
+        <fpage>1497</fpage>
+        <lpage>502</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1141319</pub-id>
+        <pub-id pub-id-type="pmid">17540862</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robertson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Hirst</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Bainbridge</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Bilenky</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Zhao</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Zeng</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Euskirchen</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Bernier</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Varhol</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Delaney</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Thiessen</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Griffith</surname>
+          <given-names>OL</given-names>
+        </name>
+        <name>
+          <surname>He</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Marra</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Snyder</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Genome-wide profiles of STAT1 DNA association using chromatin immunoprecipitation and massively parallel sequencing</article-title>
+        <source>Nat Methods</source>
+        <year>2007</year>
+        <volume>4</volume>
+        <issue>8</issue>
+        <fpage>651</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth1068</pub-id>
+        <pub-id pub-id-type="pmid">17558387</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Mikkelsen</surname>
+          <given-names>TS</given-names>
+        </name>
+        <name>
+          <surname>Ku</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Jaffe</surname>
+          <given-names>DB</given-names>
+        </name>
+        <name>
+          <surname>Issac</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Lieberman</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Giannoukos</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Alvarez</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Brockman</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Kim</surname>
+          <given-names>TK</given-names>
+        </name>
+        <name>
+          <surname>Koche</surname>
+          <given-names>RP</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Mendenhall</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>O'Donovan</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Presser</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Russ</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Xie</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Meissner</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Wernig</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Jaenisch</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Nusbaum</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Lander</surname>
+          <given-names>ES</given-names>
+        </name>
+        <name>
+          <surname>Bernstein</surname>
+          <given-names>BE</given-names>
+        </name>
+        <article-title>Genome-wide maps of chromatin state in pluripotent and lineage-committed cells</article-title>
+        <source>Nature</source>
+        <volume>448</volume>
+        <issue>7153</issue>
+        <fpage>553</fpage>
+        <lpage>60</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature06008</pub-id>
+        <pub-id pub-id-type="pmid">17603471</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Fejes</surname>
+          <given-names>AP</given-names>
+        </name>
+        <name>
+          <surname>Robertson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Bilenky</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Varhol</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Bainbridge</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <article-title>FindPeaks 3.1: A Tool for Identifying Areas of Enrichment from Massively Parallel Short Read Sequencing Technology</article-title>
+        <source>Bioinformatics</source>
+        <volume>24</volume>
+        <issue>15</issue>
+        <fpage>1729</fpage>
+        <lpage>30</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btn305</pub-id>
+        <pub-id pub-id-type="pmid">18599518</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Valouev</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Johnson</surname>
+          <given-names>DS</given-names>
+        </name>
+        <name>
+          <surname>Sundquist</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Medina</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Anton</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Batzoglou</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>RM</given-names>
+        </name>
+        <name>
+          <surname>Sidow</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Genome-wide analysis of transcription factor binding sites based on ChIP-Seq data</article-title>
+        <source>Nat Methods</source>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Johnson</surname>
+          <given-names>DS</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Gordon</surname>
+          <given-names>DB</given-names>
+        </name>
+        <name>
+          <surname>Bhattacharjee</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Curry</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Ghosh</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Brizuela</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Carroll</surname>
+          <given-names>JS</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Flicek</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Koch</surname>
+          <given-names>CM</given-names>
+        </name>
+        <name>
+          <surname>Dunham</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Bieda</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Farnham</surname>
+          <given-names>PJ</given-names>
+        </name>
+        <name>
+          <surname>Kapranov</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Nix</surname>
+          <given-names>DA</given-names>
+        </name>
+        <name>
+          <surname>Gingeras</surname>
+          <given-names>TR</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Holster</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Jiang</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Green</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Song</surname>
+          <given-names>JS</given-names>
+        </name>
+        <name>
+          <surname>McCuine</surname>
+          <given-names>SA</given-names>
+        </name>
+        <name>
+          <surname>Anton</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Nguyen</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Trinklein</surname>
+          <given-names>ND</given-names>
+        </name>
+        <name>
+          <surname>Ye</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Ching</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Hawkins</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Ren</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Scacheri</surname>
+          <given-names>PC</given-names>
+        </name>
+        <name>
+          <surname>Rozowsky</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Karpikov</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Euskirchen</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Weissman</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Gerstein</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Snyder</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Moqtaderi</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Hirsch</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Shulha</surname>
+          <given-names>HP</given-names>
+        </name>
+        <name>
+          <surname>Fu</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Weng</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Struhl</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>RM</given-names>
+        </name>
+        <name>
+          <surname>Lieb</surname>
+          <given-names>JD</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>XS</given-names>
+        </name>
+        <article-title>Systematic evaluation of variability in ChIP-chip experiments using predefined DNA targets</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <issue>3</issue>
+        <fpage>393</fpage>
+        <lpage>403</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.7080508</pub-id>
+        <pub-id pub-id-type="pmid">18258921</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yang</surname>
+          <given-names>IV</given-names>
+        </name>
+        <article-title>Use of external controls in microarray experiments</article-title>
+        <source>Methods Enzymol</source>
+        <year>2006</year>
+        <volume>411</volume>
+        <fpage>50</fpage>
+        <lpage>63</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0076-6879(06)11004-6</pub-id>
+        <pub-id pub-id-type="pmid">16939785</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Storey</surname>
+          <given-names>JD</given-names>
+        </name>
+        <article-title>A direct approach to false discovery rates</article-title>
+        <source>Journal of the Royal Statistical Society Series B</source>
+        <year>2002</year>
+        <volume>64</volume>
+        <fpage>479</fpage>
+        <lpage>498</lpage>
+        <pub-id pub-id-type="doi">10.1111/1467-9868.00346</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Barski</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Cuddapah</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Cui</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Roh</surname>
+          <given-names>TY</given-names>
+        </name>
+        <name>
+          <surname>Schones</surname>
+          <given-names>DE</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Wei</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Chepelev</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Zhao</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>High-resolution profiling of histone methylations in the human genome</article-title>
+        <source>Cell</source>
+        <volume>129</volume>
+        <issue>4</issue>
+        <fpage>823</fpage>
+        <lpage>37</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.cell.2007.05.009</pub-id>
+        <pub-id pub-id-type="pmid">17512414</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Shaffer</surname>
+          <given-names>JP</given-names>
+        </name>
+        <article-title>Multiple Hypothesis Testing</article-title>
+        <source>Ann Rev Psych</source>
+        <year>1995</year>
+        <volume>46</volume>
+        <fpage>561</fpage>
+        <lpage>584</lpage>
+        <pub-id pub-id-type="doi">10.1146/annurev.ps.46.020195.003021</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Cox</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <article-title>Alignment Scoring Guide and FAQ</article-title>
+        <source>Illumina Pipeline_v0_3 Documentation</source>
+        <year>2008</year>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

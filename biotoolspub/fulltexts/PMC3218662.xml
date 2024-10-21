@@ -1,0 +1,2277 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3218662</article-id>
+    <article-id pub-id-type="publisher-id">gb-2010-11-10-r106</article-id>
+    <article-id pub-id-type="pmid">20979621</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2010-11-10-r106</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Method</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Differential expression analysis for sequence count data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Anders</surname>
+          <given-names>Simon</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>sanders@fs.tum.de</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Huber</surname>
+          <given-names>Wolfgang</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>whuber@embl.de</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>European Molecular Biology Laboratory, Mayerhofstraße 1, 69117 Heidelberg, Germany</aff>
+    <pub-date pub-type="ppub">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>27</day>
+      <month>10</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <issue>10</issue>
+    <fpage>R106</fpage>
+    <lpage>R106</lpage>
+    <history>
+      <date date-type="received">
+        <day>20</day>
+        <month>4</month>
+        <year>2010</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>22</day>
+        <month>7</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>27</day>
+        <month>10</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Anders et al</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Anders et al</copyright-holder>
+      <license license-type="open-access">
+        <license-p>
+This is an open access article distributed under the terms of the Creative Commons Attribution License (http://creativecommons.org/licenses/by/2.0), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.
+</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/2010/11/10/R106"/>
+    <abstract>
+      <p>High-throughput sequencing assays such as RNA-Seq, ChIP-Seq or barcode counting provide quantitative readouts in the form of count data. To infer differential signal in such data correctly and with good statistical power, estimation of data variability throughout the dynamic range and a suitable error model are required. We propose a method based on the negative binomial distribution, with variance and mean linked by local regression and present an implementation, <italic>DESeq</italic>, as an R/Bioconductor package.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>High-throughput sequencing of DNA fragments is used in a range of quantitative assays. A common feature between these assays is that they sequence large amounts of DNA fragments that reflect, for example, a biological system's repertoire of RNA molecules (RNA-Seq [<xref ref-type="bibr" rid="B1">1</xref>,<xref ref-type="bibr" rid="B2">2</xref>]) or the DNA or RNA interaction regions of nucleotide binding molecules (ChIP-Seq [<xref ref-type="bibr" rid="B3">3</xref>], HITS-CLIP [<xref ref-type="bibr" rid="B4">4</xref>]). Typically, these reads are assigned to a class based on their mapping to a common region of the target genome, where each class represents a target transcript, in the case of RNA-Seq, or a binding region, in the case of ChIP-Seq. An important summary statistic is the number of reads in a class; for RNA-Seq, this <italic>read count </italic>has been found to be (to good approximation) linearly related to the abundance of the target transcript [<xref ref-type="bibr" rid="B2">2</xref>]. Interest lies in comparing read counts between different biological conditions. In the simplest case, the comparison is done separately, class by class. We will use the term <italic>gene </italic>synonymously to class, even though a class may also refer to, for example, a transcription factor binding site, or even a barcode [<xref ref-type="bibr" rid="B5">5</xref>].</p>
+    <p>We would like to use statistical testing to decide whether, for a given gene, an observed difference in read counts is significant, that is, whether it is greater than what would be expected just due to natural random variation.</p>
+    <p>If reads were independently sampled from a population with given, fixed fractions of genes, the read counts would follow a multinomial distribution, which can be approximated by the Poisson distribution.</p>
+    <p>Consequently, the Poisson distribution has been used to test for differential expression [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B7">7</xref>]. The Poisson distribution has a single parameter, which is uniquely determined by its mean; its variance and all other properties follow from it; in particular, the variance is equal to the mean. However, it has been noted [<xref ref-type="bibr" rid="B1">1</xref>,<xref ref-type="bibr" rid="B8">8</xref>] that the assumption of Poisson distribution is too restrictive: it predicts smaller variations than what is seen in the data. Therefore, the resulting statistical test does not control type-I error (the probability of false discoveries) as advertised. We show instances for this later, in the Discussion.</p>
+    <p>To address this so-called overdispersion problem, it has been proposed to model count data with negative binomial (NB) distributions [<xref ref-type="bibr" rid="B9">9</xref>], and this approach is used in the <italic>edgeR </italic>package for analysis of SAGE and RNA-Seq [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B10">10</xref>]. The NB distribution has parameters, which are uniquely determined by mean <italic>μ </italic>and variance <italic>σ</italic><sup>2</sup>. However, the number of replicates in data sets of interest is often too small to estimate both parameters, mean and variance, reliably for each gene. For <italic>edgeR</italic>, Robinson and Smyth assumed [<xref ref-type="bibr" rid="B11">11</xref>] that mean and variance are related by <italic>σ</italic><sup>2 </sup>= <italic>μ </italic>+ <italic>αμ</italic><sup>2</sup>, with a single proportionality constant <italic>α </italic>that is the same throughout the experiment and that can be estimated from the data. Hence, only one parameter needs to be estimated for each gene, allowing application to experiments with small numbers of replicates.</p>
+    <p>In this paper, we extend this model by allowing more general, data-driven relationships of variance and mean, provide an effective algorithm for fitting the model to data, and show that it provides better fits (Section <italic>Model</italic>). As a result, more balanced selection of differentially expressed genes throughout the dynamic range of the data can be obtained (Section <italic>Testing for differential expression</italic>). We demonstrate the method by applying it to four data sets (Section <italic>Applications</italic>) and discuss how it compares to alternative approaches (Section <italic>Conclusions</italic>).</p>
+  </sec>
+  <sec>
+    <title>Results and Discussion</title>
+    <sec>
+      <title>Model</title>
+      <sec>
+        <title>Description</title>
+        <p>We assume that the number of reads in sample <italic>j </italic>that are assigned to gene <italic>i </italic>can be modeled by a negative binomial (NB) distribution,</p>
+        <p>
+          <disp-formula id="bmcM1">
+            <label>(1)</label>
+            <mml:math id="M1" name="gb-2010-11-10-r106-i1" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>K</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>~</mml:mo>
+                <mml:mtext>NB</mml:mtext>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:msub>
+                  <mml:mi>μ</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>,</mml:mo>
+                <mml:msubsup>
+                  <mml:mi>σ</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msubsup>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo>,</mml:mo>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>which has two parameters, the mean <italic>μ<sub>ij </sub></italic>and the variance <inline-formula><mml:math id="M2" name="gb-2010-11-10-r106-i2" overflow="scroll"><mml:mrow><mml:msubsup><mml:mi>σ</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mi>j</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:math></inline-formula>. The read counts <italic>K<sub>ij </sub></italic>are non-negative integers. The probabilities of the distribution are given in Supplementary Note A. (All Supplementary Notes are in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>.) The NB distribution is commonly used to model count data when overdispersion is present [<xref ref-type="bibr" rid="B12">12</xref>].</p>
+        <p>In practice, we do not know the parameters <italic>μ<sub>ij </sub></italic>and <inline-formula><mml:math id="M3" name="gb-2010-11-10-r106-i2" overflow="scroll"><mml:mrow><mml:msubsup><mml:mi>σ</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mi>j</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:math></inline-formula>, and we need to estimate them from the data. Typically, the number of replicates is small, and further modelling assumptions need to be made in order to obtain useful estimates. In this paper, we develop a method that is based on the following three assumptions.</p>
+        <p>First, the mean parameter <italic>μ<sub>ij</sub></italic>, that is, the expectation value of the observed counts for gene <italic>i </italic>in sample <italic>j</italic>, is the product of a condition-dependent per-gene value <italic>q</italic><sub><italic>i</italic>, <italic>ρ</italic>(<italic>j</italic>) </sub>(where <italic>ρ</italic>(<italic>j</italic>) is the experimental condition of sample <italic>j</italic>) and a size factor <italic>s</italic><sub><italic>j</italic></sub>,</p>
+        <p>
+          <disp-formula id="bmcM2">
+            <label>(2)</label>
+            <mml:math id="M4" name="gb-2010-11-10-r106-i3" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>μ</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:msub>
+                  <mml:mi>q</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>ρ</mml:mi>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mi>j</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                      </mml:mrow>
+                      <mml:mi>S</mml:mi>
+                    </mml:msup>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>.</mml:mo>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p><italic>q</italic><sub><italic>i,ρ</italic>(<italic>j</italic>) </sub>is proportional to the expectation value of the true (but unknown) concentration of fragments from gene <italic>i </italic>under condition <italic>ρ</italic>(<italic>j</italic>). The size factor <italic>s</italic><sub><italic>j </italic></sub>represents the coverage, or sampling depth, of library <italic>j</italic>, and we will use the term <italic>common scale </italic>for quantities, such as <italic>q</italic><sub><italic>i</italic>, <italic>ρ</italic>(<italic>j</italic>)</sub>, that are adjusted for coverage by dividing by <italic>s</italic><sub><italic>j</italic></sub>.</p>
+        <p>Second, the variance <inline-formula><mml:math id="M5" name="gb-2010-11-10-r106-i2" overflow="scroll"><mml:mrow><mml:msubsup><mml:mi>σ</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mi>j</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:math></inline-formula> is the sum of a <italic>shot noise term </italic>and a <italic>raw variance term</italic>,</p>
+        <p>
+          <disp-formula id="bmcM3">
+            <label>(3)</label>
+            <mml:math id="M6" name="gb-2010-11-10-r106-i4" overflow="scroll">
+              <mml:mrow>
+                <mml:msubsup>
+                  <mml:mi>σ</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msubsup>
+                <mml:mo>=</mml:mo>
+                <mml:munder>
+                  <mml:munder>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mi>μ</mml:mi>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mi>j</mml:mi>
+                        </mml:mrow>
+                      </mml:msub>
+                    </mml:mrow>
+                    <mml:mo stretchy="true">︸</mml:mo>
+                  </mml:munder>
+                  <mml:mrow>
+                    <mml:mtext>shot</mml:mtext>
+                    <mml:mtext> </mml:mtext>
+                    <mml:mtext> </mml:mtext>
+                    <mml:mtext>noise</mml:mtext>
+                  </mml:mrow>
+                </mml:munder>
+                <mml:mo>+</mml:mo>
+                <mml:munder>
+                  <mml:munder>
+                    <mml:mrow>
+                      <mml:msubsup>
+                        <mml:mi>s</mml:mi>
+                        <mml:mi>j</mml:mi>
+                        <mml:mn>2</mml:mn>
+                      </mml:msubsup>
+                      <mml:msub>
+                        <mml:mi>v</mml:mi>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mo>,</mml:mo>
+                          <mml:mi>ρ</mml:mi>
+                          <mml:mo stretchy="false">(</mml:mo>
+                          <mml:mi>j</mml:mi>
+                          <mml:mo stretchy="false">)</mml:mo>
+                        </mml:mrow>
+                      </mml:msub>
+                    </mml:mrow>
+                    <mml:mo stretchy="true">︸</mml:mo>
+                  </mml:munder>
+                  <mml:mrow>
+                    <mml:mtext>raw</mml:mtext>
+                    <mml:mtext> </mml:mtext>
+                    <mml:mtext> </mml:mtext>
+                    <mml:mtext>variance</mml:mtext>
+                  </mml:mrow>
+                </mml:munder>
+                <mml:mo>.</mml:mo>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>Third, we assume that the per-gene raw variance parameter <italic>v</italic><sub><italic>i</italic>, <italic>ρ </italic></sub>is a smooth function of <italic>q</italic><sub><italic>i</italic></sub>, <italic>ρ</italic>,</p>
+        <p>
+          <disp-formula id="bmcM4">
+            <label>(4)</label>
+            <mml:math id="M7" name="gb-2010-11-10-r106-i5" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>v</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>ρ</mml:mi>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mi>j</mml:mi>
+                    <mml:mo stretchy="false">)</mml:mo>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:msub>
+                  <mml:mi>v</mml:mi>
+                  <mml:mi>ρ</mml:mi>
+                </mml:msub>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:msub>
+                  <mml:mi>q</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>ρ</mml:mi>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mi>j</mml:mi>
+                    <mml:mo stretchy="false">)</mml:mo>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo>.</mml:mo>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>This assumption is needed because the number of replicates is typically too low to get a precise estimate of the variance for gene <italic>i </italic>from just the data available for this gene. This assumption allows us to pool the data from genes with similar expression strength for the purpose of variance estimation.</p>
+        <p>The decomposition of the variance in Equation (3) is motivated by the following hierarchical model: We assume that the actual concentration of fragments from gene <italic>i </italic>in sample <italic>j </italic>is proportional to a random variable <italic>R<sub>ij</sub></italic>, such that the rate that fragments from gene <italic>i </italic>are sequenced is <italic>s<sub>j</sub>r<sub>ij</sub></italic>. For each gene <italic>i </italic>and all samples <italic>j </italic>of condition <italic>ρ</italic>, the <italic>R<sub>ij </sub></italic>are i.i.d. with mean <italic>q<sub>iρ </sub></italic>and variance <italic>v<sub>iρ</sub></italic>. Thus, the count value <italic>K<sub>ij</sub></italic>, conditioned on <italic>R<sub>ij </sub></italic>= <italic>r<sub>ij</sub></italic>, is Poisson distributed with rate <italic>s<sub>j</sub>r<sub>ij</sub></italic>. The marginal distribution of <italic>K<sub>ij </sub></italic>- when allowing for variation in <italic>R<sub>ij </sub></italic>- has the mean <italic>μ<sub>ij </sub></italic>and (according to the law of total variance) the variance given in Equation (3). Furthermore, if the higher moments of <italic>R<sub>ij </sub></italic>are modeled according to a gamma distribution, the marginal distribution of <italic>K<sub>ij </sub></italic>is NB (see, for example, [<xref ref-type="bibr" rid="B12">12</xref>], Section 4.2.2).</p>
+      </sec>
+      <sec>
+        <title>Fitting</title>
+        <p>We now describe how the model can be fitted to data. The data are an <italic>n </italic>× <italic>m </italic>table of counts, <italic>k<sub>ij</sub></italic>, where <italic>i </italic>= 1,..., <italic>n </italic>indexes the genes, and <italic>j </italic>= 1,..., <italic>m </italic>indexes the samples. The model has three sets of parameters:</p>
+        <p>(i) <italic>m </italic>size factors <italic>s<sub>j</sub></italic>; the expectation values of all counts from sample <italic>j </italic>are proportional to <italic>s<sub>j</sub></italic>.</p>
+        <p>(ii) for each experimental condition <italic>ρ</italic>, <italic>n </italic>expression strength parameters <italic>q<sub>iρ</sub></italic>; they reflect the expected abundance of fragments from gene <italic>i </italic>under condition <italic>ρ</italic>, that is, expectation values of counts for gene <italic>i </italic>are proportional to <italic>q<sub>iρ</sub></italic>.</p>
+        <p>(iii) The smooth functions <italic>v<sub>ρ </sub></italic>: ℝ<sup>+ </sup>→ ℝ<sup>+</sup>; for each condition <italic>ρ</italic>, <italic>v<sub>ρ </sub></italic>models the dependence of the raw variance <italic>v<sub>iρ </sub></italic>on the expected mean <italic>q<sub>iρ</sub></italic>.</p>
+        <p>The purpose of the size factors <italic>s<sub>j </sub></italic>is to render counts from different samples, which may have been sequenced to different depths, comparable. Hence, the ratios (<inline-formula><mml:math id="M8" name="gb-2010-11-10-r106-i25" overflow="scroll"><mml:mi mathvariant="double-struck">E</mml:mi></mml:math></inline-formula><italic>K<sub>ij</sub></italic>)/(<inline-formula><mml:math id="M9" name="gb-2010-11-10-r106-i25" overflow="scroll"><mml:mi mathvariant="double-struck">E</mml:mi></mml:math></inline-formula><italic>K<sub>ij' </sub></italic>) of expected counts for the same gene <italic>i </italic>in different samples <italic>j </italic>and <italic>j' </italic>should be equal to the size ratio <italic>s<sub>j</sub></italic>/<italic>s<sub>j' </sub></italic>if gene <italic>i </italic>is not differentially expressed or samples <italic>j </italic>and <italic>j' </italic>are replicates. The total number of reads, Σ<italic><sub>i </sub></italic><italic>k<sub>ij</sub></italic>, may seem to be a good measure of sequencing depth and hence a reasonable choice for <italic>s<sub>j</sub></italic>. Experience with real data, however, shows this not always to be the case, because a few highly and differentially expressed genes may have strong influence on the total read count, causing the ratio of total read counts not to be a good estimate for the ratio of expected counts.</p>
+        <p>Hence, to estimate the size factors, we take the median of the ratios of observed counts. Generalizing the procedure just outlined to the case of more than two samples, we use:</p>
+        <p>
+          <disp-formula id="bmcM5">
+            <label>(5)</label>
+            <mml:math id="M10" name="gb-2010-11-10-r106-i6" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mover accent="true">
+                    <mml:mi>s</mml:mi>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                  <mml:mi>j</mml:mi>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:munder>
+                  <mml:mrow>
+                    <mml:mtext>median</mml:mtext>
+                  </mml:mrow>
+                  <mml:mi>i</mml:mi>
+                </mml:munder>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>k</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>i</mml:mi>
+                        <mml:mi>j</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:mstyle displaystyle="true">
+                              <mml:msubsup>
+                                <mml:mo>∏</mml:mo>
+                                <mml:mrow>
+                                  <mml:mi>v</mml:mi>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mrow>
+                                <mml:mi>m</mml:mi>
+                              </mml:msubsup>
+                              <mml:mrow>
+                                <mml:msub>
+                                  <mml:mi>k</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>i</mml:mi>
+                                    <mml:mi>v</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                              </mml:mrow>
+                            </mml:mstyle>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>1</mml:mn>
+                        <mml:mo>/</mml:mo>
+                        <mml:mi>m</mml:mi>
+                      </mml:mrow>
+                    </mml:msup>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mo>.</mml:mo>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>The denominator of this expression can be interpreted as a pseudo-reference sample obtained by taking the geometric mean across samples. Thus, each size factor estimate <inline-formula><mml:math id="M11" name="gb-2010-11-10-r106-i7" overflow="scroll"><mml:mrow><mml:msub><mml:mover accent="true"><mml:mi>s</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:math></inline-formula> is computed as the median of the ratios of the <italic>j</italic>-th sample's counts to those of the pseudo-reference. (Note: While this manuscript was under review, Robinson and Oshlack [<xref ref-type="bibr" rid="B13">13</xref>] suggested a similar method.)</p>
+        <p>To estimate <italic>q<sub>iρ</sub></italic>, we use the average of the counts from the samples <italic>j </italic>corresponding to condition <italic>ρ</italic>, transformed to the common scale:</p>
+        <p>
+          <disp-formula id="bmcM6">
+            <label>(6)</label>
+            <mml:math id="M12" name="gb-2010-11-10-r106-i8" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mover accent="true">
+                    <mml:mi>q</mml:mi>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>ρ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mfrac>
+                  <mml:mn>1</mml:mn>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>m</mml:mi>
+                      <mml:mi>ρ</mml:mi>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mstyle displaystyle="true">
+                  <mml:munder>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>:</mml:mo>
+                      <mml:mi>ρ</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                      <mml:mo>=</mml:mo>
+                      <mml:mi>ρ</mml:mi>
+                    </mml:mrow>
+                  </mml:munder>
+                  <mml:mrow>
+                    <mml:mfrac>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>k</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mover accent="true">
+                            <mml:mi>s</mml:mi>
+                            <mml:mo>^</mml:mo>
+                          </mml:mover>
+                          <mml:mi>j</mml:mi>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mfrac>
+                  </mml:mrow>
+                </mml:mstyle>
+                <mml:mo>,</mml:mo>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>where <italic>m<sub>ρ </sub></italic>is the number of replicates of condition <italic>ρ </italic>and the sum runs over these replicates. the functions <italic>v<sub>ρ</sub></italic>, we first calculate sample variances on the common scale</p>
+        <p>
+          <disp-formula id="bmcM7">
+            <label>(7)</label>
+            <mml:math id="M13" name="gb-2010-11-10-r106-i9" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>w</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>ρ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mfrac>
+                  <mml:mn>1</mml:mn>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>m</mml:mi>
+                      <mml:mi>ρ</mml:mi>
+                    </mml:msub>
+                    <mml:mo>−</mml:mo>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mstyle displaystyle="true">
+                  <mml:munder>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>:</mml:mo>
+                      <mml:mi>ρ</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                      <mml:mo>=</mml:mo>
+                      <mml:mi>ρ</mml:mi>
+                    </mml:mrow>
+                  </mml:munder>
+                  <mml:mrow>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:mfrac>
+                              <mml:mrow>
+                                <mml:msub>
+                                  <mml:mi>k</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>i</mml:mi>
+                                    <mml:mi>j</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:msub>
+                                  <mml:mover accent="true">
+                                    <mml:mi>s</mml:mi>
+                                    <mml:mo>^</mml:mo>
+                                  </mml:mover>
+                                  <mml:mi>j</mml:mi>
+                                </mml:msub>
+                              </mml:mrow>
+                            </mml:mfrac>
+                            <mml:mo>−</mml:mo>
+                            <mml:msub>
+                              <mml:mover accent="true">
+                                <mml:mi>q</mml:mi>
+                                <mml:mo>^</mml:mo>
+                              </mml:mover>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>ρ</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:msup>
+                  </mml:mrow>
+                </mml:mstyle>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>and define</p>
+        <p>
+          <disp-formula id="bmcM8">
+            <label>(8)</label>
+            <mml:math id="M14" name="gb-2010-11-10-r106-i10" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>z</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>ρ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mover accent="true">
+                        <mml:mi>q</mml:mi>
+                        <mml:mo>^</mml:mo>
+                      </mml:mover>
+                      <mml:mrow>
+                        <mml:mi>i</mml:mi>
+                        <mml:mi>ρ</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>m</mml:mi>
+                      <mml:mi>ρ</mml:mi>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mstyle displaystyle="true">
+                  <mml:munder>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo>:</mml:mo>
+                      <mml:mi>ρ</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>j</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                      <mml:mo>=</mml:mo>
+                      <mml:mi>ρ</mml:mi>
+                    </mml:mrow>
+                  </mml:munder>
+                  <mml:mrow>
+                    <mml:mfrac>
+                      <mml:mn>1</mml:mn>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mover accent="true">
+                            <mml:mi>s</mml:mi>
+                            <mml:mo>^</mml:mo>
+                          </mml:mover>
+                          <mml:mi>j</mml:mi>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mfrac>
+                  </mml:mrow>
+                </mml:mstyle>
+                <mml:mo>.</mml:mo>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>In Supplementary Note B in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> we show that <italic>w<sub>iρ </sub></italic>- <italic>z<sub>iρ </sub></italic>is an unbiased estimator for the raw variance parameter <italic>v<sub>iρ </sub></italic>of Equation (3).</p>
+        <p>However, for small numbers of replicates, <italic>m<sub>ρ</sub></italic>, as is typically the case in applications, the values <italic>w<sub>iρ </sub></italic>are highly variable, and <italic>w<sub>iρ </sub></italic>- <italic>z<sub>iρ </sub></italic>would not be a useful variance estimator for statistical inference. Instead, we use local regression [<xref ref-type="bibr" rid="B14">14</xref>] on the graph <inline-formula><mml:math id="M15" name="gb-2010-11-10-r106-i11" overflow="scroll"><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mover accent="true"><mml:mi>q</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mi>ρ</mml:mi></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mi>w</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mi>ρ</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:math></inline-formula> to obtain a smooth function <italic>w<sub>ρ</sub></italic>(<italic>q</italic>), with</p>
+        <p>
+          <disp-formula id="bmcM9">
+            <label>(9)</label>
+            <mml:math id="M16" name="gb-2010-11-10-r106-i12" overflow="scroll">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mover accent="true">
+                    <mml:mi>v</mml:mi>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                  <mml:mi>ρ</mml:mi>
+                </mml:msub>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:msub>
+                  <mml:mover accent="true">
+                    <mml:mi>q</mml:mi>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>ρ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo>=</mml:mo>
+                <mml:msub>
+                  <mml:mi>w</mml:mi>
+                  <mml:mi>ρ</mml:mi>
+                </mml:msub>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:msub>
+                  <mml:mover accent="true">
+                    <mml:mi>q</mml:mi>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>ρ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo>−</mml:mo>
+                <mml:msub>
+                  <mml:mi>z</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>ρ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>as our estimate for the raw variance.</p>
+        <p>Some attention is needed to avoid estimation biases in the local regression. <italic>w<sub>iρ </sub></italic>is a sum of squared random variables, and the residuals <inline-formula><mml:math id="M17" name="gb-2010-11-10-r106-i13" overflow="scroll"><mml:mrow><mml:msub><mml:mi>w</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mi>ρ</mml:mi></mml:mrow></mml:msub><mml:mo>−</mml:mo><mml:mi>w</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mover accent="true"><mml:mi>q</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mi>ρ</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:mrow></mml:math></inline-formula> are skewed. Following References [<xref ref-type="bibr" rid="B15">15</xref>], Chapter 8 and [<xref ref-type="bibr" rid="B14">14</xref>], Section 9.1.2, we use a generalized linear model of the gamma family for the local regression, using the implementation in the <italic>locfit </italic>package [<xref ref-type="bibr" rid="B16">16</xref>].</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Testing for differential expression</title>
+      <p>Suppose that we have <italic>m<sub>A </sub></italic>replicate samples for biological condition A and <italic>m<sub>B </sub></italic>samples for condition B. For each gene <italic>i</italic>, we would like to weigh the evidence in the data for differential expression of that gene between the two conditions. In particular, we would like to test the null hypothesis <italic>q<sub>iA </sub></italic>= <italic>q<sub>iB</sub></italic>, where <italic>q<sub>iA </sub></italic>is the expression strength parameter for the samples of condition A, and q<sub>iB </sub>for condition B. To this end, we define, as test statistic, the total counts in each condition,</p>
+      <p>
+        <disp-formula id="bmcM10">
+          <label>(10)</label>
+          <mml:math id="M18" name="gb-2010-11-10-r106-i14" overflow="scroll">
+            <mml:mrow>
+              <mml:mtable>
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mi>K</mml:mi>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mtext>A</mml:mtext>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>=</mml:mo>
+                      <mml:mstyle displaystyle="true">
+                        <mml:munder>
+                          <mml:mo>∑</mml:mo>
+                          <mml:mrow>
+                            <mml:mi>j</mml:mi>
+                            <mml:mo>:</mml:mo>
+                            <mml:mi>ρ</mml:mi>
+                            <mml:mo stretchy="false">(</mml:mo>
+                            <mml:mi>j</mml:mi>
+                            <mml:mo stretchy="false">)</mml:mo>
+                            <mml:mo>=</mml:mo>
+                            <mml:mtext>A</mml:mtext>
+                          </mml:mrow>
+                        </mml:munder>
+                        <mml:mrow>
+                          <mml:msub>
+                            <mml:mi>K</mml:mi>
+                            <mml:mrow>
+                              <mml:mi>i</mml:mi>
+                              <mml:mi>j</mml:mi>
+                            </mml:mrow>
+                          </mml:msub>
+                        </mml:mrow>
+                      </mml:mstyle>
+                      <mml:mo>,</mml:mo>
+                    </mml:mrow>
+                  </mml:mtd>
+                  <mml:mtd>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mi>K</mml:mi>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mtext>B</mml:mtext>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>=</mml:mo>
+                      <mml:mstyle displaystyle="true">
+                        <mml:munder>
+                          <mml:mo>∑</mml:mo>
+                          <mml:mrow>
+                            <mml:mi>j</mml:mi>
+                            <mml:mo>:</mml:mo>
+                            <mml:mi>ρ</mml:mi>
+                            <mml:mo stretchy="false">(</mml:mo>
+                            <mml:mi>j</mml:mi>
+                            <mml:mo stretchy="false">)</mml:mo>
+                            <mml:mo>=</mml:mo>
+                            <mml:mtext>B</mml:mtext>
+                          </mml:mrow>
+                        </mml:munder>
+                        <mml:mrow>
+                          <mml:msub>
+                            <mml:mi>K</mml:mi>
+                            <mml:mrow>
+                              <mml:mi>i</mml:mi>
+                              <mml:mi>j</mml:mi>
+                            </mml:mrow>
+                          </mml:msub>
+                        </mml:mrow>
+                      </mml:mstyle>
+                      <mml:mo>,</mml:mo>
+                    </mml:mrow>
+                  </mml:mtd>
+                </mml:mtr>
+              </mml:mtable>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>and their overall sum <italic>K<sub>iS </sub></italic>= <italic>K<sub>iA </sub></italic>+ <italic>K<sub>iB</sub></italic>. From the error model described in the previous Section, we show below that - under the null hypothesis - we can compute the probabilities of the events <italic>K<sub>iA </sub></italic>= <italic>a </italic>and <italic>K<sub>iB </sub></italic>= <italic>b </italic>for any pair of numbers <italic>a </italic>and <italic>b</italic>. We denote this probability by <italic>p</italic>(<italic>a</italic>, <italic>b</italic>). The <italic>P </italic>value of a pair of observed count sums (<italic>k<sub>iA</sub></italic>, <italic>k<sub>iB</sub></italic>) is then the sum of all probabilities less or equal to <italic>p</italic>(<italic>k<sub>iA</sub></italic>, <italic>k<sub>iB</sub></italic>), given that the overall sum is <italic>k<sub>iS</sub></italic>:</p>
+      <p>
+        <disp-formula id="bmcM11">
+          <label>(11)</label>
+          <mml:math id="M19" name="gb-2010-11-10-r106-i15" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mi>p</mml:mi>
+                <mml:mi>i</mml:mi>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mstyle displaystyle="true">
+                    <mml:munder>
+                      <mml:mo>∑</mml:mo>
+                      <mml:mtable>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mrow>
+                              <mml:mi>a</mml:mi>
+                              <mml:mo>+</mml:mo>
+                              <mml:mi>b</mml:mi>
+                              <mml:mo>=</mml:mo>
+                              <mml:msub>
+                                <mml:mi>k</mml:mi>
+                                <mml:mrow>
+                                  <mml:mi>i</mml:mi>
+                                  <mml:mtext>S</mml:mtext>
+                                </mml:mrow>
+                              </mml:msub>
+                            </mml:mrow>
+                          </mml:mtd>
+                        </mml:mtr>
+                        <mml:mtr>
+                          <mml:mtd>
+                            <mml:mrow>
+                              <mml:mi>p</mml:mi>
+                              <mml:mo stretchy="false">(</mml:mo>
+                              <mml:mi>a</mml:mi>
+                              <mml:mo>,</mml:mo>
+                              <mml:mi>b</mml:mi>
+                              <mml:mo stretchy="false">)</mml:mo>
+                              <mml:mo>≤</mml:mo>
+                              <mml:mi>p</mml:mi>
+                              <mml:mo stretchy="false">(</mml:mo>
+                              <mml:msub>
+                                <mml:mi>k</mml:mi>
+                                <mml:mrow>
+                                  <mml:mi>i</mml:mi>
+                                  <mml:mtext>A</mml:mtext>
+                                </mml:mrow>
+                              </mml:msub>
+                              <mml:msub>
+                                <mml:mi>k</mml:mi>
+                                <mml:mrow>
+                                  <mml:mi>i</mml:mi>
+                                  <mml:mtext>B</mml:mtext>
+                                </mml:mrow>
+                              </mml:msub>
+                              <mml:mo stretchy="false">)</mml:mo>
+                            </mml:mrow>
+                          </mml:mtd>
+                        </mml:mtr>
+                      </mml:mtable>
+                    </mml:munder>
+                    <mml:mrow>
+                      <mml:mi>p</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>a</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>b</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:mstyle>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mstyle displaystyle="true">
+                    <mml:munder>
+                      <mml:mo>∑</mml:mo>
+                      <mml:mrow>
+                        <mml:mi>a</mml:mi>
+                        <mml:mo>+</mml:mo>
+                        <mml:mi>b</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:msub>
+                          <mml:mi>k</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mtext>S</mml:mtext>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:munder>
+                    <mml:mrow>
+                      <mml:mi>p</mml:mi>
+                      <mml:mo stretchy="false">(</mml:mo>
+                      <mml:mi>a</mml:mi>
+                      <mml:mo>,</mml:mo>
+                      <mml:mi>b</mml:mi>
+                      <mml:mo stretchy="false">)</mml:mo>
+                    </mml:mrow>
+                  </mml:mstyle>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>The variables <italic>a </italic>and <italic>b </italic>in the above sums take the values 0,..., <italic>k</italic><sub><italic>i</italic>S</sub>. The approach presented so far follows that of Robinson and Smyth [<xref ref-type="bibr" rid="B11">11</xref>] and is analogous to that taken by other conditioned tests, such as Fisher's exact test. (See Reference [<xref ref-type="bibr" rid="B17">17</xref>], Chapter 3 for a discussion of the merits of conditioning in tests.)</p>
+      <p><bold>Computation of </bold><italic>p</italic>(<italic>a</italic>, <italic>b</italic>). First, assume that, under the null hypothesis, counts from different samples are independent. Then, <italic>p</italic>(<italic>a</italic>, <italic>b</italic>) = Pr(<italic>K</italic><sub><italic>i</italic>A </sub>= <italic>a</italic>) Pr(<italic>K</italic><sub><italic>i</italic>B </sub>= <italic>b</italic>). The problem thus is computing the probability of the event <italic>K</italic><sub><italic>i</italic>A </sub>= <italic>a</italic>, and, analogously, of <italic>K</italic><sub><italic>i</italic>B </sub>= <italic>b</italic>. The random variable <italic>K</italic><sub><italic>i</italic>A </sub>is the sum of <italic>m</italic><sub><italic>A</italic></sub></p>
+      <p>NB-distributed random variables. We approximate its distribution by a NB distribution whose parameters we obtain from those of the <italic>K</italic><sub><italic>ij</italic></sub>. To this end, we first compute the pooled mean estimate from the counts of both conditions,</p>
+      <p>
+        <disp-formula id="bmcM12">
+          <label>(12)</label>
+          <mml:math id="M20" name="gb-2010-11-10-r106-i16" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mover accent="true">
+                  <mml:mi>q</mml:mi>
+                  <mml:mo>^</mml:mo>
+                </mml:mover>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mn>0</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:munder>
+                  <mml:mo>∑</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>j</mml:mi>
+                    <mml:mo>:</mml:mo>
+                    <mml:mi>ρ</mml:mi>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mi>j</mml:mi>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo>∈</mml:mo>
+                    <mml:mo>{</mml:mo>
+                    <mml:mi>A</mml:mi>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>B</mml:mi>
+                    <mml:mo>}</mml:mo>
+                  </mml:mrow>
+                </mml:munder>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mi>k</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:mo>/</mml:mo>
+              <mml:msub>
+                <mml:mi>s</mml:mi>
+                <mml:mi>j</mml:mi>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>which accounts for the fact that the null hypothesis stipulates that <italic>q</italic><sub><italic>i</italic>A </sub>= <italic>q</italic><sub><italic>i</italic>B</sub>. The summed mean and variance for condition A are</p>
+      <p>
+        <disp-formula id="bmcM13">
+          <label>(13)</label>
+          <mml:math id="M21" name="gb-2010-11-10-r106-i17" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mover accent="true">
+                  <mml:mi>μ</mml:mi>
+                  <mml:mo>^</mml:mo>
+                </mml:mover>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mtext>A</mml:mtext>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:munder>
+                  <mml:mo>∑</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>j</mml:mi>
+                    <mml:mo>∈</mml:mo>
+                    <mml:mtext>A</mml:mtext>
+                  </mml:mrow>
+                </mml:munder>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mi>s</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:msub>
+                <mml:mover accent="true">
+                  <mml:mi>q</mml:mi>
+                  <mml:mo>^</mml:mo>
+                </mml:mover>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mn>0</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula id="bmcM14">
+          <label>(14)</label>
+          <mml:math id="M22" name="gb-2010-11-10-r106-i18" overflow="scroll">
+            <mml:mrow>
+              <mml:msubsup>
+                <mml:mover accent="true">
+                  <mml:mi>σ</mml:mi>
+                  <mml:mo>^</mml:mo>
+                </mml:mover>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mtext>A</mml:mtext>
+                </mml:mrow>
+                <mml:mn>2</mml:mn>
+              </mml:msubsup>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:munder>
+                  <mml:mo>∑</mml:mo>
+                  <mml:mrow>
+                    <mml:mi>j</mml:mi>
+                    <mml:mo>∈</mml:mo>
+                    <mml:mtext>A</mml:mtext>
+                  </mml:mrow>
+                </mml:munder>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mover accent="true">
+                      <mml:mi>s</mml:mi>
+                      <mml:mo>^</mml:mo>
+                    </mml:mover>
+                    <mml:mi>j</mml:mi>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:msub>
+                <mml:mover accent="true">
+                  <mml:mi>q</mml:mi>
+                  <mml:mo>^</mml:mo>
+                </mml:mover>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mn>0</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>+</mml:mo>
+              <mml:msubsup>
+                <mml:mover accent="true">
+                  <mml:mi>s</mml:mi>
+                  <mml:mo>^</mml:mo>
+                </mml:mover>
+                <mml:mi>j</mml:mi>
+                <mml:mn>2</mml:mn>
+              </mml:msubsup>
+              <mml:msub>
+                <mml:mover accent="true">
+                  <mml:mi>v</mml:mi>
+                  <mml:mo>^</mml:mo>
+                </mml:mover>
+                <mml:mtext>A</mml:mtext>
+              </mml:msub>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mover accent="true">
+                  <mml:mi>q</mml:mi>
+                  <mml:mo>^</mml:mo>
+                </mml:mover>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mn>0</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>.</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>Supplementary Note C in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> describes how the distribution parameters of the NB for <italic>K</italic><sub><italic>i</italic>A </sub>can be determined from <inline-formula><mml:math id="M23" name="gb-2010-11-10-r106-i19" overflow="scroll"><mml:mrow><mml:msub><mml:mover accent="true"><mml:mi>μ</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mtext>A</mml:mtext></mml:mrow></mml:msub></mml:mrow></mml:math></inline-formula> and <inline-formula><mml:math id="M24" name="gb-2010-11-10-r106-i20" overflow="scroll"><mml:mrow><mml:msubsup><mml:mover accent="true"><mml:mi>σ</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mtext>A</mml:mtext></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:math></inline-formula>. (To avoid bias, we do not match the moments directly, but instead match a different pair of distribution statistics.) The parameters of <italic>K</italic><sub><italic>i</italic>B </sub>are obtained analogously.</p>
+      <p>Supplementary Note D in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> explains how we evaluate the sums in Equation (11).</p>
+    </sec>
+    <sec>
+      <title>Applications</title>
+      <sec>
+        <title>Data sets</title>
+        <p>We present results based on the following data sets:</p>
+        <sec>
+          <title>RNA-Seq in fly embryos</title>
+          <p>B. Wilczynski, Y.-H. Liu, N. Delhomme and E. Furlong have conducted RNA-Seq experiments in fly embryos and kindly shared part of their data with us ahead of publication. In each sample of this data set, a gene was engineered to be over-expressed, and we compare two biological replicates each of two such conditions, in the following denoted as 'A' and 'B'.</p>
+        </sec>
+        <sec>
+          <title>Tag-Seq of neural stem cells</title>
+          <p>Engström <italic>et al. </italic>[<xref ref-type="bibr" rid="B18">18</xref>] performed Tag-Seq [<xref ref-type="bibr" rid="B19">19</xref>] for tissue cultures of neural cells, including four from glioblastoma-derived neural stem-cells ('GNS') and two from non-cancerous neural stem ('NS') cells. As each tissue culture was derived from a different subject and so has a different genotype, these data show high variability.</p>
+        </sec>
+        <sec>
+          <title>RNA-Seq of yeast</title>
+          <p>Nagalakshmi <italic>et al. </italic>[<xref ref-type="bibr" rid="B1">1</xref>] performed RNA-Seq on replicates of <italic>Saccharomyces cerevisiae </italic>cultures. They tested two library preparation protocols, <italic>dT </italic>and <italic>RH</italic>, and obtained three sequencing runs for each protocol, such that for the first run of each protocol, they had one further technical replicate (same culture, replicated library preparation) and one further biological replicate (different culture).</p>
+        </sec>
+        <sec>
+          <title>ChIP-Seq of HapMap samples</title>
+          <p>Kasowski <italic>et al. </italic>[<xref ref-type="bibr" rid="B20">20</xref>] compared protein occupation of DNA regions between ten human individuals by ChIP-Seq. They compiled a list of regions for polymerase II and NF-κB, and counted, for each sample, the number of reads that mapped onto each region. The aim of the study was to investigate how much the regions' occupation differed between individuals.</p>
+        </sec>
+      </sec>
+      <sec>
+        <title>Variance estimation</title>
+        <p>We start by demonstrating the variance estimation. Figure <xref ref-type="fig" rid="F1">1a</xref> shows the sample variances <italic>w</italic><sub><italic>iρ </italic></sub>(Equation (7)) plotted against the means <inline-formula><mml:math id="M25" name="gb-2010-11-10-r106-i21" overflow="scroll"><mml:mrow><mml:msub><mml:mover accent="true"><mml:mi>q</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mi>ρ</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math></inline-formula> (Equation (6)) for condition <italic>A </italic>in the fly RNA-Seq data. Also shown is the local regression fit <italic>w<sub>ρ</sub></italic>(<italic>q</italic>) and the shot noise <inline-formula><mml:math id="M26" name="gb-2010-11-10-r106-i22" overflow="scroll"><mml:mrow><mml:msub><mml:mover accent="true"><mml:mi>s</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mi>j</mml:mi></mml:msub><mml:msub><mml:mover accent="true"><mml:mi>q</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mi>ρ</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math></inline-formula>. In Figure <xref ref-type="fig" rid="F1">1b</xref>, we plotted the squared coefficient of variation (SCV), that is the ratio of the variance to the mean squared. In this plot, the distance between the orange and the purple line is the SCV of the noise due to biological sampling (cf. Equation (3)).</p>
+        <fig id="F1" position="float">
+          <label>Figure 1</label>
+          <caption>
+            <p><bold>Dependence of the variance on the mean for condition <italic>A </italic>in the fly RNA-Seq data</bold>. (a) The scatter plot shows the common-scale sample variances (Equation (7)) plotted against the common-scale means (Equation (6)). The orange line is the fit <italic>w</italic>(<italic>q</italic>). The purple lines show the variance implied by the Poisson distribution for each of the two samples, that is, <inline-formula><mml:math id="M27" name="gb-2010-11-10-r106-i24" overflow="scroll"><mml:mrow><mml:msub><mml:mover accent="true"><mml:mi>s</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mi>j</mml:mi></mml:msub><mml:msub><mml:mover accent="true"><mml:mi>q</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>A</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math></inline-formula>. The dashed orange line is the variance estimate used by <italic>edgeR</italic>. (b) Same data as in (a), with the <italic>y</italic>-axis rescaled to show the squared coefficient of variation (SCV), that is all quantities are divided by the square of the mean. In (b), the solid orange line incorporated the bias correction described in Supplementary Note C in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>. (The plot only shows SCV values in the range [0, 0.2]. For a zoom-out to the full range, see Supplementary Figure S9 in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>.)</p>
+          </caption>
+          <graphic xlink:href="gb-2010-11-10-r106-1"/>
+        </fig>
+        <p>The many data points in Figure <xref ref-type="fig" rid="F1">1b</xref> that lie far above the fitted orange curve may let the fit of the local regression appear poor. However, a strong skew of the residual distribution is to be expected. See Supplementary Note E in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref> for details and a discussion of diagnostics suitable to verify the fit.</p>
+      </sec>
+      <sec>
+        <title>Testing</title>
+        <p>In order to verify that <italic>DESeq </italic>maintains control of type-I error, we contrasted one of the replicates for condition <italic>A </italic>in the fly data against the other one, using for both samples the variance function estimated from the two replicates. Figure <xref ref-type="fig" rid="F2">2</xref> shows the empirical cumulative distribution functions (ECDFs) of the <italic>P </italic>values obtained from this comparison. To control type-I error, the proportion of <italic>P </italic>values below a threshold <italic>α </italic>has to be ≤ <italic>α</italic>, that is, the ECDF curve (blue line) should not get above the diagonal (gray line). As the figure indicates, type-I error is controlled by <italic>edgeR </italic>and <italic>DESeq</italic>, but not by a Poisson-based <italic>χ</italic><sup>2 </sup>test. The latter underestimates the variability of the data and would thus make many false positive rejections. In addition to this evaluation on real data, we also verified <italic>DESeq</italic>'s type-I error control on simulated data that were generated from the error model described above; see Supplementary Note G in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>. Next, we contrasted the two <italic>A </italic>samples against the two <italic>B </italic>samples. Using the procedure described in the previous Section, we computed a <italic>P </italic>value for each gene. Figure <xref ref-type="fig" rid="F3">3</xref> shows the obtained fold changes and <italic>P </italic>values. 12% of the P values were below 5%. Adjustment for multiple-testing with the procedure of Benjamini and Hochberg [<xref ref-type="bibr" rid="B21">21</xref>] yielded significant differential expression at false discovery rate (FDR) of 10% for 864 genes (of 17,605). These are marked in red in the figure. Figure <xref ref-type="fig" rid="F3">3</xref> demonstrates how the ability to detect differential expression depends on overall counts. Specifically, the strong shot noise for low counts causes the testing procedure to call only very high fold changes significant. It can also be seen that, for counts below approximately 100, even a small increase in count levels reduces the impact of shot noise and hence the fold-change requirement, while at higher counts, when shot noise becomes unimportant (cf. Figure <xref ref-type="fig" rid="F1">1b</xref>), the fold-change cut-off depends only weakly on count level. These plots are helpful to guide experiment design: For weakly expressed genes, in the region where shot noise is important, power can be increased by deeper sequencing, while for the higher-count regime, increased power can only be achieved with further biological replicates.</p>
+        <fig id="F2" position="float">
+          <label>Figure 2</label>
+          <caption>
+            <p><bold>Type-I error control</bold>. The panels show empirical cumulative distribution functions (ECDFs) for <italic>P </italic>values from a comparison of one replicate from condition <italic>A </italic>of the fly RNA-Seq data with the other one. No genes are truly differentially expressed, and the ECDF curves (blue) should remain below the diagonal (gray). Panel (a): top row corresponds to <italic>DESeq</italic>, middle row to <italic>edgeR </italic>and bottom row to a Poisson-based <italic>χ</italic><sup>2 </sup>test. The right column shows the distributions for all genes, the left and middle columns show them separately for genes below and above a mean of 100. Panel (b) shows the same data, but zooms into the range of small <italic>P </italic>values. The plots indicate that <italic>edgeR </italic>and <italic>DESeq </italic>control type I error at (and in fact slightly below) the nominal rate, while the Poisson-based <italic>χ</italic><sup>2 </sup>test fails to do so. <italic>edgeR </italic>has an excess of small <italic>P </italic>values for low counts: the blue line lies above the diagonal. This excess is, however, compensated by the method being more conservative for high counts. All methods show a point mass at <italic>p </italic>= 1, this is due to the discreteness of the data, whose effect is particularly evident at low counts.</p>
+          </caption>
+          <graphic xlink:href="gb-2010-11-10-r106-2"/>
+        </fig>
+        <fig id="F3" position="float">
+          <label>Figure 3</label>
+          <caption>
+            <p><bold>Testing for differential expression between conditions <italic>A </italic>and <italic>B</italic>: Scatter plot of log<sub>2 </sub>ratio (fold change) versus mean</bold>. The red colour marks genes detected as differentially expressed at 10% false discovery rate when Benjamini-Hochberg multiple testing adjustment is used. The symbols at the upper and lower plot border indicate genes with very large or infinite log fold change. The corresponding volcano plot is shown in Supplementary Figure S8 in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref>.</p>
+          </caption>
+          <graphic xlink:href="gb-2010-11-10-r106-3"/>
+        </fig>
+      </sec>
+      <sec>
+        <title>Comparison with edgeR</title>
+        <p>We also analyzed the data with <italic>edgeR </italic>(version 1.6.0; [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B11">11</xref>]). We ran <italic>edgeR </italic>with four different settings, namely in common-dispersion and in tagwise-dispersion mode, and either using the size factors as estimated by <italic>DESeq </italic>or taking the total numbers of sequenced reads. The results did not depend much on these choices, and here we report the results for tag-wise dispersion mode with <italic>DESeq</italic>-estimated size factors. (The R code required to reproduce all analyses, figures and numbers reported in this article is provided in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref>; in addition, this supplement provides the results for the other settings of <italic>edgeR</italic>. The raw data can be found in Additional file <xref ref-type="supplementary-material" rid="S3">3</xref>.)</p>
+        <p>Going back to Figure <xref ref-type="fig" rid="F1">1</xref> we see that <italic>edgeR</italic>'s single-value dispersion estimate of the variance is lower than that of <italic>DESeq </italic>for weakly expressed genes and higher for strongly expressed genes. As a consequence, as we have seen in Figure <xref ref-type="fig" rid="F2">2</xref><italic>edgeR </italic>is anti-conservative for lowly expressed genes. However, it compensates for this by being more conservative with strongly expressed genes, so that, on average, type-I error control is maintained.</p>
+        <p>Nevertheless, in a test between different conditions, this behavior can result in a bias in the list of discoveries; for the present data, as Figure <xref ref-type="fig" rid="F4">4</xref> shows, weakly expressed genes seem to be overrepresented, while very few genes with high average level are called differentially expressed by <italic>edgeR</italic>. While overall the sensitivity of both methods seemed comparable (<italic>DESeq </italic>reported 864 hits, <italic>edgeR </italic>1, 127 hits), <italic>DESeq </italic>produced results which were more balanced over the dynamic range.</p>
+        <fig id="F4" position="float">
+          <label>Figure 4</label>
+          <caption>
+            <p><bold>Distribution of hits through the dynamic range</bold>. The density of common-scale mean values <italic>q<sub>i </sub></italic>for all genes in the fly data (gray line, scaled down by a factor of seven), and for the hits reported by <italic>DESeq </italic>(red line) and by <italic>edgeR </italic>at a false discovery rate of 10% (dark blue line: with tag-wise dispersion estimation; light blue line: common dispersion mode).</p>
+          </caption>
+          <graphic xlink:href="gb-2010-11-10-r106-4"/>
+        </fig>
+        <p>Similar results were obtained with the neural stem cell data, a data set with a different biological background and different noise characteristics (see Supplementary Note F in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>). The flexibility of the variance estimation scheme presented in this work appears to offer real advantages over the existing methods across a range of applications.</p>
+      </sec>
+      <sec>
+        <title>Working without replicates</title>
+        <p><italic>DESeq </italic>allows analysis of experiments with no biological replicates in one or even both of the conditions. While one may not want to draw strong conclusions from such an analysis, it may still be useful for exploration and hypothesis generation.</p>
+        <p>If replicates are available only for one of the conditions, one might choose to assume that the variance-mean dependence estimated from the data for that condition holds as well for the unreplicated one.</p>
+        <p>If neither condition has replicates, one can still perform an analysis based on the assumption that for most genes, there is no true differential expression, and that a valid mean-variance relationship can be estimated from treating the two samples as if they were replicates. A minority of differentially abundant genes will act as outliers; however, they will not have a severe impact on the gamma-family GLM fit, as the gamma distribution for low values of the shape parameter has a heavy right-hand tail. Some overestimation of the variance may be expected, which will make that approach conservative.</p>
+        <p>We performed such an analysis with the fly RNA-Seq and the neural cell Tag-Seq data, by restricting both data sets to only two samples, one from each condition. For the neural cell data, the estimated variance function was, as expected, somewhat above the two functions estimated from the <italic>GNS </italic>and <italic>NS </italic>replicates.</p>
+        <p>Using it to test for differential expression still found 269 hits at FDR = 10%, of which 202 were among the 612 hits from the more reliable analysis with all available samples. In the case of the fly RNA-Seq data, however, only 90 of the 862 hits (11%) were recovered (with two new hits). These observations are explained by the fact that in the neural cell data, the variability between replicates was not much smaller than between conditions, making the latter a usable surrogate for the former. On the other hand, for the fly data, the variability between replicates was much smaller than between the conditions, indicating that the replication provided important and otherwise not available information on the experimental variation in the data (see also next Section).</p>
+      </sec>
+      <sec>
+        <title>Variance-stabilizing transformation</title>
+        <p>Given a variance-mean dependence, a variance-stabilizing transformation (VST) is a monotonous mapping such that for the transformed values, the variance is (approximately) independent of the mean. Using the variance-mean dependence <italic>w</italic>(<italic>q</italic>) estimated by <italic>DESeq</italic>, a VST is given by</p>
+        <p>
+          <disp-formula id="bmcM15">
+            <label>(15)</label>
+            <mml:math id="M28" name="gb-2010-11-10-r106-i23" overflow="scroll">
+              <mml:mrow>
+                <mml:mi>τ</mml:mi>
+                <mml:mo stretchy="false">(</mml:mo>
+                <mml:mi>κ</mml:mi>
+                <mml:mo stretchy="false">)</mml:mo>
+                <mml:mo>=</mml:mo>
+                <mml:msup>
+                  <mml:mstyle mathsize="140%" displaystyle="true">
+                    <mml:mo>∫</mml:mo>
+                  </mml:mstyle>
+                  <mml:mi>κ</mml:mi>
+                </mml:msup>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:mtext>d</mml:mtext>
+                    <mml:mi>q</mml:mi>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:msqrt>
+                      <mml:mrow>
+                        <mml:mi>w</mml:mi>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mi>q</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                      </mml:mrow>
+                    </mml:msqrt>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mo>.</mml:mo>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>Applying the transformation <italic>τ </italic>to the common-scale count data, <italic>k<sub>ij</sub></italic>/<italic>s<sub>j</sub></italic>, yields values whose variances are approximately the same throughout the dynamic range. One application of VST is sample clustering, as in Figure <xref ref-type="fig" rid="F5">5</xref>; such an approach is more straightforward than, say, defining a suitable distance metric on the untransformed count data, whose choice is not obvious, and may not be easy to combine with available clustering or classification algorithms (which tend to be designed for variables with similar distributional properties).</p>
+        <fig id="F5" position="float">
+          <label>Figure 5</label>
+          <caption>
+            <p><bold>Sample clustering for the neural cell data of Kasowski et al</bold>. [<xref ref-type="bibr" rid="B18">18</xref>]. A common variance function was estimated for all samples and used to apply a variance-stabilizing transformation. The heat map shows a false colour representation of the Euclidean distance matrix (from dark blue for zero distance to orange for large distance), and the dendrogram represents a hierarchical clustering. Two <italic>GNS </italic>samples were derived from the same patient (marked with '(*)') and show the highest degree of similarity. The two other <italic>GNS </italic>samples (including one with atypically large cells, marked '(L)') are as dissimilar from the former as the two <italic>NS </italic>samples.</p>
+          </caption>
+          <graphic xlink:href="gb-2010-11-10-r106-5"/>
+        </fig>
+      </sec>
+      <sec>
+        <title>ChIP-Seq</title>
+        <p><italic>DESeq </italic>can also be used to analyze comparative ChIP-Seq assays. Kasowski <italic>et al. </italic>[<xref ref-type="bibr" rid="B20">20</xref>] analyzed transcription factor binding for HapMap individuals and counted for each sample how many reads mapped to pre-determined binding regions. We considered two individuals from their data set, HapMap IDs GM12878 and GM12891, for both of which at least four replicates had been done, and tested for differential occupation of the regions. The upper left two panels of Figure <xref ref-type="fig" rid="F6">6</xref> which show comparisons within the same individual, indicate that type-I error was controlled by <italic>DESeq</italic>. No region was significant at 10% FDR using Benjamini-Hochberg adjustment. Differential occupation was found, however, when contrasting the two individuals, with 4,460 of 19,028 regions significant when only two replicates each were used and 8,442 when four replicates were used (upper right two panels).</p>
+        <fig id="F6" position="float">
+          <label>Figure 6</label>
+          <caption>
+            <p><bold>Application to ChIP-Seq data</bold>. Shown are ECDF curves for <italic>P </italic>values resulting from comparisons of Pol-II ChIP-Seq data between replicates of the same individual (first and second column) and between two different individuals (third and forth column). The upper row corresponds to an analysis with <italic>DESeq </italic>('D'), the lower row to one based on Poisson GLMs ('P'). If no true differential occupation exists (that is, when comparing replicates), the ECDF (blue) should stay below the diagonal (gray), which corresponds to uniform <italic>P </italic>values. In the first column, two replicates from HapMap individual GM12878 (<italic>A1</italic>) were compared against two further replicates from the same individual (<italic>A2</italic>). Similarly, in the second column, two replicates from individual GM12891 (<italic>B1</italic>) were compared against two further replicates from the same individual (<italic>B2</italic>). For <italic>DESeq</italic>, no excess of low <italic>P </italic>values was seen, as expected when comparing replicates. In contrast, the Poisson GLM analysis produced strong enrichments of small <italic>P </italic>values; this is a reflection of overdispersion in the data, that is, the variance in the data was larger than what the Poisson GLM assumes (see also Section <italic>Choice of distribution</italic>). The third column compares two replicates from individual GM12878 (<italic>A1</italic>) against two from the other individual (<italic>B1</italic>). True occupation differences are expected, and both methods result in enrichment of small P values. The forth column shows the comparison of four replicates of GM12878 (<italic>A1 </italic>combined with <italic>A2</italic>) against four replicates of GM12891 (<italic>B1</italic>, <italic>B2</italic>); increased sample size leads to higher detection power and hence smaller <italic>P </italic>values.</p>
+          </caption>
+          <graphic xlink:href="gb-2010-11-10-r106-6"/>
+        </fig>
+        <p>Using an alternative approach, Kasowski <italic>et al</italic>. fitted generalized linear models (GLMs) of the Poisson family. This (lower row of Figure <xref ref-type="fig" rid="F6">6</xref>) resulted in an enrichment of small <italic>P </italic>values even for comparisons within the same individual, indicating that the variance was underestimated by the Poisson GLM, and literal use of the P values would lead to anti-conservative (overly optimistic) bias. Kasowski <italic>et al</italic>. addressed this and adjusted for the bias by using additional criteria for calling differential occupation.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>Why is it necessary to develop new statistical methodology for sequence count data? If large numbers of replicates were available, questions of data distribution could be avoided by using non-parametric methods, such as rank-based or permutation tests. However, it is desirable (and possible) to consider experiments with smaller numbers of replicates per condition. In order to compare an observed difference with an expected random variation, we can improve our picture of the latter in two ways: first, we can use distribution families, such as normal, Poisson and negative binomial distributions, in order to determine the higher moments, and hence the tail behavior, of statistics for differential expression, based on observed low order moments such as mean and variance. Second, we can share information, for instance, distributional parameters, between genes, based on the notion that data from different genes follow similar patterns of variability. Here, we have described an instance of such an approach, and we will now discuss the choices we have made.</p>
+    <sec>
+      <title>Choice of distribution</title>
+      <p>While for large counts, normal distributions might provide a good approximation of between-replicate variability, this is not the case for lower count values, whose discreteness and skewness mean that probability estimates computed from a normal approximation would be inadequate.</p>
+      <p>For the Poisson approximation, a key paper is the work by Marioni <italic>et al. </italic>[<xref ref-type="bibr" rid="B6">6</xref>], who studied the <italic>technical </italic>reproducibility of RNA-Seq. They extracted total RNA from two tissue samples, one from the liver and one from the kidneys of the same individual. From each RNA sample they took seven aliquots, prepared a library from each aliquot according to the protocol recommended by Illumina and sampled each library on one lane of a Solexa genome analyzer. For each gene, they then calculated the variance of the seven counts from the same tissue sample and found very good agreement with the variance predicted by a Poisson model. In line with our arguments in Section <italic>Model</italic>, Poisson shot noise is the minimum amount of variation to expect in a counting process. Thus, Marioni <italic>et al</italic>. concluded that the technical reproducibility of RNA-Seq is excellent, and that the variation between technical replicates is close to the shot noise limit. From this vantage point, Marioni <italic>et al</italic>. (and similarly Bullard <italic>et al. </italic>[<xref ref-type="bibr" rid="B22">22</xref>]) suggested to use the Poisson model (and Fisher's exact test, or a likelihood ratio test as an approximation to it) to test whether a gene is differentially expressed between their two samples. It is important to note that a rejection from such a test only informs us that the difference between the average counts in the two samples is larger than one would expect between <italic>technical </italic>replicates. Hence, we do not know whether this difference is due to the different tissue type, kidney instead of liver, or whether a difference of the same magnitude could have been found as well if one had compared two samples from different parts of the same liver, or from livers of two individuals.</p>
+      <p>Figure <xref ref-type="fig" rid="F1">1</xref> shows that shot noise is only dominant for very low count values, while already for moderate counts, the effect of the biological variation between samples exceeds the shot noise by orders of magnitude.</p>
+      <p>This is confirmed by comparison of technical with biological replicates [<xref ref-type="bibr" rid="B1">1</xref>]. In Figure <xref ref-type="fig" rid="F7">7</xref> we used <italic>DESeq </italic>to obtain variance estimates for the data of Nagalakshmi <italic>et al. </italic>[<xref ref-type="bibr" rid="B1">1</xref>]. The analysis indicates that the difference between technical replicates barely exceeds shot noise level, while biological replicates differ much more. Tests for differential expression that are based on a Poisson model, such as those discussed in References [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B7">7</xref>,<xref ref-type="bibr" rid="B20">20</xref>,<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B23">23</xref>] should thus be interpreted with caution, as they may severely underestimate the effect of biological variability, in particular for highly expressed genes.</p>
+      <fig id="F7" position="float">
+        <label>Figure 7</label>
+        <caption>
+          <p><bold>Noise estimates for the data of Nagalakshmi <italic>et al</italic></bold>. [<xref ref-type="bibr" rid="B1">1</xref>]. The data allow assessment of technical variability (between library preparations from aliquots of the same yeast culture) and biological variability (between two independently grown cultures). The blue curves depict the squared coefficient of variation at the common scale, <italic>w<sub>ρ</sub></italic>(<italic>q</italic>)/<italic>q</italic><sup>2 </sup>(see Equation (9)) for technical replicates, the red curves for biological replicates (solid lines, <italic>dT </italic>data set, dashed lines, <italic>RH </italic>data set). The data density is shown by the histogram in the top panel. The purple area marks the range of the shot noise for the range of size factors in the data set. One can see that the noise between technical replicates follows closely the shot noise limit, while the noise between biological replicates exceeds shot noise already for low count values.</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-10-r106-7"/>
+      </fig>
+      <p>Consequently, it is preferable to use a model that allows for overdispersion. While for the Poisson distribution, variance and mean are equal, the negative binomial distribution is a generalization that allow for the variance to be larger. The most advanced of the published methods using this distribution is likely <italic>edgeR </italic>[<xref ref-type="bibr" rid="B8">8</xref>]. <italic>DESeq </italic>owes its basic idea to <italic>edgeR</italic>, yet differs in several aspects.</p>
+    </sec>
+    <sec>
+      <title>Sharing of information between genes</title>
+      <p>First, we discovered that the use of total read counts as estimates of sequencing depth, and hence for the adjustment of observed counts between samples (as recommended by Robinson <italic>et al. </italic>[<xref ref-type="bibr" rid="B8">8</xref>] and others) may result in high apparent differences between replicates, and hence in poor power to detect true differences.</p>
+      <p><italic>DESeq </italic>uses the more robust size estimate Equation (5); in fact, <italic>edgeR</italic>'s power increases when it is supplied with those size estimates instead. (Note: While this paper was under review, <italic>edgeR </italic>was amended to use the method of Oshlack and Robinson [<xref ref-type="bibr" rid="B13">13</xref>].)</p>
+      <p>For small numbers of replicates as often encountered in practice, it is not possible to obtain simultaneously reliable estimates of the variance and mean parameters of the NB distribution. <italic>EdgeR </italic>addresses this problem by estimating a single <italic>common dispersion </italic>parameter. In our method, we make use of the possibility to estimate a more flexible, mean-dependent local regression. The amount of data available in typical experiments is large enough to allow for sufficiently precise local estimation of the dispersion. Over the large dynamic range that is typical for RNA-Seq, the raw SCV often appears to change noticeably, and taking this into account allows <italic>DESeq </italic>to avoid bias towards certain areas of the dynamic range in its differential-expression calls (see Figure <xref ref-type="fig" rid="F2">2</xref> and <xref ref-type="fig" rid="F4">4</xref>).</p>
+      <p>This flexibility is the most substantial difference between <italic>DESeq </italic>and <italic>edgeR</italic>, as simulations show that <italic>edgeR </italic>and <italic>DESeq </italic>perform comparably if provided with artificial data with constant SCV (Supplementary Note G in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>). <italic>EdgeR </italic>attempts to make up for the rigidity of the single-parameter noise model by allowing for an adjustment of the model-based variance estimate with the per-gene empirical variance. An empirical Bayes procedure, similar to the one originally developed for the <italic>limma </italic>package [<xref ref-type="bibr" rid="B24">24</xref>-<xref ref-type="bibr" rid="B26">26</xref>], determines how to combine these two sources of information optimally. However, for typical low replicate numbers, this so-called tagwise dispersion mode seems to have little effect (Figure <xref ref-type="fig" rid="F4">4</xref>) or even reduces <italic>edgeR</italic>'s power (Supplementary Note F in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>).</p>
+      <p>Third, we have suggested a simple and robust way of estimating the raw variance from the data. Robinson and Smyth [<xref ref-type="bibr" rid="B11">11</xref>] employed a technique they called quantile-adjusted conditional maximum likelihood to find an unbiased estimate for the raw SCV. The <italic>quantile adjustment </italic>refers to a rank-based procedure that modifies the data such that the data seem to stem from samples of equal library size. In <italic>DESeq</italic>, differing library sizes are simply addressed by linear scaling (Equations (2) and (3)), suggesting that quantile adjustment is an unnecessary complication. The price we pay for this is that we need to make the approximation that the sum of NB variables in Equation (10) is itself NB distributed. While it seems that neither the quantile adjustment nor our approximation pose reason for concern in practice, <italic>DESeq</italic>'s approach is computationally faster and, perhaps, conceptually simpler.</p>
+      <p>Fourth, our approach provides useful diagnostics. Plots such as Supplementary Figure S3 in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref> are helpful to judge the reliability of the tests. In Figure <xref ref-type="fig" rid="F1">1b</xref> and <xref ref-type="fig" rid="F7">7</xref>, it is easy to see at which mean value biological variability dominates over shot noise; this information is valuable to decide whether the sequencing depth or the number of biological replicates is the limiting factor for detection power, and so helps in planning experiments. A heatmap as in Figure <xref ref-type="fig" rid="F5">5</xref> is useful for data quality control.</p>
+    </sec>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec>
+      <title>The R package DESeq</title>
+      <p>We implemented the method as a package for the statistical environment R [<xref ref-type="bibr" rid="B27">27</xref>] and distribute it within the Bioconductor project [<xref ref-type="bibr" rid="B28">28</xref>]. As input, it expects a table of count data. The data, as well as meta-data, such as sample and gene annotation, are managed with the S4 class <italic>CountDataSet</italic>, which is derived from <italic>eSet</italic>, Bioconductor's standard data type for table-like data. The package provides high-level functions to perform analyses such as shown in Section <italic>Application </italic>with only a few commands, allowing researchers with little knowledge of R to use it. This is demonstrated with examples in the documentation provided with the package (the package vignette). Furthermore, lower-level functions are supplied for advanced users who wish to deviate from the standard work flow. A typical calculation, such as the analyses shown in Section <italic>Applications</italic>, takes a few minutes of time on a personal computer.</p>
+      <p>All the analyses presented here have been performed with <italic>DESeq</italic>. Readers wishing to examine them in detail will find a Sweave document with the commented R code of the analysis code as Additional file <xref ref-type="supplementary-material" rid="S2">2</xref> and the raw data in Additional file <xref ref-type="supplementary-material" rid="S3">3</xref>.</p>
+      <p><italic>DESeq </italic>is available as a Bioconductor package from the Bioconductor repository [<xref ref-type="bibr" rid="B28">28</xref>] and from [<xref ref-type="bibr" rid="B36">36</xref>].</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>ChIP-Seq: (high-throughput) sequencing of immunoprecipitated chromatin; ECDF: empirical cumulative distribution function; FDR: false-discovery rate; GLM: generalized linear model; RNA-Seq: (high-throughput) sequencing of RNA; SCV: squared coefficient of variation; NB: negative-binomial (distribution); VST: variance-stabilizing transformation.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>SA and WH developed the method and wrote the manuscript. SA implemented the method and performed the analyses.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>Supplement</bold>. Contains all Supplementary Notes and Supplementary Figures.</p>
+      </caption>
+      <media xlink:href="gb-2010-11-10-r106-S1.PDF" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S2">
+      <caption>
+        <title>Additional file 2</title>
+        <p><bold>Supplement II</bold>. PDF file presenting the source code of all the analyses presented in this paper, with comments, as a Sweave document.</p>
+      </caption>
+      <media xlink:href="gb-2010-11-10-r106-S2.PDF" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S3">
+      <caption>
+        <title>Additional file 3</title>
+        <p><bold>Raw data</bold>. Tarball containing the raw data for the presented analyses.</p>
+      </caption>
+      <media xlink:href="gb-2010-11-10-r106-S3.TGZ" mimetype="application" mime-subtype="x-zip-compressed">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>We are grateful to Paul Bertone for sharing the neural stem cells data ahead of publication, and to Bartek Wilczyński, Ya-Hsin Liu, Nicolas Delhomme and Eileen Furlong likewise for sharing the fly RNA-Seq data. We thank Nicolas Delhomme and Julien Gagneur for helpful comments on the manuscript. S. An. has been partially funded by the European Union Research and Training Network 'Chromatin Plasticity'.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Nagalakshmi</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Waern</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Shou</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Raha</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Gerstein</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Snyder</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>The transcriptional landscape of the yeast genome defined by RNA sequencing.</article-title>
+        <source>Science</source>
+        <year>2008</year>
+        <volume>320</volume>
+        <fpage>1344</fpage>
+        <lpage>1349</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1158441</pub-id>
+        <pub-id pub-id-type="pmid">18451266</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mortazavi</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Williams</surname>
+          <given-names>BA</given-names>
+        </name>
+        <name>
+          <surname>McCue</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Schaeffer</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Wold</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Mapping and quantifying mammalian transcriptomes by RNA-Seq.</article-title>
+        <source>Nat Methods</source>
+        <year>2008</year>
+        <volume>5</volume>
+        <fpage>621</fpage>
+        <lpage>628</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1226</pub-id>
+        <pub-id pub-id-type="pmid">18516045</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robertson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Hirst</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Bainbridge</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Bilenky</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Zhao</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Zeng</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Euskirchen</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Bernier</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Varhol</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Delaney</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Thiessen</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Griffith</surname>
+          <given-names>OL</given-names>
+        </name>
+        <name>
+          <surname>He</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Marra</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Snyder</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Genome-wide profiles of STAT1 DNA association using chromatin immunoprecipitation and massively parallel sequencing.</article-title>
+        <source>Nat Methods</source>
+        <year>2007</year>
+        <volume>4</volume>
+        <fpage>651</fpage>
+        <lpage>657</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth1068</pub-id>
+        <pub-id pub-id-type="pmid">17558387</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Licatalosi</surname>
+          <given-names>DD</given-names>
+        </name>
+        <name>
+          <surname>Mele</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Fak</surname>
+          <given-names>JJ</given-names>
+        </name>
+        <name>
+          <surname>Ule</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Kayikci</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Chi</surname>
+          <given-names>SW</given-names>
+        </name>
+        <name>
+          <surname>Clark</surname>
+          <given-names>TA</given-names>
+        </name>
+        <name>
+          <surname>Schweitzer</surname>
+          <given-names>AC</given-names>
+        </name>
+        <name>
+          <surname>Blume</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Darnell</surname>
+          <given-names>JC</given-names>
+        </name>
+        <name>
+          <surname>Darnell</surname>
+          <given-names>RB</given-names>
+        </name>
+        <article-title>HITS-CLIP yields genome-wide insights into brain alternative RNA processing.</article-title>
+        <source>Nature</source>
+        <year>2008</year>
+        <volume>456</volume>
+        <fpage>464</fpage>
+        <lpage>469</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature07488</pub-id>
+        <pub-id pub-id-type="pmid">18978773</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Smith</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Heisler</surname>
+          <given-names>LE</given-names>
+        </name>
+        <name>
+          <surname>Mellor</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Kaper</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Thompson</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Chee</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Roth</surname>
+          <given-names>FP</given-names>
+        </name>
+        <name>
+          <surname>Giaever</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Nislow</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Quantitative phenotyping via deep barcode sequencing.</article-title>
+        <source>Genome Res</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1836</fpage>
+        <lpage>1842</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.093955.109</pub-id>
+        <pub-id pub-id-type="pmid">19622793</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marioni</surname>
+          <given-names>JC</given-names>
+        </name>
+        <name>
+          <surname>Mason</surname>
+          <given-names>CE</given-names>
+        </name>
+        <name>
+          <surname>Mane</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Stephens</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gilad</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>RNA-seq: An assessment of technical reproducibility and comparison with gene expression arrays.</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>1509</fpage>
+        <lpage>1517</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.079558.108</pub-id>
+        <pub-id pub-id-type="pmid">18550803</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wang</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Feng</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>X</given-names>
+        </name>
+        <article-title>DEGseq: an R package for identifying differentially expressed genes from RNA-seq data.</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>136</fpage>
+        <lpage>138</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp612</pub-id>
+        <pub-id pub-id-type="pmid">19855105</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <article-title>Moderated statistical tests for assessing differences in tag abundance.</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <issue>21</issue>
+        <fpage>2881</fpage>
+        <lpage>2887</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btm453</pub-id>
+        <pub-id pub-id-type="pmid">17881408</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Whitaker</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>On the Poisson law of small numbers.</article-title>
+        <source>Biometrika</source>
+        <year>1914</year>
+        <volume>10</volume>
+        <fpage>36</fpage>
+        <lpage>71</lpage>
+        <pub-id pub-id-type="doi">10.1093/biomet/10.1.36</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>McCarthy</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <article-title>edgeR: a Bioconductor package for differential expression analysis of digital gene expression data.</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>139</fpage>
+        <lpage>140</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp616</pub-id>
+        <pub-id pub-id-type="pmid">19910308</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <article-title>Small-sample estimation of negative binomial dispersion, with applications to SAGE data.</article-title>
+        <source>Biostatistics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>321</fpage>
+        <lpage>332</lpage>
+        <pub-id pub-id-type="doi">10.1093/biostatistics/kxm030</pub-id>
+        <pub-id pub-id-type="pmid">17728317</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Cameron</surname>
+          <given-names>AC</given-names>
+        </name>
+        <name>
+          <surname>Trivedi</surname>
+          <given-names>PK</given-names>
+        </name>
+        <source>Regression Analysis of Count Data</source>
+        <year>1998</year>
+        <publisher-name>Cambridge University Press</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>Oshlack</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>A scaling normalization method for differential expression analysis of RNA-seq data.</article-title>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2010-11-3-r25</pub-id>
+        <pub-id pub-id-type="pmid">20196867</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Loader</surname>
+          <given-names>C</given-names>
+        </name>
+        <source>Local Regression and Likelihood</source>
+        <year>1999</year>
+        <publisher-name>Springer</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>McCullagh</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Nelder</surname>
+          <given-names>JA</given-names>
+        </name>
+        <source>Generalized Linear Models</source>
+        <year>1989</year>
+        <edition>2</edition>
+        <publisher-name>Chapman &amp; Hall/CRC</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="other">
+        <article-title>locfit: Local regression, likelihood and density estimation.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://cran.r-project.org/web/packages/locfit/">http://cran.r-project.org/web/packages/locfit/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Agresti</surname>
+          <given-names>A</given-names>
+        </name>
+        <source>Categorical Data Analysis</source>
+        <year>2002</year>
+        <edition>2</edition>
+        <publisher-name>Wiley</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Engström</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Tommei</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Stricker</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Pollard</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Bertone</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Transcriptional characterization of glioblastoma stem cell lines using tag sequencing.</article-title>
+        <year>2010</year>
+        <comment> in press </comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Morrissy</surname>
+          <given-names>AS</given-names>
+        </name>
+        <name>
+          <surname>Morin</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Delaney</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Zeng</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>McDonald</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Zhao</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Hirst</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Marra</surname>
+          <given-names>MA</given-names>
+        </name>
+        <article-title>Next-generation tag sequencing for cancer gene expression profiling.</article-title>
+        <source>Genome Res</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1825</fpage>
+        <lpage>1835</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.094482.109</pub-id>
+        <pub-id pub-id-type="pmid">19541910</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kasowski</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Grubert</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Heffelfinger</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Hariharan</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Asabere</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Waszak</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Habegger</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Rozowsky</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Shi</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Urban</surname>
+          <given-names>AE</given-names>
+        </name>
+        <name>
+          <surname>Hong</surname>
+          <given-names>MY</given-names>
+        </name>
+        <name>
+          <surname>Karczewski</surname>
+          <given-names>KJ</given-names>
+        </name>
+        <name>
+          <surname>Huber</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Weissman</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Gerstein</surname>
+          <given-names>MB</given-names>
+        </name>
+        <name>
+          <surname>Korbel</surname>
+          <given-names>JO</given-names>
+        </name>
+        <name>
+          <surname>Snyder</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Variation in transcription factor binding among humans.</article-title>
+        <source>Science</source>
+        <year>2010</year>
+        <volume>328</volume>
+        <fpage>232</fpage>
+        <lpage>235</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1183621</pub-id>
+        <pub-id pub-id-type="pmid">20299548</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Benjamini</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Hochberg</surname>
+          <given-names>Y</given-names>
+        </name>
+        <article-title>Controlling the false discovery rate: a practical and powerful approach to multiple testing.</article-title>
+        <source>J Roy Stat Soc B</source>
+        <year>1995</year>
+        <volume>57</volume>
+        <fpage>289</fpage>
+        <lpage>300</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bullard</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Purdom</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Hansen</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments.</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>94</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-11-94</pub-id>
+        <pub-id pub-id-type="pmid">20167110</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bloom</surname>
+          <given-names>JS</given-names>
+        </name>
+        <name>
+          <surname>Khan</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Kruglyak</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Singh</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Caudy</surname>
+          <given-names>AA</given-names>
+        </name>
+        <article-title>Measuring differential gene expression by short read sequencing: quantitative comparison to 2-channel gene expression microarrays.</article-title>
+        <source>BMC Genomics</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>221</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-10-221</pub-id>
+        <pub-id pub-id-type="pmid">19435513</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <person-group person-group-type="editor">Gentleman R, Carey V, Dudoit S, R Irizarry WH</person-group>
+        <article-title>Limma: linear models for microarray data.</article-title>
+        <source>Bioinformatics and Computational Biology Solutions Using R and Bioconductor</source>
+        <year>2005</year>
+        <publisher-name>New York: Springer</publisher-name>
+        <fpage>397</fpage>
+        <lpage>420</lpage>
+        <comment>full_text</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <article-title>Linear models and empirical Bayes methods for assessing differential expression in microarray experiments.</article-title>
+        <source>Stat Appl Genet Mol Biol</source>
+        <year>2004</year>
+        <volume>3</volume>
+        <fpage>Article3</fpage>
+        <pub-id pub-id-type="pmid">16646809</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lönnstedt</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Speed</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Replicated microarray data.</article-title>
+        <source>Stat Sin</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>31</fpage>
+        <lpage>46</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="other">
+        <article-title>R: A Language and Environment for Statistical Computing.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.R-project.org">http://www.R-project.org</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gentleman</surname>
+          <given-names>RC</given-names>
+        </name>
+        <name>
+          <surname>Carey</surname>
+          <given-names>VJ</given-names>
+        </name>
+        <name>
+          <surname>Bates</surname>
+          <given-names>DM</given-names>
+        </name>
+        <name>
+          <surname>Bolstad</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Dettling</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ellis</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Gautier</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Ge</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Gentry</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hornik</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Hothorn</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Huber</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Iacus</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Leisch</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Maechler</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Rossini</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Sawitzki</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Tierney</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>JYH</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Bioconductor: Open software development for computational biology and bioinformatics.</article-title>
+        <source>Genome Biol</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>R80</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2004-5-10-r80</pub-id>
+        <pub-id pub-id-type="pmid">15461798</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bliss</surname>
+          <given-names>CI</given-names>
+        </name>
+        <name>
+          <surname>Fisher</surname>
+          <given-names>RA</given-names>
+        </name>
+        <article-title>Fitting the negative binomial distribution to biological data.</article-title>
+        <source>Biometrics</source>
+        <year>1953</year>
+        <volume>9</volume>
+        <fpage>176</fpage>
+        <lpage>200</lpage>
+        <pub-id pub-id-type="doi">10.2307/3001850</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Clark</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Perry</surname>
+          <given-names>JN</given-names>
+        </name>
+        <article-title>Estimation of the negative binomial parameter κ by maximum quasi-likelihood.</article-title>
+        <source>Biometrics</source>
+        <year>1989</year>
+        <volume>45</volume>
+        <fpage>309</fpage>
+        <lpage>316</lpage>
+        <pub-id pub-id-type="doi">10.2307/2532055</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lawless</surname>
+          <given-names>JF</given-names>
+        </name>
+        <article-title>Negative binomial and mixed Poisson regression.</article-title>
+        <source>Can J Stat</source>
+        <year>1987</year>
+        <volume>15</volume>
+        <fpage>209</fpage>
+        <lpage>225</lpage>
+        <pub-id pub-id-type="doi">10.2307/3314912</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Saha</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Paul</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Bias-corrected maximum likelihood estimator of the negative binomial dispersion parameter.</article-title>
+        <source>Biometrics</source>
+        <year>2005</year>
+        <volume>61</volume>
+        <fpage>179</fpage>
+        <lpage>285</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.0006-341X.2005.030833.x</pub-id>
+        <pub-id pub-id-type="pmid">15737091</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B33">
+      <mixed-citation publication-type="other">
+        <article-title>Fast and accurate computation of binomial probabilities.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://projects.scipy.org/scipy/raw-attachment/ticket/620/loader2000Fast.pdf">http://projects.scipy.org/scipy/raw-attachment/ticket/620/loader2000Fast.pdf</ext-link>
+        <comment>(Note: This is a copy of the original paper, which is no longer available online.)</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B34">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Trapnell</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Ultrafast and memory-efficient alignment of short DNA sequences to the human genome.</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>R25</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-3-r25</pub-id>
+        <pub-id pub-id-type="pmid">19261174</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B35">
+      <mixed-citation publication-type="other">
+        <article-title>HTSeq: Analysing high-throughput sequencing data with Python.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www-huber.embl.de/users/anders/HTSeq/">http://www-huber.embl.de/users/anders/HTSeq/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B36">
+      <mixed-citation publication-type="other">
+        <article-title>DESeq.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www-huber.embl.de/users/anders/DESeq">http://www-huber.embl.de/users/anders/DESeq</ext-link>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

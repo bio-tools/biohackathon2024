@@ -1,0 +1,261 @@
+<?properties open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title-group>
+      <journal-title>Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1460-2059</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2735667</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btp412</article-id>
+    <article-id pub-id-type="publisher-id">btp412</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Applications Note</subject>
+        <subj-group>
+          <subject>Sequence Analysis</subject>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>HI: haplotype improver using paired-end short reads</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Long</surname>
+          <given-names>Quan</given-names>
+        </name>
+        <xref ref-type="corresp" rid="COR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>MacArthur</surname>
+          <given-names>Daniel</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Ning</surname>
+          <given-names>Zemin</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Tyler-Smith</surname>
+          <given-names>Chris</given-names>
+        </name>
+      </contrib>
+    </contrib-group>
+    <aff>The Wellcome Trust Sanger Institute, Hinxton, Cambs, CB10 1SA, UK</aff>
+    <author-notes>
+      <corresp id="COR1">*To whom correspondence should be addressed.</corresp>
+      <fn>
+        <p>Associate Editor: Alfonso Valencia</p>
+      </fn>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>15</day>
+      <month>9</month>
+      <year>2009</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>1</day>
+      <month>7</month>
+      <year>2009</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>1</day>
+      <month>7</month>
+      <year>2009</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="epub"/>. -->
+    <volume>25</volume>
+    <issue>18</issue>
+    <fpage>2436</fpage>
+    <lpage>2437</lpage>
+    <history>
+      <date date-type="received">
+        <day>27</day>
+        <month>4</month>
+        <year>2009</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>25</day>
+        <month>6</month>
+        <year>2009</year>
+      </date>
+      <date date-type="accepted">
+        <day>25</day>
+        <month>6</month>
+        <year>2009</year>
+      </date>
+    </history>
+    <permissions>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">http://creativecommons.org/licenses/by-nc/2.0/uk/</ext-link>) which permits unrestricted non-commercial use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Summary:</bold> We present a program to improve haplotype reconstruction by incorporating information from paired-end reads, and demonstrate its utility on simulated data. We find that given a fixed coverage, longer reads (implying fewer of them) are preferable.</p>
+      <p><bold>Availability:</bold> The executable and user manual can be freely downloaded from <ext-link ext-link-type="ftp" xlink:href="ftp://ftp.sanger.ac.uk/pub/zn1/HI">ftp://ftp.sanger.ac.uk/pub/zn1/HI</ext-link>.</p>
+      <p>
+        <bold>Contact:</bold>
+        <email>ql2@sanger.ac.uk</email>
+      </p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec sec-type="intro" id="SEC1">
+    <title>1 INTRODUCTION</title>
+    <p>With recent advances in DNA sequencing technology, more and more ambitious population-scale sequencing projects have become feasible, e.g. the 1000 Genomes Project (<ext-link ext-link-type="uri" xlink:href="http://www.1000genomes.org/page.php">http://www.1000genomes.org/page.php</ext-link>). Haplotype reconstruction is an important step in many genetic analyses. Currently, there are several successful population-genetic model-based haplotype inference tools using different methodologies, such as the MCMC-based PHASE (Stephens <italic>et al</italic>., <xref ref-type="bibr" rid="B6">2001</xref>) or the HMM-based fastPHASE (Scheet and Stephens, <xref ref-type="bibr" rid="B5">2006</xref>). However, these phasing algorithms assume the use of genotype data. To apply these tools to next-gen resequencing data, the typical procedure involves: (i) mapping the reads to the reference genome with a mapping tool; (ii) calling SNPs from the consensus sequence; and (iii) importing the SNP files into a phasing tool as if they were generated from a genotyping platform. An important source of information from the raw data is lost in this procedure if we start from paired-end reads. That is, if a pair of reads happens to carry a pair of heterozygous SNPs, it indicates the true chromosomal phase of these SNPs (<xref ref-type="fig" rid="F1">Fig. 1</xref>). It is easy to imagine that the information linking two SNPs can be expanded to blocks, enabling us to phase a number of SNPs in a local region.
+<fig id="F1" position="float"><label>Fig. 1.</label><caption><p>If a pair of reads covers two heterozygous positions, the alleles carried (A and G in the example shown) must be on the same chromosome. Therefore we can phase the genotype (A/T, G/C) to (A, G) and (T, C).</p></caption><graphic xlink:href="btp412f1"/></fig></p>
+    <p>Making use of sequence read information to resolve haplotypes is not new. Actually, in traditional capillary sequencing projects (Kim <italic>et al</italic>., <xref ref-type="bibr" rid="B2">2007</xref>), people have already used information from fosmid end assembly to infer haplotypic phase (Li <italic>et al</italic>., <xref ref-type="bibr" rid="B3">2004</xref>). However, their approach was designed for traditional sequencing projects in which the reads are relatively long (500–800 bp) and the number of reads typically not very large, and therefore may not be suitable for high-throughput short-read sequencing data. Given the current read length of 35–75 bp from the short-read platforms, it is impossible to resolve individual haplotypes via <italic>de novo</italic> assembly (Kim <italic>et al</italic>., <xref ref-type="bibr" rid="B2">2007</xref>). Reliable phasing must still rely on the population-genetic models that have been applied successfully to genotype data.</p>
+    <p>In this article, we present our program, Haplotype Improver (HI) to improve haplotype reconstruction using paired-end short reads. Assuming that the users have run an existing phaser, HI processes the paired-end information in the raw data to form blocks of haplotypes and compares them with the output of a phasing tool (currently HI supports PHASE and fastPHASE). When inconsistencies are found, HI will decide whether or not, and at which loci, to change the haplotype reconstructions according to its calculations.</p>
+  </sec>
+  <sec sec-type="methods" id="SEC2">
+    <title>2 METHODS</title>
+    <p>First, we look for paired-end reads carrying two heterozygous SNPs in a tested sample. To facilitate the calculation, we designed two levels of hash tables. The first level is a hash table to store all the locations of heterozygous SNPs from a given individual, and we therefore scan all the reads from the alignment file to identify the relevant ones. Let <italic>m</italic> be the number of the heterozygous sites. The second level of hash tables initially consists of <italic>m</italic> hash tables similar to the first level of hash tables. If the locations of two SNPs, <italic>i</italic> and <italic>j</italic>, respectively, resulting from the paired reads are on the same chromosome, we mask <italic>i</italic> and <italic>j in the second level hash tables</italic>, and then record the corresponding haplotype in this combined region (note that it is not necessary for it to be a continuous region because we may have another SNP <italic>k</italic> located between <italic>i</italic> and <italic>j</italic>). Finally, after all the mapped reads have been scanned, there should be <italic>m</italic>′ (<italic>m</italic>′≤<italic>m</italic>) masked hash tables remaining in the dataset where each table stands for a haplotype block (again, the ‘block’ is not necessarily a continuous region).</p>
+    <p>Next, we check for inconsistencies between the information in blocks and the results provided by the phasing tool. By ‘inconsistency’, we mean that the alleles supposed to share the same haplotype are mistakenly distributed to two separate chromosomes by the phasing tool. We calculate a ratio based on a probability model to decide which segment to move to make the result consistent (see User Manual for details.) Finally, adjusted haplotypes of the sample are reported. When the data quality is low, the information from multiple paired-end reads themselves may be inconsistent. In this case, HI will not take any action.</p>
+    <p>The time required by this algorithm is linearly proportional to the number of reads, and the space required is linearly proportional to the number of heterozygous sites in all individuals. Compared with the time-consuming sampling process of phasing tools, the time added by HI is small. Any user who can run phasing tools can afford the RAM for HI.</p>
+  </sec>
+  <sec id="SEC3">
+    <title>3 SIMULATIONS AND EXPERIMENTAL DESIGN</title>
+    <p>To validate the performance and explore the best experimental design strategy, we tested HI on simulated data.</p>
+    <p>In each simulation, we use MS (Hudson, <xref ref-type="bibr" rid="B1">2002</xref>) to generate a population of 100 000 haploid SNP sequences under the standard neutral model and sample 60 sequences from it to form 30 diploid individuals. We embed them within non-repetitive regions of the human genome. The average SNP density is 3.3 SNP/kb and the heterozygous SNP density is 0.72 het/kb. We then simulate Illumina reads and map them back to the reference genome to call SNPs. In the simulation, we use SSAHA (Ning <italic>et al</italic>., <xref ref-type="bibr" rid="B4">2001</xref>) for read mapping and SNP calling. We have four parameters: coverage per base (with values 10, 20, 30 and 40), mean insert size (with values 300, 500, 700, 900, 3k, 5k, 7k, 10k), standard deviation of insert size (with values 0.2, 0.5 and 0.8), and read length (with values 36, 50 and 72). We tested each combination of the values of the four parameters to see how many errors caused by phasing could be improved. The marginalized results are shown in <xref ref-type="fig" rid="F2">Figure 2</xref>. When the insert size is moderate, one can see that for PHASE, usually more than 10% errors can be eliminated, whereas for fastPHASE, this proportion is around 1–5%.
+<fig id="F2" position="float"><label>Fig. 2.</label><caption><p>The <italic>y</italic>-axis shows the percentage of phasing errors eliminated by HI. The <italic>x</italic>-axis shows the values of the parameter indicated. In each plot, the performance value varied with the parameter of interest; while the other three parameters were marginalized. (The data for insert size longer than 3 kb are only used in the insert size plot.)</p></caption><graphic xlink:href="btp412f2"/></fig></p>
+    <p>The analysis of simulated data indicates that longer read length is preferred. Note that this conclusion is not trivial because, given the same coverage, longer read length means fewer reads. From the simulations, we observed that very long insert size significantly larger than the mean heterozygous SNP spacing looks not preferable for HI itself. But long insert size may be an advantage for other purpose, e.g. read mapping, and may therefore also impact the precision of haplotype reconstruction. Finally, high sequence coverage is preferred, a requirement that will become easier to satisfy as the throughput of new sequencing technologies continues to increase.</p>
+  </sec>
+  <sec sec-type="discussion" id="SEC4">
+    <title>4 DISCUSSION</title>
+    <p>Researchers familiar with the statistical framework for haplotype reconstruction may have the following concerns: (i) Why not integrate paired-end information with population-genetic models by modifying the MCMC sampling schema to improve phasing precision? We are currently developing such an algorithm, but the method presented here represents a simple and robust initial approach to improve phasing using paired-end information. (ii) Modifying the individual haplotype will change the haplotype distribution in a non-statistically sound manner, therefore causing problems in downstream analyses. In fact, our simulation shows that the haplotype distribution is only slightly altered or unchanged by HI (data not shown).</p>
+    <p>There are many alignment formats available. In its current form, HI uses SSAHA's CIGAR alignment format. We will soon switch to support the SAM (<ext-link ext-link-type="uri" xlink:href="http://samtools.sourceforge.net/">http://samtools.sourceforge.net/</ext-link>) format which may be accepted as the uniform standard by the community in the near future. Because SAM files are usually sorted by chromosomal coordinate, following this transition it will be straightforward to reduce the time requirement to <italic>O</italic>(<italic>m</italic>log(<italic>n</italic>)), where <italic>n</italic>, <italic>m</italic> are the number of reads and heterozygous positions, respectively.</p>
+    <p><italic>Funding:</italic> The Wellcome Trust.</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </sec>
+</body>
+<back>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="B1">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hudson</surname>
+            <given-names>RR</given-names>
+          </name>
+        </person-group>
+        <article-title>Generating samples under a Wright-Fisher neutral model of genetic variation</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>337</fpage>
+        <lpage>338</lpage>
+        <pub-id pub-id-type="pmid">11847089</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B2">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>JH</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Diploid genome reconstruction of <italic>Ciona intestinalis</italic> and comparative analysis with <italic>Ciona savignyi</italic></article-title>
+        <source>Genome Res.</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <fpage>1101</fpage>
+        <lpage>1110</lpage>
+        <pub-id pub-id-type="pmid">17567986</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B3">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>LM</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Haplotype reconstruction from SNP alignment</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>2004</year>
+        <volume>11</volume>
+        <fpage>505</fpage>
+        <lpage>516</lpage>
+        <pub-id pub-id-type="pmid">15285905</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B4">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ning</surname>
+            <given-names>Z</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>SSAHA: a fast search method for large DNA databases</article-title>
+        <source>Genome Res.</source>
+        <year>2001</year>
+        <volume>11</volume>
+        <fpage>1725</fpage>
+        <lpage>1729</lpage>
+        <pub-id pub-id-type="pmid">11591649</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B5">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Scheet</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Stephens</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>A fast and flexible statistical model for large-scale population genotype data: applications to inferring missing genotypes and haplotypic phase</article-title>
+        <source>Am. J. Hum. Genet.</source>
+        <year>2006</year>
+        <volume>78</volume>
+        <fpage>629</fpage>
+        <lpage>644</lpage>
+        <pub-id pub-id-type="pmid">16532393</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B6">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Stephens</surname>
+            <given-names>M</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A new statistical method for haplotype reconstruction from population data</article-title>
+        <source>Am. J. Hum. Genet.</source>
+        <year>2001</year>
+        <volume>68</volume>
+        <fpage>978</fpage>
+        <lpage>989</lpage>
+        <pub-id pub-id-type="pmid">11254454</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

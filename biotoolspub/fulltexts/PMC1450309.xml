@@ -1,0 +1,2684 @@
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title>BMC Bioinformatics</journal-title>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">1450309</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-7-175</article-id>
+    <article-id pub-id-type="pmid">16569230</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-7-175</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Methodology Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>LS-NMF: A modified non-negative matrix factorization algorithm utilizing uncertainty estimates</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib id="A1" contrib-type="author">
+        <name>
+          <surname>Wang</surname>
+          <given-names>Guoli</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>guoli.wang@fccc.edu</email>
+      </contrib>
+      <contrib id="A2" contrib-type="author">
+        <name>
+          <surname>Kossenkov</surname>
+          <given-names>Andrew V</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>andrew.kossenkov@fccc.edu</email>
+      </contrib>
+      <contrib id="A3" corresp="yes" contrib-type="author">
+        <name>
+          <surname>Ochs</surname>
+          <given-names>Michael F</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>m_ochs@fccc.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Division of Population Science, Fox Chase Cancer Center, Philadelphia, PA, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2006</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>28</day>
+      <month>3</month>
+      <year>2006</year>
+    </pub-date>
+    <volume>7</volume>
+    <fpage>175</fpage>
+    <lpage>175</lpage>
+    <ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/1471-2105/7/175"/>
+    <history>
+      <date date-type="received">
+        <day>6</day>
+        <month>10</month>
+        <year>2005</year>
+      </date>
+      <date date-type="accepted">
+        <day>28</day>
+        <month>3</month>
+        <year>2006</year>
+      </date>
+    </history>
+    <copyright-statement>Copyright © 2006 Wang et al; licensee BioMed Central Ltd.</copyright-statement>
+    <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+      <p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0"/>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</p>
+    </license>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Non-negative matrix factorisation (NMF), a machine learning algorithm, has been applied to the analysis of microarray data. A key feature of NMF is the ability to identify patterns that together explain the data as a linear combination of expression signatures. Microarray data generally includes individual estimates of uncertainty for each gene in each condition, however NMF does not exploit this information. Previous work has shown that such uncertainties can be extremely valuable for pattern recognition.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We have created a new algorithm, least squares non-negative matrix factorization, LS-NMF, which integrates uncertainty measurements of gene expression data into NMF updating rules. While the LS-NMF algorithm maintains the advantages of original NMF algorithm, such as easy implementation and a guaranteed locally optimal solution, the performance in terms of linking functionally related genes has been improved. LS-NMF exceeds NMF significantly in terms of identifying functionally related genes as determined from annotations in the MIPS database.</p>
+      </sec>
+      <sec>
+        <title>Conclusion</title>
+        <p>Uncertainty measurements on gene expression data provide valuable information for data analysis, and use of this information in the LS-NMF algorithm significantly improves the power of the NMF technique.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Because of their ability to link genes that behave similarly across conditions in a gene expression study, pattern recognition and clustering are widely used for data analysis of microarray data (see [<xref ref-type="bibr" rid="B1">1</xref>] for a review). Numerous methods have been adopted to cluster genes or samples including hierarchical clustering [<xref ref-type="bibr" rid="B2">2</xref>], maximum likelihood clustering [<xref ref-type="bibr" rid="B3">3</xref>], the cluster affinity search technique [<xref ref-type="bibr" rid="B4">4</xref>], quality threshold clustering [<xref ref-type="bibr" rid="B5">5</xref>], and fuzzy K-means clustering [<xref ref-type="bibr" rid="B6">6</xref>], among others. Some methods specifically aim to identify subsets of behaviors within the data, where genes behave similarly only over a subset of samples. Such methods include two-way clustering [<xref ref-type="bibr" rid="B7">7</xref>] and biclustering [<xref ref-type="bibr" rid="B8">8</xref>]. Other methods allow genes to belong to multiple patterns, reflecting biological roles where genes function in multiple cellular processes. Such methods include Bayesian Decomposition [<xref ref-type="bibr" rid="B9">9</xref>,<xref ref-type="bibr" rid="B10">10</xref>], principal component analysis [<xref ref-type="bibr" rid="B11">11</xref>], independent component analysis [<xref ref-type="bibr" rid="B12">12</xref>], and nonnegative matrix factorization [<xref ref-type="bibr" rid="B13">13</xref>-<xref ref-type="bibr" rid="B15">15</xref>].</p>
+    <p>By creation of a constrained model (e.g., a model with only positive points), non-negative matrix factorization (NMF) shares with Bayesian Decomposition (BD) the potential to more accurately identify sets of genes that together provide function. Both aim to recover two matrices, <bold>A </bold>and <bold>P</bold>, that reproduce the data within the uncertainty as in</p>
+    <p><bold>D </bold>= <bold>M </bold>+ <italic>ε </italic>= <bold>A</bold>·<bold>P </bold>+ <italic>ε</italic>.     (1)</p>
+    <p>In the case of NMF, this constraint is positivity in the <bold>A </bold>and <bold>P </bold>matrices, while in BD the constraint is provided through relationships between model points in the form of convolution functions during matrix reconstruction [<xref ref-type="bibr" rid="B16">16</xref>]. For microarray data, the matrix <bold>D </bold>provides the estimates of transcriptional levels, such that each column corresponds to the estimate for a single condition, with each matrix element in a column corresponding to the estimate for a single gene (or probe set) in that condition. A row of <bold>D </bold>corresponds to the processed intensity for a single gene across all conditions. If <bold>D </bold>has dimension of <italic>I </italic>× <italic>J</italic>, then <bold>A </bold>has dimensions <italic>I </italic>× <italic>K</italic>, and <bold>P </bold>has dimensions <italic>K </italic>× <italic>J</italic>, where <italic>K </italic>is the dimensionality (i.e., rank). There is no accepted method yet to choose <italic>K a priori</italic>, however many possible <italic>K </italic>can be tested in order to find an optimal value [<xref ref-type="bibr" rid="B17">17</xref>].</p>
+    <p>The overall simulation in the original NMF algorithm aims to minimize the difference between <bold>M </bold>and <bold>D </bold>in Equation 1, with every element in <bold>D </bold>given the same weight in evaluating the difference between the two matrices. However, most microarray measurements are replicated and, in addition, statistical techniques have been developed to estimate uncertainty measurements for all data points in <bold>D </bold>[<xref ref-type="bibr" rid="B18">18</xref>-<xref ref-type="bibr" rid="B21">21</xref>]. This uncertainty information is extremely valuable for identifying the best model [<xref ref-type="bibr" rid="B10">10</xref>], and it has been used in microarray analysis in other contexts as well [<xref ref-type="bibr" rid="B22">22</xref>]. Inclusion of this information in fitting the <bold>A </bold>and <bold>P </bold>matrices should improve the NMF algorithm by allowing it to more precisely fit the reconstructed <bold>M </bold>to the data, <bold>D</bold>. Such approaches have also been used successfully within supervised methods, such as LS-SVM [<xref ref-type="bibr" rid="B23">23</xref>].</p>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <sec>
+      <title>Data sets</title>
+      <p>We applied the least squares nonnegative matrix factorization (LS-NMF) algorithm to two publicly available microarray datasets, one with no individual estimates of uncertainties for each data point and one with such information. The first set is yeast cell cycle data from cultures synchronized with a temperature sensitive cdc28-mutant [<xref ref-type="bibr" rid="B24">24</xref>], which has a single Affymetrix GeneChip measurement at each time point. The second set is the yeast deletion mutant compendium from Rosetta Inpharmatics [<xref ref-type="bibr" rid="B25">25</xref>], which comprises microarray measurements of mRNA levels from yeast cultures containing either clones of <italic>S. cerevisiae </italic>with gene deletions or chemical treatments. Both data sets were preprocessed as described in Methods to create the estimates of mRNA levels for the data matrix, <bold>D</bold>.</p>
+    </sec>
+    <sec>
+      <title>Algorithm performance</title>
+      <sec>
+        <title>Data fitting</title>
+        <p>To measure the ability of LS-NMF to fit the data, we measured the <italic>χ</italic><sup>2 </sup>fit (as in Equation 6) between the model of the data provided by <bold>M </bold>and the data in <bold>D</bold>, as in Equation 1. The original NMF algorithm used the root mean square distance (RMSD) between these two matrices as a measure of fit, however this is incapable of taking into account the uncertainty information used by LS-NMF. Essentially, NMF ignores variations in the precision of the measurements. The <italic>χ</italic><sup>2 </sup>measure provides a standard approach to determining the fit between a model of a data set and the data set itself. Figure <xref ref-type="fig" rid="F1">1</xref> shows the difference between the <bold>D </bold>and <bold>M </bold>matrices using LS-NMF and NMF for dimensionalities of <italic>K </italic>= 3 - 20 on the Rosetta data set. Figure <xref ref-type="fig" rid="F1">1</xref> demonstrates that the <italic>χ</italic><sup>2 </sup>error value decreased with increasing dimensionality for LS-NMF, but not for the NMF simulation. At all dimensions, LS-NMF consistently fits the data better, which is expected as NMF does not optimize <bold>M </bold>for the known variance. More interestingly, in the LS-NMF simulation, the RMSD error appears to be independent of the dimensionality, while NMF does depend on the dimensionality. This results from the LS-NMF simulation fitting the more reliable data points tightly, while allowing the data points with high variance to be fit more loosely. This can be seen in Figure <xref ref-type="fig" rid="F2">2</xref>, where points with the highest variance (bottom 25%) do not improve in RMSD in LS-NMF, while they continue to show improvement in <italic>χ</italic><sup>2</sup>. The <italic>χ</italic><sup>2 </sup>measure takes into account the variance providing a better measure of fit in cases of varying variance.</p>
+      </sec>
+      <sec>
+        <title>Computational complexity</title>
+        <p>While incorporating uncertainty measurements into NMF update rules (as described in Methods) makes sense for fitting microarray data, if the modification adds too much computational complexity, it will not be useful practically. We have measured the additional computational cost when applied to the Rosetta data set, and we have found that it is a constant offset compared to the cost of the original NMF implementation, regardless of complexity. This indicates that LS-NMF has the same convergence speed as NMF after a higher set-up cost, so that LS-NMF can be used with a minimal loss of efficiency compared with the original NMF algorithm in most practical applications.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Biological insights</title>
+      <sec>
+        <title>ROC analysis of metagenes</title>
+        <p>After normalization as described in the Methods, the contribution of each gene to a metagene is represented by a scaled <italic>Z</italic>-score, with a positive <italic>Z</italic>-score indicating that the gene is likely to be associated with that metagene, and a negative <italic>Z</italic>-score indicating that the gene is unlikely to be associated with the metagene. Metagenes were introduced to summarize behavior shared by many genes within an experiment that together provided the ability to classify samples [<xref ref-type="bibr" rid="B26">26</xref>,<xref ref-type="bibr" rid="B27">27</xref>]. This was similar to the concept of an eigengene from singular value decomposition [<xref ref-type="bibr" rid="B11">11</xref>], but with regression models using classification data driving the determination of mixing of the genes in a metagene. Metagenes have been discussed in relation to NMF analysis of microarray data previously [<xref ref-type="bibr" rid="B15">15</xref>], where they summarize behavior across conditions and assign fractions of the overall expression pattern for each gene to these behaviors.</p>
+        <p>Figure <xref ref-type="fig" rid="F3">3</xref> shows that metagenes can recover known gene coregulation in the well studied yeast cell cycle data set [<xref ref-type="bibr" rid="B24">24</xref>]. The ROC test for the cell cycle data set relies on known sets of coregulated genes [<xref ref-type="bibr" rid="B28">28</xref>] and is described in Methods. Figure <xref ref-type="fig" rid="F3">3a</xref> shows the areas under the ROC curve against the number of metagenes (dimensions) for both NMF and LS-NMF. Because the cell cycle data set does not have uncertainty estimates, we use a uniform multiplicative uncertainty estimate in LS-NMF (see Equations 6–8). As expected, LS-NMF does not outperform NMF here, as there is no uncertainty information. The differences between the curves merely reflects random differences in changes generated by slightly different update rules. To verify that LS-NMF behaves like NMF in the limit, we assigned unit uncertainty to all data points, which should reduce LS-NMF to NMF, as Equations 7–8 reduce to Equations 2–3. We analyzed the cell cycle data using six dimensions in agreement with our earlier work [<xref ref-type="bibr" rid="B9">9</xref>] and compared the performance of LS-NMF and NMF to shrinkage-based hierarchical clustering [<xref ref-type="bibr" rid="B28">28</xref>]. As can be seen in Figure <xref ref-type="fig" rid="F3">3b</xref>, both NMF and LS-NMF clearly perform much better at the recovery of known biological coregulation groups (note that the curves for NMF and LS-NMF lie on top of each other). We used the Rosetta compendium [<xref ref-type="bibr" rid="B25">25</xref>] to explore the ability of LS-NMF to gain power from uncertainty data, with the gold standard supplied by genes that together provide a metabolic pathway (see Table <xref ref-type="table" rid="T1">1</xref>). Figure <xref ref-type="fig" rid="F3">3c</xref> shows the performance of NMF and LS-NMF across different values of dimensionality <italic>K </italic>in terms of area under the ROC curve, as well as results for K-means clustering applied to scaled data and for NMF applied to scaled data. The scaled data set was generated by dividing each data point in <bold>D </bold>by its associated uncertainty as in the original publication [<xref ref-type="bibr" rid="B25">25</xref>]. For all dimensionalities, LS-NMF improves the recovery of coregulated genes by 15% over NMF and K-means. Scaling the data has an effect similar to LS-NMF (see update equations below), however this leads to problems in interpretation of the metagenes, since the amplitude of a gene in a metagene will be reduced to near zero for a gene with strongly scaled data (see Equation 1).</p>
+      </sec>
+      <sec>
+        <title>Prediction of functional relationships</title>
+        <p>The other way to evaluate the performance of NMF and LS-NMF is by testing their ability to predict functional relationships between genes. In the reduced Rosetta data set, 215 conditions are measurements of mRNA levels in deletion mutants of <italic>S. cerevisiae </italic>growing in rich media compared with mRNA levels of wildtype <italic>S. cerevisiae </italic>in similar conditions. Mutants showing similar changes in gene expression might be expected to have deletions of functionally related genes, allowing predictions of functional relationships between genes based on links between deletion mutants. These predictions were scored against available database information. In order to demonstrate the gain from including uncertainty measurements, predictions based on <bold>P </bold>matrices in Equation 1 from NMF, LS-NMF, and NMF on data scaled by the uncertainty estimates were compared at different dimensions. The dimensions chosen match previous work using estimation by Bayesian Decomposition and ClutrFree [<xref ref-type="bibr" rid="B17">17</xref>], where 15 dimensions were estimated to cover the data, and NMF [<xref ref-type="bibr" rid="B13">13</xref>], where 50 dimensions were estimated. In addition, correlations in the original data space (<bold>D</bold>) were also calculated as a baseline providing estimates of the ability of the data to predict functional relationships independent of any dimensionality reduction.</p>
+        <p>Predictions of functional relationships were made using pairwise Pearson correlations between experiments measured in each of the seven spaces (the original data space, and the 15 and 50 dimensional spaces with NMF, LS-NMF, and NMF on scaled data). In all spaces, only the 215 deletion mutant conditions were used for analysis. Predictions were checked against the MIPS database (see Methods), and the results are shown in Figure <xref ref-type="fig" rid="F4">4</xref>. For each of the methods, Figure <xref ref-type="fig" rid="F4">4</xref> shows the percentage of predictions validated by MIPS as a function of the number of predictions made, which increases as the threshold for correlation is lowered. In general, the methods should exhibit the highest validation for their strongest predictions (i.e., highest thresholds, far left in Figure <xref ref-type="fig" rid="F4">4</xref>), but predictions based on the 15-dimensional NMF did not show such a trend, while 50-dimensional NMF and all LS-NMF did behave as expected. NMF applied to the scaled data and LS-NMF performed similarly at 50 dimensions, but LS-NMF performed better at 15 dimensions. Both produced better results than NMF applied to unsealed data and the unreduced original data. The better consistency of LS-NMF across changes in dimension may indicate that including uncertainty information into NMF updating rules improves the robustness of the algorithm. Note that for all methods except NMF applied to unsealed data, the methods perform at roughly the same level when only the most reliable predictions are considered (left side of figures).</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <p>In the last several years, many analytical approaches have been used to identify groups of genes related by their similar expression profiles across different conditions, including time series, tumor samples, or different tissues. Since evolution has led to the borrowing of genes for use in multiple biological functions, the ability of NMF to estimate an expression profile as a linear combination of metagenes gains power by matching biological behavior. This power is demonstrated by the analysis of the yeast cell cycle data, where the ROC analysis shows that NMF is more powerful than hierarchical clustering at recovering coexpression groups. Nevertheless, as shown by the 63 replicated controls in the Rosetta compendium, the mRNA levels of individual genes are not equally well controlled in biological systems, leading to potentially large differences in the variance of mRNA levels between different genes. The constantly improving quality of microarrays and the ability to replicate conditions, either through repeated experimentation in model systems or through the capture of multiple related samples, provides estimates of this gene and condition specific variance. By using this valuable information in NMF update rules, the least squares non-negative matrix factorization (LS-NMF) algorithm improves the ability of this approach to recover biological knowledge as demonstrated by the analysis of the Rosetta compendium. Here, unlike in the yeast cell cycle data, individual uncertainty estimates are available at each data point. The value of this information is demonstrated in Figure <xref ref-type="fig" rid="F3">3c</xref>, where LS-NMF outperformed NMF in ROC analysis, and in Figure <xref ref-type="fig" rid="F4">4</xref>, where at both dimensionalities LS-NMF greatly increased the number of successfully recovered functional relationships.</p>
+    <p>LS-NMF may also be more stable than NMF in interpreting biological functions of genes based on the metagenes when the dimensionality is poorly estimated. In Figure <xref ref-type="fig" rid="F4">4</xref>, analysis at 15 and 50 dimensions give similar results in gene function prediction for LS-NMF, but not for NMF, where analysis at 15 dimensions failed to give meaningful results. This may result from the lack of uncertainty information in NMF, which makes each data point equally important in feedback to the update rules. A higher dimensionality could then yield a better factorization, while dimensionalities under some threshold would be highly influenced by the noise from mRNA levels with high variance. In LS-NMF, data points with low vairance will always influence the update rules more strongly.</p>
+    <p>LS-NMF gains its power from inclusion of uncertainty information. Such information can also be added by scaling the data by the uncertainty estimate, as was done in the original Rosetta study [<xref ref-type="bibr" rid="B25">25</xref>]. As can be seen in Figures <xref ref-type="fig" rid="F3">3</xref> and <xref ref-type="fig" rid="F4">4</xref>, this gives similar though not identical results. However, the direct inclusion of uncertainty information provides both improved interpretation (15 dimensions in Figure <xref ref-type="fig" rid="F4">4</xref>) and more flexibility. The direct use of uncertainty information in LS-NMF allows extensions, such as treatment of individual data points separately based on additional information during updating (e.g., <italic>a priori </italic>biological knowledge linking genes), which scaling cannot include. In addition, the approach allows for straightforward addition of methods such as simulated annealing [<xref ref-type="bibr" rid="B29">29</xref>], which may be useful in escaping local maxima in the probability distribution.</p>
+  </sec>
+  <sec>
+    <title>Conclusion</title>
+    <p>We have implemented a new algorithm, LS-NMF, based on NMF, to analyze microarray data. The incorporation of uncertainty information into the analysis of mRNA transcript levels significantly improves the recovery of biological information in the form of functional links between genes. In cases where there is no variance information available, LS-NMF reduces back to NMF. LS-NMF will provide the community with a powerful new tool for analysis of high-throughput data. The implementation is straightforward, so analysis of new data types with similar variance estimates should be possible, such as mass spectrometry data. The source code and documentation is available from <ext-link ext-link-type="uri" xlink:href="http://bioinformatics.fccc.edu/"/> by following the Open-Source link.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>The LS-NMF algorithm</title>
+      <p>LS-NMF, like NMF, operates on preprocessed data from a set of expression array experiments. The data comprises estimates of mRNA transcript levels (single channel) or ratios (two channel) represented as a single matrix <bold>D</bold>. Each row of <bold>D </bold>contains the mRNA estimates for each gene in all conditions (e.g., distinct tissues, experiments, timepoints), and each column corresponds to the estimates of mRNA levels for all genes in a single condition. For a dataset comprising <italic>I </italic>genes with expression measured in <italic>J </italic>conditions, the dimensionality of matrix <bold>D </bold>would be <italic>I </italic>× <italic>J</italic>. The goal of the NMF simulation is to find a small number of metagenes (the number of metagenes provides a dimensionality estimate), each defined as a positive linear combination of <italic>I </italic>genes. The mRNA level estimates across conditions for each gene can be approximated then as a positive linear combination of these metagenes. Mathematically, this can be expressed as an approximate factorization of matrix <bold>D </bold>into a pair of matrixes <bold>A </bold>and <bold>P </bold>as in Equation 1. The mock data, <bold>M</bold>, is the approximation of <bold>D</bold>, based on our estimates of <bold>A </bold>and <bold>P</bold>. The matrix <italic>ε </italic>provides for the error in the measurements in <bold>D</bold>. For <italic>K </italic>metagenes (i.e., <italic>K </italic>dimensions), matrix <bold>A </bold>is of size <italic>I </italic>× <italic>K </italic>with each of the <italic>K </italic>columns defining a metagene. The value of element <italic>A</italic><sub><italic>ik </italic></sub>indicates how strongly gene <italic>i </italic>is associated with metagene <italic>k</italic>. Matrix <bold>P </bold>is then of size <italic>K </italic>× <italic>J</italic>, with each row representing the relative mRNA levels of a metagene across the conditions. The value of element <italic>P</italic><sub><italic>kj </italic></sub>givens the strength of metagene <italic>k </italic>in condition <italic>j</italic>.</p>
+      <p>For NMF simulation, random matrices <bold>A </bold>and <bold>P </bold>are initialized according to some scheme. For instance, they could be populated from a uniform distribution <italic>U </italic>[0,1]. The two matrices are then iteratively updated using the rules [<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B30">30</xref>],</p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M1" name="1471-2105-7-175-i1" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>P</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>α</mml:mi>
+                    <mml:mi>μ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>←</mml:mo>
+                <mml:msub>
+                  <mml:mi>P</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>α</mml:mi>
+                    <mml:mi>μ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:msub>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mi>i</mml:mi>
+                      </mml:msub>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>A</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>α</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:msub>
+                          <mml:mi>D</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>μ</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:msub>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mi>i</mml:mi>
+                      </mml:msub>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>A</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>α</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:msub>
+                          <mml:mi>M</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>μ</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWGqbaudaWgaaWcbaacciGae8xSdeMae8hVd0gabeaakiabgcziSkabdcfaqnaaBaaaleaacqWFXoqycqWF8oqBaeqaaOWaaSaaaeaadaaeqaqaaiabdgeabnaaBaaaleaacqWGPbqAcqWFXoqyaeqaaOGaemiraq0aaSbaaSqaaiabdMgaPjab=X7aTbqabaaabaGaemyAaKgabeqdcqGHris5aaGcbaWaaabeaeaacqWGbbqqdaWgaaWcbaGaemyAaKMae8xSdegabeaakiabd2eannaaBaaaleaacqWGPbqAcqWF8oqBaeqaaaqaaiabdMgaPbqab0GaeyyeIuoaaaGccaWLjaGaaCzcamaabmaabaGaeGOmaidacaGLOaGaayzkaaaaaa@534E@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M2" name="1471-2105-7-175-i2" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>A</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>δ</mml:mi>
+                    <mml:mi>α</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>←</mml:mo>
+                <mml:msub>
+                  <mml:mi>A</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>δ</mml:mi>
+                    <mml:mi>α</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:msub>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mi>j</mml:mi>
+                      </mml:msub>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>D</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>δ</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:msub>
+                          <mml:mi>P</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>α</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:msub>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mi>j</mml:mi>
+                      </mml:msub>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>M</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>δ</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:msub>
+                          <mml:mi>P</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>α</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mn>3</mml:mn>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWGbbqqdaWgaaWcbaacciGae8hTdqMae8xSdegabeaakiabgcziSkabdgeabnaaBaaaleaacqWF0oazcqWFXoqyaeqaaOWaaSaaaeaadaaeqaqaaiabdseaenaaBaaaleaacqWF0oazcqWGQbGAaeqaaOGaemiuaa1aaSbaaSqaaiab=f7aHjabdQgaQbqabaaabaGaemOAaOgabeqdcqGHris5aaGcbaWaaabeaeaacqWGnbqtdaWgaaWcbaGae8hTdqMaemOAaOgabeaakiabdcfaqnaaBaaaleaacqWFXoqycqWGQbGAaeqaaaqaaiabdQgaQbqab0GaeyyeIuoaaaGccaWLjaGaaCzcamaabmaabaGaeG4mamdacaGLOaGaayzkaaaaaa@5318@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M3" name="1471-2105-7-175-i3" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>M</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:msub>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mi>k</mml:mi>
+                  </mml:msub>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>A</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>i</mml:mi>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:msub>
+                      <mml:mi>P</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>k</mml:mi>
+                        <mml:mi>j</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:mtext>     </mml:mtext>
+                    <mml:mrow>
+                      <mml:mo>(</mml:mo>
+                      <mml:mn>4</mml:mn>
+                      <mml:mo>)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                </mml:mstyle>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWGnbqtdaWgaaWcbaGaemyAaKMaemOAaOgabeaakiabg2da9maaqababaGaemyqae0aaSbaaSqaaiabdMgaPjabdUgaRbqabaGccqWGqbaudaWgaaWcbaGaem4AaSMaemOAaOgabeaakiaaxMaacaWLjaWaaeWaaeaacqaI0aanaiaawIcacaGLPaaaaSqaaiabdUgaRbqab0GaeyyeIuoaaaa@40DE@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>which guarantees reaching a local maximum in Likelihood and minimizes</p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M4" name="1471-2105-7-175-i4" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo>‖</mml:mo>
+                      <mml:mrow>
+                        <mml:mi>D</mml:mi>
+                        <mml:mo>−</mml:mo>
+                        <mml:mi>M</mml:mi>
+                      </mml:mrow>
+                      <mml:mo>‖</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+                <mml:mo>=</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:munder>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mi>j</mml:mi>
+                    </mml:mrow>
+                  </mml:munder>
+                  <mml:mrow>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>D</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo>−</mml:mo>
+                            <mml:msub>
+                              <mml:mi>M</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:msup>
+                    <mml:mo>.</mml:mo>
+                    <mml:mtext>     </mml:mtext>
+                    <mml:mrow>
+                      <mml:mo>(</mml:mo>
+                      <mml:mn>5</mml:mn>
+                      <mml:mo>)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                </mml:mstyle>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaadaqbdaqaaiabdseaejabgkHiTiabd2eanbGaayzcSlaawQa7amaaCaaaleqabaGaeGOmaidaaOGaeyypa0ZaaabuaeaadaqadaqaaiabdseaenaaBaaaleaacqWGPbqAcqWGQbGAaeqaaOGaeyOeI0Iaemyta00aaSbaaSqaaiabdMgaPjabdQgaQbqabaaakiaawIcacaGLPaaadaahaaWcbeqaaiabikdaYaaakiabc6caUiaaxMaacaWLjaWaaeWaaeaacqaI1aqnaiaawIcacaGLPaaaaSqaaiabdMgaPjabdQgaQbqab0GaeyyeIuoaaaa@4A56@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>In the original NMF algorithm, elements of <bold>A </bold>and <bold>P </bold>were updated at a pace determined by the difference between <bold>M </bold>and <bold>D</bold>. For a discussion of some approaches to updating <bold>A </bold>and <bold>P</bold>, see [<xref ref-type="bibr" rid="B31">31</xref>]. Since no uncertainty information enters the updating rules, every matrix element involved in the updating is weighted equally. In order to take advantage of uncertainty information, we minimize the <italic>χ</italic><sup>2 </sup>error,</p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M5" name="1471-2105-7-175-i5" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msup>
+                  <mml:mi>x</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+                <mml:mo>=</mml:mo>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:munder>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mrow>
+                          <mml:mi>i</mml:mi>
+                          <mml:mi>j</mml:mi>
+                        </mml:mrow>
+                      </mml:munder>
+                      <mml:mrow>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:mfrac>
+                              <mml:mrow>
+                                <mml:mrow>
+                                  <mml:mo>(</mml:mo>
+                                  <mml:mrow>
+                                    <mml:msub>
+                                      <mml:mi>D</mml:mi>
+                                      <mml:mrow>
+                                        <mml:mi>i</mml:mi>
+                                        <mml:mi>j</mml:mi>
+                                      </mml:mrow>
+                                    </mml:msub>
+                                    <mml:mo>−</mml:mo>
+                                    <mml:msub>
+                                      <mml:mi>M</mml:mi>
+                                      <mml:mrow>
+                                        <mml:mi>i</mml:mi>
+                                        <mml:mi>j</mml:mi>
+                                      </mml:mrow>
+                                    </mml:msub>
+                                  </mml:mrow>
+                                  <mml:mo>)</mml:mo>
+                                </mml:mrow>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:msub>
+                                  <mml:mi>σ</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>i</mml:mi>
+                                    <mml:mi>j</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                              </mml:mrow>
+                            </mml:mfrac>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mn>6</mml:mn>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWG4baEdaahaaWcbeqaaiabikdaYaaakiabg2da9maaqafabaWaaeWaaeaadaWcaaqaamaabmaabaGaemiraq0aaSbaaSqaaiabdMgaPjabdQgaQbqabaGccqGHsislcqWGnbqtdaWgaaWcbaGaemyAaKMaemOAaOgabeaaaOGaayjkaiaawMcaaaqaaGGaciab=n8aZnaaBaaaleaacqWGPbqAcqWGQbGAaeqaaaaaaOGaayjkaiaawMcaaaWcbaGaemyAaKMaemOAaOgabeqdcqGHris5aOWaaWbaaSqabeaacqaIYaGmaaGccaWLjaGaaCzcamaabmaabaGaeGOnaydacaGLOaGaayzkaaaaaa@4B00@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>instead of the distance between <bold>D </bold>and <bold>M</bold>. The update rules can easily incorporate this change with</p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M6" name="1471-2105-7-175-i6" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>P</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>α</mml:mi>
+                    <mml:mi>μ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>←</mml:mo>
+                <mml:msub>
+                  <mml:mi>P</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>α</mml:mi>
+                    <mml:mi>μ</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:msub>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mi>i</mml:mi>
+                      </mml:msub>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>A</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>α</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>D</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>μ</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>σ</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>μ</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:msub>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mi>i</mml:mi>
+                      </mml:msub>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>A</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>α</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>M</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>μ</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>σ</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>μ</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mn>7</mml:mn>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWGqbaudaWgaaWcbaacciGae8xSdeMae8hVd0gabeaakiabgcziSkabdcfaqnaaBaaaleaacqWFXoqycqWF8oqBaeqaaOWaaSaaaeaadaaeqaqaaiabdgeabnaaBaaaleaacqWGPbqAcqWFXoqyaeqaaOWaaSaaaeaacqWGebardaWgaaWcbaGaemyAaKMae8hVd0gabeaaaOqaaiab=n8aZnaaBaaaleaacqWGPbqAcqWF8oqBaeqaaaaaaeaacqWGPbqAaeqaniabggHiLdaakeaadaaeqaqaaiabdgeabnaaBaaaleaacqWGPbqAcqWFXoqyaeqaaOWaaSaaaeaacqWGnbqtdaWgaaWcbaGaemyAaKMae8hVd0gabeaaaOqaaiab=n8aZnaaBaaaleaacqWGPbqAcqWF8oqBaeqaaaaaaeaacqWGPbqAaeqaniabggHiLdaaaOGaaCzcaiaaxMaadaqadaqaaiabiEda3aGaayjkaiaawMcaaaaa@5D78@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M7" name="1471-2105-7-175-i7" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>A</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>δ</mml:mi>
+                    <mml:mi>α</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>←</mml:mo>
+                <mml:msub>
+                  <mml:mi>A</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>δ</mml:mi>
+                    <mml:mi>α</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:msub>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mi>j</mml:mi>
+                      </mml:msub>
+                      <mml:mrow>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>D</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>δ</mml:mi>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>σ</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>δ</mml:mi>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                        <mml:msub>
+                          <mml:mi>P</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>α</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:msub>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mi>j</mml:mi>
+                      </mml:msub>
+                      <mml:mrow>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>M</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>δ</mml:mi>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>σ</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>δ</mml:mi>
+                                <mml:mi>j</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                        <mml:msub>
+                          <mml:mi>P</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>α</mml:mi>
+                            <mml:mi>j</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mn>8</mml:mn>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWGbbqqdaWgaaWcbaacciGae8hTdqMae8xSdegabeaakiabgcziSkabdgeabnaaBaaaleaacqWF0oazcqWFXoqyaeqaaOWaaSaaaeaadaaeqaqaamaalaaabaGaemiraq0aaSbaaSqaaiab=r7aKjabdQgaQbqabaaakeaacqWFdpWCdaWgaaWcbaGae8hTdqMaemOAaOgabeaaaaGccqWGqbaudaWgaaWcbaGae8xSdeMaemOAaOgabeaaaeaacqWGQbGAaeqaniabggHiLdaakeaadaaeqaqaamaalaaabaGaemyta00aaSbaaSqaaiab=r7aKjabdQgaQbqabaaakeaacqWFdpWCdaWgaaWcbaGae8hTdqMaemOAaOgabeaaaaGccqWGqbaudaWgaaWcbaGae8xSdeMaemOAaOgabeaaaeaacqWGQbGAaeqaniabggHiLdaaaOGaaCzcaiaaxMaadaqadaqaaiabiIda4aGaayjkaiaawMcaaaaa@5D24@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M8" name="1471-2105-7-175-i8" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>M</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>j</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:msub>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mi>k</mml:mi>
+                  </mml:msub>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>A</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>i</mml:mi>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:msub>
+                      <mml:mi>P</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>k</mml:mi>
+                        <mml:mi>j</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:mstyle>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mn>9</mml:mn>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWGnbqtdaWgaaWcbaGaemyAaKMaemOAaOgabeaakiabg2da9maaqababaGaemyqae0aaSbaaSqaaiabdMgaPjabdUgaRbqabaGccqWGqbaudaWgaaWcbaGaem4AaSMaemOAaOgabeaaaeaacqWGRbWAaeqaniabggHiLdGccaWLjaGaaCzcamaabmaabaGaeGyoaKdacaGLOaGaayzkaaaaaa@40DD@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>where <italic>σ</italic><sub><italic>ij </italic></sub>is the uncertainty measurement for <italic>D</italic><sub><italic>ij</italic></sub>. This requires the existence of a new matrix, <bold>U</bold>, that provides estimates of the uncertainties for all data points. One advantage of this approach is that missing data is easily handled by assigning a value of 0 (for single channel) or 1.0 (for two channel, i.e. ratio) together with a large uncertainty. This essentially allows the algorithm to ignore these data points when fitting the model.</p>
+      <p>It is straightforward to follow the procedure described by Lee and Seung [<xref ref-type="bibr" rid="B30">30</xref>] to verify that <italic>χ</italic><sup>2 </sup>is nonincreasing under the modified update rules.</p>
+    </sec>
+    <sec>
+      <title>Implementation of NMF and LS-NMF algorithms</title>
+      <p>The NMF algorithm was obtained from the Broad Institute as a Matlab script [<xref ref-type="bibr" rid="B15">15</xref>]. We converted this to a C++ version allowing modification, and we validated the C++ version by making sure we obtained the same results as for the Matlab version in a number of simulations. For LS-NMF, Equations 7–9 were implemented within C++. The code included modified update rules that take into account the additional U matrix. The code is designed for use on Beowulf clusters running Linux, and source code is available under the GNU Lesser Public License from the Fox Chase Bioinformatics web site <ext-link ext-link-type="uri" xlink:href="http://bioinformatics.fccc.edu/"/> by following the Open-Source Software link.</p>
+      <p>Since the update rules in NMF and LS-NMF only guarantee a local minimum, the algorithms may or may not converge to the same solution on each simulation, depending on the properties of the probability distribution. To address this limitation, any simulation must be repeated multiple times (typically 20–100 individual runs) starting with different initial <bold>A </bold>and <bold>P </bold>matrices [<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B15">15</xref>]. After the simulation, either the best [<xref ref-type="bibr" rid="B13">13</xref>] or average [<xref ref-type="bibr" rid="B15">15</xref>] factorization is selected for further analysis. We repeated NMF and LS-NMF simulations on both the cell cycle dataset and the Rosetta dataset 20 times for each dimension, <italic>K</italic>, between 3 and 20. Each single simulation was run for 20,000 update steps or until it converged based on a predefined <italic>χ</italic><sup>2 </sup>threshold (or RMSD threshold for NMF). The factorization with the lowest <italic>χ</italic><sup>2 </sup>error (or RMSD error for NMF) from the 20 repeated runs for each dimension was selected for further analysis. The errors were calculated as</p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M9" name="1471-2105-7-175-i9" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msup>
+                  <mml:mi>x</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:msup>
+                <mml:mo>=</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:munderover>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>I</mml:mi>
+                  </mml:munderover>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:munderover>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mrow>
+                          <mml:mi>j</mml:mi>
+                          <mml:mo>=</mml:mo>
+                          <mml:mn>1</mml:mn>
+                        </mml:mrow>
+                        <mml:mi>J</mml:mi>
+                      </mml:munderover>
+                      <mml:mrow>
+                        <mml:mrow>
+                          <mml:mo>{</mml:mo>
+                          <mml:mrow>
+                            <mml:mfrac>
+                              <mml:mn>1</mml:mn>
+                              <mml:mrow>
+                                <mml:msubsup>
+                                  <mml:mi>σ</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>i</mml:mi>
+                                    <mml:mi>j</mml:mi>
+                                  </mml:mrow>
+                                  <mml:mn>2</mml:mn>
+                                </mml:msubsup>
+                              </mml:mrow>
+                            </mml:mfrac>
+                            <mml:msup>
+                              <mml:mrow>
+                                <mml:mrow>
+                                  <mml:mo>(</mml:mo>
+                                  <mml:mrow>
+                                    <mml:msub>
+                                      <mml:mi>D</mml:mi>
+                                      <mml:mrow>
+                                        <mml:mi>i</mml:mi>
+                                        <mml:mi>j</mml:mi>
+                                      </mml:mrow>
+                                    </mml:msub>
+                                    <mml:mo>−</mml:mo>
+                                    <mml:msub>
+                                      <mml:mi>M</mml:mi>
+                                      <mml:mrow>
+                                        <mml:mi>i</mml:mi>
+                                        <mml:mi>j</mml:mi>
+                                      </mml:mrow>
+                                    </mml:msub>
+                                  </mml:mrow>
+                                  <mml:mo>)</mml:mo>
+                                </mml:mrow>
+                              </mml:mrow>
+                              <mml:mn>2</mml:mn>
+                            </mml:msup>
+                          </mml:mrow>
+                          <mml:mo>}</mml:mo>
+                        </mml:mrow>
+                        <mml:mtext>     </mml:mtext>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:mn>10</mml:mn>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                </mml:mstyle>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWG4baEdaahaaWcbeqaaiabikdaYaaakiabg2da9maaqahabaWaaabCaeaadaGadaqaamaalaaabaGaeGymaedabaacciGae83Wdm3aa0baaSqaaiabdMgaPjabdQgaQbqaaiabikdaYaaaaaGcdaqadaqaaiabdseaenaaBaaaleaacqWGPbqAcqWGQbGAaeqaaOGaeyOeI0Iaemyta00aaSbaaSqaaiabdMgaPjabdQgaQbqabaaakiaawIcacaGLPaaadaahaaWcbeqaaiabikdaYaaaaOGaay5Eaiaaw2haaiaaxMaacaWLjaWaaeWaaeaacqaIXaqmcqaIWaamaiaawIcacaGLPaaaaSqaaiabdQgaQjabg2da9iabigdaXaqaaiabd2eanbqdcqGHris5aaWcbaGaemyAaKMaeyypa0JaeGymaedabaGaemOta4eaniabggHiLdaaaa@56FA@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M10" name="1471-2105-7-175-i10" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:mi>R</mml:mi>
+                <mml:mi>M</mml:mi>
+                <mml:mi>S</mml:mi>
+                <mml:mi>D</mml:mi>
+                <mml:mo>=</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:munderover>
+                    <mml:mo>∑</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>=</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mi>I</mml:mi>
+                  </mml:munderover>
+                  <mml:mrow>
+                    <mml:mstyle displaystyle="true">
+                      <mml:munderover>
+                        <mml:mo>∑</mml:mo>
+                        <mml:mrow>
+                          <mml:mi>j</mml:mi>
+                          <mml:mo>=</mml:mo>
+                          <mml:mn>1</mml:mn>
+                        </mml:mrow>
+                        <mml:mi>J</mml:mi>
+                      </mml:munderover>
+                      <mml:mrow>
+                        <mml:msup>
+                          <mml:mrow>
+                            <mml:mrow>
+                              <mml:mo>(</mml:mo>
+                              <mml:mrow>
+                                <mml:msub>
+                                  <mml:mi>D</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>i</mml:mi>
+                                    <mml:mi>j</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                                <mml:mo>−</mml:mo>
+                                <mml:msub>
+                                  <mml:mi>M</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>i</mml:mi>
+                                    <mml:mi>j</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                              </mml:mrow>
+                              <mml:mo>)</mml:mo>
+                            </mml:mrow>
+                          </mml:mrow>
+                          <mml:mn>2</mml:mn>
+                        </mml:msup>
+                        <mml:mtext>     </mml:mtext>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:mn>11</mml:mn>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                    </mml:mstyle>
+                  </mml:mrow>
+                </mml:mstyle>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWGsbGucqWGnbqtcqWGtbWucqWGebarcqGH9aqpdaaeWbqaamaaqahabaWaaeWaaeaacqWGebardaWgaaWcbaGaemyAaKMaemOAaOgabeaakiabgkHiTiabd2eannaaBaaaleaacqWGPbqAcqWGQbGAaeqaaaGccaGLOaGaayzkaaWaaWbaaSqabeaacqaIYaGmaaGccaWLjaGaaCzcamaabmaabaGaeGymaeJaeGymaedacaGLOaGaayzkaaaaleaacqWGQbGAcqGH9aqpcqaIXaqmaeaacqWGnbqta0GaeyyeIuoaaSqaaiabdMgaPjabg2da9iabigdaXaqaaiabd6eaobqdcqGHris5aaaa@500E@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+    </sec>
+    <sec>
+      <title>Data preprocessing</title>
+      <p>Two data sets were analyzed using LS-NMF and NMF, the yeast cell cycle data set [<xref ref-type="bibr" rid="B24">24</xref>] and the Rosetta compendium [<xref ref-type="bibr" rid="B25">25</xref>]. The cell cycle data set comprises measurements of mRNA levels using Affymetrix GeneChips. Synchronization was done using a temperature sensitive mutant of cdc28, which is required for passage into the late G 1 stage of the cell cycle. Cultures were grown following temperature change to activate cdc28, and mRNA was harvested at 10 minute intervals. The data was preprocessed by the original authors to identify genes that had cell cycle periodicity, resulting in a data set with 788 genes measured at 17 time points. The 10 minute intervals beginning with <italic>t </italic>= 0 on release from cell cycle arrest ended at 160 minutes, providing roughly two passes through the yeast cell cycle.</p>
+      <p>The Rosetta data comprises genome-wide measurements of gene expression across 300 deletion mutants or chemical treatments using oligonucleotide microarrays. We downloaded the data from Rosetta Inpharmatics, filtered it to remove experiments where less than 2 genes underwent 3-fold changes, and finally removed genes that did not change by 3-fold across the remaining conditions, resulting in 764 gene probes and 228 conditions. The Rosetta error model, based on replicates and 63 control replications of wildtype yeast, provided the estimation of uncertainty for each data point [<xref ref-type="bibr" rid="B25">25</xref>]. As the data comprised log-ratios, data transformation was used to convert these measurements to positive ratios and errors were propagated from the log space to the ratio space.</p>
+    </sec>
+    <sec>
+      <title>Evaluating the algorithms</title>
+      <p>The most reliable criteria to evaluate algorithms applied to microarray data is the ability to recover the knowledge of biological relationships between genes, i.e., whether the suggested metagenes summarize biological knowledge. While there are few well-established benchmarks available to test the validity of metagenes, we use two well studied data sets and biological knowledge of coregulation or functional relationships to evaluate performance. For the first data set, the cell cycle data, the coregulation groups are based on biological knowledge of the yeast cell cycle and comprise 9 overlapping groups with 43 genes [<xref ref-type="bibr" rid="B28">28</xref>]. For the second data set, the Rosetta compendium, accuracy of the metagenes was estimated using ROC analysis based on KEGG metabolic pathways [<xref ref-type="bibr" rid="B32">32</xref>] and predictions of gene relationships compared to MIPS functional classification [<xref ref-type="bibr" rid="B33">33</xref>].</p>
+      <p>To identify membership of genes in each metagene, a threshold must be set. To do this, each row of <bold>P </bold>was normalized to sum to 1, and a correction factor was applied to the corresponding column of <bold>A </bold>to leave <bold>M </bold>unchanged. In order to find the metagenes in <bold>A</bold>, the <italic>Z</italic>-score was calculated for each element in each row by</p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M11" name="1471-2105-7-175-i11" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:msub>
+                  <mml:mi>Z</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mi>k</mml:mi>
+                  </mml:mrow>
+                </mml:msub>
+                <mml:mo>=</mml:mo>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>A</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>i</mml:mi>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:mo>−</mml:mo>
+                    <mml:msub>
+                      <mml:mi>μ</mml:mi>
+                      <mml:mi>i</mml:mi>
+                    </mml:msub>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>σ</mml:mi>
+                      <mml:mi>i</mml:mi>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:mfrac>
+                <mml:mo>,</mml:mo>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mrow>
+                    <mml:mn>12</mml:mn>
+                  </mml:mrow>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaacqWGAbGwdaWgaaWcbaGaemyAaKMaem4AaSgabeaakiabg2da9maalaaabaGaemyqae0aaSbaaSqaaiabdMgaPjabdUgaRbqabaGccqGHsisliiGacqWF8oqBdaWgaaWcbaGaemyAaKgabeaaaOqaaiab=n8aZnaaBaaaleaacqWGPbqAaeqaaaaakiabcYcaSiaaxMaacaWLjaWaaeWaaeaacqaIXaqmcqaIYaGmaiaawIcacaGLPaaaaaa@4303@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>where <italic>μ</italic><sub><italic>i </italic></sub>is the average value for gene <italic>i </italic>in <bold>A</bold>, and <italic>σ</italic><sub><italic>i </italic></sub>is the standard deviation. The same data transformation was done also for <bold>P</bold>, but it was column-based to obtain behavior across metagenes for each condition. Then we assigned gene <italic>i </italic>as a member of metagene <italic>k</italic>, if <italic>Z</italic><sub><italic>ik</italic></sub>was greater than a threshold, <italic>T</italic>. By changing the threshold value for the <italic>Z</italic>-score, we calculated an ROC curve using the procedure outlined below. It is useful to note that each gene may be assigned to multiple metagenes, which allows identification of multiple regulation of genes.</p>
+      <p>1. <bold>Assign genes to metagenes based on the selected threshold. </bold>Generate a Boolean connectivity matrix <bold>C </bold>with dimension of <italic>I </italic>× <italic>K </italic>with <italic>C</italic><sub><italic>ik </italic></sub>= 1, iff gene <italic>i </italic>was assign to metagene <italic>k</italic>.</p>
+      <p>2. <bold>Assign metagenes to biologically verified coregulation groups. </bold>Metagene <italic>k </italic>is assigned to represent coregulation group <italic>G</italic><sub><italic>m </italic></sub>iff the metagene maximizes <inline-formula><mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M12" name="1471-2105-7-175-i12" overflow="scroll"><mml:semantics definitionURL="" encoding=""><mml:mrow><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>i</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mi>G</mml:mi><mml:mi>m</mml:mi></mml:msub></mml:mrow></mml:munder><mml:mrow><mml:msub><mml:mi>C</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mi>k</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:mstyle></mml:mrow><mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaadaaeqbqaaiabdoeadnaaBaaaleaacqWGPbqAcqWGRbWAaeqaaaqaaiabdMgaPjabgIGiolabdEeahnaaBaaameaacqWGTbqBaeqaaaWcbeqdcqGHris5aaaa@384A@</mml:annotation></mml:semantics></mml:math></inline-formula> among all possible <italic>k</italic>, i.e. metagene <italic>k </italic>is the most enriched metagene for genes in group <italic>G</italic><sub><italic>m</italic></sub>.</p>
+      <p>3. <bold>Keep a Boolean correlation matrix R with dimension of </bold><italic>K </italic>× <italic>M</italic>. The value <italic>M </italic>is set by the number of coregulation groups, and <italic>R</italic><sub><italic>km </italic></sub>= 1 iff metagene <italic>k </italic>was assigned to represent coregulation group <italic>G</italic><sub><italic>m</italic></sub>.</p>
+      <p>4. <bold>Calculate the sensitivity and specificity</bold>. The true positive, true negatives, false positives, and false negatives are given by</p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M13" name="1471-2105-7-175-i13" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:mtable columnalign="left">
+                  <mml:mtr columnalign="left">
+                    <mml:mtd columnalign="left">
+                      <mml:mrow>
+                        <mml:mi>T</mml:mi>
+                        <mml:mi>P</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mstyle displaystyle="true">
+                          <mml:munderover>
+                            <mml:mo>∑</mml:mo>
+                            <mml:mrow>
+                              <mml:mi>k</mml:mi>
+                              <mml:mo>=</mml:mo>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                            <mml:mi>K</mml:mi>
+                          </mml:munderover>
+                          <mml:mrow>
+                            <mml:mstyle displaystyle="true">
+                              <mml:munderover>
+                                <mml:mo>∑</mml:mo>
+                                <mml:mrow>
+                                  <mml:mi>m</mml:mi>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mrow>
+                                <mml:mi>M</mml:mi>
+                              </mml:munderover>
+                              <mml:mrow>
+                                <mml:mo>{</mml:mo>
+                                <mml:msub>
+                                  <mml:mi>R</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>k</mml:mi>
+                                    <mml:mi>m</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                                <mml:mstyle displaystyle="true">
+                                  <mml:munder>
+                                    <mml:mo>∑</mml:mo>
+                                    <mml:mrow>
+                                      <mml:mi>g</mml:mi>
+                                      <mml:mo>∈</mml:mo>
+                                      <mml:msub>
+                                        <mml:mi>G</mml:mi>
+                                        <mml:mi>m</mml:mi>
+                                      </mml:msub>
+                                    </mml:mrow>
+                                  </mml:munder>
+                                  <mml:mrow>
+                                    <mml:msub>
+                                      <mml:mi>C</mml:mi>
+                                      <mml:mrow>
+                                        <mml:mi>g</mml:mi>
+                                        <mml:mi>m</mml:mi>
+                                      </mml:mrow>
+                                    </mml:msub>
+                                  </mml:mrow>
+                                </mml:mstyle>
+                                <mml:mo>}</mml:mo>
+                              </mml:mrow>
+                            </mml:mstyle>
+                          </mml:mrow>
+                        </mml:mstyle>
+                      </mml:mrow>
+                    </mml:mtd>
+                  </mml:mtr>
+                  <mml:mtr columnalign="left">
+                    <mml:mtd columnalign="left">
+                      <mml:mrow>
+                        <mml:mi>T</mml:mi>
+                        <mml:mi>N</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mstyle displaystyle="true">
+                          <mml:munderover>
+                            <mml:mo>∑</mml:mo>
+                            <mml:mrow>
+                              <mml:mi>k</mml:mi>
+                              <mml:mo>=</mml:mo>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                            <mml:mi>K</mml:mi>
+                          </mml:munderover>
+                          <mml:mrow>
+                            <mml:mstyle displaystyle="true">
+                              <mml:munderover>
+                                <mml:mo>∑</mml:mo>
+                                <mml:mrow>
+                                  <mml:mi>m</mml:mi>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mrow>
+                                <mml:mi>M</mml:mi>
+                              </mml:munderover>
+                              <mml:mrow>
+                                <mml:mo>{</mml:mo>
+                                <mml:msub>
+                                  <mml:mi>R</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>k</mml:mi>
+                                    <mml:mi>m</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                                <mml:mstyle displaystyle="true">
+                                  <mml:munder>
+                                    <mml:mo>∑</mml:mo>
+                                    <mml:mrow>
+                                      <mml:mi>g</mml:mi>
+                                      <mml:mo>∉</mml:mo>
+                                      <mml:msub>
+                                        <mml:mi>G</mml:mi>
+                                        <mml:mi>m</mml:mi>
+                                      </mml:msub>
+                                    </mml:mrow>
+                                  </mml:munder>
+                                  <mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mo>(</mml:mo>
+                                      <mml:mrow>
+                                        <mml:mn>1</mml:mn>
+                                        <mml:mo>−</mml:mo>
+                                        <mml:msub>
+                                          <mml:mi>C</mml:mi>
+                                          <mml:mrow>
+                                            <mml:mi>g</mml:mi>
+                                            <mml:mi>m</mml:mi>
+                                          </mml:mrow>
+                                        </mml:msub>
+                                      </mml:mrow>
+                                      <mml:mo>)</mml:mo>
+                                    </mml:mrow>
+                                  </mml:mrow>
+                                </mml:mstyle>
+                                <mml:mo>}</mml:mo>
+                              </mml:mrow>
+                            </mml:mstyle>
+                          </mml:mrow>
+                        </mml:mstyle>
+                      </mml:mrow>
+                    </mml:mtd>
+                  </mml:mtr>
+                  <mml:mtr columnalign="left">
+                    <mml:mtd columnalign="left">
+                      <mml:mrow>
+                        <mml:mi>F</mml:mi>
+                        <mml:mi>P</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mstyle displaystyle="true">
+                          <mml:munderover>
+                            <mml:mo>∑</mml:mo>
+                            <mml:mrow>
+                              <mml:mi>k</mml:mi>
+                              <mml:mo>=</mml:mo>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                            <mml:mi>K</mml:mi>
+                          </mml:munderover>
+                          <mml:mrow>
+                            <mml:mstyle displaystyle="true">
+                              <mml:munderover>
+                                <mml:mo>∑</mml:mo>
+                                <mml:mrow>
+                                  <mml:mi>m</mml:mi>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mrow>
+                                <mml:mi>M</mml:mi>
+                              </mml:munderover>
+                              <mml:mrow>
+                                <mml:mo>{</mml:mo>
+                                <mml:msub>
+                                  <mml:mi>R</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>k</mml:mi>
+                                    <mml:mi>m</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                                <mml:mstyle displaystyle="true">
+                                  <mml:munder>
+                                    <mml:mo>∑</mml:mo>
+                                    <mml:mrow>
+                                      <mml:mi>g</mml:mi>
+                                      <mml:mo>∉</mml:mo>
+                                      <mml:msub>
+                                        <mml:mi>G</mml:mi>
+                                        <mml:mi>m</mml:mi>
+                                      </mml:msub>
+                                    </mml:mrow>
+                                  </mml:munder>
+                                  <mml:mrow>
+                                    <mml:msub>
+                                      <mml:mi>C</mml:mi>
+                                      <mml:mrow>
+                                        <mml:mi>g</mml:mi>
+                                        <mml:mi>m</mml:mi>
+                                      </mml:mrow>
+                                    </mml:msub>
+                                  </mml:mrow>
+                                </mml:mstyle>
+                                <mml:mo>}</mml:mo>
+                              </mml:mrow>
+                            </mml:mstyle>
+                          </mml:mrow>
+                        </mml:mstyle>
+                      </mml:mrow>
+                    </mml:mtd>
+                  </mml:mtr>
+                  <mml:mtr columnalign="left">
+                    <mml:mtd columnalign="left">
+                      <mml:mrow>
+                        <mml:mi>F</mml:mi>
+                        <mml:mi>N</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mstyle displaystyle="true">
+                          <mml:munderover>
+                            <mml:mo>∑</mml:mo>
+                            <mml:mrow>
+                              <mml:mi>k</mml:mi>
+                              <mml:mo>=</mml:mo>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                            <mml:mi>K</mml:mi>
+                          </mml:munderover>
+                          <mml:mrow>
+                            <mml:mstyle displaystyle="true">
+                              <mml:munderover>
+                                <mml:mo>∑</mml:mo>
+                                <mml:mrow>
+                                  <mml:mi>m</mml:mi>
+                                  <mml:mo>=</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mrow>
+                                <mml:mi>M</mml:mi>
+                              </mml:munderover>
+                              <mml:mrow>
+                                <mml:mo>{</mml:mo>
+                                <mml:msub>
+                                  <mml:mi>R</mml:mi>
+                                  <mml:mrow>
+                                    <mml:mi>k</mml:mi>
+                                    <mml:mi>m</mml:mi>
+                                  </mml:mrow>
+                                </mml:msub>
+                                <mml:mstyle displaystyle="true">
+                                  <mml:munder>
+                                    <mml:mo>∑</mml:mo>
+                                    <mml:mrow>
+                                      <mml:mi>g</mml:mi>
+                                      <mml:mo>∈</mml:mo>
+                                      <mml:msub>
+                                        <mml:mi>G</mml:mi>
+                                        <mml:mi>m</mml:mi>
+                                      </mml:msub>
+                                    </mml:mrow>
+                                  </mml:munder>
+                                  <mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mo>(</mml:mo>
+                                      <mml:mrow>
+                                        <mml:mn>1</mml:mn>
+                                        <mml:mo>−</mml:mo>
+                                        <mml:msub>
+                                          <mml:mi>C</mml:mi>
+                                          <mml:mrow>
+                                            <mml:mi>g</mml:mi>
+                                            <mml:mi>m</mml:mi>
+                                          </mml:mrow>
+                                        </mml:msub>
+                                      </mml:mrow>
+                                      <mml:mo>)</mml:mo>
+                                    </mml:mrow>
+                                  </mml:mrow>
+                                </mml:mstyle>
+                                <mml:mo>}</mml:mo>
+                              </mml:mrow>
+                            </mml:mstyle>
+                          </mml:mrow>
+                        </mml:mstyle>
+                      </mml:mrow>
+                    </mml:mtd>
+                  </mml:mtr>
+                </mml:mtable>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mrow>
+                    <mml:mn>13</mml:mn>
+                  </mml:mrow>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaafaqaaeabbaaaaeaacqWGubavcqWGqbaucqGH9aqpdaaeWbqaamaaqahabaGaei4EaSNaemOuai1aaSbaaSqaaiabdUgaRjabd2gaTbqabaGcdaaeqbqaaiabdoeadnaaBaaaleaacqWGNbWzcqWGTbqBaeqaaaqaaiabdEgaNjabgIGiolabdEeahnaaBaaameaacqWGTbqBaeqaaaWcbeqdcqGHris5aOGaeiyFa0haleaacqWGTbqBcqGH9aqpcqaIXaqmaeaacqWGnbqta0GaeyyeIuoaaSqaaiabdUgaRjabg2da9iabigdaXaqaaiabdUealbqdcqGHris5aaGcbaGaemivaqLaemOta4Kaeyypa0ZaaabCaeaadaaeWbqaaiabcUha7jabdkfasnaaBaaaleaacqWGRbWAcqWGTbqBaeqaaOWaaabuaeaadaqadaqaaiabigdaXiabgkHiTiabdoeadnaaBaaaleaacqWGNbWzcqWGTbqBaeqaaaGccaGLOaGaayzkaaaaleaacqWGNbWzcqGHjiYZcqWGhbWrdaWgaaadbaGaemyBa0gabeaaaSqab0GaeyyeIuoakiabc2ha9bWcbaGaemyBa0Maeyypa0JaeGymaedabaGaemyta0eaniabggHiLdaaleaacqWGRbWAcqGH9aqpcqaIXaqmaeaacqWGlbWsa0GaeyyeIuoaaOqaaiabdAeagjabdcfaqjabg2da9maaqahabaWaaabCaeaacqGG7bWEcqWGsbGudaWgaaWcbaGaem4AaSMaemyBa0gabeaakmaaqafabaGaem4qam0aaSbaaSqaaiabdEgaNjabd2gaTbqabaaabaGaem4zaCMaeyycI8Saem4raC0aaSbaaWqaaiabd2gaTbqabaaaleqaniabggHiLdGccqGG9bqFaSqaaiabd2gaTjabg2da9iabigdaXaqaaiabd2eanbqdcqGHris5aaWcbaGaem4AaSMaeyypa0JaeGymaedabaGaem4saSeaniabggHiLdaakeaacqWGgbGrcqWGobGtcqGH9aqpdaaeWbqaamaaqahabaGaei4EaSNaemOuai1aaSbaaSqaaiabdUgaRjabd2gaTbqabaGcdaaeqbqaamaabmaabaGaeGymaeJaeyOeI0Iaem4qam0aaSbaaSqaaiabdEgaNjabd2gaTbqabaaakiaawIcacaGLPaaaaSqaaiabdEgaNjabgIGiolabdEeahnaaBaaameaacqWGTbqBaeqaaaWcbeqdcqGHris5aOGaeiyFa0haleaacqWGTbqBcqGH9aqpcqaIXaqmaeaacqWGnbqta0GaeyyeIuoaaSqaaiabdUgaRjabg2da9iabigdaXaqaaiabdUealbqdcqGHris5aaaakiaaxMaacaWLjaWaaeWaaeaacqaIXaqmcqaIZaWmaiaawIcacaGLPaaaaaa@C6C3@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>yielding sensitivity and specificity given by</p>
+      <p>
+        <inline-formula>
+          <mml:math xmlns:mml="http://www.w3.org/1998/Math/MathML" id="M14" name="1471-2105-7-175-i14" overflow="scroll">
+            <mml:semantics definitionURL="" encoding="">
+              <mml:mrow>
+                <mml:mtable>
+                  <mml:mtr>
+                    <mml:mtd>
+                      <mml:mrow>
+                        <mml:mi>S</mml:mi>
+                        <mml:mi>e</mml:mi>
+                        <mml:mi>n</mml:mi>
+                        <mml:mi>s</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:mi>T</mml:mi>
+                            <mml:mi>P</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>T</mml:mi>
+                            <mml:mi>P</mml:mi>
+                            <mml:mo>+</mml:mo>
+                            <mml:mi>F</mml:mi>
+                            <mml:mi>N</mml:mi>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                    </mml:mtd>
+                  </mml:mtr>
+                  <mml:mtr>
+                    <mml:mtd>
+                      <mml:mrow>
+                        <mml:mi>S</mml:mi>
+                        <mml:mi>p</mml:mi>
+                        <mml:mi>e</mml:mi>
+                        <mml:mi>c</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:mi>T</mml:mi>
+                            <mml:mi>N</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>T</mml:mi>
+                            <mml:mi>N</mml:mi>
+                            <mml:mo>+</mml:mo>
+                            <mml:mi>F</mml:mi>
+                            <mml:mi>P</mml:mi>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                    </mml:mtd>
+                  </mml:mtr>
+                </mml:mtable>
+                <mml:mo>.</mml:mo>
+                <mml:mtext>     </mml:mtext>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mrow>
+                    <mml:mn>14</mml:mn>
+                  </mml:mrow>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:annotation encoding="MathType-MTEF">
+ MathType@MTEF@5@5@+=feaafiart1ev1aaatCvAUfKttLearuWrP9MDH5MBPbIqV92AaeXatLxBI9gBaebbnrfifHhDYfgasaacH8akY=wiFfYdH8Gipec8Eeeu0xXdbba9frFj0=OqFfea0dXdd9vqai=hGuQ8kuc9pgc9s8qqaq=dirpe0xb9q8qiLsFr0=vr0=vr0dc8meaabaqaciaacaGaaeqabaqabeGadaaakeaafaqabeGabaaabaGaem4uamLaemyzauMaemOBa4Maem4CamNaeyypa0ZaaSaaaeaacqWGubavcqWGqbauaeaacqWGubavcqWGqbaucqGHRaWkcqWGgbGrcqWGobGtaaaabaGaem4uamLaemiCaaNaemyzauMaem4yamMaeyypa0ZaaSaaaeaacqWGubavcqWGobGtaeaacqWGubavcqWGobGtcqGHRaWkcqWGgbGrcqWGqbauaaaaaiabc6caUiaaxMaacaWLjaWaaeWaaeaacqaIXaqmcqaI0aanaiaawIcacaGLPaaaaaa@4EA8@</mml:annotation>
+            </mml:semantics>
+          </mml:math>
+        </inline-formula>
+      </p>
+      <p>5. <bold>Plot the ROC curve</bold>. The ROC curve is generated by plotting multiple esitmates of the <italic>Sens </italic>and 1 – <italic>Spec </italic>based on different thresholds <italic>T</italic>. We used the trapezoidal rule to approximate the area under ROC curve.</p>
+      <p>In order to identify TN, TP, FP, FN values for Equation 13, a gold standard is required. For figures <xref ref-type="fig" rid="F3">3a</xref> and <xref ref-type="fig" rid="F3">3b</xref>, the cell cycle coregulation groups identified previously from known transcriptional response and transcription factor binding analyses in the yeast cell cycle are used [<xref ref-type="bibr" rid="B28">28</xref>]. For 3c, these groups are not useful, since most of these genes play a criticial role in the cell cycle and are not included in the deletion mutant set (only 5 of 43 genes are included as deletion mutants). For this data set, we instead created coreguation groups from the KEGG metabolic pathways [<xref ref-type="bibr" rid="B32">32</xref>]. These groups are based on the assumption that genes encoding enzymes that together provide a metabolic pathway are likely to be coexpressed. The 11 groups comprising 63 genes are provided in Table <xref ref-type="table" rid="T1">1</xref>.</p>
+      <p>The second way that we evaluated the performance of NMF and LS-NMF was by predicting gene relationships as done by Kim and Tidor [<xref ref-type="bibr" rid="B13">13</xref>]. We assumed that similarity of gene expression profiles as measured by metagenes for different deletion mutants indicated a functional relationship between the deleted genes. We calculated predictions in both the original, unreduced data space (from the <bold>D </bold>matrix) and in the reduced dimensional spaces computed by NMF, LS-NMF, and NMF applied to scaled data (from the <bold>P </bold>matrix). The scaled data was produced by taking the Rosetta data and dividing by the uncertainty estimates. The Pearson correlation coefficient was calculated between all conditions (i.e. deletion mutants), and the absolute value of the correlation coefficient was used as a score for the predicted relationship. The functional relationships between deletion mutants are used as predictors of functional relationships for the deleted genes. From the Rosetta dataset, Pearson correlation coefficients were calculated for all possible pairs of 215 columns in <bold>P </bold>(i.e, all possible deletion mutant combinations). The scores were compared to a threshold for multiple thresholds, and successful predictions of functional relationships were determined by comparison to the MIPS Funcat annotation [<xref ref-type="bibr" rid="B33">33</xref>,<xref ref-type="bibr" rid="B34">34</xref>]. The Funcat annotations are hierarchical, comprising high level (level 1, example 41 DEVELOPMENT) to low level (level 4, example 41.01.03.03 mycelium development) categorizations. In order to have sufficient data for the analysis and to have sufficient fine resolution of function, we focused on the second and third levels of annotation (e.g., 41.01 fungal/microorganismic development, 41.01.03 tissue pattern formation). Two genes appearing in the same MIPS functional category were considered as functionally related. For all combinations of two genes predicted as functionally related by the Pearson correlation test of their deletion mutants, the total number of successful predictions were determined. The fraction of successful predictions were then plotted as the threshold was reduced and the number of predictions increased. In cases where genes do not have a MIPS functional assignment at the desired level or were classified as "UNCLASSIFIED PROTEINS", the corresponding deletion mutants were removed from the analysis. This left 168 genes at level 3, where MIPS has 441 different classifications, and 180 genes at level 2, where MIPS has 158 different classifications.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>GW performed all analyses presented in this work, developed the new update equations for LS-NMF, and coded the LS-NMF algorithm. AVK analyzed the KEGG metabolic pathways and created the genes lists presented in Table <xref ref-type="table" rid="T1">1</xref> by comparison to the Rosetta deletion mutant data. MFO oversaw the project and suggested the use of the <italic>χ</italic><sup>2 </sup>measure to improve NMF.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <sec>
+      <title>Acknowledgements</title>
+      <p>This work was supported by NIH through the National Library of Medicine (LM008309 to mfo) and the NCI CCSG grant (CA06927 supporting mfo), and the Pennsylvania Department of Health.</p>
+    </sec>
+  </ack>
+  <ref-list>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ochs</surname>
+            <given-names>MF</given-names>
+          </name>
+          <name>
+            <surname>Godwin</surname>
+            <given-names>AK</given-names>
+          </name>
+        </person-group>
+        <article-title>Microarrays in cancer: research and applications</article-title>
+        <source>Biotechniques</source>
+        <year>2003</year>
+        <volume>34</volume>
+        <fpage>S4</fpage>
+        <lpage>S15</lpage>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eisen</surname>
+            <given-names>MB</given-names>
+          </name>
+          <name>
+            <surname>Spellman</surname>
+            <given-names>PT</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>PO</given-names>
+          </name>
+          <name>
+            <surname>Botstein</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Cluster analysis and display of genome-wide expression patterns</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>1998</year>
+        <volume>95</volume>
+        <fpage>14863</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="pmid">9843981</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.95.25.14863</pub-id>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lukashin</surname>
+            <given-names>AV</given-names>
+          </name>
+          <name>
+            <surname>Fuchs</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis of temporal gene expression profiles: clustering by simulated annealing and determining the optimal number of clusters</article-title>
+        <source>Bioinformatics</source>
+        <year>2001</year>
+        <volume>17</volume>
+        <fpage>405</fpage>
+        <lpage>14</lpage>
+        <pub-id pub-id-type="pmid">11331234</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/17.5.405</pub-id>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ben-Dor</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Shamir</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Yakhini</surname>
+            <given-names>Z</given-names>
+          </name>
+        </person-group>
+        <article-title>Clustering gene expression patterns</article-title>
+        <source>J Comput Biol</source>
+        <year>1999</year>
+        <volume>6</volume>
+        <fpage>281</fpage>
+        <lpage>97</lpage>
+        <pub-id pub-id-type="pmid">10582567</pub-id>
+        <pub-id pub-id-type="doi">10.1089/106652799318274</pub-id>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Heyer</surname>
+            <given-names>LJ</given-names>
+          </name>
+          <name>
+            <surname>Kruglyak</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Yooseph</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Exploring expression data: identification and analysis of coexpressed genes</article-title>
+        <source>Genome Res</source>
+        <year>1999</year>
+        <volume>9</volume>
+        <fpage>1106</fpage>
+        <lpage>15</lpage>
+        <pub-id pub-id-type="pmid">10568750</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.9.11.1106</pub-id>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gasch</surname>
+            <given-names>AP</given-names>
+          </name>
+          <name>
+            <surname>Eisen</surname>
+            <given-names>MB</given-names>
+          </name>
+        </person-group>
+        <article-title>Exploring the conditional coregulation of yeast gene expression through fuzzy k-means clustering</article-title>
+        <source>Genome Biol</source>
+        <year>2002</year>
+        <volume>3</volume>
+        <comment>RESEARCH0059</comment>
+        <pub-id pub-id-type="pmid">12429058</pub-id>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Getz</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Levine</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Domany</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Coupled two-way clustering analysis of gene microarray data</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2000</year>
+        <volume>97</volume>
+        <fpage>12079</fpage>
+        <lpage>84</lpage>
+        <pub-id pub-id-type="pmid">11035779</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.210134797</pub-id>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tanay</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Sharan</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Shamir</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Discovering statistically significant biclusters in gene expression data</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>S136</fpage>
+        <lpage>44</lpage>
+        <pub-id pub-id-type="pmid">12169541</pub-id>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Moloshok</surname>
+            <given-names>TD</given-names>
+          </name>
+          <name>
+            <surname>Klevecz</surname>
+            <given-names>RR</given-names>
+          </name>
+          <name>
+            <surname>Grant</surname>
+            <given-names>JD</given-names>
+          </name>
+          <name>
+            <surname>Manion</surname>
+            <given-names>FJ</given-names>
+          </name>
+          <name>
+            <surname>Speier</surname>
+            <given-names>WFt</given-names>
+          </name>
+          <name>
+            <surname>Ochs</surname>
+            <given-names>MF</given-names>
+          </name>
+        </person-group>
+        <article-title>Application of Bayesian Decomposition for analysing microarray data</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>566</fpage>
+        <lpage>75</lpage>
+        <pub-id pub-id-type="pmid">12016054</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/18.4.566</pub-id>
+      </citation>
+    </ref>
+    <ref id="B10">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ochs</surname>
+            <given-names>MF</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Parmigiani G, Garrett E, Irizarry R, Zeger S</surname>
+          </name>
+        </person-group>
+        <article-title>Bayesian Decomposition</article-title>
+        <source>The Analysis of Gene Expression Data: Methods and Software</source>
+        <year>2003</year>
+        <publisher-name>New York: Springer Verlag</publisher-name>
+      </citation>
+    </ref>
+    <ref id="B11">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Alter</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>PO</given-names>
+          </name>
+          <name>
+            <surname>Botstein</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Singular value decomposition for genome-wide expression data processing and modeling</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2000</year>
+        <volume>97</volume>
+        <fpage>10101</fpage>
+        <lpage>6</lpage>
+        <pub-id pub-id-type="pmid">10963673</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.97.18.10101</pub-id>
+      </citation>
+    </ref>
+    <ref id="B12">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lee</surname>
+            <given-names>SI</given-names>
+          </name>
+          <name>
+            <surname>Batzoglou</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>Application of independent component analysis to microarrays</article-title>
+        <source>Genome Biol</source>
+        <year>2003</year>
+        <volume>4</volume>
+        <fpage>R76</fpage>
+        <comment>[1465–6914 (Electronic) Journal Article]</comment>
+        <pub-id pub-id-type="pmid">14611662</pub-id>
+        <pub-id pub-id-type="doi">10.1186/gb-2003-4-11-r76</pub-id>
+      </citation>
+    </ref>
+    <ref id="B13">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kim</surname>
+            <given-names>PM</given-names>
+          </name>
+          <name>
+            <surname>Tidor</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>Subsystem identification through dimensionality reduction of large-scale gene expression data</article-title>
+        <source>Genome Res</source>
+        <year>2003</year>
+        <volume>13</volume>
+        <fpage>1706</fpage>
+        <lpage>18</lpage>
+        <pub-id pub-id-type="pmid">12840046</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.903503</pub-id>
+      </citation>
+    </ref>
+    <ref id="B14">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zhang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wei</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>Computational decomposition of molecular signatures based on blind source separation of non-negative dependent sources with NMF</article-title>
+        <source>IEEE 13th Workshop on Neural Networks for Signal Processing, 2003</source>
+        <year>2003</year>
+        <fpage>409</fpage>
+        <lpage>418</lpage>
+      </citation>
+    </ref>
+    <ref id="B15">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brunet</surname>
+            <given-names>JP</given-names>
+          </name>
+          <name>
+            <surname>Tamayo</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Golub</surname>
+            <given-names>TR</given-names>
+          </name>
+          <name>
+            <surname>Mesirov</surname>
+            <given-names>JP</given-names>
+          </name>
+        </person-group>
+        <article-title>Metagenes and molecular pattern discovery using matrix factorization</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2004</year>
+        <volume>101</volume>
+        <fpage>4164</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="pmid">15016911</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.0308531101</pub-id>
+      </citation>
+    </ref>
+    <ref id="B16">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sibisi</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Skilling</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Prior distributions on measure space</article-title>
+        <source>Journal of the Royal Statistical Society, B</source>
+        <year>1997</year>
+        <volume>59</volume>
+        <fpage>217</fpage>
+        <lpage>235</lpage>
+        <pub-id pub-id-type="doi">10.1111/1467-9868.00065</pub-id>
+      </citation>
+    </ref>
+    <ref id="B17">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bidaut</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Ochs</surname>
+            <given-names>MF</given-names>
+          </name>
+        </person-group>
+        <article-title>ClutrFree: cluster tree visualization and interpretation</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>2869</fpage>
+        <lpage>71</lpage>
+        <pub-id pub-id-type="pmid">15145813</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bth307</pub-id>
+      </citation>
+    </ref>
+    <ref id="B18">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ideker</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Thorsson</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Siegel</surname>
+            <given-names>AF</given-names>
+          </name>
+          <name>
+            <surname>Hood</surname>
+            <given-names>LE</given-names>
+          </name>
+        </person-group>
+        <article-title>Testing for differentially-expressed genes by maximum-likelihood analysis of microarray data</article-title>
+        <source>J Comput Biol</source>
+        <year>2000</year>
+        <volume>7</volume>
+        <fpage>805</fpage>
+        <lpage>17</lpage>
+        <pub-id pub-id-type="pmid">11382363</pub-id>
+        <pub-id pub-id-type="doi">10.1089/10665270050514945</pub-id>
+      </citation>
+    </ref>
+    <ref id="B19">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Newton</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Kendziorski</surname>
+            <given-names>CM</given-names>
+          </name>
+          <name>
+            <surname>Richmond</surname>
+            <given-names>CS</given-names>
+          </name>
+          <name>
+            <surname>Blattner</surname>
+            <given-names>FR</given-names>
+          </name>
+          <name>
+            <surname>Tsui</surname>
+            <given-names>KW</given-names>
+          </name>
+        </person-group>
+        <article-title>On differential variability of expression ratios: improving statistical inference about gene expression changes from microarray data</article-title>
+        <source>J Comput Biol</source>
+        <year>2001</year>
+        <volume>8</volume>
+        <fpage>37</fpage>
+        <lpage>52</lpage>
+        <pub-id pub-id-type="pmid">11339905</pub-id>
+        <pub-id pub-id-type="doi">10.1089/106652701300099074</pub-id>
+      </citation>
+    </ref>
+    <ref id="B20">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tusher</surname>
+            <given-names>VG</given-names>
+          </name>
+          <name>
+            <surname>Tibshirani</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Chu</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>Significance analysis of microarrays applied to the ionizing radiation response</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <fpage>5116</fpage>
+        <lpage>21</lpage>
+        <pub-id pub-id-type="pmid">11309499</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.091062498</pub-id>
+      </citation>
+    </ref>
+    <ref id="B21">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kerr</surname>
+            <given-names>MK</given-names>
+          </name>
+          <name>
+            <surname>Afshari</surname>
+            <given-names>CA</given-names>
+          </name>
+          <name>
+            <surname>Bennett</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Bushel</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Martinez</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Walker</surname>
+            <given-names>NJ</given-names>
+          </name>
+          <name>
+            <surname>Churchill</surname>
+            <given-names>GA</given-names>
+          </name>
+        </person-group>
+        <article-title>Statistical analysis of a gene expression microarray experiment with replication</article-title>
+        <source>Statistica Sinica</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>203</fpage>
+        <lpage>218</lpage>
+      </citation>
+    </ref>
+    <ref id="B22">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sanguinetti</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Milo</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Rattray</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Lawrence</surname>
+            <given-names>ND</given-names>
+          </name>
+        </person-group>
+        <article-title>Accounting for probe-level noise in principal component analysis of microarray data</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>3748</fpage>
+        <lpage>54</lpage>
+        <comment>[1367–4803 (Print) Evaluation Studies Journal Article]</comment>
+        <pub-id pub-id-type="pmid">16091409</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti617</pub-id>
+      </citation>
+    </ref>
+    <ref id="B23">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pochet</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>De Smet</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Suykens</surname>
+            <given-names>JA</given-names>
+          </name>
+          <name>
+            <surname>De Moor</surname>
+            <given-names>BL</given-names>
+          </name>
+        </person-group>
+        <article-title>Systematic benchmarking of microarray data classification: assessing the role of non-linearity and dimensionality reduction</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>3185</fpage>
+        <lpage>95</lpage>
+        <comment>[1367–4803 (Print) Evaluation Studies Journal Article Validation Studies]</comment>
+        <pub-id pub-id-type="pmid">15231531</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bth383</pub-id>
+      </citation>
+    </ref>
+    <ref id="B24">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cho</surname>
+            <given-names>RJ</given-names>
+          </name>
+          <name>
+            <surname>Campbell</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Winzeler</surname>
+            <given-names>EA</given-names>
+          </name>
+          <name>
+            <surname>Steinmetz</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Conway</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Wodicka</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Wolfsberg</surname>
+            <given-names>TG</given-names>
+          </name>
+          <name>
+            <surname>Gabrielian</surname>
+            <given-names>AE</given-names>
+          </name>
+          <name>
+            <surname>Landsman</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Lockhart</surname>
+            <given-names>DJ</given-names>
+          </name>
+          <name>
+            <surname>Davis</surname>
+            <given-names>RW</given-names>
+          </name>
+        </person-group>
+        <article-title>A genome-wide transcriptional analysis of the mitotic cell cycle</article-title>
+        <source>Mol Cell</source>
+        <year>1998</year>
+        <volume>2</volume>
+        <fpage>65</fpage>
+        <lpage>73</lpage>
+        <pub-id pub-id-type="pmid">9702192</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S1097-2765(00)80114-8</pub-id>
+      </citation>
+    </ref>
+    <ref id="B25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hughes</surname>
+            <given-names>TR</given-names>
+          </name>
+          <name>
+            <surname>Marton</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Jones</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Roberts</surname>
+            <given-names>CJ</given-names>
+          </name>
+          <name>
+            <surname>Stoughton</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Armour</surname>
+            <given-names>CD</given-names>
+          </name>
+          <name>
+            <surname>Bennett</surname>
+            <given-names>HA</given-names>
+          </name>
+          <name>
+            <surname>Coffey</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Dai</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>He</surname>
+            <given-names>YD</given-names>
+          </name>
+          <name>
+            <surname>Kidd</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>King</surname>
+            <given-names>AM</given-names>
+          </name>
+          <name>
+            <surname>Meyer</surname>
+            <given-names>MR</given-names>
+          </name>
+          <name>
+            <surname>Slade</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Lum</surname>
+            <given-names>PY</given-names>
+          </name>
+          <name>
+            <surname>Stepaniants</surname>
+            <given-names>SB</given-names>
+          </name>
+          <name>
+            <surname>Shoemaker</surname>
+            <given-names>DD</given-names>
+          </name>
+          <name>
+            <surname>Gachotte</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Chakraburtty</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Simon</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Bard</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Friend</surname>
+            <given-names>SH</given-names>
+          </name>
+        </person-group>
+        <article-title>Functional discovery via a compendium of expression profiles</article-title>
+        <source>Cell</source>
+        <year>2000</year>
+        <volume>102</volume>
+        <fpage>109</fpage>
+        <lpage>26</lpage>
+        <pub-id pub-id-type="pmid">10929718</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0092-8674(00)00015-5</pub-id>
+      </citation>
+    </ref>
+    <ref id="B26">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>West</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Blanchette</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Dressman</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Huang</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Ishida</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Spang</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Zuzan</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Olson</surname>
+            <given-names>JJA</given-names>
+          </name>
+          <name>
+            <surname>Marks</surname>
+            <given-names>JR</given-names>
+          </name>
+          <name>
+            <surname>Nevins</surname>
+            <given-names>JR</given-names>
+          </name>
+        </person-group>
+        <article-title>Predicting the clinical status of human breast cancer by using gene expression profiles</article-title>
+        <source>Proc Nail Acad Sci USA</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <fpage>11462</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.201162998</pub-id>
+      </citation>
+    </ref>
+    <ref id="B27">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Huang</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Ishida</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Pittman</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Dressman</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Bild</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Kloos</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>D'Amico</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Pestell</surname>
+            <given-names>RG</given-names>
+          </name>
+          <name>
+            <surname>West</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Nevins</surname>
+            <given-names>JR</given-names>
+          </name>
+        </person-group>
+        <article-title>Gene expression phenotypic models that predict the activity of oncogenic pathways</article-title>
+        <source>Nat Genet</source>
+        <year>2003</year>
+        <volume>34</volume>
+        <fpage>226</fpage>
+        <lpage>30</lpage>
+        <pub-id pub-id-type="pmid">12754511</pub-id>
+        <pub-id pub-id-type="doi">10.1038/ng1167</pub-id>
+      </citation>
+    </ref>
+    <ref id="B28">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cherepinsky</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Feng</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Rejali</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Mishra</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>Shrinkage-based similarity metric for cluster analysis of microarry data</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2003</year>
+        <volume>100</volume>
+        <fpage>9668</fpage>
+        <lpage>73</lpage>
+        <pub-id pub-id-type="pmid">12902543</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.1633770100</pub-id>
+      </citation>
+    </ref>
+    <ref id="B29">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Geman</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Geman</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Stochastic relaxation, Gibbs distributions, and the Bayesian restoration of images</article-title>
+        <source>IEEE Transactions on Pattern Analysis and Machine Intelligence</source>
+        <year>1984</year>
+        <volume>PAMI-6</volume>
+        <fpage>721</fpage>
+        <lpage>741</lpage>
+      </citation>
+    </ref>
+    <ref id="B30">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lee</surname>
+            <given-names>DD</given-names>
+          </name>
+          <name>
+            <surname>Seung</surname>
+            <given-names>HS</given-names>
+          </name>
+        </person-group>
+        <article-title>Learning the parts of objects by non-negative matrix factorization</article-title>
+        <source>Nature</source>
+        <year>1999</year>
+        <volume>401</volume>
+        <fpage>788</fpage>
+        <lpage>91</lpage>
+        <pub-id pub-id-type="pmid">10548103</pub-id>
+        <pub-id pub-id-type="doi">10.1038/44565</pub-id>
+      </citation>
+    </ref>
+    <ref id="B31">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lee</surname>
+            <given-names>DD</given-names>
+          </name>
+          <name>
+            <surname>Seung</surname>
+            <given-names>HS</given-names>
+            <suffix>(Eds)</suffix>
+          </name>
+        </person-group>
+        <source>Algorithms for non-negative matrix factorization Advances in Neural Information Processing Systems 13</source>
+        <year>2001</year>
+      </citation>
+    </ref>
+    <ref id="B32">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kanehisa</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Goto</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Kawashima</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Nakaya</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>The KEGG databases at GenomeNet</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>42</fpage>
+        <lpage>6</lpage>
+        <pub-id pub-id-type="pmid">11752249</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/30.1.42</pub-id>
+      </citation>
+    </ref>
+    <ref id="B33">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Guldener</surname>
+            <given-names>U</given-names>
+          </name>
+          <name>
+            <surname>Munsterkotter</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Kastenmuller</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Strack</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>van Helden</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Lemer</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Richelles</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wodak</surname>
+            <given-names>SJ</given-names>
+          </name>
+          <name>
+            <surname>Garcia-Martinez</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Perez-Ortin</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Michael</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Kaps</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Talla</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Dujon</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Andre</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Souciet</surname>
+            <given-names>JL</given-names>
+          </name>
+          <name>
+            <surname>De Montigny</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Bon</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Gaillardin</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Mewes</surname>
+            <given-names>HW</given-names>
+          </name>
+        </person-group>
+        <article-title>CYGD: the Comprehensive Yeast Genome Database</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2005</year>
+        <fpage>D364</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="pmid">15608217</pub-id>
+      </citation>
+    </ref>
+    <ref id="B34">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mewes</surname>
+            <given-names>HW</given-names>
+          </name>
+          <name>
+            <surname>Amid</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Arnold</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Frishman</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Guldener</surname>
+            <given-names>U</given-names>
+          </name>
+          <name>
+            <surname>Mannhaupt</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Munsterkotter</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Pagel</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Strack</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Stumpflen</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Warfsmann</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Ruepp</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>MIPS: analysis and annotation of proteins from whole genomes</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2004</year>
+        <fpage>D41</fpage>
+        <lpage>4</lpage>
+        <pub-id pub-id-type="pmid">14681354</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/gkh092</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig position="float" id="F1">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Fits to the Data</bold>. The comparison of LS-NMF and NMF for fitting data is shown for the Rosetta Compendium. NMF is based on root mean squared deviation (RMSD) fitting, and as the number of dimensions increases, the fit improves with potential overfitting possible. The <italic>χ</italic><sup>2 </sup>measurement provides the standard measure of fit to the data and shows how the LS-NMF method fits data much better once individual uncertainty measurements are considered.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-7-175-1"/>
+    </fig>
+    <fig position="float" id="F2">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Misfit in M</bold>. The error between portions of the <bold>M </bold>and <bold>D </bold>matrices is shown as the dimensionality increases for the Rosetta data as fit by LS-NMF. The bottom 25% of the genes in terms of precision (i.e., highest variance) are shown together with the top 25%. Since LS-NMF relies on the variance, the algorithm fits the reliable data with improving accuracy, while ignoring poor data in terms of RMSD as the dimensionality increases.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-7-175-2"/>
+    </fig>
+    <fig position="float" id="F3">
+      <label>Figure 3</label>
+      <caption>
+        <p><bold>ROC Analysis of Yeast Cell Cycle and Rosetta Data Sets</bold>. ROC analysis for NMF and LS-NMF for the yeast cell cycle data is summarized in sections a and b, while section c shows the results for the Rosetta Compendium analysis, where variance estimates are available. In a, the total area under the ROC curves is shown for LS-NMF (solid line) and NMF (dashed line). In b, LS-NMF and NMF are compared to hierarchical clustering at a single dimensionality (the LS-NMF and NMF curves are superimposed as there is no difference). In c, the areas under the ROC curve for analysis of the Rosetta data are shown for LS-NMF (solid line), NMF (dash-dot line), K-means clustering (dashed line), and NMF on scaled data (C-NMF, dotted line). Here the variance information allows far better results to be obtained, either by scaling or by use of LS-NMF. The advantages of the approach used in LS-NMF are discussed in the text.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-7-175-3"/>
+    </fig>
+    <fig position="float" id="F4">
+      <label>Figure 4</label>
+      <caption>
+        <p><bold>Comparisons of Metagenes and MIPS Functional Classes</bold>. Evaluation of metagenes for LS-NMF, NMF, and NMF on scaled data, as well as expression profiles for unreduced data, was done by determining the ability of each approach to find functionally related genes based on the MIPS functional classification. In a, the fraction of correct classifications at level 2 in the MIPS ontology are shown in terms of increasing numbers of gene pairs (i.e., decreasing threshold for correlation). In b, the same information is shown for level 3 in the MIPS ontology. The performance of NMF can be improved by utilizing a divergence based update rule, however performance is still significantly below LS-NMF, with recovery ranging from 12 to 30 times greater with LS-NMF.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-7-175-4"/>
+    </fig>
+    <table-wrap position="float" id="T1">
+      <label>Table 1</label>
+      <caption>
+        <p>Coregulation Groups for Rosetta ROC Analysis. This table provides groups of genes that are believed to be coregulated based on the metabolic pathways of <italic>S. cerevisiae </italic>as summarized in the KEGG database.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td align="center" colspan="3">Coregulation Groups</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">Group</td>
+            <td align="center">KEGG Pathway</td>
+            <td align="center">Genes</td>
+          </tr>
+          <tr>
+            <td colspan="3">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="center">1</td>
+            <td align="center">glucose fermentation</td>
+            <td align="center">ADH5 ALD5 ADH4 ADH2 ADH1 ALD4</td>
+          </tr>
+          <tr>
+            <td align="center">2</td>
+            <td align="center">phenylalanine degradation</td>
+            <td align="center">ADH5 ARO10 ADH4 ARO9 ADH2 ADH1</td>
+          </tr>
+          <tr>
+            <td align="center">3</td>
+            <td align="center">sulfate assimilation pathway II</td>
+            <td align="center">MET10 MET3 ECM17 MET14 MET17 MET16</td>
+          </tr>
+          <tr>
+            <td align="center">4</td>
+            <td align="center">gluconeogenesis</td>
+            <td align="center">TDH2 PCK1 YMR323W ERR1 ERR2</td>
+          </tr>
+          <tr>
+            <td align="center">5</td>
+            <td align="center">serine-isocitrate lyase pathway</td>
+            <td align="center">CIT2 ACO1 YMR323W ERR1 ERR2</td>
+          </tr>
+          <tr>
+            <td align="center">6</td>
+            <td align="center">TCA cycle, aerobic respiration</td>
+            <td align="center">CIT2 KGD2 ACO1 IDH1 IDH2</td>
+          </tr>
+          <tr>
+            <td align="center">7</td>
+            <td align="center">tryptophan degradation</td>
+            <td align="center">ADH5 ARO10 ADH4 ADH2 ADH1</td>
+          </tr>
+          <tr>
+            <td align="center">8</td>
+            <td align="center">glycolysis</td>
+            <td align="center">TDH2 YMR323W ERR1 ERR2</td>
+          </tr>
+          <tr>
+            <td align="center">9</td>
+            <td align="center">histidine biosynthesis</td>
+            <td align="center">HIS7 HIS4 HIS5 HIS3</td>
+          </tr>
+          <tr>
+            <td align="center">10</td>
+            <td align="center">leucine biosynthesis</td>
+            <td align="center">LEU2 LEU1 BAT1 LEU4</td>
+          </tr>
+          <tr>
+            <td align="center">11</td>
+            <td align="center">tryptophan degradation via kynurenine</td>
+            <td align="center">BNA4 BNA1 BNA2 BNA5</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+  </sec>
+</back>

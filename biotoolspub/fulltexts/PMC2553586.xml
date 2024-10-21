@@ -1,0 +1,920 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <?epub August-1-2008?>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">nar</journal-id>
+    <journal-id journal-id-type="hwp">nar</journal-id>
+    <journal-title-group>
+      <journal-title>Nucleic Acids Research</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2553586</article-id>
+    <article-id pub-id-type="pmid">18676452</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gkn430</article-id>
+    <article-id pub-id-type="publisher-id">gkn430</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Methods Online</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Consolidated strategy for the analysis of microarray spike-in data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>McCall</surname>
+          <given-names>Matthew N.</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>Rafael A.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="COR1">*</xref>
+      </contrib>
+    </contrib-group>
+    <aff>Department of Biostatistics, Johns Hopkins University, 615 N. Wolfe Street, Baltimore, MD 21205, USA</aff>
+    <author-notes>
+      <corresp id="COR1">*To whom correspondence should be addressed. Tel: <phone>+1 410 614 5157</phone>; Fax: <fax>+1 410 955 0958</fax>; Email: <email>ririzarr@jhsph.edu</email></corresp>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <month>10</month>
+      <year>2008</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>1</day>
+      <month>8</month>
+      <year>2008</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>1</day>
+      <month>8</month>
+      <year>2008</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="epub"/>. -->
+    <volume>36</volume>
+    <issue>17</issue>
+    <fpage>e108</fpage>
+    <lpage>e108</lpage>
+    <history>
+      <date date-type="received">
+        <day>17</day>
+        <month>4</month>
+        <year>2008</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>19</day>
+        <month>6</month>
+        <year>2008</year>
+      </date>
+      <date date-type="accepted">
+        <day>20</day>
+        <month>6</month>
+        <year>2008</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© 2008 The Author(s)</copyright-statement>
+      <copyright-year>2008</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">http://creativecommons.org/licenses/by-nc/2.0/uk/</ext-link>) which permits unrestricted non-commercial use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p>As the number of users of microarray technology continues to grow, so does the importance of platform assessments and comparisons. Spike-in experiments have been successfully used for internal technology assessments by microarray manufacturers and for comparisons of competing data analysis approaches. The microarray literature is saturated with statistical assessments based on spike-in experiment data. Unfortunately, the statistical assessments vary widely and are applicable only in specific cases. This has introduced confusion into the debate over best practices with regards to which platform, protocols and data analysis tools are best. Furthermore, cross-platform comparisons have proven difficult because reported concentrations are not comparable. In this article, we introduce two new spike-in experiments, present a novel statistical solution that enables cross-platform comparisons, and propose a comprehensive procedure for assessments based on spike-in experiments. The ideas are implemented in a user friendly Bioconductor package: spkTools. We demonstrated the utility of our tools by presenting the first spike-in-based comparison of the three major platforms–Affymetrix, Agilent and Illumina.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>Assessing sensitivity presents a challenge for microarray technology because one needs experimental designs in which the correct outcome for a given measurement is known <italic>a priori</italic>. Spike-ins provide a way to do this and are therefore used extensively for assessment purposes (<xref ref-type="bibr" rid="B1 B2 B3 B4 B5 B6 B7 B8">1–8</xref>). In fact, spike-in experiments will be integral to government-led projects that will help determine the practicality of microarrays in clinical applications. An example is the External RNA Control Consortium (ERCC) (<xref ref-type="bibr" rid="B9">9</xref>), led by the National Institute for Standards and Technology (NIST). Creating well-characterized, tested RNA spike-in controls is the first goal of the ERCC. Proper statistical analysis strategies for the data generated by these experiments are indispensable. Unfortunately, the statistical assessments for spike-in experiments presented in the literature vary widely and are not generally applicable. For reasons explained in detail below, comparisons across platforms are particularly problematic. In this article, we propose a consolidated strategy that builds on a widely used benchmark methodology (<xref ref-type="bibr" rid="B10">10</xref>): we assessed specificity and sensitivity in a way that can be easily related to practical performance. We propose a solution to the cross-platform problem and demonstrate its use by analyzing data from spike-in experiments performed by Affymetrix, Agilent and Illumina. The data were preprocessed with the most commonly used procedures, as described in the next section. We refer to the processed data (in log<sub>2</sub> scale) as <italic>expression values</italic>.</p>
+    <p>An important fact that has been overlooked by previous assessments is that microarray performance largely depends on concentration levels (<xref ref-type="bibr" rid="B11">11</xref>). Assessments based on experiments for which spike-in concentrations lead to unusually high expression measurements have resulted in misleading conclusions (<xref ref-type="bibr" rid="B12">12</xref>). For this reason, it is essential that the distribution of observed expression for the spike-in transcripts reflects the distributions seen in typical experiments. <xref ref-type="fig" rid="F1">Figure 1</xref> shows the typical distribution of expression values for the background RNA for the three studied data sets. The tick marks on the <italic>x</italic>-axis represent the average expression at each reported spike-in level. This figure illustrates that the spike-in transcripts resulted in higher expression measurements, on average, than the background RNA transcripts. Furthermore, we see that, relative to their respective background RNA distributions, the Agilent and Illumina spike-ins have higher observed expression than those in the Affymetrix experiment. Previous work (<xref ref-type="bibr" rid="B11">11</xref>) suggests that comparing platform performance without correcting for this leaves Affymetrix at a disadvantage.
+<fig id="F1" position="float"><label>Figure 1.</label><caption><p>Empirical densities. These plots depict the empirical density of the average (across arrays) expression values for the background RNA. The tick marks on the <italic>x</italic>-axis show the average expression at each nominal concentration. The dotted lines represent the cut points for low, medium and high ALE values (defined in text).</p></caption><graphic xlink:href="gkn430f1"/></fig></p>
+    <p>For spike-in experiments to be useful in a cross-study assessment, we need to understand how the reported nominal concentrations relate across data sets. The reported concentrations attempt to quantify the amount of spike-in RNA in a sample relative to the total amount of RNA. However, in our experience, the reported values are impossible to relate between the different manufacturers. One reason is that two approaches have been used: (i) adding prelabeled spike-ins to the target solution just before hybridization and (ii) adding spike-ins to the total RNA at the beginning of amplification. We prefer the second approach because it better imitates a real experiment (<xref ref-type="bibr" rid="B13">13</xref>). Specifically, it reproduces the technical variation due to cDNA synthesis, fragmentation, labeling and hybridization. However, the Affymetrix and Illumina data presented in this article are from experiments that followed the first approach, while the Agilent experiment followed the second approach. A molarity calculation is easy to perform in the first approach but difficult in the second because the only true known values in the experiment are the mass of the spike-in and the mass of total RNA. For this reason, Agilent reports nominal values in different units (relative concentration) than Affymetrix and Illumina [picomolar (pM)]. However, even when picomolar concentrations are reported we find that nominal concentrations do not map well across experiments (<xref ref-type="table" rid="T1">Table 1</xref>). We hope that the ERCC will solve this problem by standardizing protocols. Here, we propose a data-driven solution that permits cross-platform comparison with existing data sets.
+<table-wrap id="T1" position="float"><label>Table 1.</label><caption><p>Nominal concentration to ALE mapping</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th rowspan="1" colspan="1">Reported nominal concentration</th><th rowspan="1" colspan="1">Average expression value</th><th rowspan="1" colspan="1">Proportion of genes below</th><th rowspan="1" colspan="1">ALE strata</th><th rowspan="1" colspan="1">SD</th></tr></thead><tbody align="left"><tr><td rowspan="1" colspan="1"><bold>Affymetrix (pM)</bold></td></tr><tr><td rowspan="1" colspan="1">0.125</td><td rowspan="1" colspan="1">5.1</td><td rowspan="1" colspan="1">0.35</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">0.87</td></tr><tr><td rowspan="1" colspan="1">0.250</td><td rowspan="1" colspan="1">5.2</td><td rowspan="1" colspan="1">0.38</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">0.90</td></tr><tr><td rowspan="1" colspan="1">0.500</td><td rowspan="1" colspan="1">5.3</td><td rowspan="1" colspan="1">0.40</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">0.74</td></tr><tr><td rowspan="1" colspan="1">1.000</td><td rowspan="1" colspan="1">5.7</td><td rowspan="1" colspan="1">0.48</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">0.72</td></tr><tr><td rowspan="1" colspan="1">2.000</td><td rowspan="1" colspan="1">6.4</td><td rowspan="1" colspan="1">0.62</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.82</td></tr><tr><td rowspan="1" colspan="1">4.000</td><td rowspan="1" colspan="1">7.1</td><td rowspan="1" colspan="1">0.73</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.79</td></tr><tr><td rowspan="1" colspan="1">8.000</td><td rowspan="1" colspan="1">7.8</td><td rowspan="1" colspan="1">0.82</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.68</td></tr><tr><td rowspan="1" colspan="1">16.000</td><td rowspan="1" colspan="1">8.4</td><td rowspan="1" colspan="1">0.89</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.67</td></tr><tr><td rowspan="1" colspan="1">32.000</td><td rowspan="1" colspan="1">9.3</td><td rowspan="1" colspan="1">0.94</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.79</td></tr><tr><td rowspan="1" colspan="1">64.000</td><td rowspan="1" colspan="1">10.2</td><td rowspan="1" colspan="1">0.97</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.72</td></tr><tr><td rowspan="1" colspan="1">128.000</td><td rowspan="1" colspan="1">11.2</td><td rowspan="1" colspan="1">0.99</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.54</td></tr><tr><td rowspan="1" colspan="1">256.000</td><td rowspan="1" colspan="1">12.0</td><td rowspan="1" colspan="1">0.99</td><td rowspan="1" colspan="1">High</td><td rowspan="1" colspan="1">0.49</td></tr><tr><td rowspan="1" colspan="1">512.000</td><td rowspan="1" colspan="1">12.6</td><td rowspan="1" colspan="1">1.00</td><td rowspan="1" colspan="1">High</td><td rowspan="1" colspan="1">0.51</td></tr><tr><td rowspan="1" colspan="1"><bold>Agilent (relative concentration)</bold></td></tr><tr><td rowspan="1" colspan="1">Reported nominal concentration</td><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/></tr><tr><td rowspan="1" colspan="1">0.20</td><td rowspan="1" colspan="1">4.6</td><td rowspan="1" colspan="1">0.34</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">1.35</td></tr><tr><td rowspan="1" colspan="1">2.00</td><td rowspan="1" colspan="1">4.8</td><td rowspan="1" colspan="1">0.36</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">1.40</td></tr><tr><td rowspan="1" colspan="1">20.00</td><td rowspan="1" colspan="1">6.3</td><td rowspan="1" colspan="1">0.49</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">0.63</td></tr><tr><td rowspan="1" colspan="1">200.00</td><td rowspan="1" colspan="1">9.1</td><td rowspan="1" colspan="1">0.73</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.47</td></tr><tr><td rowspan="1" colspan="1">666.67</td><td rowspan="1" colspan="1">10.9</td><td rowspan="1" colspan="1">0.86</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.36</td></tr><tr><td rowspan="1" colspan="1">2000.00</td><td rowspan="1" colspan="1">12.5</td><td rowspan="1" colspan="1">0.94</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.3</td></tr><tr><td rowspan="1" colspan="1">6666.67</td><td rowspan="1" colspan="1">14.2</td><td rowspan="1" colspan="1">0.97</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.21</td></tr><tr><td rowspan="1" colspan="1">20000.00</td><td rowspan="1" colspan="1">15.6</td><td rowspan="1" colspan="1">0.99</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.16</td></tr><tr><td rowspan="1" colspan="1">66666.67</td><td rowspan="1" colspan="1">17.1</td><td rowspan="1" colspan="1">1.00</td><td rowspan="1" colspan="1">High</td><td rowspan="1" colspan="1">0.31</td></tr><tr><td rowspan="1" colspan="1">200000.00</td><td rowspan="1" colspan="1">18.0</td><td rowspan="1" colspan="1">1.00</td><td rowspan="1" colspan="1">High</td><td rowspan="1" colspan="1">0.25</td></tr><tr><td rowspan="1" colspan="1"><bold>Illumina (pM)</bold></td></tr><tr><td rowspan="1" colspan="1">Reported nominal concentration</td><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/></tr><tr><td rowspan="1" colspan="1">0.01</td><td rowspan="1" colspan="1">2.9</td><td rowspan="1" colspan="1">0.38</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">0.39</td></tr><tr><td rowspan="1" colspan="1">0.03</td><td rowspan="1" colspan="1">3.0</td><td rowspan="1" colspan="1">0.49</td><td rowspan="1" colspan="1">Low</td><td rowspan="1" colspan="1">0.46</td></tr><tr><td rowspan="1" colspan="1">0.10</td><td rowspan="1" colspan="1">3.9</td><td rowspan="1" colspan="1">0.68</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">0.83</td></tr><tr><td rowspan="1" colspan="1">0.30</td><td rowspan="1" colspan="1">5.4</td><td rowspan="1" colspan="1">0.76</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">1.51</td></tr><tr><td rowspan="1" colspan="1">1.00</td><td rowspan="1" colspan="1">7.5</td><td rowspan="1" colspan="1">0.85</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">1.26</td></tr><tr><td rowspan="1" colspan="1">3.00</td><td rowspan="1" colspan="1">9.5</td><td rowspan="1" colspan="1">0.94</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">1.05</td></tr><tr><td rowspan="1" colspan="1">10.00</td><td rowspan="1" colspan="1">11.4</td><td rowspan="1" colspan="1">0.98</td><td rowspan="1" colspan="1">Med</td><td rowspan="1" colspan="1">1.01</td></tr><tr><td rowspan="1" colspan="1">30.00</td><td rowspan="1" colspan="1">12.8</td><td rowspan="1" colspan="1">1.00</td><td rowspan="1" colspan="1">High</td><td rowspan="1" colspan="1">0.81</td></tr><tr><td rowspan="1" colspan="1">100.00</td><td rowspan="1" colspan="1">14.1</td><td rowspan="1" colspan="1">1.00</td><td rowspan="1" colspan="1">High</td><td rowspan="1" colspan="1">0.65</td></tr><tr><td rowspan="1" colspan="1">300.00</td><td rowspan="1" colspan="1">14.8</td><td rowspan="1" colspan="1">1.00</td><td rowspan="1" colspan="1">High</td><td rowspan="1" colspan="1">0.34</td></tr><tr><td rowspan="1" colspan="1">1000.00</td><td rowspan="1" colspan="1">15.0</td><td rowspan="1" colspan="1">1.00</td><td rowspan="1" colspan="1">High</td><td rowspan="1" colspan="1">0.26</td></tr></tbody></table><table-wrap-foot><fn><p>This table contains summary measures specific to each nominal spike-in level. The first column shows the nominal concentrations as originally reported. The second column shows the average of all observed expression values associated with the row's; nominal concentration. The third column shows the proportion of background RNA with expression values less than the average expression value. The fourth column shows the ALE strata (defined in text) associated with the row's; nominal concentration. Finally, the fifth column shows the SD of all observed expression values associated with the row's; nominal concentration.</p></fn></table-wrap-foot></table-wrap></p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>MATERIALS AND METHODS</title>
+    <sec>
+      <title>Experimental protocols</title>
+      <p>The platforms used were Affymetrix's; HGU133A GeneChip, Agilent's; 4x44K Whole Human Genome Oligo Microarray and Illumina's; Human-6 v2 Beadchip. The experiments for each platform were performed by the respective manufacturer. Each manufacturer followed different experimental procedures (<xref ref-type="table" rid="T2">Table 2</xref>). The raw data were preprocessed with the default procedures: Affymetrix was preprocessed using RMA (<xref ref-type="bibr" rid="B14">14</xref>); Agilent used background subtraction and normalized to the 75th percentile; Illumina used local background subtraction and quantile normalization (<xref ref-type="bibr" rid="B15">15</xref>).
+<table-wrap id="T2" position="float"><label>Table 2.</label><caption><p>Description of data sets</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th rowspan="1" colspan="1"/><th rowspan="1" colspan="1">Affymetrix</th><th rowspan="1" colspan="1">Agilent</th><th rowspan="1" colspan="1">Illumina</th></tr></thead><tbody align="left"><tr><td rowspan="1" colspan="1">Background RNA</td><td rowspan="1" colspan="1">HeLa complex cRNA</td><td rowspan="1" colspan="1">Human Osteosarcoma (MG-63) purchased from Ambion (Cat. # 7868)</td><td rowspan="1" colspan="1">Human Liver purchased from Ambion (Cat. # 7960)</td></tr><tr><td rowspan="1" colspan="1">Spike-in production</td><td rowspan="1" colspan="1">30 cDNA clones isolated from a lymphoblast cell line, eight artificially engineered, four eukaryotic controls from the polyA spike control kit</td><td rowspan="1" colspan="1"><italic>In vitro</italic> synthesized, polyadenylated transcripts derived from the Adenovirus E1A gene</td><td rowspan="1" colspan="1"><italic>In vitro</italic> transcription of cloned bacterial and viral genes</td></tr><tr><td rowspan="1" colspan="1">Background correction</td><td rowspan="1" colspan="1">RMA</td><td rowspan="1" colspan="1">Background subtraction and spatial-detrending</td><td rowspan="1" colspan="1">Local background subtraction</td></tr><tr><td rowspan="1" colspan="1">Normalization</td><td rowspan="1" colspan="1">RMA</td><td rowspan="1" colspan="1">Normalized to the 75th percentile on each microarray</td><td rowspan="1" colspan="1">Quantile normalization</td></tr></tbody></table><table-wrap-foot><fn><p>This table gives a brief comparison of the three data sets used in this analysis.</p></fn></table-wrap-foot></table-wrap></p>
+    </sec>
+    <sec>
+      <title>Relating nominal concentrations across data sets</title>
+      <p>Our solution to the problem of mapping was to replace each nominal concentration with the average log expression across arrays (ALE) for genes spiked in at that concentration. This approach assures that performance assessments based on spike-in data are related to expression measurements that are defined consistently across platforms: low, medium and high ALE values correspond to low, medium and high observed expression values, respectively (<xref ref-type="table" rid="T1">Table 1</xref>).</p>
+    </sec>
+    <sec>
+      <title>Accuracy assessment</title>
+      <p>With the ALE values in place, we were ready to adapt some of the existing statistical assessments to cross-platform comparisons. We started with a basic assessment of accuracy: the <italic>signal detection slope</italic> (<xref ref-type="bibr" rid="B10">10</xref>). Microarrays are designed to measure the abundance of sample RNA. In principle, we expect a doubling of nominal concentration to result in a doubling of observed intensity. In other words, on the log<sub>2</sub> scale, the slope from the regression of expression on nominal concentration can be interpreted as the expected observed difference when the true difference is a fold change of 2. Thus, an optimal result is a slope of one, and values higher and lower than one are associated with over and under estimation, respectively (<xref ref-type="fig" rid="F2">Figure 2</xref>).
+<fig id="F2" position="float"><label>Figure 2.</label><caption><p>Observed versus nominal values. For each of the three platforms, expression values are plotted against the log (base 2) of the reported nominal concentration. The regression slope obtained utilizing all the data and the regression slopes obtain within each ALE value strata are shown. The slope of each line is reported in the legend. The vertical lines divide the ALE strata.</p></caption><graphic xlink:href="gkn430f2"/></fig></p>
+    </sec>
+    <sec>
+      <title>ALE strata</title>
+      <p>It has been noted that at very high and very low concentrations one typically observes lower slopes compared to those seen at medium concentrations (11). To address this, we consider the signal detection slopes for genes spiked-in at low, medium and high ALE values (<xref ref-type="fig" rid="F2">Figure 2</xref>). We implemented a data-driven approach to selecting these two cut-offs.</p>
+      <p>We defined <italic>f</italic> to be the function that maps nominal log concentration <italic>x</italic> to expected observed concentration <italic>f</italic>(<italic>x</italic>). Using a cubic spline, fitted to the observed data, we obtained a parametric representation of <italic>f</italic>. We then looked for concentrations for which clear changes in sensitivity occurred, i.e. values of <italic>x</italic> with large slope changes. Note that large changes in slope result in local maxima in the absolute value of the second derivative of <italic>f</italic>. For each platform, the absolute value of the second derivative <italic>f</italic> ′′ showed two clear local maxima (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkn430/DC1">Supplementary Figure 1</ext-link>). For each platform, we mapped each concentration <italic>x</italic> to its corresponding empirical percentile Φ(<italic>x</italic>) and plotted |<italic>f</italic>′′(<italic>x</italic>)| against Φ(<italic>x</italic>) (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkn430/DC1">Supplementary Figure 2</ext-link>). The percentiles that maximized the slope change were similar across platforms. The modes for the average curve were 0.615 and 0.993. Therefore, for the purpose of this comparison, we assigned as <italic>low</italic>, ALE values less than the 60th percentile of the distribution of background RNA. Similarly, we defined as <italic>high</italic> ALE values above the 99th percentile. The remaining ALE values, between the 60th and 99th percentile, were denoted as <italic>medium</italic>. Our choice of cut-points was further motivated by observing that for the Affymetrix data the 60th percentile provided a good cut-off for distinguishing genes called present from genes called absent (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkn430/DC1">Supplementary Figure 3</ext-link>).</p>
+    </sec>
+    <sec>
+      <title>Precision assessments</title>
+      <p>To complete our comparison, we needed to assess specificity. Because the majority of microarray studies rely on relative measures (e.g. fold change) as opposed to absolute ones, we focused on the precision of the basic unit of relative expression: log-ratios. We adapted the precision assessment of Cope <italic>et al.</italic> (10) that focused on the variability of log-ratios generated by comparisons expected to produce log-ratios of 0. Our set of comparisons was created by making all possible comparisons between spiked-in transcripts across arrays in which they had the same nominal concentration and from all possible comparisons within the background RNA. We referred to this group of comparisons as the <italic>Null</italic> set. The SD of these log-ratios served as a basic assessment of precision and has a useful interpretation: it is the expected range of observed log-ratios for genes that are not differentially expressed. <xref ref-type="table" rid="T3">Table 3</xref> and <xref ref-type="fig" rid="F3">Figure 3</xref> show results for the three platforms.
+<table-wrap id="T3" position="float"><label>Table 3.</label><caption><p>Assessment results</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th rowspan="1" colspan="1"/><th rowspan="1" colspan="1">Accuracy<hr/></th><th colspan="2" rowspan="1">Precision<hr/></th><th colspan="3" rowspan="1">Performance<hr/></th></tr><tr><th rowspan="1" colspan="1">Platform</th><th rowspan="1" colspan="1">Slope (SD)</th><th rowspan="1" colspan="1">SD</th><th rowspan="1" colspan="1">99.5%</th><th rowspan="1" colspan="1">SNR</th><th rowspan="1" colspan="1">POT</th><th rowspan="1" colspan="1">GNN</th></tr></thead><tbody align="left"><tr><td rowspan="1" colspan="1"><bold>Low</bold></td><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/></tr><tr><td rowspan="1" colspan="1">Affymetrix (RMA)</td><td rowspan="1" colspan="1">0.20 (0.31)</td><td rowspan="1" colspan="1">0.10</td><td rowspan="1" colspan="1">0.36</td><td rowspan="1" colspan="1">2.00</td><td rowspan="1" colspan="1">0.30</td><td rowspan="1" colspan="1">13</td></tr><tr><td rowspan="1" colspan="1">Affymetrix (MAS5)</td><td rowspan="1" colspan="1">0.58 (0.73)</td><td rowspan="1" colspan="1">0.64</td><td rowspan="1" colspan="1">3.54</td><td rowspan="1" colspan="1">0.91</td><td rowspan="1" colspan="1">0.00</td><td rowspan="1" colspan="1">581</td></tr><tr><td rowspan="1" colspan="1">Agilent</td><td rowspan="1" colspan="1">0.26 (0.90)</td><td rowspan="1" colspan="1">0.40</td><td rowspan="1" colspan="1">2.74</td><td rowspan="1" colspan="1">0.65</td><td rowspan="1" colspan="1">0.00</td><td rowspan="1" colspan="1">246</td></tr><tr><td rowspan="1" colspan="1">Illumina</td><td rowspan="1" colspan="1">0.11 (0.39)</td><td rowspan="1" colspan="1">0.35</td><td rowspan="1" colspan="1">1.18</td><td rowspan="1" colspan="1">0.31</td><td rowspan="1" colspan="1">0.00</td><td rowspan="1" colspan="1">506</td></tr><tr><td rowspan="1" colspan="1"><bold>Medium</bold></td><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/></tr><tr><td rowspan="1" colspan="1">Affymetrix (RMA)</td><td rowspan="1" colspan="1">0.79 (0.35)</td><td rowspan="1" colspan="1">0.09</td><td rowspan="1" colspan="1">0.40</td><td rowspan="1" colspan="1">8.78</td><td rowspan="1" colspan="1">0.87</td><td rowspan="1" colspan="1">19</td></tr><tr><td rowspan="1" colspan="1">Affymetrix (MAS5)</td><td rowspan="1" colspan="1">0.80 (0.38)</td><td rowspan="1" colspan="1">0.18</td><td rowspan="1" colspan="1">0.95</td><td rowspan="1" colspan="1">4.44</td><td rowspan="1" colspan="1">0.35</td><td rowspan="1" colspan="1">24</td></tr><tr><td rowspan="1" colspan="1">Agilent</td><td rowspan="1" colspan="1">0.99 (0.17)</td><td rowspan="1" colspan="1">0.11</td><td rowspan="1" colspan="1">0.86</td><td rowspan="1" colspan="1">9.00</td><td rowspan="1" colspan="1">0.78</td><td rowspan="1" colspan="1">20</td></tr><tr><td rowspan="1" colspan="1">Illumina</td><td rowspan="1" colspan="1">1.15 (0.37)</td><td rowspan="1" colspan="1">0.25</td><td rowspan="1" colspan="1">1.48</td><td rowspan="1" colspan="1">4.60</td><td rowspan="1" colspan="1">0.19</td><td rowspan="1" colspan="1">25</td></tr><tr><td rowspan="1" colspan="1"><bold>High</bold></td><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/><td rowspan="1" colspan="1"/></tr><tr><td rowspan="1" colspan="1">Affymetrix (RMA)</td><td rowspan="1" colspan="1">0.57 (0.15)</td><td rowspan="1" colspan="1">0.06</td><td rowspan="1" colspan="1">0.22</td><td rowspan="1" colspan="1">9.50</td><td rowspan="1" colspan="1">0.99</td><td rowspan="1" colspan="1">10</td></tr><tr><td rowspan="1" colspan="1">Affymetrix (MAS5)</td><td rowspan="1" colspan="1">0.48 (0.19)</td><td rowspan="1" colspan="1">0.13</td><td rowspan="1" colspan="1">0.42</td><td rowspan="1" colspan="1">3.69</td><td rowspan="1" colspan="1">0.62</td><td rowspan="1" colspan="1">10</td></tr><tr><td rowspan="1" colspan="1">Agilent</td><td rowspan="1" colspan="1">0.61 (0.29)</td><td rowspan="1" colspan="1">0.10</td><td rowspan="1" colspan="1">0.38</td><td rowspan="1" colspan="1">6.10</td><td rowspan="1" colspan="1">0.79</td><td rowspan="1" colspan="1">10</td></tr><tr><td rowspan="1" colspan="1">Illumina</td><td rowspan="1" colspan="1">0.42 (0.32)</td><td rowspan="1" colspan="1">0.15</td><td rowspan="1" colspan="1">0.62</td><td rowspan="1" colspan="1">2.80</td><td rowspan="1" colspan="1">0.27</td><td rowspan="1" colspan="1">15</td></tr></tbody></table><table-wrap-foot><fn><p>For each of the ALE strata, we report summary assessments for accuracy, precision and overall performance. The first column shows the signal detection slope, which can be interpreted as the expected observed difference when the true difference is a fold change of 2. In parenthesis is the SD of the log-ratios associated with nonzero nominal log-ratios. The second column shows the standard deviation of null log-ratios. The SD can be interpreted as the expected range of observed log-ratios for genes that are not differentially expressed. The third column shows the 99.5th percentile of the null distribution. It can be interpreted as the expected minimum value that the top 100 nondifferentially expressed genes will reach. The fourth column shows the ratio of the values in column 1 and column 2. It is a rough measure of signal to noise ratio. The fifth column shows the probability that, when comparing two samples, a gene with a true log-fold change of 2 will appear in a list of the 100 genes with the highest log-ratios. The sixth column shows the size of gene list necessary to obtain 10 true positives when one considers a list of genes with the highest fold change.</p></fn></table-wrap-foot></table-wrap>
+<fig id="F3" position="float"><label>Figure 3.</label><caption><p>Log-ratio distributions. These plots depict the distribution of observed log ratios for various nominal fold changes. In each case, the log ratios are stratified by the ALE values into which the two nominal concentrations fall. For example, HL means that one fell in the high stratum and one fell in the medium stratum. The null distributions' log-ratios are divided into background RNA (Bg-Null) and spike-ins at the same nominal concentration (S-Null), for each bin. The dotted horizontal lines represent the expected or nominal log-ratios: zero for the null distribution and Δ for the other comparisons (Δ =log<sub>2</sub> 4 for Affymetrix and Δ =log<sub>2</sub> 3 for Agilent and Illumina).</p></caption><graphic xlink:href="gkn430f3"/></fig></p>
+      <p>Because specificity varies with nominal concentration (11), we stratified these comparisons into low, medium and high ALE values. In <xref ref-type="fig" rid="F3">Figure 3</xref>, many outliers were observed on each platform. This was expected given the documented problem of cross-hybridization. Because a platform with larger SD and small outliers might be preferable to the one with a smaller SD but large outliers, we included the 99.5th percentile of the null distribution as a second summary assessment of specificity. Note that in a typical experiment close to 0.5% of null genes are expected to exceed this value, which translates to approximately 100 genes on whole-genome arrays. <xref ref-type="fig" rid="F3">Figure 3</xref> also includes comparisons of spike-ins expected to yield a certain fold change. These serve to further demonstrate the variability of relative expression across ALE strata. They also serve as a rough illustration of the accuracy of log-ratios for each ALE strata and each platform.</p>
+    </sec>
+    <sec>
+      <title>Performance assessments</title>
+      <p>Precision and accuracy assessments on their own may not be of much practical use. However, the summary statistics described earlier (<xref ref-type="table" rid="T3">Table 3</xref>) can be easily combined to answer any practical question, as long as it can be posed in a statistical context. We focus on two summaries related to the common problem of detecting differentially expressed genes. Note that we purposely developed summaries that do not directly penalize for a lack of accuracy and precision as long as the real differences are detected. However, as expected, detection ability was highly dependent on accuracy and precision.</p>
+      <p>For the first example, we computed the chance that, when comparing two samples, a gene with true log fold change Δ = 1 will appear in a list of the top 100 genes (highest log-ratios). We refer to this quantity as the <italic>probability of being at the top</italic> (POT) and recommend computing it separately in each ALE strata. Specifically, we assume that the log-ratios in each ALE strata follow a normal distribution with mean and variance estimated from the data (accuracy slope and SD in <xref ref-type="table" rid="T3">Table 3</xref>) and compute the probability that a random variable from that distribution exceeds the 99.5th percentile of the null distribution.</p>
+      <p>As a second example, we computed the expected size of a gene list one would have to consider to find <italic>n</italic> genes that have a true log fold change Δ. To perform this calculation, we assumed <italic>m</italic><sub>1</sub> genes were differentially expressed and <italic>m</italic><sub>0</sub> were not. Note that <italic>m</italic><sub>1</sub> + <italic>m</italic><sub>0</sub> is the number of genes on the array. Furthermore, we assumed that the true log-ratios in each ALE strata followed a normal distribution with mean and variance estimated from the data (accuracy slope and SD in <xref ref-type="table" rid="T3">Table 3</xref>). The empirical distribution was used for the null genes. With these assumptions in place, we computed the gene list size for <italic>n</italic> = 10, <italic>m</italic><sub>1</sub> = 100 and <italic>m</italic><sub>0</sub> = 10 000, we calculate the gene list size, <italic>N</italic>, required to obtain <italic>n</italic> = 10 true fold changes (<xref ref-type="table" rid="T3">Table 3</xref>). We refer to this quantity as the <italic>gene-list needed to detect n true-positives</italic> (GNN). Again, we recommend computing it separately in each ALE strata.</p>
+    </sec>
+    <sec>
+      <title>Imbalance measure</title>
+      <p>Those interested in taking advantage of our methodology should know that an important requirement is a spike-in experimental design that does not confound nominal concentrations and genes. A large source of variability in microarray data is the probe-effect (<xref ref-type="bibr" rid="B16">16</xref>) and these vary across platforms. We fitted an analysis of variance (ANOVA) model to describe the probe effect for each platform (<xref ref-type="table" rid="T4">Table 4</xref>). Note that if nominal concentrations are confounded with genes, it becomes impossible to separate differences due to signal detection from differences in probe affinities. Many of the previously published spike-in experiments suffer from this confounding effect. To quantify design imbalance, we used the following measure of imbalance developed by Wu (17):
+<disp-formula id="M1"><label>1</label><graphic xlink:href="gkn430m1"/></disp-formula>
+where <italic>i</italic> denotes each covariate, λ<italic><sub>i</sub></italic> an optional weight associated with each covariate, <italic>u<sub>i</sub></italic> are the possible levels for covariate <italic>i</italic>, <italic>t</italic> represents the treatment levels, <italic>n</italic><sub><italic>t</italic></sub>(<italic>u</italic><sub><italic>i</italic></sub>) is the number of units with its <italic>i</italic>-th covariate at level <italic>u<sub>i</sub></italic> receiving treatment <italic>t</italic>, and <italic>n</italic>(<italic>u</italic><sub><italic>i</italic></sub>) is the total number of units with its <italic>i</italic>-th covariate at level <italic>u<sub>i</sub></italic> (<xref ref-type="bibr" rid="B17">17</xref>). In our case, the two covariates are probe and array, and the treatment is nominal concentration. Since imbalance is defined as a weighted sum of the imbalance due to each covariate, we chose to report the probe and array imbalance separately to give a better understanding of the source of the imbalance in each design. In order to not penalize large designs, we divided the probe imbalance by the number of probes and the array imbalance by the number of arrays. These results are included in <xref ref-type="table" rid="T4">Table 4</xref>.
+<table-wrap id="T4" position="float"><label>Table 4.</label><caption><p>ANOVA results</p></caption><table frame="hsides" rules="groups"><thead align="left"><tr><th rowspan="1" colspan="1">Platform</th><th rowspan="1" colspan="1">Affymetrix (RMA)</th><th rowspan="1" colspan="1">Affymetrix (MAS5)</th><th rowspan="1" colspan="1">Agilent</th><th rowspan="1" colspan="1">Illumina</th></tr></thead><tbody align="left"><tr><td rowspan="1" colspan="1">Concentration effect</td><td rowspan="1" colspan="1">2.48</td><td rowspan="1" colspan="1">2.77</td><td rowspan="1" colspan="1">4.53</td><td rowspan="1" colspan="1">2.19</td></tr><tr><td rowspan="1" colspan="1">Probe effect</td><td rowspan="1" colspan="1">0.54</td><td rowspan="1" colspan="1">0.55</td><td rowspan="1" colspan="1">0.44</td><td rowspan="1" colspan="1">0.38</td></tr><tr><td rowspan="1" colspan="1">Array effect</td><td rowspan="1" colspan="1">0.17</td><td rowspan="1" colspan="1">0.17</td><td rowspan="1" colspan="1">0.19</td><td rowspan="1" colspan="1">NA</td></tr><tr><td rowspan="1" colspan="1">Measurement error</td><td rowspan="1" colspan="1">0.47</td><td rowspan="1" colspan="1">0.72</td><td rowspan="1" colspan="1">0.69</td><td rowspan="1" colspan="1">0.54</td></tr><tr><td rowspan="1" colspan="1">Probe imbalance</td><td rowspan="1" colspan="1">0</td><td rowspan="1" colspan="1">0</td><td rowspan="1" colspan="1">3.60</td><td rowspan="1" colspan="1">0</td></tr><tr><td rowspan="1" colspan="1">Array imbalance</td><td rowspan="1" colspan="1">0</td><td rowspan="1" colspan="1">0</td><td rowspan="1" colspan="1">0</td><td rowspan="1" colspan="1">1059.67</td></tr></tbody></table><table-wrap-foot><fn><p>To understand the variability contributed by differences in nominal concentrations, probe effect and array, we fitted a three-way ANOVA model containing only main effects to the expression values from the spike-in transcripts. The estimated SD of each effect is shown in the first three rows. The fourth row shows the SD of the error term. Finally, a measure of the amount of confounding between nominal concentration and the other two effects is included in rows five and six. We use the measure presented by Wu (<xref ref-type="bibr" rid="B17">17</xref>). An optimal design, such as a Latin Square, will have a measure of 0 for each imbalance. The more confounding the larger these values. Note, the large imbalance due to array in the Illumina design. In this experiment array and nominal concentration were completely confounded. However, because the array effect is small (the arrays are normalized) this was not as much of a problem. In the Agilent experiment, there is a small amount of confounding between probe and concentration because a Latin Square design was used with a single concentration/gene combination missing.</p></fn></table-wrap-foot></table-wrap></p>
+      <p>We have developed a software package that permits quick and easy creation of plots and tables such as those presented here. The software is freely available as the <monospace>spkTools</monospace> package from the Bioconductor Project (<xref ref-type="bibr" rid="B18">18</xref>). This package defines a new S4 class that extends the <monospace>ExpressionSet</monospace> class (<xref ref-type="bibr" rid="B18">18</xref>) to include a matrix of nominal concentrations; this new class is called <monospace>SpikeInExpressionSet</monospace>. The functions implemented in this package take an object of this type as their input and automatically produce the tables and plots presented in this paper. Of particular interest is a function named <monospace>spkAll</monospace>, which is a wrapper function for all the functions contained in this package. When run on a <monospace>SpikeInExpressionSet</monospace> object, it produces the full complement of tables and plots shown in this article and saves them with easily recognizable file names. Although this package was designed with the intent of producing the full array of results for each experiment, the functions can also be applied separately with a few exceptions where the output of one function is required as the input of another. Further details and examples outlining the use of these functions can be found in the help files accompanying the package.</p>
+    </sec>
+  </sec>
+  <sec sec-type="results">
+    <title>RESULTS</title>
+    <p>The ANOVA analysis (<xref ref-type="table" rid="T4">Table 4</xref>) revealed that all platforms have similar sized probe effects. This underscores the importance of balancing genes and concentration levels. The Agilent experiment had a small imbalance (<xref ref-type="table" rid="T4">Table 4</xref>). This was because Agilent used one less concentration mixture than the number of spike-in probes. The Illumina array had a very large array imbalance because array and concentration were completely confounded. However, because all data sets were normalized we expected the array effect for Illumina to be small, as with Affymetrix and Agilent. This type of confounding is therefore less problematic.</p>
+    <p><xref ref-type="fig" rid="F2">Figure 2</xref> demonstrated that Agilent performed best with regard to accuracy in all concentration bins. While Illumina performed better than Affymetrix in the medium concentrations, Affymetrix performed better in the low and high concentrations. Affymetrix was most consistent across all bins. If we had looked at only the overall slope, Illumina would have appeared to perform best because fold changes are overestimated in the medium concentrations. <xref ref-type="fig" rid="F2">Figure 2</xref> also shows the changing relationship between expression and nominal concentration. For all three platforms, the slope is small at low nominal concentrations, larger at high concentrations, and largest at medium concentrations. However, the difference between these slopes and the nominal concentrations at which the shift between bins occurs varies across platforms. It is this fact that illustrates why it is crucial to view nominal concentration and expression as platform dependent measures.</p>
+    <p><xref ref-type="fig" rid="F3">Figure 3</xref> highlights two important findings: (i) precision depends strongly on concentration with higher variability observed for low concentrations, (ii) Affymetrix, which had the worst accuracy, has the best precision, especially for low concentrations where the difference was substantial.</p>
+    <p>In terms of the POT and GNN assessment, Affymetrix outperforms Agilent which outperforms Illumina: the gene list size in the low/medium/high strata for Affymetrix were 37/34/25, for Agilent they were 682/38/26 and for Illumina they were 1489/60/46 (<xref ref-type="table" rid="T3">Table 3</xref>). To provide a graphical version of this summary, we included boxplots of observed log-ratios for comparison with nonzero nominal log-fold changes Δ &gt; 0 (<xref ref-type="fig" rid="F3">Figure 3</xref>). Due to the different designs, using the same expected log-fold change, Δ, for all platforms was not possible. We used the closest possible values instead: log<sub>2</sub>(4) for Affymetrix and log<sub>2</sub>(3) for Agilent and Illumina. Log ratio (M) versus average intensity (A) plots also depict both accuracy and precision and are included as <ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkn430/DC1">Supplementary Figure 4</ext-link>.</p>
+  </sec>
+  <sec sec-type="discussion">
+    <title>DISCUSSION</title>
+    <p>We have described a general assessment procedure for microarray data based on spike-in experiments and demonstrated how the procedure can be used to compare across different experiments and microarray platforms. A novel aspect of the approach is that we independently assess performance at low, medium, and high concentrations using ALE values: an empirically constructed mapping between nominal concentration and observed expression. This mapping is important because nominal concentrations can not be interpreted in the same way in all experiments. In our approach, measurements are interpreted relative to the distribution of background RNA expression.</p>
+    <p>Our results demonstrate that while Agilent and Illumina had better overall accuracy, Affymetrix has better precision. In the medium and high strata, Affymetrix and Agilent performed similarly, and better than Illumina, according to the POT and GNN measures. In the low strata, Affymetrix greatly outperformed Agilent and Illumina. Affymetrix's; advantage was due to the smaller number of outliers (<xref ref-type="table" rid="T3">Table 3</xref> and <ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkn430/DC1">Supplementary Figure 1</ext-link>). Note that to keep the article focused, we considered a basic analysis approach based on fold change. However, the <monospace>spkTools</monospace> package can be used for more elaborate platform comparisons. For example, to help reduce outliers, we filtered genes called absent or undetected by the manufacturer's; software. Because various noisy comparisons are no longer considered, this approach improves specificity in the low strata. However, sensitivity is made worse because true differences are accidentally filtered away (<ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkn430/DC1">Supplementary Table 1</ext-link>). Problems with these detection calls have been documented (<xref ref-type="bibr" rid="B19">19</xref>).</p>
+    <p>As we previously described the 60th and 99th percentiles provided the best cut-points for this analysis; however, that need not be the case in future analyses. For this reason, the <monospace>spkTools</monospace> package permits the user to choose any two percentiles to use as the cut-points. We recommend that the optimal cut-points for a future data set be determined in a manner similar to what we described.</p>
+    <p>It is important to note that the microarray products compared here are of different generations, with Affymetrix's; the oldest and Agilent's; the newest. Also, the spike-in targets and background RNA vary between platforms (<xref ref-type="table" rid="T2">Table 2</xref>). Finally, different preprocessing algorithms will result in differences in performance (16). To illustrate this, we ran Affymetrix data processed with the manufacturers default MAS 5.0 through our assessment (<xref ref-type="table" rid="T3">Table 3</xref> and <ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkn430/DC1">Supplementary Figure 6</ext-link>). An interesting finding was that with MAS 5.0, instead of RMA, Affymetrix no longer had an advantage in the low strata. We expect results for Agilent and Illumina to improve with the development of novel preprocessing algorithms for these technologies by the scientific community. Because we expect a large increase in spike-in experiments and preprocessing algorithms, we developed the <monospace>spkTools</monospace> package to permit quick and easy creation of plots such as those presented here.</p>
+    <p>Spike-in experiments have been criticized for producing artificial data with little resemblance to real data produced by a typical experiment. A particular limitation of the data shown here is the use of technical replicates: the data fails to incorporate the biological variation present in most experiments. However, acceptable sensitivity and specificity measures, determined by spike-in experiments such as those presented here, are a minimal requirement for a microarray platform. A technology not performing well in our assessment will not perform well in the more complicated setting of real experiments. A strength of our spike-in data is that they permit a focused assessment based on the most basic attributes of this technology. Furthermore, we expect vastly improved spike-in experiments, e.g. using biological replicates, to emerge in large numbers once the ERCC makes it first formal recommendation. We have therefore developed a general tool that can be readily applied to data from these experiments. Furthermore, the strategy we described and used successfully to compare the three main microarray platforms using Latin-Square spike-in experiments for the first time, can serve as a blueprint for future methods and analyses.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>SUPPLEMENTARY DATA</title>
+    <p><ext-link ext-link-type="uri" xlink:href="http://nar.oxfordjournals.org/cgi/content/full/gkn430/DC1">Supplementary data</ext-link> are available at NAR Online. Raw data and annotation files are available from <ext-link ext-link-type="uri" xlink:href="http://rafalab.org">http://rafalab.org</ext-link>.</p>
+    <supplementary-material id="PMC_1" content-type="local-data">
+      <caption>
+        <title>[Supplementary Data]</title>
+      </caption>
+      <media mimetype="text" mime-subtype="html" xlink:href="gkn430_index.html"/>
+      <media xlink:role="associated-file" mimetype="application" mime-subtype="pdf" xlink:href="gkn430_1.pdf"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>We thank Agilent, and especially Anne Bergstrom Lucas, for providing the Agilent spike-in data and insightful discussions on spike-in experiments. We thank Illumina, and especially Shawn Baker, for sharing the Illumina spike-in data. We also thank Affymetrix for making their spike-in experiments public. This work was supported by National Institutes of Health (1R01GM083084-01 to R.I., 1R01RR021967-01A2 to R.I., T32GM074906 to M.M.).</p>
+    <p><italic>Conflict of interest statement</italic>. None declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="B1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fodor</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Read</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Pirrung</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Stryer</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Lu</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Solas</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>Light-directed, spatially addressable parallel chemical synthesis</article-title>
+        <source>Science</source>
+        <year>1991</year>
+        <volume>251</volume>
+        <fpage>767</fpage>
+        <lpage>773</lpage>
+        <pub-id pub-id-type="pmid">1990438</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B2">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fodor</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Rava</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Huang</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Pease</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Holmes</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Adams</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Multiplexed biochemical assays with biological chips</article-title>
+        <source>Nature</source>
+        <year>1993</year>
+        <volume>364</volume>
+        <fpage>555</fpage>
+        <lpage>556</lpage>
+        <pub-id pub-id-type="pmid">7687751</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schena</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Shalon</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Davis</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Quantitative monitoring of gene expression patterns with a complementary DNA microarray</article-title>
+        <source>Science</source>
+        <year>1995</year>
+        <volume>270</volume>
+        <fpage>467</fpage>
+        <lpage>470</lpage>
+        <pub-id pub-id-type="pmid">7569999</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lockhart</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Dong</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Byrne</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Follettie</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Gallo</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Chee</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Mittmann</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Want</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Kobayashi</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Horton</surname>
+            <given-names>H</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>DNA expression monitoring by hybridization of high density oligonucleotide arrays</article-title>
+        <source>Nat. Biotechnol.</source>
+        <year>1996</year>
+        <volume>14</volume>
+        <fpage>1675</fpage>
+        <lpage>1680</lpage>
+        <pub-id pub-id-type="pmid">9634850</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Higuchi</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Fockler</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Dollinger</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Watson</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Kinetic</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Analysis: real-time monitoring of DNA amplification reactions</article-title>
+        <source>Biotechnology</source>
+        <year>1993</year>
+        <volume>11</volume>
+        <fpage>1026</fpage>
+        <lpage>1030</lpage>
+        <pub-id pub-id-type="pmid">7764001</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Heid</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Stevens</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Livak</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Williams</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Real time quantitative PCR</article-title>
+        <source>Genome Res.</source>
+        <year>1996</year>
+        <volume>6</volume>
+        <fpage>986</fpage>
+        <lpage>994</lpage>
+        <pub-id pub-id-type="pmid">8908518</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wittwer</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Herrmann</surname>
+            <given-names>MG</given-names>
+          </name>
+          <name>
+            <surname>Moss</surname>
+            <given-names>AA</given-names>
+          </name>
+          <name>
+            <surname>Rasmussen</surname>
+            <given-names>RP</given-names>
+          </name>
+        </person-group>
+        <article-title>Continuous fluorescence monitoring of rapid cycle DNA amplification</article-title>
+        <source>Biotechniques</source>
+        <year>1997</year>
+        <volume>22</volume>
+        <fpage>130</fpage>
+        <lpage>139</lpage>
+        <pub-id pub-id-type="pmid">8994660</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B8">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cronin</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Ghosh</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Sistare</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Quackenbush</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Vilker</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>O'Connell</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Universal RNA reference materials for gene expression</article-title>
+        <source>Clin. Chem.</source>
+        <year>2004</year>
+        <volume>50</volume>
+        <fpage>1464</fpage>
+        <lpage>1471</lpage>
+        <pub-id pub-id-type="pmid">15155546</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Baker</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Bauer</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Beyer</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Brenton</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Bromley</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Burrill</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Causton</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Conley</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Elespuru</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Fero</surname>
+            <given-names>M</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The external RNA controls consortium: a progress report</article-title>
+        <source>Nat. Methods</source>
+        <year>2005</year>
+        <volume>2</volume>
+        <fpage>731</fpage>
+        <lpage>734</lpage>
+        <pub-id pub-id-type="pmid">16179916</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cope</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Irizarry</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Jaffee</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>A benchmark for Affymetrix GeneChip expression measures</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>323</fpage>
+        <lpage>331</lpage>
+        <pub-id pub-id-type="pmid">14960458</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Irizarry</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Jaffee</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Comparison of Affymetrix GeneChip expression measures</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <fpage>789</fpage>
+        <lpage>794</lpage>
+        <pub-id pub-id-type="pmid">16410320</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B12">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Irizarry</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Cope</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>Z</given-names>
+          </name>
+        </person-group>
+        <article-title>Feature-level exploration of a published Affymetrix GeneChip control dataset</article-title>
+        <source>Genome Biol.</source>
+        <year>2006</year>
+        <volume>7</volume>
+        <fpage>404</fpage>
+        <pub-id pub-id-type="pmid">16953902</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tong</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Lucas</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Shippy</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Fan</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Fang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Hong</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Orr</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Chu</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Guo</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Collins</surname>
+            <given-names>P</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Evaluation of external RNA controls for the assessment of microarray performance</article-title>
+        <source>Nat. Biotechnol.</source>
+        <year>2006</year>
+        <volume>24</volume>
+        <fpage>1132</fpage>
+        <lpage>1139</lpage>
+        <pub-id pub-id-type="pmid">16964227</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B14">
+      <label>14</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Irizarry</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Bolstad</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Collin</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Cope</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Hobbs</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>Summaries of Affymetrix GeneChip probe level data</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>e15</fpage>
+        <pub-id pub-id-type="pmid">12582260</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kuhn</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Baker</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Chudin</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Lieu</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Oeser</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Bennett</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Rigault</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Barker</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>McDaniel</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Chee</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>A novel, high-performance random array platform for quantitative gene expression profiling</article-title>
+        <source>Genome Res.</source>
+        <year>2004</year>
+        <volume>14</volume>
+        <fpage>2347</fpage>
+        <lpage>2356</lpage>
+        <pub-id pub-id-type="pmid">15520296</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B16">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Irizarry</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Warren</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Spencer</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Kim</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Biswal</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Frank</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Gabrielson</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Garcia</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Geoghegan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Germino</surname>
+            <given-names>G</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Multiple-laboratory comparison of microarray platforms</article-title>
+        <source>Nat. Methods</source>
+        <year>2005</year>
+        <volume>2</volume>
+        <fpage>345</fpage>
+        <lpage>350</lpage>
+        <pub-id pub-id-type="pmid">15846361</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wu</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Iterative construction of nearly balanced assignments I: categorical covariates</article-title>
+        <source>Technometrics</source>
+        <year>1981</year>
+        <volume>23</volume>
+        <issue>1</issue>
+        <fpage>37</fpage>
+        <lpage>44</lpage>
+      </element-citation>
+    </ref>
+    <ref id="B18">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gentleman</surname>
+            <given-names>RC</given-names>
+          </name>
+          <name>
+            <surname>Carey</surname>
+            <given-names>VJ</given-names>
+          </name>
+          <name>
+            <surname>Bates</surname>
+            <given-names>DM</given-names>
+          </name>
+          <name>
+            <surname>Bolstad</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Dettling</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Dudoit</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Ellis</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Gautier</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Ge</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Gentry</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Bioconductor: open software development for computational biology and bioinformatics</article-title>
+        <source>Genome Biol.</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>R80</fpage>
+        <pub-id pub-id-type="pmid">15461798</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B19">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zilliox</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Irizarry</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>A gene expression bar code for microarray data</article-title>
+        <source>Nat. Methods</source>
+        <year>2007</year>
+        <volume>4</volume>
+        <fpage>11</fpage>
+        <lpage>913</lpage>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

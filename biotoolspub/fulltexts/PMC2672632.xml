@@ -1,0 +1,301 @@
+<?properties open_access?>
+<?properties no_embargo?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title>Bioinformatics</journal-title>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1460-2059</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2672632</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btp126</article-id>
+    <article-id pub-id-type="publisher-id">btp126</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Applications Note</subject>
+        <subj-group>
+          <subject>Gene Expression</subject>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>The <monospace>tspair</monospace> package for finding top scoring pair classifiers in <monospace>R</monospace></article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Leek</surname>
+          <given-names>Jeffrey T.</given-names>
+        </name>
+      </contrib>
+    </contrib-group>
+    <aff>Department of Oncology, Johns Hopkins School of Medicine, Baltimore, MD 21287, USA</aff>
+    <author-notes>
+      <fn>
+        <p>Associate Editor: Joaquin Dopazo</p>
+      </fn>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>1</day>
+      <month>5</month>
+      <year>2009</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>10</day>
+      <month>3</month>
+      <year>2009</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>10</day>
+      <month>3</month>
+      <year>2009</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+			<pub-date pub-type="epub"/>. -->
+    <volume>25</volume>
+    <issue>9</issue>
+    <fpage>1203</fpage>
+    <lpage>1204</lpage>
+    <history>
+      <date date-type="received">
+        <day>11</day>
+        <month>1</month>
+        <year>2009</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>16</day>
+        <month>2</month>
+        <year>2009</year>
+      </date>
+      <date date-type="accepted">
+        <day>1</day>
+        <month>3</month>
+        <year>2009</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© 2009 The Author(s)</copyright-statement>
+      <copyright-year>2009</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">
+        <p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/">http://creativecommons.org/licenses/by-nc/2.0/uk/</ext-link>) which permits unrestricted non-commercial use, distribution, and reproduction in any medium, provided the original work is properly cited.</p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Summary:</bold> Top scoring pairs (TSPs) are pairs of genes whose relative rankings can be used to accurately classify individuals into one of two classes. TSPs have two main advantages over many standard classifiers used in gene expression studies: (i) a TSP is based on only two genes, which leads to easily interpretable and inexpensive diagnostic tests and (ii) TSP classifiers are based on gene rankings, so they are more robust to variation in technical factors or normalization than classifiers based on expression levels of individual genes. Here I describe the <monospace>R</monospace> package, <monospace>tspair</monospace>, which can be used to quickly identify and assess TSP classifiers for gene expression data.</p>
+      <p><bold>Availability:</bold> The <monospace>R</monospace> package <monospace>tspair</monospace> is freely available from Bioconductor: <ext-link ext-link-type="uri" xlink:href="http://www.bioconductor.org">http://www.bioconductor.org</ext-link></p>
+      <p>
+        <bold>Contact:</bold>
+        <email>jtleek@jhu.edu</email>
+      </p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec sec-type="intro" id="SEC1">
+    <title>1 INTRODUCTION</title>
+    <p>Classification of patients into disease groups or subtypes is the most direct way to translate microarray technology into a clinically useful tool (Quackenbush, <xref ref-type="bibr" rid="B6">2006</xref>). A small number of tests based on microarrays have even been approved for clinical use, for example, for diagnosing breast cancer subtypes (Ma <italic>et al.</italic>, <xref ref-type="bibr" rid="B2">2004</xref>; Marchionni <italic>et al.</italic>, <xref ref-type="bibr" rid="B3">2008</xref>; Paik <italic>et al.</italic>, <xref ref-type="bibr" rid="B4">2004</xref>; van't Veer <italic>et al.</italic>, <xref ref-type="bibr" rid="B8">2002</xref>). But standard microarray classifiers are based on complicated functions of many gene expression measurements. This type of classifier is both hard to interpret and depends critically on the platform, pre-processing and normalization steps to be effective (Quackenbush, <xref ref-type="bibr" rid="B6">2006</xref>). Identifying biologically interpretable, robust and cheap classifiers based on small subsets of genes would greatly speed progress in the development of clinical tests from microarray experiments.</p>
+    <p>Top scoring pairs (TSPs) are pairs of genes that accurately classify patients into clinically relevant groups based on their ranks (Geman <italic>et al.</italic>, <xref ref-type="bibr" rid="B1">2004</xref>; Tan <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2005</xref>; Xu <italic>et al.</italic>, <xref ref-type="bibr" rid="B9">2005</xref>). The basic idea is to search among all pairs of genes, and look for genes whose ranking most consistently switches between two groups. To understand how the classification scheme works, consider the simulated gene expression data in <xref ref-type="fig" rid="F1">Figure 1</xref>. In this figure there are two groups of arrays, separated by the black line. These groups could represent healthy patients versus cancer patients, or two distinct subtypes of cancer. For all but one array in Group 1, Gene 1 has higher expression than Gene 2, and the reverse is true in Group 2. In this case, Genes 1 and 2 form a classifier based on their relative levels of expression. A new sample where the gene expression for Gene 1 was higher than the gene expression for Gene 2 would be classified as Group 1.
+<fig id="F1" position="float"><label>Fig. 1.</label><caption><p>An Example of a TSP. In this simulated example, the expression for Gene 1 is higher than the expression for Gene 2 for almost all of the arrays in the group on the left and this relationship reverses for the group on the right.</p></caption><graphic xlink:href="btp126f1"/></fig>
+</p>
+    <p>The TSP approach has been successfully applied to identify subtypes of sarcoma, resulting in a RT-PCR-based test that correctly classified 20 independent tumors with perfect accuracy (Price <italic>et al.</italic>, <xref ref-type="bibr" rid="B5">2007</xref>). This early success suggests that it may be possible to identify TSP classifiers for other important diseases and quickly develop new inexpensive diagnostic tests.</p>
+  </sec>
+  <sec id="SEC2">
+    <title>2 THE <monospace>TSPAIR</monospace> PACKAGE</title>
+    <p>Calculating the TSP for a gene expression dataset is relatively straightforward, but computationally intensive. I have developed an <monospace>R</monospace> package <monospace>tspair</monospace> that can rapidly calculate the TSP for typical gene expression datasets, with tens of thousands of genes. The TSP can be calculated both in <monospace>R</monospace> or with an external <monospace>C</monospace> function, which allows both for rapid calculation and flexible development of the <monospace>tspair</monospace> package. The <monospace>tspair</monospace> package includes functions for calculating the statistical significance of a TSP by permutation test, and is fully compatible with Bioconductor expression sets. The <monospace>R</monospace> package is freely available from the Bioconductor web site (<ext-link ext-link-type="uri" xlink:href="www.bioconductor.org">www.bioconductor.org</ext-link>).</p>
+  </sec>
+  <sec id="SEC3">
+    <title>3 AN EXAMPLE SESSION</title>
+    <p>Here I present an example session on a simple simulated dataset included in the <monospace>tspair</monospace> package. I calculate the TSP, assess the strength of evidence for the classifier with a permutation test, plot the output and show how to predict outcomes for a new dataset. The main function in the <monospace>tspair</monospace> package is <monospace>tspcalc()</monospace>. This function accepts either (i) a gene expression matrix or an expression set and a group indicator vector, or (ii) an expression set object and a column number, indicating which column of the annotation data to use as the group indicator. The result is a tsp object which gives the TSP score, indices, gene expression data and group labels for the TSP. If there are multiple pairs that achieve the top score, then the tie-breaking score developed by Tan <italic>et al.</italic> (<xref ref-type="bibr" rid="B7">2005</xref>) is reported.</p>
+    <p>
+      <inline-graphic xlink:href="btp126i1.jpg"/>
+    </p>
+    <p>The function <monospace>tspsig()</monospace> can be used to calculate the significance of a TSP classifier by permutation as described in Geman <italic>et al.</italic> (<xref ref-type="bibr" rid="B1">2004</xref>). The class labels are permuted, a new TSP is calculated for each permutation, and the null scores are compared with the observed TSP score to calculate a <italic>P</italic>-value. Since the maximum score is calculated for each null permutation, <monospace>tspsig()</monospace> performs a test of the null hypothesis that no TSP classifier is better than random chance.</p>
+    <p>
+      <inline-graphic xlink:href="btp126i2.jpg"/>
+    </p>
+    <p>Once a TSP has been calculated, the <monospace>tspplot()</monospace> function can be used to visualize the classifier. The resulting TSP figure (<xref ref-type="fig" rid="F2">Fig. 2</xref>) plots the expression for the first gene in the pair versus the expression for the second gene in the pair. The true group difference is indicated by the color of the points, and the score for the TSP classifier is shown in the title of the plot. The black 45<sup>○</sup> line indicates the classification from the TSP; the better the black line separates the colors the better the accuracy of the TSP.
+<fig id="F2" position="float"><label>Fig. 2.</label><caption><p><bold>A TSP plot</bold>. A TSP plot for the simulated data example in the <monospace>tspair</monospace> package. The colors indicate the true groups, and the black line indicates the TSP classification. The black line is the line where expression for ‘Gene 5’ equals the expression for ‘Gene 338’; the classification boundary is not data-driven, it is set in advance.</p></caption><graphic xlink:href="btp126f2"/></fig></p>
+    <p>
+      <inline-graphic xlink:href="btp126i3.jpg"/>
+    </p>
+    <p>A major advantage of the TSP approach is that predictions are very simple and can be easily calculated either by hand or using the built-in functionality of the <monospace>tspair</monospace> package. In this example, the expression value for ‘Gene5’ is greater than the expression value for ‘Gene338’ much more often for the diseased patients. In a new dataset, when the expression for ‘Gene5’ is greater than the expression for ‘Gene338’ I predict that the patient will be diseased. The <monospace>tspair</monospace> package can be used to predict the outcomes of new samples based on new expression data. The new data can take the form of a new expression matrix, or an expression set object. The <monospace>R</monospace> function <monospace>predict()</monospace> searches for the TSP gene names from the original <monospace>tspcalc()</monospace> function call, and based on the row names or <monospace>featureNames</monospace> of the new dataset identifies the genes to use for prediction. If multiple TSPs are reported, the default is to predict with the TSP achieving the top tie-breaking score (Tan <italic>et al.</italic>, <xref ref-type="bibr" rid="B7">2005</xref>), but the user may also elect to use a different TSP for prediction.</p>
+    <p>
+      <inline-graphic xlink:href="btp126i4.jpg"/>
+    </p>
+    <p>In this example, the <monospace>predict()</monospace> function finds the genes with labels ‘Gene5’ and ‘Gene338’ in the second dataset and calculates the TSP predictions based on the values of these two genes. The new data matrix need not be defined by a microarray, it could easily be the result of RT-PCR or any other expression assay, imported into <monospace>R</monospace> as a tab-delimited text file.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>The author acknowledges the useful discussions with Giovanni Parmigiani, Leslie Cope, Dan Naiman and Don Geman.</p>
+    <p><italic>Funding</italic>: National Science Foundation (DMS034211); <grant-sponsor>National Institutes of Health</grant-sponsor> (<grant-num>1UL1RR025005-01</grant-num>).</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Geman</surname>
+            <given-names>D</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Classifying gene expression profiles from pairwise mRNA comparisons</article-title>
+        <source>Stat. Appl. Genet. Mol. Biol.</source>
+        <year>2004</year>
+        <volume>3</volume>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ma</surname>
+            <given-names>XJ</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A two-gene expression ratio predicts clinical outcome in breast cancer patients treated with tamoxifen</article-title>
+        <source>Cancer Cell</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>607</fpage>
+        <lpage>616</lpage>
+        <pub-id pub-id-type="pmid">15193263</pub-id>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Marchionni</surname>
+            <given-names>L</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Systematic review: gene expression profiling assays in early-stage breast cancer</article-title>
+        <source>Ann. Inter. Med.</source>
+        <year>2008</year>
+        <volume>148</volume>
+        <fpage>358</fpage>
+        <lpage>369</lpage>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Paik</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A multigene assay to predict recurrence of tamoxifen-treated, node-negative breast cancer</article-title>
+        <source>N. Engl. J. Med.</source>
+        <year>2004</year>
+        <volume>351</volume>
+        <fpage>2817</fpage>
+        <lpage>2826</lpage>
+        <pub-id pub-id-type="pmid">15591335</pub-id>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Price</surname>
+            <given-names>ND</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Highly accurate two-gene classifier for differentiating gastrointestinal stromal tumors and leiomyosarcomas</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>2007</year>
+        <volume>104</volume>
+        <fpage>3414</fpage>
+        <lpage>3419</lpage>
+        <pub-id pub-id-type="pmid">17360660</pub-id>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Quackenbush</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Microarray analysis and tumor classification</article-title>
+        <source>N. Engl. J. Med.</source>
+        <year>2006</year>
+        <volume>354</volume>
+        <fpage>2463</fpage>
+        <lpage>2472</lpage>
+        <pub-id pub-id-type="pmid">16760446</pub-id>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tan</surname>
+            <given-names>AC</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Simple decision rules for classifying human cancers from gene expression profiles</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>3896</fpage>
+        <lpage>3904</lpage>
+        <pub-id pub-id-type="pmid">16105897</pub-id>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>van't Veer</surname>
+            <given-names>LJ</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Gene expression profiling predicts clinical outcome of breast cancer</article-title>
+        <source>Nature</source>
+        <year>2002</year>
+        <volume>415</volume>
+        <fpage>530</fpage>
+        <lpage>536</lpage>
+        <pub-id pub-id-type="pmid">11823860</pub-id>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Xu</surname>
+            <given-names>L</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Robust prostate cancer marker genes emerge from direct integration of inter-study microarray data</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <fpage>3905</fpage>
+        <lpage>3911</lpage>
+        <pub-id pub-id-type="pmid">16131522</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+</back>

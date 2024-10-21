@@ -1,0 +1,1720 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title-group>
+      <journal-title>Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1367-4811</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3810854</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btt509</article-id>
+    <article-id pub-id-type="publisher-id">btt509</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Applications Notes</subject>
+        <subj-group>
+          <subject>Sequence Analysis</subject>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Infernal 1.1: 100-fold faster RNA homology searches</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Nawrocki</surname>
+          <given-names>Eric P.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="btt509-COR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Eddy</surname>
+          <given-names>Sean R.</given-names>
+        </name>
+      </contrib>
+      <aff>HHMI Janelia Farm Research Campus, Ashburn, VA 20147, USA</aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="btt509-COR1">*To whom correspondence should be addressed.</corresp>
+      <fn>
+        <p>Associate Editor: Ivo Hofacker</p>
+      </fn>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>15</day>
+      <month>11</month>
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>4</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>4</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="epub"/>. -->
+    <volume>29</volume>
+    <issue>22</issue>
+    <fpage>2933</fpage>
+    <lpage>2935</lpage>
+    <history>
+      <date date-type="received">
+        <day>2</day>
+        <month>7</month>
+        <year>2013</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>16</day>
+        <month>8</month>
+        <year>2013</year>
+      </date>
+      <date date-type="accepted">
+        <day>27</day>
+        <month>8</month>
+        <year>2013</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author 2013. Published by Oxford University Press. All rights reserved.</copyright-statement>
+      <copyright-year>2013</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by/3.0/">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/3.0/">http://creativecommons.org/licenses/by/3.0/</ext-link>), which permits unrestricted reuse, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Summary:</bold> Infernal builds probabilistic profiles of the sequence and secondary structure of an RNA family called covariance models (CMs) from structurally annotated multiple sequence alignments given as input. Infernal uses CMs to search for new family members in sequence databases and to create potentially large multiple sequence alignments. Version 1.1 of Infernal introduces a new filter pipeline for RNA homology search based on accelerated profile hidden Markov model (HMM) methods and HMM-banded CM alignment methods. This enables ∼100-fold acceleration over the previous version and ∼10 000-fold acceleration over exhaustive non-filtered CM searches.</p>
+      <p><bold>Availability:</bold> Source code, documentation and the benchmark are downloadable from <ext-link ext-link-type="uri" xlink:href="http://infernal.janelia.org">http://infernal.janelia.org</ext-link>. Infernal is freely licensed under the GNU GPLv3 and should be portable to any POSIX-compliant operating system, including Linux and Mac OS/X. Documentation includes a user’s guide with a tutorial, a discussion of file formats and user options and additional details on methods implemented in the software.</p>
+      <p>
+        <bold>Contact:</bold>
+        <email>nawrockie@janelia.hhmi.org</email>
+      </p>
+    </abstract>
+    <counts>
+      <page-count count="3"/>
+    </counts>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>1 INTRODUCTION</title>
+    <p>Many structural RNAs conserve their sequence and secondary structure, and the most effective RNA homology search and alignment tools incorporate both types of conservation into their scoring systems. Covariance models (CMs) are profile stochastic context-free grammars (<xref ref-type="bibr" rid="btt509-B5">Durbin <italic>et al.</italic>, 1998</xref>), probabilistic models of the conserved sequence and secondary structure of an RNA family, analogous to sequence-based profile hidden Markov models (HMMs) commonly used for protein sequence analysis, with added complexity necessary for modeling RNA secondary structure. Infernal implements methods for constructing CMs from input structurally annotated RNA alignments or single sequences and for using those models to search for and align homologous RNAs.</p>
+    <p>Compared with the previous version 1.0.2, Infernal 1.1 accelerates typical RNA homology searches ∼100-fold using a filter pipeline based on accelerated profile HMM methods [the HMMER3 project (<xref ref-type="bibr" rid="btt509-B7">Eddy, 2008</xref>, <xref ref-type="bibr" rid="btt509-B8">2011</xref>)] and constrained CM alignment algorithms (<xref ref-type="bibr" rid="btt509-B2">Brown, 2000</xref>; <xref ref-type="bibr" rid="btt509-B13">Nawrocki, 2009</xref>). The increased speed comes at a negligible cost to sensitivity (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>). Additionally, version 1.1 implements specialized algorithms for structural alignment of truncated RNA sequences (<xref ref-type="bibr" rid="btt509-B12">Kolbe and Eddy, 2009</xref>) commonly found in sequencing reads, which were prone to misalignment in previous versions.
+<fig id="btt509-F1" position="float"><label>Fig. 1.</label><caption><p>ROC-like curves for the benchmark. Plots are shown for the new Infernal 1.1 with and without filters, for the old Infernal 1.0.2, for profile HMM searches with nhmmer (from the HMMER package included in Infernal 1.1, default parameters) and for family-pairwise-searches with BLASTN (ncbi-blast-2.2.28+, default parameters). The maximum sensitivity (not shown) for default Infernal 1.1 is 0.81 (629 of 820 true positives found), which is achieved at a false-positive rate of 0.19/Mb/query. For non-filtered Infernal, maximum sensitivity is 0.87 at 2.9 false positives per Mb per query. This indicates that at high false-positive rates the filters prevent some true positives from being found, but prevent many more false positives from being found. CPU times are total times for all 106 family searches measured for single execution threads on 3.0 GHz Intel Xeon processors. The Infernal times do not include time required for model calibration.</p></caption><graphic xlink:href="btt509f1p"/></fig></p>
+  </sec>
+  <sec id="SEC2">
+    <title>2 APPROACH</title>
+    <p>Exhaustive dynamic programming (DP) CM algorithms are impractically slow (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>). Several types of sequence-based filters have been developed for acceleration, including a BLAST-based filtering scheme used by Rfam since its inception (<xref ref-type="bibr" rid="btt509-B10">Griffiths-Jones <italic>et al.</italic>, 2003</xref>) and several profile HMM-based methods (<xref ref-type="bibr" rid="btt509-B15">Weinberg and Ruzzo, 2004</xref>, <xref ref-type="bibr" rid="btt509-B16">2006</xref>). Infernal version 1.0.2 and version 1.1 both use profile HMM filters: version 1.0.2’s filters are derived from the HMMER2 package (<xref ref-type="bibr" rid="btt509-B6">Eddy, 2003</xref>), whereas version 1.1 co-opts HMMER3’s dramatically accelerated search algorithms, which take advantage of single-instruction multiple-data vector instructions to parallelize the core steps of the HMM DP algorithms (<xref ref-type="bibr" rid="btt509-B8">Eddy, 2011</xref>). Version 1.1 uses four separate profile HMM-based filter stages, each one successively slower and stricter than the previous stage. The new filter stages are sufficiently fast that the post-HMM-filtering CM DP algorithms as implemented in the previous version (1.0.2) became the clear computational bottleneck. To accelerate these, constraints, or bands, derived from an HMM alignment of the sequence are imposed on the DP matrices to significantly reduce the number of required calculations (<xref ref-type="bibr" rid="btt509-B2">Brown, 2000</xref>; <xref ref-type="bibr" rid="btt509-B13">Nawrocki, 2009</xref>). Both the new filters and the banded CM methods are vital for the improved search speed. In the benchmark described later in the text, for default Infernal searches, the profile HMM stages take about one-third of the total running time and the remaining time is spent on the subsequent CM DP calculations.</p>
+  </sec>
+  <sec id="SEC3">
+    <title>3 USAGE</title>
+    <p>There are two major applications of Infernal: to search for structural RNAs in a sequence dataset (e.g. to perform genome annotation of RNAs) and to create multiple sequence- and structure-based alignments of RNA homologs [e.g. 16S small subunit ribosomal RNA alignment for environmental survey studies (<xref ref-type="bibr" rid="btt509-B4">Cole <italic>et al.</italic>, 2009</xref>)]. Both applications begin with a CM file, which can either be downloaded from the Rfam database of &gt;2000 RNA families (<xref ref-type="bibr" rid="btt509-B3">Burge <italic>et al.</italic>, 2013</xref>) or created by the user with Infernal’s <italic>cmbuild</italic> program from a structurally annotated single sequence or multiple sequence alignment. Before a CM can be used to search a sequence database, it must first be calibrated by the <italic>cmcalibrate</italic> program, which performs a simulated search against random sequence to determine model-specific parameters for assigning E-values to database hits. (Rfam CM files come pre-calibrated.) The <italic>cmsearch</italic> program takes a calibrated CM file, searches it against a sequence database and outputs a ranked list of top scoring hits and hit alignments. The <italic>cmalign</italic> program takes a CM file (calibrated or not), aligns all sequences to the model and outputs a structurally annotated MSA in Stockholm format. Version 1.1 introduces the <italic>cmscan</italic> program for determining whether a given sequence contains homologies to any known RNA families in a CM library like Rfam. Before running <italic>cmscan</italic>, the CM database must be converted to a special format using <italic>cmpress</italic>, which enables faster scanning.</p>
+  </sec>
+  <sec id="SEC4">
+    <title>4 PERFORMANCE</title>
+    <p>An independent benchmark of RNA homology search (<xref ref-type="bibr" rid="btt509-B9">Freyhult <italic>et al.</italic>, 2007</xref>) found covariance model-based programs, including a previous version of Infernal, to be the most specific and sensitive of the tools tested. We present here results from an updated version of our previously published internal RMARK benchmark (<xref ref-type="bibr" rid="btt509-B14">Nawrocki <italic>et al.</italic>, 2009</xref>), mainly to indicate the relative performance of Infernal 1.1 and the previous version 1.0.2.</p>
+    <p>The RMARK3 benchmark was constructed from the seed alignments of the Rfam 10.0 database as previously described (<xref ref-type="bibr" rid="btt509-B14">Nawrocki <italic>et al.</italic>, 2009</xref>). It is composed of a set of 106 families, each represented by a training alignment of ≥5 aligned sequences and a test set of ≥1 sequences. No two test sequences are &gt;70% identical, and no train/test sequence pair is &gt;60% identical. The 780 test sequences were embedded into ten 1 Mb genome-like sequences, to create a benchmark ‘pseudo-genome’ of 10.16 Mb. For each included family, a model was built from the training set using the Rfam alignment, calibrated and used to search the pseudo-genome. The resulting hits from all searches were then sorted by E-value and a sensitivity versus false-positive rate ROC-like curve was generated from the results (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>).</p>
+    <p><xref ref-type="fig" rid="btt509-F1">Figure 1</xref> shows that default Infernal 1.1 performs the benchmark searches in 0.44 h and is ∼100 times faster than the previous version 1.0.2 (49.31 h) and ∼10 000 times faster than exhaustive non-filtered 1.1 search (4359 h); yet all three search methods have similar sensitivity at the low false-positive rates necessary for large database searches. We also tested two sequence-only methods: profile HMMs implemented in HMMER3 (<xref ref-type="bibr" rid="btt509-B7">Eddy, 2008</xref>, <xref ref-type="bibr" rid="btt509-B8">2011</xref>) and family-pairwise (<xref ref-type="bibr" rid="btt509-B11">Grundy, 1998</xref>) single-sequence BLASTN queries (<xref ref-type="bibr" rid="btt509-B1">Altschul <italic>et al.</italic>, 1997</xref>), which were faster (0.02 and 0.01 h, respectively), but significantly less sensitive than CMs, indicating the benefit of secondary structure modeling.</p>
+    <p>The relatively fast speed of default version 1.1 on the benchmark is maintained on real genomic sequences. The average speed is 1.5 s/Mb/query on the benchmark and 0.6 s/Mb/query on a several gigabase database that includes a sampling of 15 genomes (five each of archaea, bacteria and eukarya) using the same query models from the benchmark. As database size increases, Infernal increases filter stringency resulting in faster search rates without sacrificing appreciable sensitivity at low false-positive rates based on further RMARK benchmarking (results not shown).</p>
+    <p>Infernal is now a more practical tool for RNA homology search. The increased speed should enable its incorporation into automated sequence annotation pipelines and obviate the need for additional filtering schemes for large-scale CM searches, such as the BLAST-based filter paradigm used by Rfam (<xref ref-type="bibr" rid="btt509-B10">Griffiths-Jones <italic>et al.</italic>, 2003</xref>). Rfam-based annotation of one typical bacterial or archaeal genome (i.e. searching all 2208 Rfam 11.0 models against a 2–5 Mb target) now takes ∼1 h on a single quad-core desktop computer. Analysis of larger datasets, however, such as vertebrate genomes or all reads from a high-throughput sequencing run, still requires a compute cluster. As an example, a search of all Rfam models against the 1 Gb chicken genome would require ∼3 h on a 100-CPU compute cluster. The most expensive programs (<italic>cmalign</italic>, <italic>cmcalibrate</italic>, <italic>cmscan</italic> and <italic>cmsearch</italic>) are implemented for use with multiple threads on multi-core machines and in coarse-grained MPI versions for clusters.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>Travis Wheeler adapted HMMER3’s filters for chromosome-length sequences, and his code is integral to Infernal’s pipeline. We thank Goran Ceric and his team for managing Janelia Farm’s high-performance computing resources.</p>
+    <p><italic>Funding</italic>: Infernal development is supported by <funding-source>Howard Hughes Medical Institute</funding-source>.</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="btt509-B1">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>SF</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Gapped BLAST and PSI-BLAST: a new generation of protein database search programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3389</fpage>
+        <lpage>3402</lpage>
+        <pub-id pub-id-type="pmid">9254694</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B2">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brown</surname>
+            <given-names>MP</given-names>
+          </name>
+        </person-group>
+        <article-title>Small subunit ribosomal RNA modeling using stochastic context-free grammars</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>57</fpage>
+        <lpage>66</lpage>
+        <pub-id pub-id-type="pmid">10977066</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B3">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Burge</surname>
+            <given-names>SW</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam 11.0: 10 years of RNA families</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2013</year>
+        <volume>41</volume>
+        <fpage>D226</fpage>
+        <lpage>D232</lpage>
+        <pub-id pub-id-type="pmid">23125362</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B4">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cole</surname>
+            <given-names>JR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The Ribosomal Database Project: improved alignments and new tools for rRNA analysis</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2009</year>
+        <volume>37</volume>
+        <fpage>D141</fpage>
+        <lpage>D145</lpage>
+        <pub-id pub-id-type="pmid">19004872</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B5">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids</source>
+        <year>1998</year>
+        <publisher-loc>Cambridge, UK</publisher-loc>
+        <publisher-name>Cambridge University Press</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B6">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <source>The HMMER2 user’s guide</source>
+        <year>2003</year>
+        <comment><ext-link ext-link-type="uri" xlink:href="http://hmmer.janelia.org/">http://hmmer.janelia.org/</ext-link> (1 July 2013, date last accessed)</comment>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B7">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>A probabilistic model of local sequence alignment that simplifies statistical significance estimation</article-title>
+        <source>PLoS Comput. Biol.</source>
+        <year>2008</year>
+        <volume>4</volume>
+        <fpage>e1000069</fpage>
+        <pub-id pub-id-type="pmid">18516236</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B8">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Accelerated profile HMM searches</article-title>
+        <source>PLoS Comp. Biol.</source>
+        <year>2011</year>
+        <volume>7</volume>
+        <fpage>e1002195</fpage>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B9">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Freyhult</surname>
+            <given-names>EK</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Exploring genomic dark matter: a critical assessment of the performance of homology search methods on noncoding RNA</article-title>
+        <source>Genome Res.</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <fpage>117</fpage>
+        <lpage>125</lpage>
+        <pub-id pub-id-type="pmid">17151342</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B10">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Griffiths-Jones</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam: an RNA family database</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>439</fpage>
+        <lpage>441</lpage>
+        <pub-id pub-id-type="pmid">12520045</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B11">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Grundy</surname>
+            <given-names>WN</given-names>
+          </name>
+        </person-group>
+        <article-title>Homology detection via family pairwise search</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>1998</year>
+        <volume>5</volume>
+        <fpage>479</fpage>
+        <lpage>491</lpage>
+        <pub-id pub-id-type="pmid">9773344</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B12">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kolbe</surname>
+            <given-names>DL</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Local RNA structure alignment with incomplete sequence</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1236</fpage>
+        <lpage>1243</lpage>
+        <pub-id pub-id-type="pmid">19304875</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B13">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawrocki</surname>
+            <given-names>EP</given-names>
+          </name>
+        </person-group>
+        <source>Structural RNA Homology Search and Alignment Using Covariance Models</source>
+        <year>2009</year>
+        <comment>PhD Thesis, Washington University School of Medicine, USA</comment>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B14">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawrocki</surname>
+            <given-names>EP</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Infernal 1.0: inference of RNA alignments</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1335</fpage>
+        <lpage>1337</lpage>
+        <pub-id pub-id-type="pmid">19307242</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B15">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <article-title>Exploiting conserved structure for faster annotation of non-coding RNAs without loss of accuracy</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <issue>Suppl. 1</issue>
+        <fpage>I334</fpage>
+        <lpage>I341</lpage>
+        <pub-id pub-id-type="pmid">15262817</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B16">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <article-title>Sequence-based heuristics for faster annotation of non-coding RNA families</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <fpage>35</fpage>
+        <lpage>39</lpage>
+        <pub-id pub-id-type="pmid">16267089</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title-group>
+      <journal-title>Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1367-4811</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3810854</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btt509</article-id>
+    <article-id pub-id-type="publisher-id">btt509</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Applications Notes</subject>
+        <subj-group>
+          <subject>Sequence Analysis</subject>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Infernal 1.1: 100-fold faster RNA homology searches</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Nawrocki</surname>
+          <given-names>Eric P.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="btt509-COR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Eddy</surname>
+          <given-names>Sean R.</given-names>
+        </name>
+      </contrib>
+      <aff>HHMI Janelia Farm Research Campus, Ashburn, VA 20147, USA</aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="btt509-COR1">*To whom correspondence should be addressed.</corresp>
+      <fn>
+        <p>Associate Editor: Ivo Hofacker</p>
+      </fn>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>15</day>
+      <month>11</month>
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>4</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>4</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="epub"/>. -->
+    <volume>29</volume>
+    <issue>22</issue>
+    <fpage>2933</fpage>
+    <lpage>2935</lpage>
+    <history>
+      <date date-type="received">
+        <day>2</day>
+        <month>7</month>
+        <year>2013</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>16</day>
+        <month>8</month>
+        <year>2013</year>
+      </date>
+      <date date-type="accepted">
+        <day>27</day>
+        <month>8</month>
+        <year>2013</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author 2013. Published by Oxford University Press. All rights reserved.</copyright-statement>
+      <copyright-year>2013</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by/3.0/">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/3.0/">http://creativecommons.org/licenses/by/3.0/</ext-link>), which permits unrestricted reuse, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Summary:</bold> Infernal builds probabilistic profiles of the sequence and secondary structure of an RNA family called covariance models (CMs) from structurally annotated multiple sequence alignments given as input. Infernal uses CMs to search for new family members in sequence databases and to create potentially large multiple sequence alignments. Version 1.1 of Infernal introduces a new filter pipeline for RNA homology search based on accelerated profile hidden Markov model (HMM) methods and HMM-banded CM alignment methods. This enables ∼100-fold acceleration over the previous version and ∼10 000-fold acceleration over exhaustive non-filtered CM searches.</p>
+      <p><bold>Availability:</bold> Source code, documentation and the benchmark are downloadable from <ext-link ext-link-type="uri" xlink:href="http://infernal.janelia.org">http://infernal.janelia.org</ext-link>. Infernal is freely licensed under the GNU GPLv3 and should be portable to any POSIX-compliant operating system, including Linux and Mac OS/X. Documentation includes a user’s guide with a tutorial, a discussion of file formats and user options and additional details on methods implemented in the software.</p>
+      <p>
+        <bold>Contact:</bold>
+        <email>nawrockie@janelia.hhmi.org</email>
+      </p>
+    </abstract>
+    <counts>
+      <page-count count="3"/>
+    </counts>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>1 INTRODUCTION</title>
+    <p>Many structural RNAs conserve their sequence and secondary structure, and the most effective RNA homology search and alignment tools incorporate both types of conservation into their scoring systems. Covariance models (CMs) are profile stochastic context-free grammars (<xref ref-type="bibr" rid="btt509-B5">Durbin <italic>et al.</italic>, 1998</xref>), probabilistic models of the conserved sequence and secondary structure of an RNA family, analogous to sequence-based profile hidden Markov models (HMMs) commonly used for protein sequence analysis, with added complexity necessary for modeling RNA secondary structure. Infernal implements methods for constructing CMs from input structurally annotated RNA alignments or single sequences and for using those models to search for and align homologous RNAs.</p>
+    <p>Compared with the previous version 1.0.2, Infernal 1.1 accelerates typical RNA homology searches ∼100-fold using a filter pipeline based on accelerated profile HMM methods [the HMMER3 project (<xref ref-type="bibr" rid="btt509-B7">Eddy, 2008</xref>, <xref ref-type="bibr" rid="btt509-B8">2011</xref>)] and constrained CM alignment algorithms (<xref ref-type="bibr" rid="btt509-B2">Brown, 2000</xref>; <xref ref-type="bibr" rid="btt509-B13">Nawrocki, 2009</xref>). The increased speed comes at a negligible cost to sensitivity (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>). Additionally, version 1.1 implements specialized algorithms for structural alignment of truncated RNA sequences (<xref ref-type="bibr" rid="btt509-B12">Kolbe and Eddy, 2009</xref>) commonly found in sequencing reads, which were prone to misalignment in previous versions.
+<fig id="btt509-F1" position="float"><label>Fig. 1.</label><caption><p>ROC-like curves for the benchmark. Plots are shown for the new Infernal 1.1 with and without filters, for the old Infernal 1.0.2, for profile HMM searches with nhmmer (from the HMMER package included in Infernal 1.1, default parameters) and for family-pairwise-searches with BLASTN (ncbi-blast-2.2.28+, default parameters). The maximum sensitivity (not shown) for default Infernal 1.1 is 0.81 (629 of 820 true positives found), which is achieved at a false-positive rate of 0.19/Mb/query. For non-filtered Infernal, maximum sensitivity is 0.87 at 2.9 false positives per Mb per query. This indicates that at high false-positive rates the filters prevent some true positives from being found, but prevent many more false positives from being found. CPU times are total times for all 106 family searches measured for single execution threads on 3.0 GHz Intel Xeon processors. The Infernal times do not include time required for model calibration.</p></caption><graphic xlink:href="btt509f1p"/></fig></p>
+  </sec>
+  <sec id="SEC2">
+    <title>2 APPROACH</title>
+    <p>Exhaustive dynamic programming (DP) CM algorithms are impractically slow (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>). Several types of sequence-based filters have been developed for acceleration, including a BLAST-based filtering scheme used by Rfam since its inception (<xref ref-type="bibr" rid="btt509-B10">Griffiths-Jones <italic>et al.</italic>, 2003</xref>) and several profile HMM-based methods (<xref ref-type="bibr" rid="btt509-B15">Weinberg and Ruzzo, 2004</xref>, <xref ref-type="bibr" rid="btt509-B16">2006</xref>). Infernal version 1.0.2 and version 1.1 both use profile HMM filters: version 1.0.2’s filters are derived from the HMMER2 package (<xref ref-type="bibr" rid="btt509-B6">Eddy, 2003</xref>), whereas version 1.1 co-opts HMMER3’s dramatically accelerated search algorithms, which take advantage of single-instruction multiple-data vector instructions to parallelize the core steps of the HMM DP algorithms (<xref ref-type="bibr" rid="btt509-B8">Eddy, 2011</xref>). Version 1.1 uses four separate profile HMM-based filter stages, each one successively slower and stricter than the previous stage. The new filter stages are sufficiently fast that the post-HMM-filtering CM DP algorithms as implemented in the previous version (1.0.2) became the clear computational bottleneck. To accelerate these, constraints, or bands, derived from an HMM alignment of the sequence are imposed on the DP matrices to significantly reduce the number of required calculations (<xref ref-type="bibr" rid="btt509-B2">Brown, 2000</xref>; <xref ref-type="bibr" rid="btt509-B13">Nawrocki, 2009</xref>). Both the new filters and the banded CM methods are vital for the improved search speed. In the benchmark described later in the text, for default Infernal searches, the profile HMM stages take about one-third of the total running time and the remaining time is spent on the subsequent CM DP calculations.</p>
+  </sec>
+  <sec id="SEC3">
+    <title>3 USAGE</title>
+    <p>There are two major applications of Infernal: to search for structural RNAs in a sequence dataset (e.g. to perform genome annotation of RNAs) and to create multiple sequence- and structure-based alignments of RNA homologs [e.g. 16S small subunit ribosomal RNA alignment for environmental survey studies (<xref ref-type="bibr" rid="btt509-B4">Cole <italic>et al.</italic>, 2009</xref>)]. Both applications begin with a CM file, which can either be downloaded from the Rfam database of &gt;2000 RNA families (<xref ref-type="bibr" rid="btt509-B3">Burge <italic>et al.</italic>, 2013</xref>) or created by the user with Infernal’s <italic>cmbuild</italic> program from a structurally annotated single sequence or multiple sequence alignment. Before a CM can be used to search a sequence database, it must first be calibrated by the <italic>cmcalibrate</italic> program, which performs a simulated search against random sequence to determine model-specific parameters for assigning E-values to database hits. (Rfam CM files come pre-calibrated.) The <italic>cmsearch</italic> program takes a calibrated CM file, searches it against a sequence database and outputs a ranked list of top scoring hits and hit alignments. The <italic>cmalign</italic> program takes a CM file (calibrated or not), aligns all sequences to the model and outputs a structurally annotated MSA in Stockholm format. Version 1.1 introduces the <italic>cmscan</italic> program for determining whether a given sequence contains homologies to any known RNA families in a CM library like Rfam. Before running <italic>cmscan</italic>, the CM database must be converted to a special format using <italic>cmpress</italic>, which enables faster scanning.</p>
+  </sec>
+  <sec id="SEC4">
+    <title>4 PERFORMANCE</title>
+    <p>An independent benchmark of RNA homology search (<xref ref-type="bibr" rid="btt509-B9">Freyhult <italic>et al.</italic>, 2007</xref>) found covariance model-based programs, including a previous version of Infernal, to be the most specific and sensitive of the tools tested. We present here results from an updated version of our previously published internal RMARK benchmark (<xref ref-type="bibr" rid="btt509-B14">Nawrocki <italic>et al.</italic>, 2009</xref>), mainly to indicate the relative performance of Infernal 1.1 and the previous version 1.0.2.</p>
+    <p>The RMARK3 benchmark was constructed from the seed alignments of the Rfam 10.0 database as previously described (<xref ref-type="bibr" rid="btt509-B14">Nawrocki <italic>et al.</italic>, 2009</xref>). It is composed of a set of 106 families, each represented by a training alignment of ≥5 aligned sequences and a test set of ≥1 sequences. No two test sequences are &gt;70% identical, and no train/test sequence pair is &gt;60% identical. The 780 test sequences were embedded into ten 1 Mb genome-like sequences, to create a benchmark ‘pseudo-genome’ of 10.16 Mb. For each included family, a model was built from the training set using the Rfam alignment, calibrated and used to search the pseudo-genome. The resulting hits from all searches were then sorted by E-value and a sensitivity versus false-positive rate ROC-like curve was generated from the results (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>).</p>
+    <p><xref ref-type="fig" rid="btt509-F1">Figure 1</xref> shows that default Infernal 1.1 performs the benchmark searches in 0.44 h and is ∼100 times faster than the previous version 1.0.2 (49.31 h) and ∼10 000 times faster than exhaustive non-filtered 1.1 search (4359 h); yet all three search methods have similar sensitivity at the low false-positive rates necessary for large database searches. We also tested two sequence-only methods: profile HMMs implemented in HMMER3 (<xref ref-type="bibr" rid="btt509-B7">Eddy, 2008</xref>, <xref ref-type="bibr" rid="btt509-B8">2011</xref>) and family-pairwise (<xref ref-type="bibr" rid="btt509-B11">Grundy, 1998</xref>) single-sequence BLASTN queries (<xref ref-type="bibr" rid="btt509-B1">Altschul <italic>et al.</italic>, 1997</xref>), which were faster (0.02 and 0.01 h, respectively), but significantly less sensitive than CMs, indicating the benefit of secondary structure modeling.</p>
+    <p>The relatively fast speed of default version 1.1 on the benchmark is maintained on real genomic sequences. The average speed is 1.5 s/Mb/query on the benchmark and 0.6 s/Mb/query on a several gigabase database that includes a sampling of 15 genomes (five each of archaea, bacteria and eukarya) using the same query models from the benchmark. As database size increases, Infernal increases filter stringency resulting in faster search rates without sacrificing appreciable sensitivity at low false-positive rates based on further RMARK benchmarking (results not shown).</p>
+    <p>Infernal is now a more practical tool for RNA homology search. The increased speed should enable its incorporation into automated sequence annotation pipelines and obviate the need for additional filtering schemes for large-scale CM searches, such as the BLAST-based filter paradigm used by Rfam (<xref ref-type="bibr" rid="btt509-B10">Griffiths-Jones <italic>et al.</italic>, 2003</xref>). Rfam-based annotation of one typical bacterial or archaeal genome (i.e. searching all 2208 Rfam 11.0 models against a 2–5 Mb target) now takes ∼1 h on a single quad-core desktop computer. Analysis of larger datasets, however, such as vertebrate genomes or all reads from a high-throughput sequencing run, still requires a compute cluster. As an example, a search of all Rfam models against the 1 Gb chicken genome would require ∼3 h on a 100-CPU compute cluster. The most expensive programs (<italic>cmalign</italic>, <italic>cmcalibrate</italic>, <italic>cmscan</italic> and <italic>cmsearch</italic>) are implemented for use with multiple threads on multi-core machines and in coarse-grained MPI versions for clusters.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>Travis Wheeler adapted HMMER3’s filters for chromosome-length sequences, and his code is integral to Infernal’s pipeline. We thank Goran Ceric and his team for managing Janelia Farm’s high-performance computing resources.</p>
+    <p><italic>Funding</italic>: Infernal development is supported by <funding-source>Howard Hughes Medical Institute</funding-source>.</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="btt509-B1">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>SF</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Gapped BLAST and PSI-BLAST: a new generation of protein database search programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3389</fpage>
+        <lpage>3402</lpage>
+        <pub-id pub-id-type="pmid">9254694</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B2">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brown</surname>
+            <given-names>MP</given-names>
+          </name>
+        </person-group>
+        <article-title>Small subunit ribosomal RNA modeling using stochastic context-free grammars</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>57</fpage>
+        <lpage>66</lpage>
+        <pub-id pub-id-type="pmid">10977066</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B3">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Burge</surname>
+            <given-names>SW</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam 11.0: 10 years of RNA families</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2013</year>
+        <volume>41</volume>
+        <fpage>D226</fpage>
+        <lpage>D232</lpage>
+        <pub-id pub-id-type="pmid">23125362</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B4">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cole</surname>
+            <given-names>JR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The Ribosomal Database Project: improved alignments and new tools for rRNA analysis</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2009</year>
+        <volume>37</volume>
+        <fpage>D141</fpage>
+        <lpage>D145</lpage>
+        <pub-id pub-id-type="pmid">19004872</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B5">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids</source>
+        <year>1998</year>
+        <publisher-loc>Cambridge, UK</publisher-loc>
+        <publisher-name>Cambridge University Press</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B6">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <source>The HMMER2 user’s guide</source>
+        <year>2003</year>
+        <comment><ext-link ext-link-type="uri" xlink:href="http://hmmer.janelia.org/">http://hmmer.janelia.org/</ext-link> (1 July 2013, date last accessed)</comment>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B7">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>A probabilistic model of local sequence alignment that simplifies statistical significance estimation</article-title>
+        <source>PLoS Comput. Biol.</source>
+        <year>2008</year>
+        <volume>4</volume>
+        <fpage>e1000069</fpage>
+        <pub-id pub-id-type="pmid">18516236</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B8">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Accelerated profile HMM searches</article-title>
+        <source>PLoS Comp. Biol.</source>
+        <year>2011</year>
+        <volume>7</volume>
+        <fpage>e1002195</fpage>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B9">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Freyhult</surname>
+            <given-names>EK</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Exploring genomic dark matter: a critical assessment of the performance of homology search methods on noncoding RNA</article-title>
+        <source>Genome Res.</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <fpage>117</fpage>
+        <lpage>125</lpage>
+        <pub-id pub-id-type="pmid">17151342</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B10">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Griffiths-Jones</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam: an RNA family database</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>439</fpage>
+        <lpage>441</lpage>
+        <pub-id pub-id-type="pmid">12520045</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B11">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Grundy</surname>
+            <given-names>WN</given-names>
+          </name>
+        </person-group>
+        <article-title>Homology detection via family pairwise search</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>1998</year>
+        <volume>5</volume>
+        <fpage>479</fpage>
+        <lpage>491</lpage>
+        <pub-id pub-id-type="pmid">9773344</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B12">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kolbe</surname>
+            <given-names>DL</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Local RNA structure alignment with incomplete sequence</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1236</fpage>
+        <lpage>1243</lpage>
+        <pub-id pub-id-type="pmid">19304875</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B13">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawrocki</surname>
+            <given-names>EP</given-names>
+          </name>
+        </person-group>
+        <source>Structural RNA Homology Search and Alignment Using Covariance Models</source>
+        <year>2009</year>
+        <comment>PhD Thesis, Washington University School of Medicine, USA</comment>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B14">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawrocki</surname>
+            <given-names>EP</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Infernal 1.0: inference of RNA alignments</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1335</fpage>
+        <lpage>1337</lpage>
+        <pub-id pub-id-type="pmid">19307242</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B15">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <article-title>Exploiting conserved structure for faster annotation of non-coding RNAs without loss of accuracy</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <issue>Suppl. 1</issue>
+        <fpage>I334</fpage>
+        <lpage>I341</lpage>
+        <pub-id pub-id-type="pmid">15262817</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B16">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <article-title>Sequence-based heuristics for faster annotation of non-coding RNA families</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <fpage>35</fpage>
+        <lpage>39</lpage>
+        <pub-id pub-id-type="pmid">16267089</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title-group>
+      <journal-title>Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1367-4811</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3810854</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btt509</article-id>
+    <article-id pub-id-type="publisher-id">btt509</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Applications Notes</subject>
+        <subj-group>
+          <subject>Sequence Analysis</subject>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Infernal 1.1: 100-fold faster RNA homology searches</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Nawrocki</surname>
+          <given-names>Eric P.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="btt509-COR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Eddy</surname>
+          <given-names>Sean R.</given-names>
+        </name>
+      </contrib>
+      <aff>HHMI Janelia Farm Research Campus, Ashburn, VA 20147, USA</aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="btt509-COR1">*To whom correspondence should be addressed.</corresp>
+      <fn>
+        <p>Associate Editor: Ivo Hofacker</p>
+      </fn>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>15</day>
+      <month>11</month>
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>4</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>4</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="epub"/>. -->
+    <volume>29</volume>
+    <issue>22</issue>
+    <fpage>2933</fpage>
+    <lpage>2935</lpage>
+    <history>
+      <date date-type="received">
+        <day>2</day>
+        <month>7</month>
+        <year>2013</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>16</day>
+        <month>8</month>
+        <year>2013</year>
+      </date>
+      <date date-type="accepted">
+        <day>27</day>
+        <month>8</month>
+        <year>2013</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author 2013. Published by Oxford University Press. All rights reserved.</copyright-statement>
+      <copyright-year>2013</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by/3.0/">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/3.0/">http://creativecommons.org/licenses/by/3.0/</ext-link>), which permits unrestricted reuse, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Summary:</bold> Infernal builds probabilistic profiles of the sequence and secondary structure of an RNA family called covariance models (CMs) from structurally annotated multiple sequence alignments given as input. Infernal uses CMs to search for new family members in sequence databases and to create potentially large multiple sequence alignments. Version 1.1 of Infernal introduces a new filter pipeline for RNA homology search based on accelerated profile hidden Markov model (HMM) methods and HMM-banded CM alignment methods. This enables ∼100-fold acceleration over the previous version and ∼10 000-fold acceleration over exhaustive non-filtered CM searches.</p>
+      <p><bold>Availability:</bold> Source code, documentation and the benchmark are downloadable from <ext-link ext-link-type="uri" xlink:href="http://infernal.janelia.org">http://infernal.janelia.org</ext-link>. Infernal is freely licensed under the GNU GPLv3 and should be portable to any POSIX-compliant operating system, including Linux and Mac OS/X. Documentation includes a user’s guide with a tutorial, a discussion of file formats and user options and additional details on methods implemented in the software.</p>
+      <p>
+        <bold>Contact:</bold>
+        <email>nawrockie@janelia.hhmi.org</email>
+      </p>
+    </abstract>
+    <counts>
+      <page-count count="3"/>
+    </counts>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>1 INTRODUCTION</title>
+    <p>Many structural RNAs conserve their sequence and secondary structure, and the most effective RNA homology search and alignment tools incorporate both types of conservation into their scoring systems. Covariance models (CMs) are profile stochastic context-free grammars (<xref ref-type="bibr" rid="btt509-B5">Durbin <italic>et al.</italic>, 1998</xref>), probabilistic models of the conserved sequence and secondary structure of an RNA family, analogous to sequence-based profile hidden Markov models (HMMs) commonly used for protein sequence analysis, with added complexity necessary for modeling RNA secondary structure. Infernal implements methods for constructing CMs from input structurally annotated RNA alignments or single sequences and for using those models to search for and align homologous RNAs.</p>
+    <p>Compared with the previous version 1.0.2, Infernal 1.1 accelerates typical RNA homology searches ∼100-fold using a filter pipeline based on accelerated profile HMM methods [the HMMER3 project (<xref ref-type="bibr" rid="btt509-B7">Eddy, 2008</xref>, <xref ref-type="bibr" rid="btt509-B8">2011</xref>)] and constrained CM alignment algorithms (<xref ref-type="bibr" rid="btt509-B2">Brown, 2000</xref>; <xref ref-type="bibr" rid="btt509-B13">Nawrocki, 2009</xref>). The increased speed comes at a negligible cost to sensitivity (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>). Additionally, version 1.1 implements specialized algorithms for structural alignment of truncated RNA sequences (<xref ref-type="bibr" rid="btt509-B12">Kolbe and Eddy, 2009</xref>) commonly found in sequencing reads, which were prone to misalignment in previous versions.
+<fig id="btt509-F1" position="float"><label>Fig. 1.</label><caption><p>ROC-like curves for the benchmark. Plots are shown for the new Infernal 1.1 with and without filters, for the old Infernal 1.0.2, for profile HMM searches with nhmmer (from the HMMER package included in Infernal 1.1, default parameters) and for family-pairwise-searches with BLASTN (ncbi-blast-2.2.28+, default parameters). The maximum sensitivity (not shown) for default Infernal 1.1 is 0.81 (629 of 820 true positives found), which is achieved at a false-positive rate of 0.19/Mb/query. For non-filtered Infernal, maximum sensitivity is 0.87 at 2.9 false positives per Mb per query. This indicates that at high false-positive rates the filters prevent some true positives from being found, but prevent many more false positives from being found. CPU times are total times for all 106 family searches measured for single execution threads on 3.0 GHz Intel Xeon processors. The Infernal times do not include time required for model calibration.</p></caption><graphic xlink:href="btt509f1p"/></fig></p>
+  </sec>
+  <sec id="SEC2">
+    <title>2 APPROACH</title>
+    <p>Exhaustive dynamic programming (DP) CM algorithms are impractically slow (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>). Several types of sequence-based filters have been developed for acceleration, including a BLAST-based filtering scheme used by Rfam since its inception (<xref ref-type="bibr" rid="btt509-B10">Griffiths-Jones <italic>et al.</italic>, 2003</xref>) and several profile HMM-based methods (<xref ref-type="bibr" rid="btt509-B15">Weinberg and Ruzzo, 2004</xref>, <xref ref-type="bibr" rid="btt509-B16">2006</xref>). Infernal version 1.0.2 and version 1.1 both use profile HMM filters: version 1.0.2’s filters are derived from the HMMER2 package (<xref ref-type="bibr" rid="btt509-B6">Eddy, 2003</xref>), whereas version 1.1 co-opts HMMER3’s dramatically accelerated search algorithms, which take advantage of single-instruction multiple-data vector instructions to parallelize the core steps of the HMM DP algorithms (<xref ref-type="bibr" rid="btt509-B8">Eddy, 2011</xref>). Version 1.1 uses four separate profile HMM-based filter stages, each one successively slower and stricter than the previous stage. The new filter stages are sufficiently fast that the post-HMM-filtering CM DP algorithms as implemented in the previous version (1.0.2) became the clear computational bottleneck. To accelerate these, constraints, or bands, derived from an HMM alignment of the sequence are imposed on the DP matrices to significantly reduce the number of required calculations (<xref ref-type="bibr" rid="btt509-B2">Brown, 2000</xref>; <xref ref-type="bibr" rid="btt509-B13">Nawrocki, 2009</xref>). Both the new filters and the banded CM methods are vital for the improved search speed. In the benchmark described later in the text, for default Infernal searches, the profile HMM stages take about one-third of the total running time and the remaining time is spent on the subsequent CM DP calculations.</p>
+  </sec>
+  <sec id="SEC3">
+    <title>3 USAGE</title>
+    <p>There are two major applications of Infernal: to search for structural RNAs in a sequence dataset (e.g. to perform genome annotation of RNAs) and to create multiple sequence- and structure-based alignments of RNA homologs [e.g. 16S small subunit ribosomal RNA alignment for environmental survey studies (<xref ref-type="bibr" rid="btt509-B4">Cole <italic>et al.</italic>, 2009</xref>)]. Both applications begin with a CM file, which can either be downloaded from the Rfam database of &gt;2000 RNA families (<xref ref-type="bibr" rid="btt509-B3">Burge <italic>et al.</italic>, 2013</xref>) or created by the user with Infernal’s <italic>cmbuild</italic> program from a structurally annotated single sequence or multiple sequence alignment. Before a CM can be used to search a sequence database, it must first be calibrated by the <italic>cmcalibrate</italic> program, which performs a simulated search against random sequence to determine model-specific parameters for assigning E-values to database hits. (Rfam CM files come pre-calibrated.) The <italic>cmsearch</italic> program takes a calibrated CM file, searches it against a sequence database and outputs a ranked list of top scoring hits and hit alignments. The <italic>cmalign</italic> program takes a CM file (calibrated or not), aligns all sequences to the model and outputs a structurally annotated MSA in Stockholm format. Version 1.1 introduces the <italic>cmscan</italic> program for determining whether a given sequence contains homologies to any known RNA families in a CM library like Rfam. Before running <italic>cmscan</italic>, the CM database must be converted to a special format using <italic>cmpress</italic>, which enables faster scanning.</p>
+  </sec>
+  <sec id="SEC4">
+    <title>4 PERFORMANCE</title>
+    <p>An independent benchmark of RNA homology search (<xref ref-type="bibr" rid="btt509-B9">Freyhult <italic>et al.</italic>, 2007</xref>) found covariance model-based programs, including a previous version of Infernal, to be the most specific and sensitive of the tools tested. We present here results from an updated version of our previously published internal RMARK benchmark (<xref ref-type="bibr" rid="btt509-B14">Nawrocki <italic>et al.</italic>, 2009</xref>), mainly to indicate the relative performance of Infernal 1.1 and the previous version 1.0.2.</p>
+    <p>The RMARK3 benchmark was constructed from the seed alignments of the Rfam 10.0 database as previously described (<xref ref-type="bibr" rid="btt509-B14">Nawrocki <italic>et al.</italic>, 2009</xref>). It is composed of a set of 106 families, each represented by a training alignment of ≥5 aligned sequences and a test set of ≥1 sequences. No two test sequences are &gt;70% identical, and no train/test sequence pair is &gt;60% identical. The 780 test sequences were embedded into ten 1 Mb genome-like sequences, to create a benchmark ‘pseudo-genome’ of 10.16 Mb. For each included family, a model was built from the training set using the Rfam alignment, calibrated and used to search the pseudo-genome. The resulting hits from all searches were then sorted by E-value and a sensitivity versus false-positive rate ROC-like curve was generated from the results (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>).</p>
+    <p><xref ref-type="fig" rid="btt509-F1">Figure 1</xref> shows that default Infernal 1.1 performs the benchmark searches in 0.44 h and is ∼100 times faster than the previous version 1.0.2 (49.31 h) and ∼10 000 times faster than exhaustive non-filtered 1.1 search (4359 h); yet all three search methods have similar sensitivity at the low false-positive rates necessary for large database searches. We also tested two sequence-only methods: profile HMMs implemented in HMMER3 (<xref ref-type="bibr" rid="btt509-B7">Eddy, 2008</xref>, <xref ref-type="bibr" rid="btt509-B8">2011</xref>) and family-pairwise (<xref ref-type="bibr" rid="btt509-B11">Grundy, 1998</xref>) single-sequence BLASTN queries (<xref ref-type="bibr" rid="btt509-B1">Altschul <italic>et al.</italic>, 1997</xref>), which were faster (0.02 and 0.01 h, respectively), but significantly less sensitive than CMs, indicating the benefit of secondary structure modeling.</p>
+    <p>The relatively fast speed of default version 1.1 on the benchmark is maintained on real genomic sequences. The average speed is 1.5 s/Mb/query on the benchmark and 0.6 s/Mb/query on a several gigabase database that includes a sampling of 15 genomes (five each of archaea, bacteria and eukarya) using the same query models from the benchmark. As database size increases, Infernal increases filter stringency resulting in faster search rates without sacrificing appreciable sensitivity at low false-positive rates based on further RMARK benchmarking (results not shown).</p>
+    <p>Infernal is now a more practical tool for RNA homology search. The increased speed should enable its incorporation into automated sequence annotation pipelines and obviate the need for additional filtering schemes for large-scale CM searches, such as the BLAST-based filter paradigm used by Rfam (<xref ref-type="bibr" rid="btt509-B10">Griffiths-Jones <italic>et al.</italic>, 2003</xref>). Rfam-based annotation of one typical bacterial or archaeal genome (i.e. searching all 2208 Rfam 11.0 models against a 2–5 Mb target) now takes ∼1 h on a single quad-core desktop computer. Analysis of larger datasets, however, such as vertebrate genomes or all reads from a high-throughput sequencing run, still requires a compute cluster. As an example, a search of all Rfam models against the 1 Gb chicken genome would require ∼3 h on a 100-CPU compute cluster. The most expensive programs (<italic>cmalign</italic>, <italic>cmcalibrate</italic>, <italic>cmscan</italic> and <italic>cmsearch</italic>) are implemented for use with multiple threads on multi-core machines and in coarse-grained MPI versions for clusters.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>Travis Wheeler adapted HMMER3’s filters for chromosome-length sequences, and his code is integral to Infernal’s pipeline. We thank Goran Ceric and his team for managing Janelia Farm’s high-performance computing resources.</p>
+    <p><italic>Funding</italic>: Infernal development is supported by <funding-source>Howard Hughes Medical Institute</funding-source>.</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="btt509-B1">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>SF</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Gapped BLAST and PSI-BLAST: a new generation of protein database search programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3389</fpage>
+        <lpage>3402</lpage>
+        <pub-id pub-id-type="pmid">9254694</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B2">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brown</surname>
+            <given-names>MP</given-names>
+          </name>
+        </person-group>
+        <article-title>Small subunit ribosomal RNA modeling using stochastic context-free grammars</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>57</fpage>
+        <lpage>66</lpage>
+        <pub-id pub-id-type="pmid">10977066</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B3">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Burge</surname>
+            <given-names>SW</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam 11.0: 10 years of RNA families</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2013</year>
+        <volume>41</volume>
+        <fpage>D226</fpage>
+        <lpage>D232</lpage>
+        <pub-id pub-id-type="pmid">23125362</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B4">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cole</surname>
+            <given-names>JR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The Ribosomal Database Project: improved alignments and new tools for rRNA analysis</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2009</year>
+        <volume>37</volume>
+        <fpage>D141</fpage>
+        <lpage>D145</lpage>
+        <pub-id pub-id-type="pmid">19004872</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B5">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids</source>
+        <year>1998</year>
+        <publisher-loc>Cambridge, UK</publisher-loc>
+        <publisher-name>Cambridge University Press</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B6">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <source>The HMMER2 user’s guide</source>
+        <year>2003</year>
+        <comment><ext-link ext-link-type="uri" xlink:href="http://hmmer.janelia.org/">http://hmmer.janelia.org/</ext-link> (1 July 2013, date last accessed)</comment>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B7">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>A probabilistic model of local sequence alignment that simplifies statistical significance estimation</article-title>
+        <source>PLoS Comput. Biol.</source>
+        <year>2008</year>
+        <volume>4</volume>
+        <fpage>e1000069</fpage>
+        <pub-id pub-id-type="pmid">18516236</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B8">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Accelerated profile HMM searches</article-title>
+        <source>PLoS Comp. Biol.</source>
+        <year>2011</year>
+        <volume>7</volume>
+        <fpage>e1002195</fpage>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B9">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Freyhult</surname>
+            <given-names>EK</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Exploring genomic dark matter: a critical assessment of the performance of homology search methods on noncoding RNA</article-title>
+        <source>Genome Res.</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <fpage>117</fpage>
+        <lpage>125</lpage>
+        <pub-id pub-id-type="pmid">17151342</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B10">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Griffiths-Jones</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam: an RNA family database</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>439</fpage>
+        <lpage>441</lpage>
+        <pub-id pub-id-type="pmid">12520045</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B11">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Grundy</surname>
+            <given-names>WN</given-names>
+          </name>
+        </person-group>
+        <article-title>Homology detection via family pairwise search</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>1998</year>
+        <volume>5</volume>
+        <fpage>479</fpage>
+        <lpage>491</lpage>
+        <pub-id pub-id-type="pmid">9773344</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B12">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kolbe</surname>
+            <given-names>DL</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Local RNA structure alignment with incomplete sequence</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1236</fpage>
+        <lpage>1243</lpage>
+        <pub-id pub-id-type="pmid">19304875</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B13">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawrocki</surname>
+            <given-names>EP</given-names>
+          </name>
+        </person-group>
+        <source>Structural RNA Homology Search and Alignment Using Covariance Models</source>
+        <year>2009</year>
+        <comment>PhD Thesis, Washington University School of Medicine, USA</comment>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B14">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawrocki</surname>
+            <given-names>EP</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Infernal 1.0: inference of RNA alignments</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1335</fpage>
+        <lpage>1337</lpage>
+        <pub-id pub-id-type="pmid">19307242</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B15">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <article-title>Exploiting conserved structure for faster annotation of non-coding RNAs without loss of accuracy</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <issue>Suppl. 1</issue>
+        <fpage>I334</fpage>
+        <lpage>I341</lpage>
+        <pub-id pub-id-type="pmid">15262817</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B16">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <article-title>Sequence-based heuristics for faster annotation of non-coding RNA families</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <fpage>35</fpage>
+        <lpage>39</lpage>
+        <pub-id pub-id-type="pmid">16267089</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20070202//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Bioinformatics</journal-id>
+    <journal-id journal-id-type="publisher-id">bioinformatics</journal-id>
+    <journal-id journal-id-type="hwp">bioinfo</journal-id>
+    <journal-title-group>
+      <journal-title>Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1367-4803</issn>
+    <issn pub-type="epub">1367-4811</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3810854</article-id>
+    <article-id pub-id-type="doi">10.1093/bioinformatics/btt509</article-id>
+    <article-id pub-id-type="publisher-id">btt509</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Applications Notes</subject>
+        <subj-group>
+          <subject>Sequence Analysis</subject>
+        </subj-group>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Infernal 1.1: 100-fold faster RNA homology searches</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Nawrocki</surname>
+          <given-names>Eric P.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="btt509-COR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Eddy</surname>
+          <given-names>Sean R.</given-names>
+        </name>
+      </contrib>
+      <aff>HHMI Janelia Farm Research Campus, Ashburn, VA 20147, USA</aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="btt509-COR1">*To whom correspondence should be addressed.</corresp>
+      <fn>
+        <p>Associate Editor: Ivo Hofacker</p>
+      </fn>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <day>15</day>
+      <month>11</month>
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>4</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>4</day>
+      <month>9</month>
+      <year>2013</year>
+    </pub-date>
+    <!-- PMC Release delay is 0 months and 0 days and was based on the
+							<pub-date pub-type="epub"/>. -->
+    <volume>29</volume>
+    <issue>22</issue>
+    <fpage>2933</fpage>
+    <lpage>2935</lpage>
+    <history>
+      <date date-type="received">
+        <day>2</day>
+        <month>7</month>
+        <year>2013</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>16</day>
+        <month>8</month>
+        <year>2013</year>
+      </date>
+      <date date-type="accepted">
+        <day>27</day>
+        <month>8</month>
+        <year>2013</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author 2013. Published by Oxford University Press. All rights reserved.</copyright-statement>
+      <copyright-year>2013</copyright-year>
+      <license license-type="creative-commons" xlink:href="http://creativecommons.org/licenses/by/3.0/">
+        <license-p><!--CREATIVE COMMONS-->This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/3.0/">http://creativecommons.org/licenses/by/3.0/</ext-link>), which permits unrestricted reuse, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p><bold>Summary:</bold> Infernal builds probabilistic profiles of the sequence and secondary structure of an RNA family called covariance models (CMs) from structurally annotated multiple sequence alignments given as input. Infernal uses CMs to search for new family members in sequence databases and to create potentially large multiple sequence alignments. Version 1.1 of Infernal introduces a new filter pipeline for RNA homology search based on accelerated profile hidden Markov model (HMM) methods and HMM-banded CM alignment methods. This enables ∼100-fold acceleration over the previous version and ∼10 000-fold acceleration over exhaustive non-filtered CM searches.</p>
+      <p><bold>Availability:</bold> Source code, documentation and the benchmark are downloadable from <ext-link ext-link-type="uri" xlink:href="http://infernal.janelia.org">http://infernal.janelia.org</ext-link>. Infernal is freely licensed under the GNU GPLv3 and should be portable to any POSIX-compliant operating system, including Linux and Mac OS/X. Documentation includes a user’s guide with a tutorial, a discussion of file formats and user options and additional details on methods implemented in the software.</p>
+      <p>
+        <bold>Contact:</bold>
+        <email>nawrockie@janelia.hhmi.org</email>
+      </p>
+    </abstract>
+    <counts>
+      <page-count count="3"/>
+    </counts>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>1 INTRODUCTION</title>
+    <p>Many structural RNAs conserve their sequence and secondary structure, and the most effective RNA homology search and alignment tools incorporate both types of conservation into their scoring systems. Covariance models (CMs) are profile stochastic context-free grammars (<xref ref-type="bibr" rid="btt509-B5">Durbin <italic>et al.</italic>, 1998</xref>), probabilistic models of the conserved sequence and secondary structure of an RNA family, analogous to sequence-based profile hidden Markov models (HMMs) commonly used for protein sequence analysis, with added complexity necessary for modeling RNA secondary structure. Infernal implements methods for constructing CMs from input structurally annotated RNA alignments or single sequences and for using those models to search for and align homologous RNAs.</p>
+    <p>Compared with the previous version 1.0.2, Infernal 1.1 accelerates typical RNA homology searches ∼100-fold using a filter pipeline based on accelerated profile HMM methods [the HMMER3 project (<xref ref-type="bibr" rid="btt509-B7">Eddy, 2008</xref>, <xref ref-type="bibr" rid="btt509-B8">2011</xref>)] and constrained CM alignment algorithms (<xref ref-type="bibr" rid="btt509-B2">Brown, 2000</xref>; <xref ref-type="bibr" rid="btt509-B13">Nawrocki, 2009</xref>). The increased speed comes at a negligible cost to sensitivity (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>). Additionally, version 1.1 implements specialized algorithms for structural alignment of truncated RNA sequences (<xref ref-type="bibr" rid="btt509-B12">Kolbe and Eddy, 2009</xref>) commonly found in sequencing reads, which were prone to misalignment in previous versions.
+<fig id="btt509-F1" position="float"><label>Fig. 1.</label><caption><p>ROC-like curves for the benchmark. Plots are shown for the new Infernal 1.1 with and without filters, for the old Infernal 1.0.2, for profile HMM searches with nhmmer (from the HMMER package included in Infernal 1.1, default parameters) and for family-pairwise-searches with BLASTN (ncbi-blast-2.2.28+, default parameters). The maximum sensitivity (not shown) for default Infernal 1.1 is 0.81 (629 of 820 true positives found), which is achieved at a false-positive rate of 0.19/Mb/query. For non-filtered Infernal, maximum sensitivity is 0.87 at 2.9 false positives per Mb per query. This indicates that at high false-positive rates the filters prevent some true positives from being found, but prevent many more false positives from being found. CPU times are total times for all 106 family searches measured for single execution threads on 3.0 GHz Intel Xeon processors. The Infernal times do not include time required for model calibration.</p></caption><graphic xlink:href="btt509f1p"/></fig></p>
+  </sec>
+  <sec id="SEC2">
+    <title>2 APPROACH</title>
+    <p>Exhaustive dynamic programming (DP) CM algorithms are impractically slow (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>). Several types of sequence-based filters have been developed for acceleration, including a BLAST-based filtering scheme used by Rfam since its inception (<xref ref-type="bibr" rid="btt509-B10">Griffiths-Jones <italic>et al.</italic>, 2003</xref>) and several profile HMM-based methods (<xref ref-type="bibr" rid="btt509-B15">Weinberg and Ruzzo, 2004</xref>, <xref ref-type="bibr" rid="btt509-B16">2006</xref>). Infernal version 1.0.2 and version 1.1 both use profile HMM filters: version 1.0.2’s filters are derived from the HMMER2 package (<xref ref-type="bibr" rid="btt509-B6">Eddy, 2003</xref>), whereas version 1.1 co-opts HMMER3’s dramatically accelerated search algorithms, which take advantage of single-instruction multiple-data vector instructions to parallelize the core steps of the HMM DP algorithms (<xref ref-type="bibr" rid="btt509-B8">Eddy, 2011</xref>). Version 1.1 uses four separate profile HMM-based filter stages, each one successively slower and stricter than the previous stage. The new filter stages are sufficiently fast that the post-HMM-filtering CM DP algorithms as implemented in the previous version (1.0.2) became the clear computational bottleneck. To accelerate these, constraints, or bands, derived from an HMM alignment of the sequence are imposed on the DP matrices to significantly reduce the number of required calculations (<xref ref-type="bibr" rid="btt509-B2">Brown, 2000</xref>; <xref ref-type="bibr" rid="btt509-B13">Nawrocki, 2009</xref>). Both the new filters and the banded CM methods are vital for the improved search speed. In the benchmark described later in the text, for default Infernal searches, the profile HMM stages take about one-third of the total running time and the remaining time is spent on the subsequent CM DP calculations.</p>
+  </sec>
+  <sec id="SEC3">
+    <title>3 USAGE</title>
+    <p>There are two major applications of Infernal: to search for structural RNAs in a sequence dataset (e.g. to perform genome annotation of RNAs) and to create multiple sequence- and structure-based alignments of RNA homologs [e.g. 16S small subunit ribosomal RNA alignment for environmental survey studies (<xref ref-type="bibr" rid="btt509-B4">Cole <italic>et al.</italic>, 2009</xref>)]. Both applications begin with a CM file, which can either be downloaded from the Rfam database of &gt;2000 RNA families (<xref ref-type="bibr" rid="btt509-B3">Burge <italic>et al.</italic>, 2013</xref>) or created by the user with Infernal’s <italic>cmbuild</italic> program from a structurally annotated single sequence or multiple sequence alignment. Before a CM can be used to search a sequence database, it must first be calibrated by the <italic>cmcalibrate</italic> program, which performs a simulated search against random sequence to determine model-specific parameters for assigning E-values to database hits. (Rfam CM files come pre-calibrated.) The <italic>cmsearch</italic> program takes a calibrated CM file, searches it against a sequence database and outputs a ranked list of top scoring hits and hit alignments. The <italic>cmalign</italic> program takes a CM file (calibrated or not), aligns all sequences to the model and outputs a structurally annotated MSA in Stockholm format. Version 1.1 introduces the <italic>cmscan</italic> program for determining whether a given sequence contains homologies to any known RNA families in a CM library like Rfam. Before running <italic>cmscan</italic>, the CM database must be converted to a special format using <italic>cmpress</italic>, which enables faster scanning.</p>
+  </sec>
+  <sec id="SEC4">
+    <title>4 PERFORMANCE</title>
+    <p>An independent benchmark of RNA homology search (<xref ref-type="bibr" rid="btt509-B9">Freyhult <italic>et al.</italic>, 2007</xref>) found covariance model-based programs, including a previous version of Infernal, to be the most specific and sensitive of the tools tested. We present here results from an updated version of our previously published internal RMARK benchmark (<xref ref-type="bibr" rid="btt509-B14">Nawrocki <italic>et al.</italic>, 2009</xref>), mainly to indicate the relative performance of Infernal 1.1 and the previous version 1.0.2.</p>
+    <p>The RMARK3 benchmark was constructed from the seed alignments of the Rfam 10.0 database as previously described (<xref ref-type="bibr" rid="btt509-B14">Nawrocki <italic>et al.</italic>, 2009</xref>). It is composed of a set of 106 families, each represented by a training alignment of ≥5 aligned sequences and a test set of ≥1 sequences. No two test sequences are &gt;70% identical, and no train/test sequence pair is &gt;60% identical. The 780 test sequences were embedded into ten 1 Mb genome-like sequences, to create a benchmark ‘pseudo-genome’ of 10.16 Mb. For each included family, a model was built from the training set using the Rfam alignment, calibrated and used to search the pseudo-genome. The resulting hits from all searches were then sorted by E-value and a sensitivity versus false-positive rate ROC-like curve was generated from the results (<xref ref-type="fig" rid="btt509-F1">Fig. 1</xref>).</p>
+    <p><xref ref-type="fig" rid="btt509-F1">Figure 1</xref> shows that default Infernal 1.1 performs the benchmark searches in 0.44 h and is ∼100 times faster than the previous version 1.0.2 (49.31 h) and ∼10 000 times faster than exhaustive non-filtered 1.1 search (4359 h); yet all three search methods have similar sensitivity at the low false-positive rates necessary for large database searches. We also tested two sequence-only methods: profile HMMs implemented in HMMER3 (<xref ref-type="bibr" rid="btt509-B7">Eddy, 2008</xref>, <xref ref-type="bibr" rid="btt509-B8">2011</xref>) and family-pairwise (<xref ref-type="bibr" rid="btt509-B11">Grundy, 1998</xref>) single-sequence BLASTN queries (<xref ref-type="bibr" rid="btt509-B1">Altschul <italic>et al.</italic>, 1997</xref>), which were faster (0.02 and 0.01 h, respectively), but significantly less sensitive than CMs, indicating the benefit of secondary structure modeling.</p>
+    <p>The relatively fast speed of default version 1.1 on the benchmark is maintained on real genomic sequences. The average speed is 1.5 s/Mb/query on the benchmark and 0.6 s/Mb/query on a several gigabase database that includes a sampling of 15 genomes (five each of archaea, bacteria and eukarya) using the same query models from the benchmark. As database size increases, Infernal increases filter stringency resulting in faster search rates without sacrificing appreciable sensitivity at low false-positive rates based on further RMARK benchmarking (results not shown).</p>
+    <p>Infernal is now a more practical tool for RNA homology search. The increased speed should enable its incorporation into automated sequence annotation pipelines and obviate the need for additional filtering schemes for large-scale CM searches, such as the BLAST-based filter paradigm used by Rfam (<xref ref-type="bibr" rid="btt509-B10">Griffiths-Jones <italic>et al.</italic>, 2003</xref>). Rfam-based annotation of one typical bacterial or archaeal genome (i.e. searching all 2208 Rfam 11.0 models against a 2–5 Mb target) now takes ∼1 h on a single quad-core desktop computer. Analysis of larger datasets, however, such as vertebrate genomes or all reads from a high-throughput sequencing run, still requires a compute cluster. As an example, a search of all Rfam models against the 1 Gb chicken genome would require ∼3 h on a 100-CPU compute cluster. The most expensive programs (<italic>cmalign</italic>, <italic>cmcalibrate</italic>, <italic>cmscan</italic> and <italic>cmsearch</italic>) are implemented for use with multiple threads on multi-core machines and in coarse-grained MPI versions for clusters.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>ACKNOWLEDGEMENTS</title>
+    <p>Travis Wheeler adapted HMMER3’s filters for chromosome-length sequences, and his code is integral to Infernal’s pipeline. We thank Goran Ceric and his team for managing Janelia Farm’s high-performance computing resources.</p>
+    <p><italic>Funding</italic>: Infernal development is supported by <funding-source>Howard Hughes Medical Institute</funding-source>.</p>
+    <p><italic>Conflict of Interest</italic>: none declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="btt509-B1">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Altschul</surname>
+            <given-names>SF</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Gapped BLAST and PSI-BLAST: a new generation of protein database search programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>1997</year>
+        <volume>25</volume>
+        <fpage>3389</fpage>
+        <lpage>3402</lpage>
+        <pub-id pub-id-type="pmid">9254694</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B2">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brown</surname>
+            <given-names>MP</given-names>
+          </name>
+        </person-group>
+        <article-title>Small subunit ribosomal RNA modeling using stochastic context-free grammars</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>57</fpage>
+        <lpage>66</lpage>
+        <pub-id pub-id-type="pmid">10977066</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B3">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Burge</surname>
+            <given-names>SW</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam 11.0: 10 years of RNA families</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2013</year>
+        <volume>41</volume>
+        <fpage>D226</fpage>
+        <lpage>D232</lpage>
+        <pub-id pub-id-type="pmid">23125362</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B4">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cole</surname>
+            <given-names>JR</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The Ribosomal Database Project: improved alignments and new tools for rRNA analysis</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2009</year>
+        <volume>37</volume>
+        <fpage>D141</fpage>
+        <lpage>D145</lpage>
+        <pub-id pub-id-type="pmid">19004872</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B5">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Durbin</surname>
+            <given-names>R</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids</source>
+        <year>1998</year>
+        <publisher-loc>Cambridge, UK</publisher-loc>
+        <publisher-name>Cambridge University Press</publisher-name>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B6">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <source>The HMMER2 user’s guide</source>
+        <year>2003</year>
+        <comment><ext-link ext-link-type="uri" xlink:href="http://hmmer.janelia.org/">http://hmmer.janelia.org/</ext-link> (1 July 2013, date last accessed)</comment>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B7">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>A probabilistic model of local sequence alignment that simplifies statistical significance estimation</article-title>
+        <source>PLoS Comput. Biol.</source>
+        <year>2008</year>
+        <volume>4</volume>
+        <fpage>e1000069</fpage>
+        <pub-id pub-id-type="pmid">18516236</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B8">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Accelerated profile HMM searches</article-title>
+        <source>PLoS Comp. Biol.</source>
+        <year>2011</year>
+        <volume>7</volume>
+        <fpage>e1002195</fpage>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B9">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Freyhult</surname>
+            <given-names>EK</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Exploring genomic dark matter: a critical assessment of the performance of homology search methods on noncoding RNA</article-title>
+        <source>Genome Res.</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <fpage>117</fpage>
+        <lpage>125</lpage>
+        <pub-id pub-id-type="pmid">17151342</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B10">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Griffiths-Jones</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Rfam: an RNA family database</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>439</fpage>
+        <lpage>441</lpage>
+        <pub-id pub-id-type="pmid">12520045</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B11">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Grundy</surname>
+            <given-names>WN</given-names>
+          </name>
+        </person-group>
+        <article-title>Homology detection via family pairwise search</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>1998</year>
+        <volume>5</volume>
+        <fpage>479</fpage>
+        <lpage>491</lpage>
+        <pub-id pub-id-type="pmid">9773344</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B12">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kolbe</surname>
+            <given-names>DL</given-names>
+          </name>
+          <name>
+            <surname>Eddy</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Local RNA structure alignment with incomplete sequence</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1236</fpage>
+        <lpage>1243</lpage>
+        <pub-id pub-id-type="pmid">19304875</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B13">
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawrocki</surname>
+            <given-names>EP</given-names>
+          </name>
+        </person-group>
+        <source>Structural RNA Homology Search and Alignment Using Covariance Models</source>
+        <year>2009</year>
+        <comment>PhD Thesis, Washington University School of Medicine, USA</comment>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B14">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nawrocki</surname>
+            <given-names>EP</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Infernal 1.0: inference of RNA alignments</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1335</fpage>
+        <lpage>1337</lpage>
+        <pub-id pub-id-type="pmid">19307242</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B15">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <article-title>Exploiting conserved structure for faster annotation of non-coding RNAs without loss of accuracy</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <issue>Suppl. 1</issue>
+        <fpage>I334</fpage>
+        <lpage>I341</lpage>
+        <pub-id pub-id-type="pmid">15262817</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="btt509-B16">
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Weinberg</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <article-title>Sequence-based heuristics for faster annotation of non-coding RNA families</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <fpage>35</fpage>
+        <lpage>39</lpage>
+        <pub-id pub-id-type="pmid">16267089</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

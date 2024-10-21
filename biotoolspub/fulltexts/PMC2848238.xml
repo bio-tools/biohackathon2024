@@ -1,0 +1,1199 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2848238</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-11-142</article-id>
+    <article-id pub-id-type="pmid">20298584</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-11-142</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>MISHIMA - a new method for high speed multiple alignment of nucleotide sequences of bacterial genome scale data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Kryukov</surname>
+          <given-names>Kirill</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>kkryukov@lab.nig.ac.jp</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A2">
+        <name>
+          <surname>Saitou</surname>
+          <given-names>Naruya</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>saitounr@lab.nig.ac.jp</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Division of Population Genetics, National Institute of Genetics 1111 Yata, Mishima, 411-8540, Japan</aff>
+    <aff id="I2"><label>2</label>Genome Network Project, National Institute of Genetics 1111 Yata, Mishima, 411-8540, Japan</aff>
+    <pub-date pub-type="collection">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>18</day>
+      <month>3</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <fpage>142</fpage>
+    <lpage>142</lpage>
+    <history>
+      <date date-type="received">
+        <day>17</day>
+        <month>7</month>
+        <year>2009</year>
+      </date>
+      <date date-type="accepted">
+        <day>18</day>
+        <month>3</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Kryukov and Saitou; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Kryukov and Saitou; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/11/142"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Large nucleotide sequence datasets are becoming increasingly common objects of comparison. Complete bacterial genomes are reported almost everyday. This creates challenges for developing new multiple sequence alignment methods. Conventional multiple alignment methods are based on pairwise alignment and/or progressive alignment techniques. These approaches have performance problems when the number of sequences is large and when dealing with genome scale sequences.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We present a new method of multiple sequence alignment, called MISHIMA (Method for Inferring Sequence History In terms of Multiple Alignment), that does not depend on pairwise sequence comparison. A new algorithm is used to quickly find rare oligonucleotide sequences shared by all sequences. Divide and conquer approach is then applied to break the sequences into fragments that can be aligned independently by an external alignment program. These partial alignments are assembled together to form a complete alignment of the original sequences.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>MISHIMA provides improved performance compared to the commonly used multiple alignment methods. As an example, six complete genome sequences of bacteria species <italic>Helicobacter pylori </italic>(about 1.7 Mb each) were successfully aligned in about 6 hours using a single PC.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Alignment of vast number of nucleotide sequences is one of the central problems in current genomic studies. Sequence alignment is used in many kinds of biological studies, including phylogenetic analysis, identification of conserved domains, prediction of protein structure and database searches.</p>
+    <p>Alignment of multiple sequences remains a considerable challenge in terms of computation time required to complete an alignment of a reasonably large sequence dataset. Even pairwise sequence alignment becomes hard when the sequences are very long. Most alignment algorithms use some sorts of heuristics to reduce the computation time. Every alignment method was designed with some expectations on the size of data to be analyzed and what sort of computer hardware is likely to be used. The progress in alignment techniques during the last 30 years would not be possible without the parallel constant improvement in computer technology. The alignment methods being developed these days work better than those of 20 ago partly just because they are designed to run on faster processors and use more memory.</p>
+    <p>The most simple and widely used such heuristic is the method of progressive alignment [<xref ref-type="bibr" rid="B1">1</xref>], which was employed in a number of alignment programs such as MULTALIGN [<xref ref-type="bibr" rid="B2">2</xref>], MULTAL [<xref ref-type="bibr" rid="B3">3</xref>], MultAlin [<xref ref-type="bibr" rid="B4">4</xref>], CLUSTAL W [<xref ref-type="bibr" rid="B5">5</xref>,<xref ref-type="bibr" rid="B6">6</xref>], and MUSCLE [<xref ref-type="bibr" rid="B7">7</xref>]. Under the idea of progressive alignment, first the sequences are compared pairwise, one to one. Each pair of sequences is aligned with the dynamic programming algorithm, and the evolutionary distance between the sequences is estimated. Based on those distances the phylogenetic tree is constructed and then used for building multiple alignment.</p>
+    <p>An alternative approach to solve the problem of multiple sequence alignment is the iterative procedure of refining the global alignment, for example in PRRP program [<xref ref-type="bibr" rid="B8">8</xref>]. Also a genetic algorithm for multiple sequence alignment was proposed [<xref ref-type="bibr" rid="B9">9</xref>]. MAFFT package [<xref ref-type="bibr" rid="B10">10</xref>] contains both progressive and iterative alignment methods, depending on a novel approach of finding homologous regions with the help of fast Fourier transform.</p>
+    <p>Another direction focuses on increasing the performance of traditional dynamic programming based methods. This includes Divide-and-Conquer techniques, implemented in DCA [<xref ref-type="bibr" rid="B11">11</xref>] and OMA [<xref ref-type="bibr" rid="B12">12</xref>]. There are also studies attempting to take advantage of the parallel computation, especially popular for progressive alignment techniques like CLUSTAL W [<xref ref-type="bibr" rid="B13">13</xref>-<xref ref-type="bibr" rid="B15">15</xref>].</p>
+    <p>Recently it became popular to locate regions of local conservations before attempting to construct the global alignment. This idea was used for pairwise alignment in MUMmer [<xref ref-type="bibr" rid="B16">16</xref>], Shuffle-LAGAN [<xref ref-type="bibr" rid="B17">17</xref>], Avid [<xref ref-type="bibr" rid="B18">18</xref>] and GS-Aligner [<xref ref-type="bibr" rid="B19">19</xref>]. For multiple sequences a similar technique was used in DIALIGN [<xref ref-type="bibr" rid="B20">20</xref>], CHAOS [<xref ref-type="bibr" rid="B21">21</xref>], and MAFFT [<xref ref-type="bibr" rid="B10">10</xref>].</p>
+    <p>While there is considerable progress in recent multiple alignment research, it still remains a challenging problem to align multiple genomic sequences. Therefore we investigated an non-conventional heuristic approach to multiple sequence analysis, which we present in this work. A prototype of MISHIMA was briefly introduced by Kryukov and Saitou [<xref ref-type="bibr" rid="B22">22</xref>].</p>
+  </sec>
+  <sec>
+    <title>Implementation</title>
+    <sec>
+      <title>Extraction of important information</title>
+      <p>It is believed that only a certain part of a genome is functional, and most of the genome content is never expressed or used. As a result some parts of the genome remain mostly unchanged during the evolution, while other parts quickly accumulate mutations through neutral evolution [<xref ref-type="bibr" rid="B23">23</xref>]. Conserved parts of the genome can be very helpful in identifying homology. If we could quickly locate conserved areas in the genome, that information obtained could be used to assist the process of alignment.</p>
+      <p>This idea has already been implemented in other methods, in which homology was first detected by pairwise sequence comparison and the obtained information was then used to build the alignment (DIALIGN [<xref ref-type="bibr" rid="B20">20</xref>], MLAGAN [<xref ref-type="bibr" rid="B24">24</xref>]). However for large genomic sequences the pairwise comparison step is very time consuming. Also pairwise comparison does not reveal features shared by multiple sequences. On the other hand, it is often the case that several sequences share some regions of high similarity. We propose a new heuristic method for locating conserved patterns shared by multiple sequences that can be directly used in a sequence alignment procedure.</p>
+    </sec>
+    <sec>
+      <title>Divide-and-Conquer approach</title>
+      <p>Rearrangements of DNA fragments are known to happen very rarely in the evolutionary process, once sequences started to evolve independently in different species. Majority of the mutations result from substitutions or insertion/deletion events. Therefore in most cases it is a valid approach to use divide-and-conquer procedure for sequence alignment. Its principle is that sequences can be split into parts that will be aligned independently and a complete alignment will finally be constructed by assembling the partial alignments together [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B25">25</xref>].</p>
+      <p>The main difficulty in this method is to find the splitting points. The DCA program uses a pairwise sequence comparison with a dynamic programming-based method to find the splitting positions [<xref ref-type="bibr" rid="B25">25</xref>]. However the cost of pairwise comparison increases rapidly with the increase of sequence length and/or number of sequences. Below we propose a more rapid method to find the splitting positions.</p>
+      <p>Once the sequences are divided into sufficiently short segments, these segments can be aligned by calling a conventional alignment program. DCA uses MSA alignment program [<xref ref-type="bibr" rid="B26">26</xref>,<xref ref-type="bibr" rid="B27">27</xref>] to align the parts of sequences. In this study we use CLUSTAL W [<xref ref-type="bibr" rid="B6">6</xref>] and MAFFT [<xref ref-type="bibr" rid="B10">10</xref>] to align the sequence segments separately.</p>
+      <p>CLUSTAL W is not suitable for aligning long sequences or large number of sequences because of high computational requirements. MAFFT can be very fast with small datasets, but its computation time increases rapidly when aligning larger datasets, like complete bacterial genomes. Application of these programs can be extended to much larger datasets by combining with the Divide-and-Conquer approach.</p>
+      <p>It should be noted that such Divide-and-Conquer approach is not able to detect duplications, inversions and genomic rearrangements. This approach is valid under the assumption that all sequences can be aligned in a linear fashion to each other to form a multiple alignment.</p>
+    </sec>
+    <sec>
+      <title>Using k-tuple frequencies</title>
+      <p>The core idea of MISHIMA is to analyze k-tuples found in the original sequences and to evaluate them based on their frequencies. When a particular nucleotide k-tuple is found exactly once in each sequence, we consider it as a likely homology signal. A k-tuple that has its close variants found once in each sequence is considered to be less likely, but still possible homology signal. Analyzing all k-tuples up to certain length allows us to select those k-tuples that represent the most probable homology shared by multiple sequences. These k-tuples can then be used to anchor the sequences before employing Divide and Conquer method to complete the alignment.</p>
+      <p>The basic principle of MISHIMA can be outlined as follows:</p>
+      <p>1. Find potentially useful k-tuples based on the number of their occurrences in the sequence data.</p>
+      <p>2. Analyze the potentially useful k-tuples, and select those that represent most probable local homology.</p>
+      <p>3. Use the selected k-tuples as anchors, split the sequences into segments.</p>
+      <p>4. Align the segments independently from each other.</p>
+      <p>5. Join partial alignments to complete the final multiple sequence alignment.</p>
+    </sec>
+    <sec>
+      <title>Dictionary of k-tuples</title>
+      <p>As a first step we count the number of occurrences of each short k-tuple in the original sequence dataset. We keep this information in a dictionary structure, indexed by a k-tuple sequence. The number of possible nucleotide k-tuples is 4<sup>K</sup>, so the maximum k we can use is limited by the amount of memory we can use for the dictionary. We store k-tuple frequencies as 32-bit numbers, so 4*4<sup>K </sup>bytes is required to store the frequencies of all nucleotide k-tuples. This allowed us to use k of 13 and 14 on 32-bit machines.</p>
+      <p>We found that knowing the number of occurrences of each k-tuple in the original sequence dataset is not enough to efficiently decide which k-tuples are more likely to represent the local homology. Therefore we decided to also store the number of sequences exhibiting each k-tuple. Additionally we store the index of the last sequence where the k-tuple was found, which allows us to collect all the frequencies using single read through the sequence dataset.</p>
+    </sec>
+    <sec>
+      <title>Choosing the right lengths of a k-tuple</title>
+      <p>Length k is a very important factor affecting the chance for a k-tuple to be useful for alignment purposes. A random sequence of length L is expected to contain L/4<sup>K </sup>occurrences of each k-tuple. Let us take L as A*N, where N is the number of sequences and A is the average sequence length. The expected number of occurrences for one k-tuple is A*N/4<sup>K</sup>. Since we are mostly interested in finding k-tuples with exactly N occurrences (once in each sequence), an ideal case for this method would be where A*N/4<sup>K </sup>= N, which means A = 4<sup>K</sup>. Thus, to have the best results with this method, the length of sequences to be analyzed should be comparable to, or shorter than 4<sup>K</sup>.</p>
+      <p>This is an intuitive estimation, to give some feeling of relation between the dataset size and k-tuple's k. Of course the real biological sequences, especially those that we are trying to align, are often not completely random, which suggests that longer sequences can be aligned if they contain significant homology. Therefore the capability of MISHIMA to align the real sequences should be higher than this estimate. But non-conserved intergenic regions in a genomic sequences may well be considered as random sequence, and the total size of such regions in a sequence data is a limiting factor for MISHIMA. This shows that the length k is the basic parameter affecting the performance of this method.</p>
+      <p>Choosing the optimal length of a k-tuple is critical for the successful alignment. If k is too small, too many occurrences of each k-tuple will be found. Although to some extent this depends on the length of the sequences, it is difficult to predict whether the particular k is too small or not. Therefore we use all k-tuples with k from 1 to M in this method. For selecting M - the upper limit of k - we suggest to depend on the memory limitation. Most of the steps of the MISHIMA algorithm are performed in linear time, which makes it practical to use the largest M allowed by the amount of available memory.</p>
+      <p>We ended up using 12 bytes for each k-tuple in a dictionary. The total amount of memory required for dictionary is therefore 12*(4+4<sup>2</sup>+...+4<sup>M</sup>) bytes. This allows us to use M of 12, with the dictionary occupying less than 300 MB of RAM.</p>
+    </sec>
+    <sec>
+      <title>Finding seeds</title>
+      <p>Our initial method of using identical k-tuples shared by all sequences has a low sensitivity, and we decided to use inexact matching instead. We do this by updating the dictionary to include the number of inexact copies of a k-tuple in the sequence dataset. Our method allows up to one substitution difference between two k-tuples.</p>
+      <p>After a k-tuple dictionary is constructed and updated with inexact match counts, it becomes possible to select k-tuples which represent potential homology. Potentially useful k-tuples are defined as those that have one inexact match in every sequence. Such k-tuples, or seeds, are extracted and saved for further analysis.</p>
+      <p>The next step is to find the locations of seeds in sequence data. Locations are extracted in a second read through the sequence data. It should be noted that this step also completes in linear time.</p>
+      <p>In cases where no seeds could be found, the external aligner is used to align the whole dataset.</p>
+    </sec>
+    <sec>
+      <title>Seed compatibility</title>
+      <p>Now we will introduce measure for compatibility of two seeds, based on their relative coordinates in sequence data. For now we will consider only seeds that are found not more than once in every sequence. If both of two seeds, A and B, can be found in a sequence, there are two possible orders: either the coordinate of A is smaller than that of B, or vice versa. We can mark these two cases as A-&gt;B and B-&gt;A.</p>
+      <p>If all sequences in a dataset exhibit the same order of seeds A and B, these two seeds are compatible. However, if sequences have these seeds some in A-&gt;B order while some other in B-&gt;A order, we can then define an incompatibility distance as number of sequences, where A and B order is different from the majority case. A distance defined in this way can be effectively used to evaluate the possibility that two seeds together represent a possible homology signal. This distance is used to construct a maximum non-conflicting set of seeds in the following procedure.</p>
+      <p>A constant number of T best seeds is selected (T is 600 in current MISHIMA, because of memory limitations). Then the matrix of size TxT is constructed. Each cell of the matrix contains the incompatibility distance between two seeds. In the first step all of the selected T seeds are included and the matrix contains TxT distance values. Then the matrix is analyzed to find the sum of all numbers for every row. This sum corresponds to the total amount of incompatibility introduced by one seed. Now the seed which introduces the largest amount of incompatibility is removed from the set. The matrix is recalculated and the procedure iterates until no incompatibility is left unresolved. Finally only compatible seeds remain, which are used as alignment anchors. If all seeds are mutually incompatible with each other, there will be still one anchor left after removing the incompatibility. This anchor is used to divide the sequences into 2 parts, which are aligned separately.</p>
+      <p>The number of anchors found in all our example datasets is included in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>, in *.anchors files.</p>
+    </sec>
+    <sec>
+      <title>Iterative procedure of dictionary analysis</title>
+      <p>After the dictionary step has finished and a set of non-conflicting seeds is selected, the algorithm will have a set of anchors, connecting the sequences. The sequences are then divided and regions between the anchors are aligned independently from each other. After all partial alignments are complete, they are concatenated to construct a final complete alignment.</p>
+      <p>Alignment of the regions between the seeds is performed using an external aligner provided the sequences are short enough. Otherwise MISHIMA is used again (recursively) to divide the sequences into shorter parts. The depth of the recursive operation in MISHIMA can be set with the command line option '-max-depth = x'. Since MISHIMA takes a constant time for each step of finding seeds and dividing the sequences, using a limited depth may improve the performance on some datasets.</p>
+      <p>The overall flow of MISHIMA algorithm is shown in Fig. <xref ref-type="fig" rid="F1">1</xref>.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Procedure of MISHIMA alignment and complexity of each step</bold>.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-1"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Assessing the alignment speed and quality</title>
+      <p>The performance of MISHIMA was evaluated on several example dataset, detailed in the Results section. We used several popular aligners for comparison: CLUSTAL W, MUSCLE, MAFFT and MLAGAN. The details, including version and parameters we used with these methods, are included in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>.</p>
+      <p>For assessing the alignment quality we used the sum-of-pairs alignment score [<xref ref-type="bibr" rid="B26">26</xref>], based on the pairwise sequence identity. The score is computed as arithmetic mean of pairwise identity scores of all sequence pairs in the alignment. Pairwise identity score is computed as following: S<sub>ij </sub>= 100*M<sub>ij</sub>/L, where M<sub>ij </sub>is the number of alignment positions where sequences i and j have the same nucleotide (not including gaps), and L is the length of complete multiple alignment (including gaps).</p>
+      <p>While a simulated dataset is necessary for a serious discussion of alignment quality, we believe that using the sum-of-pairs score is sufficient for evaluating MISHIMA's performance, for the following reasons: 1. Our main focus is on comparing MISHIMA+external aligner combination to external aligner alone. 2. We are mainly interested in verifying whether MISHIMA would not produce particularly big misalignments; the simplified score is sufficient for this purpose. 3. MISHIMA is targeting rather closely related sequences, which means that the correct alignments produced by almost any method will have about the same score, and misalignments will result in a noticeable score decrease.</p>
+      <p>The sum-of-pairs identity score was computed for all example alignments produced by MISHIMA and other methods.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and Discussion</title>
+    <sec>
+      <title>Human mtDNA genomes</title>
+      <p>Complete human mitochondrial DNA (mtDNA) genome sequences were used as an example of very closely related sequences. As of July 16, 2009, a total of 4,718 complete human mtDNA genome sequences are available in DDBJ/EMBL/GenBank International Nucleotide Sequence Database. MISHIMA was able to successfully align hundreds of such genomes. Computation results can be seen in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>.</p>
+      <p>We measured the time MISHIMA takes for aligning the whole and partial sequences and compared it with three popular aligners: CLUSTAL W, MUSCLE and MAFFT (Fig. <xref ref-type="fig" rid="F2">2</xref> and Table <xref ref-type="table" rid="T1">1</xref>). Partial sequences (with 2 kb increment) and complete ~16.5 kb sequences were used to see the effect of sequence length on computation time. A fixed length fragment was cut from the beginning of each sequence to produce partial sequences. Note that MISHIMA was using an external aligner (CLUSTAL W or MAFFT) to align the regions between the anchors, and their running time is counted in the MISHIMA total running time. 50, 100, 200 and 400 sequences were compared separately in order to examine effect of number of sequences on computation time. Nucleotide diversity for these datasets is within the range of 0.002-0.003.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Computation time of MISHIMA, CLUSTAL W, MUSCLE and MAFFT, on human mtDNA datasets of 50, 100, 200 and 400 sequences, complete and partial</bold>. MUSCLE results are shown for all cases where it could complete the alignment.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-2"/>
+      </fig>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Alignment time comparison of various numbers of human mtDNA genomes (complete sequences)</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th align="center" colspan="4">No. of sequences compared</th>
+            </tr>
+            <tr>
+              <th/>
+              <th colspan="4">
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th align="left">Method</th>
+              <th align="center">50</th>
+              <th align="center">100</th>
+              <th align="center">200</th>
+              <th align="center">400</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">MISHIMA + MAFFT</td>
+              <td align="center">00:01:05</td>
+              <td align="center">00:02:23</td>
+              <td align="center">00:12:59</td>
+              <td align="center">01:38:09</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">MISHIMA + CLUSTAL W -max-depth = 1</td>
+              <td align="center">00:00:43</td>
+              <td align="center">00:02:06</td>
+              <td align="center">00:06:05</td>
+              <td align="center">00:34:19</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">CLUSTAL W</td>
+              <td align="center">02:15:32</td>
+              <td align="center">04:48:59</td>
+              <td align="center">10:16:22</td>
+              <td align="center">25:08:23</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">MUSCLE</td>
+              <td align="center">00:44:29</td>
+              <td align="center">01:28:12</td>
+              <td align="center">02:08:44</td>
+              <td align="center">-----</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">MAFFT</td>
+              <td align="center">00:02:43</td>
+              <td align="center">00:05:44</td>
+              <td align="center">00:16:31</td>
+              <td align="center">00:38:51</td>
+            </tr>
+            <tr>
+              <td colspan="5">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">Nucleotide diversity</td>
+              <td align="center">0.003</td>
+              <td align="center">0.002</td>
+              <td align="center">0.002</td>
+              <td align="center">0.002</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p>CLUSTAL W is the slowest among the compared aligners, even with [-quicktree] option, followed by MUSCLE (Fig. <xref ref-type="fig" rid="F2">2</xref>). Fig. <xref ref-type="fig" rid="F2">2</xref> shows that computation time of MISHIMA and MAFFT increases much slower than that of CLUSTAL W and MUSCLE. CLUSTAL W took 90-100 times longer time for complete mtDNA sequence alignment than it took aligning 2 kb fragments for all four cases. MISHIMA alignment time increased only 10 times between 2 kb and full length datasets. MUSCLE was unable to complete the alignment of 200 and 400 complete sequences. We used two kinds of option sets for MAFFT; [--retree 1 --maxiterate 0] (shown in orange) and [--retree 2 --maxiterate 1000] (shown in blue). Both option sets showed much faster results than either MUSCLE or CLUSTAL W. MISHIMA is as fast as MAFFT set at faster option (shown in orange) either when CLUSTAL W was used (shown in light blue) or when MAFFT was used (shown in red) as the external alignment program when 50, 100, and 200 human mtDNA sequences were compared.</p>
+      <p>When 400 human mtDNA sequences are compared, MAFFT set at faster option is clearly faster than MISHIMA. However, if we add [-max-depth = 1] option to MISHIMA (shown in light blue), both aligners finish in similar time. Because human mtDNA sequences are quite similar with each other, good seeds are found in abundance in the first iteration of dictionary analysis, and average block length (length of sequences between two adjacent anchor seeds) is already short enough for CLUSTAL W usage. Therefore, we recommend using this option when aligning closely related sequences, such as sequences from same species.</p>
+      <p>While the performance of MISHIMA is similar to that of MAFFT, it should be noted that only high similarity regions are aligned by MISHIMA, and the lower similarity parts are aligned with an external alignment program - either CLUSTAL W or MAFFT. This means that when CLUSTAL W is used as an external aligner, the alignment quality will be close to that of the CLUSTAL W complete alignment. Fig. <xref ref-type="fig" rid="F3">3</xref> shows sum-of-pairs alignment score [<xref ref-type="bibr" rid="B26">26</xref>] of all alignments compared. MISHIMA alignment tends to have higher score than alignments produced by CLUSTAL W or MAFFT alone.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Alignment score of alignments produced by MISHIMA, CLUSTAL W, MUSCLE and MAFFT, on human mtDNA datasets of 50, 100, 200 and 400 sequences, complete and partial</bold>. MUSCLE results are shown for all cases where it could complete the alignment.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-3"/>
+      </fig>
+      <p>We also tried MLAGAN [<xref ref-type="bibr" rid="B24">24</xref>] on these datasets, but it did not work well, either producing corrupted alignment, or taking very long time (even compared to CLUSTAL W). Therefore MLAGAN results are not included in the figures.</p>
+    </sec>
+    <sec>
+      <title>Mammalian mtDNA genomes</title>
+      <p>MISHIMA is powerful for aligning closely related nucleotide sequences, as shown in the above section. If more divergent sequences are compared, how does MISHIMA perform? We thus retrieved complete mtDNA genomes from various order of mammalian species. Average nucleotide difference for these datasets are within the range of 0.25-0.27.</p>
+      <p>Alignment times taken by MISHIMA (with various settings), CLUSTAL W, MUSCLE, and MAFFT for aligning datasets of 50, 100 and 200 complete mtDNA sequences are shown in Table <xref ref-type="table" rid="T2">2</xref>. Scaling of the alignment time depending on sequence length is shown in Fig. <xref ref-type="fig" rid="F4">4</xref>: MISHIMA+MAFFT combination is the fastest, followed by MAFFT alone, MISHIMA+CLUSTAL W, MUSCLE. CLUSTAL W is much slower. MUSCLE could not complete the alignment of 200 complete mtDNA genomes. MLAGAN results are not shown, since it was not able to produce the alignment even for 2 kb fragments.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Computation time of MISHIMA, CLUSTAL W, MUSCLE and MAFFT, on mammalian mtDNA datasets of 50, 100 and 200 sequences, complete and partial</bold>. MUSCLE results are shown for all cases where it could complete the alignment.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-4"/>
+      </fig>
+      <table-wrap id="T2" position="float">
+        <label>Table 2</label>
+        <caption>
+          <p>Alignment time comparison of various numbers of mammalian mtDNA genomes (complete sequences)</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th align="center" colspan="3">No. of sequences compared</th>
+            </tr>
+            <tr>
+              <th/>
+              <th colspan="3">
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th align="left">Method</th>
+              <th align="center">50</th>
+              <th align="center">100</th>
+              <th align="center">200</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">MISHIMA + MAFFT</td>
+              <td align="center">00:06:50</td>
+              <td align="center">00:10:24</td>
+              <td align="center">00:19:03</td>
+            </tr>
+            <tr>
+              <td colspan="4">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">CLUSTAL W</td>
+              <td align="center">02:15:04</td>
+              <td align="center">05:05:20</td>
+              <td align="center">10:40:31</td>
+            </tr>
+            <tr>
+              <td colspan="4">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">MUSCLE</td>
+              <td align="center">00:46:13</td>
+              <td align="center">01:38:59</td>
+              <td align="center">-----</td>
+            </tr>
+            <tr>
+              <td colspan="4">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">MAFFT</td>
+              <td align="center">00:12:13</td>
+              <td align="center">00:33:36</td>
+              <td align="center">00:53:38</td>
+            </tr>
+            <tr>
+              <td colspan="4">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">Nucleotide diversity</td>
+              <td align="center">0.249</td>
+              <td align="center">0.274</td>
+              <td align="center">0.262</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p>If we compare computation times shown in Table <xref ref-type="table" rid="T1">1</xref> and Table <xref ref-type="table" rid="T2">2</xref>, those of MISHIMA are certainly much slower for different mammalian species than for human individuals; 23 times and 13 times more for 50 and 100 sequences, respectively. This is because the number of good seeds for anchoring is reduced as sequence divergence increases. Computation results can be found in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>.</p>
+      <p>MISHIMA greatly accelerates the aligner that it is using: MISHIMA+CLUSTAL W is much faster than CLUSTAL W alone, MISHIMA+MAFFT is faster than MAFFT alone. Is this achieved by sacrificing the alignment quality? Fig. <xref ref-type="fig" rid="F5">5</xref> shows the alignment score of all finished alignments. MISHIMA+CLUSTAL W score is about the same with the score of CLUSTAL W alone, also MISHIMA+MAFFT score is similar to score of MAFFT alone. Thus, the improvement in computation time is not achieved at the expense of alignment quality.</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Alignment score of alignments produced by MISHIMA, CLUSTAL W, MUSCLE and MAFFT, on mammalian mtDNA datasets of 50, 100 and 200 sequences, complete and partial</bold>. MUSCLE results are shown for all cases where it could complete the alignment.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-5"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Complete genomes of four different strains of bacteria</title>
+      <p>We are now moving from mtDNA genome sequences to much larger bacterial genomes. We first chose 4 strains of <italic>Streptococcus pyogenes </italic>as example. Each genome is about 2 MB, so the total dataset size is about 8 MB. CLUSTAL W could not produce the alignment even after 15 days, and computation was aborted. In good contrast, MISHIMA+CLUSTAL W could successfully produce the multiple alignment of these four genomes in less than three hours. In the course of alignment the dataset was separated into 485 segments, divided by 484 seeds. The average length of one segment was about 4 kb, which is much easier to align than complete sequences.</p>
+      <p>We used various values for [-max-depth = N] option: unlimited depth (default), 1, 2, and 3. Computation times for each case are shown in Table <xref ref-type="table" rid="T3">3</xref>. Adding [-max-depth = 1] reduced the computation time in the case of 400 human mtDNA genome sequences (see Table <xref ref-type="table" rid="T1">1</xref>), while activating this option for alignment of 4 genome sequences of <italic>Streptococcus pyogenes </italic>strains resulted in 3 times slower computation. As the number of iterations increased, computation time was reduced, and the computation time for the case of [-max-depth = 3] was slightly shorter than default unlimited depth (Table <xref ref-type="table" rid="T3">3</xref>). With [-max-depth = 1] (number of recursive uses of MISHIMA anchoring algorithm is set to only 1), some sequence blocks may be quite long, and external aligner may take very long time aligning such blocks. Computation results can be seen in Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>.</p>
+      <table-wrap id="T3" position="float">
+        <label>Table 3</label>
+        <caption>
+          <p>Alignment time of 4 complete genomes of <italic>Streptococcus pyogenes </italic>with various settings of MISHIMA</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Method</th>
+              <th align="center">Alignment time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">MISHIMA -max-depth = 1 -aligner = clustalw</td>
+              <td align="center">10:08:52</td>
+            </tr>
+            <tr>
+              <td align="left">MISHIMA -max-depth = 2 -aligner = clustalw</td>
+              <td align="center">02:54:48</td>
+            </tr>
+            <tr>
+              <td align="left">MISHIMA -max-depth = 3 -aligner = clustalw</td>
+              <td align="center">02:33:44</td>
+            </tr>
+            <tr>
+              <td align="left">MISHIMA (unlimited depth) -aligner = clustalw</td>
+              <td align="center">02:43:03</td>
+            </tr>
+            <tr>
+              <td align="left">MISHIMA -max-depth = 1 -align-seeds-only</td>
+              <td align="center">00:00:27</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p>In any case, it is clear that MISHIMA can be used to align multiple complete bacterial genomes, as long as they are closely related. The alignment of four strains of <italic>Streptococcus pyogenes </italic>revealed several large insertions and deletions, some more than 10 kb long. If one is interested in quickly finding such large deletions, we recommend use of [-align-seeds-only] option, so that the external aligner is not activated. In this way only seed anchoring is conducted, which is much faster (only 27 seconds in <italic>S. pyogenes </italic>example) than producing full multiple alignment.</p>
+    </sec>
+    <sec>
+      <title>Complete genomes of six different strains of bacteria</title>
+      <p>We then moved to a more complex dataset - 6 complete genomes of different strains of <italic>Helicobacter pylori </italic>- each about 1.7 MB. Average nucleotide difference of the dataset is 0.133. Neither CLUSTAL W, MAFFT nor MUSCLE were able to complete the alignment even after 3 days. Therefore we decided to also run tests on fragments of these genomes; we chopped 200 Kb from the beginning of every sequence, then 400 Kb, 600 Kb, and so on, until 1.6 Mb. The computation time of various methods can be seen in Fig. <xref ref-type="fig" rid="F6">6</xref>, and alignment score is shown in Fig. <xref ref-type="fig" rid="F7">7</xref>. MUSCLE was unable to align even the 200 Kb dataset, while CLUSTAL W took 42 hours. MAFFT managed it within 3 minutes - faster than MISHIMA which took 21 minutes with default settings. However, as longer fragments were attempted, MAFFT was slowing down rapidly. With 600 Kb fragments MISHIMA was 2 times faster than MAFFT at its fastest setting [--retree 1 --maxiterate 0]. At the 1.2 Mb length, MISHIMA was more than 6 times faster compared to MAFFT (Fig. <xref ref-type="fig" rid="F6">6</xref>). This time we could also use MLAGAN, which performed very fast in this dataset. The alignment score of MISHIMA is comparable to that of other methods (Fig. <xref ref-type="fig" rid="F7">7</xref>).</p>
+      <fig id="F6" position="float">
+        <label>Figure 6</label>
+        <caption>
+          <p><bold>Computation time of MISHIMA, CLUSTAL W, MAFFT and MLAGAN on <italic>Helicobacter pylori </italic>datasets of 6 sequences, complete and partial</bold>.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-6"/>
+      </fig>
+      <fig id="F7" position="float">
+        <label>Figure 7</label>
+        <caption>
+          <p><bold>Alignment score of alignments produced by MISHIMA, CLUSTAL W, MAFFT and MLAGAN on <italic>Helicobacter pylori </italic>datasets of 6 sequences, complete and partial</bold>.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-7"/>
+      </fig>
+      <p>MISHIMA+MAFFT combination performed well on this dataset. Adding options [-max-depth = 1] and [-max-depth = 2] allowed to save time and improve the alignment score with this dataset.</p>
+    </sec>
+    <sec>
+      <title>Larger datasets</title>
+      <p>We tried MISHIMA on larger bacterial datasets. We used fragmented sequences of 14 genomes of <italic>Staphylococcus aureus</italic>. CLUSTAL W, MUSCLE and MAFFT were taking too long time to align this dataset. MLAGAN was still able to produce the alignment. MISHIMA was operating with the default options in this example, using MAFFT as an external aligner. MISHIMA and MLAGAN alignment times are comparable to each other with partial datasets. When increasing the alignment length, MISHIMA+MAFFT combination becomes faster (Fig. <xref ref-type="fig" rid="F8">8</xref>).</p>
+      <fig id="F8" position="float">
+        <label>Figure 8</label>
+        <caption>
+          <p><bold>Computation time of MISHIMA and MLAGAN on <italic>Staphylococcus aureus </italic>datasets of 6, 10 and 14 sequences</bold>.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-8"/>
+      </fig>
+      <p>Interestingly, MISHIMA alignment time starts to decrease when the sequences are getting closer to complete genome. The reason is that more complete sequences allow for the construction of a set of anchors that leaves smaller unaligned sequence block in the end. This effect is particularly apparent with 14 sequences (Fig. <xref ref-type="fig" rid="F8">8</xref>).</p>
+      <p>The alignment score does not show any big problems with MISHIMA alignment (it is usually higher than that of MLAGAN alignment, Fig. <xref ref-type="fig" rid="F9">9</xref>). So we can conclude that MISHIMA does not sacrifice the alignment quality for fast computation.</p>
+      <fig id="F9" position="float">
+        <label>Figure 9</label>
+        <caption>
+          <p><bold>Alignment score of alignments produced by MISHIMA and MLAGAN on <italic>Staphylococcus aureus </italic>datasets of 6, 10 and 14 sequences</bold>.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-142-9"/>
+      </fig>
+      <p>At present, we were not able to compare the time and score of MISHIMA+MAFFT with just MAFFT, however from previous examples we have seen that MISHIMA+MAFFT alignment is similar in quality to MAFFT alignment. Thus by using MISHIMA we can produce MAFFT-quality alignment even for large datasets where we can't use MAFFT alone.</p>
+      <p>This example shows that MISHIMA is effective on large datasets, including those that are very difficult to align with other programs.</p>
+    </sec>
+    <sec>
+      <title>Random sequences</title>
+      <p>Multiple alignments should be conducted on homologous sequences. However, there will always be a possibility of non-homologous sequences being erroneously included for multiple alignment. It is therefore ideal to detect such non-alignable sequences instantaneously and MISHIMA can do just that. We demonstrate MISHIMA's ability to detect unalignable sequences by using random sequences. Two sets of random sequences (50 and 100 sequences of 20 kb length) were generated using newly built random sequence generator (K. Kryukov, unpublished). We used MISHIMA with [-align-seeds-only -max-depth = 1] options. As expected, MISHIMA could not detect any seeds, which is a good indication that the data is very hard or impossible to align. Quick examination of the result confirmed that the sequences could not be aligned. MISHIMA took only 13 and 15 seconds to produce the results for 50 and 100 sequences, while CLUSTAL W took hours trying to align these random and non-homologous sequences (Table <xref ref-type="table" rid="T4">4</xref>).</p>
+      <table-wrap id="T4" position="float">
+        <label>Table 4</label>
+        <caption>
+          <p>Alignment time of 20 kb random sequences</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="center">Number of sequences</th>
+              <th align="center">CLUSTAL W</th>
+              <th align="center">MISHIMA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="center">50</td>
+              <td align="center">03:55:05</td>
+              <td align="center">00:00:13</td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="center">100</td>
+              <td align="center">08:43:09</td>
+              <td align="center">00:00:15</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p>We therefore recommend to first try using MISHIMA with [-align-seeds-only -max-depth = 1] options on new data. By this way you will be able to quickly know if there are any problems with the sequences. If MISHIMA was able to find seeds and produce a rough alignment, then the sequences are fine and normal MISHIMA alignment procedure can be used. In fact, computation times using this option set for human complete mtDNA genomes are 00:00:18, 00:01:15, and 00:14:38 for 50, 100, and 200 sequences, respectively. When [-max-depth = 1] option is also activated, computation times for 200 and 400 sequences are 00:00:51 and 00:02:27, respectively. These are much shorter than MISHIMA default for producing full multiple alignments.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusion</title>
+    <p>We developed a heuristic method for multiple sequence alignment that can greatly speed up alignment of large datasets - those consisting of hundreds of sequences, as well as those with very long sequences, such as complete bacteria genomes.</p>
+    <p>MISHIMA depends on either MAFFT (default option), or CLUSTAL W (with [-aligner = clustalw]) for aligning the areas between the "seeds" to produce the complete alignment. However even without other programs MISHIMA can be used to quickly produce a rough alignment where only seeds are aligned. This can be very useful for quick evaluation of a new dataset before applying a more thorough alignment procedure.</p>
+    <p>Given the rapidly increasing number of sequenced organisms, there is a growing interest in comparing closely related species. MISHIMA is particularly helpful for such analysis due to its ability to quickly locate homology signals.</p>
+  </sec>
+  <sec>
+    <title>Availability and requirements</title>
+    <p>Project name: MISHIMA</p>
+    <p>Project home page: <ext-link ext-link-type="uri" xlink:href="http://esper.lab.nig.ac.jp/study/mishima/">http://esper.lab.nig.ac.jp/study/mishima/</ext-link></p>
+    <p>Operating system: Windows</p>
+    <p>Programming language: C (not open source).</p>
+    <p>Other requirements: For using with CLUSTAL W, CLUSTAL W version 2.0.10 or later should be installed. For using with MAFFT, MAFFT version 6.707b or later should be installed.</p>
+    <p>License: Binary is free for any use.</p>
+    <p>Any restrictions to use by non-academics: None.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>KK came up with the idea of heuristic homology search, developed the software, ran tests and drafted the manuscript. NS contributed to the design of the algorithm, did additional testing on large datasets, and improved the manuscript. Both authors read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p>Index of/study/mishima/supplementary-data</p>
+      </caption>
+      <media xlink:href="1471-2105-11-142-S1.DOCX" mimetype="text" mime-subtype="plain">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>This work was supported by grants from Ministry of Education, Culture, Sports, Science and Technology. KK was additionally supported by Human Genome Network Project led by Drs. Takashi Gojobori and Kazuho Ikeo.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Feng</surname>
+          <given-names>DF</given-names>
+        </name>
+        <name>
+          <surname>Doolittle</surname>
+          <given-names>RF</given-names>
+        </name>
+        <article-title>Progressive sequence alignment as a prerequisite to correct phylogenetic trees</article-title>
+        <source>J Mol Evol</source>
+        <year>1987</year>
+        <volume>25</volume>
+        <issue>4</issue>
+        <fpage>351</fpage>
+        <lpage>360</lpage>
+        <pub-id pub-id-type="doi">10.1007/BF02603120</pub-id>
+        <pub-id pub-id-type="pmid">3118049</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Barton</surname>
+          <given-names>GJ</given-names>
+        </name>
+        <name>
+          <surname>Sternberg</surname>
+          <given-names>MJE</given-names>
+        </name>
+        <article-title>A Strategy for the Rapid Multiple Alignment of Protein Sequences. Confidence Levels from Tetriary Structure Compositions</article-title>
+        <source>J Mol Biol</source>
+        <year>1987</year>
+        <volume>198</volume>
+        <fpage>327</fpage>
+        <lpage>337</lpage>
+        <pub-id pub-id-type="doi">10.1016/0022-2836(87)90316-0</pub-id>
+        <pub-id pub-id-type="pmid">3430611</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Taylor</surname>
+          <given-names>WR</given-names>
+        </name>
+        <article-title>A Flexible Method to Align Large Number of Biological Sequences</article-title>
+        <source>J Mol Evol</source>
+        <year>1988</year>
+        <volume>28</volume>
+        <issue>1-2</issue>
+        <fpage>161</fpage>
+        <lpage>169</lpage>
+        <pub-id pub-id-type="doi">10.1007/BF02143508</pub-id>
+        <pub-id pub-id-type="pmid">3148736</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Corpet</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>Multiple sequence alignment with hierarchical clustering</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>1988</year>
+        <volume>16</volume>
+        <issue>22</issue>
+        <fpage>10881</fpage>
+        <lpage>10890</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/16.22.10881</pub-id>
+        <pub-id pub-id-type="pmid">2849754</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Higgins</surname>
+          <given-names>DG</given-names>
+        </name>
+        <name>
+          <surname>Sharp</surname>
+          <given-names>PM</given-names>
+        </name>
+        <article-title>CLUSTAL: a package for performing multiple sequence alignment on a microcomputer</article-title>
+        <source>Gene</source>
+        <year>1988</year>
+        <volume>73</volume>
+        <fpage>237</fpage>
+        <lpage>244</lpage>
+        <pub-id pub-id-type="doi">10.1016/0378-1119(88)90330-7</pub-id>
+        <pub-id pub-id-type="pmid">3243435</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Thompson</surname>
+          <given-names>JD</given-names>
+        </name>
+        <name>
+          <surname>Higgins</surname>
+          <given-names>DG</given-names>
+        </name>
+        <name>
+          <surname>Gibson</surname>
+          <given-names>TJ</given-names>
+        </name>
+        <article-title>CLUSTALW: Improving the sensitivity of progressive multiple sequence alignment through sequence weighting, position specific gap penalties and weight matrix choice</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>1994</year>
+        <volume>22</volume>
+        <fpage>4673</fpage>
+        <lpage>4680</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/22.22.4673</pub-id>
+        <pub-id pub-id-type="pmid">7984417</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Edgar</surname>
+          <given-names>RC</given-names>
+        </name>
+        <article-title>MUSCLE: multiple sequence alignment with high accuracy and high throughput</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2004</year>
+        <volume>32</volume>
+        <issue>5</issue>
+        <fpage>1792</fpage>
+        <lpage>1797</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkh340</pub-id>
+        <pub-id pub-id-type="pmid">15034147</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gotoh</surname>
+          <given-names>O</given-names>
+        </name>
+        <article-title>Significant Improvement in Accuracy of Multiple Protein Sequence Alignments by Iterative Refinement as Assessed by Reference to Structural Alignments</article-title>
+        <source>J Mol Biol</source>
+        <year>1996</year>
+        <volume>264</volume>
+        <fpage>823</fpage>
+        <lpage>838</lpage>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1996.0679</pub-id>
+        <pub-id pub-id-type="pmid">8980688</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Notredame</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Higgins</surname>
+          <given-names>DG</given-names>
+        </name>
+        <article-title>SAGA: Sequence Alignment by Genetic Algorithm</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>1996</year>
+        <volume>24</volume>
+        <fpage>1515</fpage>
+        <lpage>1524</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/24.8.1515</pub-id>
+        <pub-id pub-id-type="pmid">8628686</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Katoh</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Misawa</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Kuma</surname>
+          <given-names>KI</given-names>
+        </name>
+        <name>
+          <surname>Miyata</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>MAFFT: a novel method for rapid multiple sequence alignment based on fast Fourier transform</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <issue>14</issue>
+        <fpage>3059</fpage>
+        <lpage>3066</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkf436</pub-id>
+        <pub-id pub-id-type="pmid">12136088</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tonges</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Perrey</surname>
+          <given-names>SW</given-names>
+        </name>
+        <name>
+          <surname>Stoye</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Dress</surname>
+          <given-names>AWM</given-names>
+        </name>
+        <article-title>A General Method for Fast Multiple Sequence Alignment</article-title>
+        <source>Gene</source>
+        <year>1996</year>
+        <volume>172</volume>
+        <issue>1</issue>
+        <fpage>GC33</fpage>
+        <lpage>GC41</lpage>
+        <pub-id pub-id-type="doi">10.1016/0378-1119(96)00123-0</pub-id>
+        <pub-id pub-id-type="pmid">8654965</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Reinert</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Stoye</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Will</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>An iterative method for faster sum-of-pairs multiple sequence alignment</article-title>
+        <source>Bioinformatics</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <issue>9</issue>
+        <fpage>808</fpage>
+        <lpage>814</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/16.9.808</pub-id>
+        <pub-id pub-id-type="pmid">11108703</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Mikhailov</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Cofer</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Gompets</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Performance optimization of Clustal W: Parallel Clustal W, HT Clustal, and MULTICLUSTAL</article-title>
+        <source>SGI White Paper</source>
+        <year>2001</year>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Cheetham</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Dehne</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Pitre</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Rau-Chaplin</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Taillon</surname>
+          <given-names>PJ</given-names>
+        </name>
+        <article-title>Parallel CLUSTAL W for PC Clusters</article-title>
+        <source>Proceedings of the International Conference on Computational Science and Its Applications: Montreal; Springer Lecture Notes in Computer Science</source>
+        <year>2003</year>
+        <volume>2667</volume>
+        <issue>Part II</issue>
+        <fpage>300</fpage>
+        <lpage>309</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>KB</given-names>
+        </name>
+        <article-title>ClustalW-MPI: ClustalW analysis using distributed and parallel computing</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>12</issue>
+        <fpage>1585</fpage>
+        <lpage>1586</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg192</pub-id>
+        <pub-id pub-id-type="pmid">12912844</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Delcher</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Kasif</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Fleischmann</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Peterson</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>White</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Alignment of whole genomes</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <issue>11</issue>
+        <fpage>2369</fpage>
+        <lpage>2376</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/27.11.2369</pub-id>
+        <pub-id pub-id-type="pmid">10325427</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brudno</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Malde</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Poliakov</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Do</surname>
+          <given-names>CB</given-names>
+        </name>
+        <name>
+          <surname>Couronne</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Dubchak</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Batzoglou</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Glocal alignment: finding rearrangements during alignment</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>Suppl 1</issue>
+        <fpage>i54</fpage>
+        <lpage>i62</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg1005</pub-id>
+        <pub-id pub-id-type="pmid">12855437</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bray</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Dubchak</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Pachter</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>AVID: A Global Alignment Program</article-title>
+        <source>Genome Research</source>
+        <year>2003</year>
+        <volume>13</volume>
+        <fpage>97</fpage>
+        <lpage>102</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.789803</pub-id>
+        <pub-id pub-id-type="pmid">12529311</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Shih</surname>
+          <given-names>ACC</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>WH</given-names>
+        </name>
+        <article-title>GS-Aligner: A Novel Tool for Aligning Genomic Sequences Using Bit-Level Operations</article-title>
+        <source>Mol Biol Evol</source>
+        <year>2003</year>
+        <volume>20</volume>
+        <issue>8</issue>
+        <fpage>1299</fpage>
+        <lpage>1309</lpage>
+        <pub-id pub-id-type="doi">10.1093/molbev/msg139</pub-id>
+        <pub-id pub-id-type="pmid">12777500</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Morgenstern</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Frech</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Dress</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Werner</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>DIALIGN: Finding local similarities by multiple sequence alignment</article-title>
+        <source>Bioinformatics</source>
+        <year>1998</year>
+        <volume>14</volume>
+        <issue>3</issue>
+        <fpage>290</fpage>
+        <lpage>294</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/14.3.290</pub-id>
+        <pub-id pub-id-type="pmid">9614273</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brudno</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Chapman</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gottgens</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Batzoglou</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Morgenstern</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Fast and sensitive multiple alignment of large genomic sequences</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2003</year>
+        <volume>4</volume>
+        <fpage>66</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-4-66</pub-id>
+        <pub-id pub-id-type="pmid">14693042</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Kryukov</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Saitou</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>MISHIMA: a Method for Identifying Sequence History In terms of Multiple Alignment</article-title>
+        <source>In proceedings of the RECOMB 2005; Boston</source>
+        <year>2005</year>
+        <fpage>177</fpage>
+        <lpage>178</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Kimura</surname>
+          <given-names>M</given-names>
+        </name>
+        <source>The Neutral Theory of Molecular Evolution</source>
+        <year>1983</year>
+        <publisher-name>Cambridge, Cambridge University Press</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brudno</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Do</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Cooper</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Kim</surname>
+          <given-names>MF</given-names>
+        </name>
+        <name>
+          <surname>Davydov</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Green</surname>
+          <given-names>ED</given-names>
+        </name>
+        <name>
+          <surname>Sidow</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Batzoglou</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>LAGAN and Multi-LAGAN: efficient tools for large-scale multiple alignment of genomic DNA</article-title>
+        <source>Genome Research</source>
+        <year>2003</year>
+        <volume>13</volume>
+        <issue>4</issue>
+        <fpage>721</fpage>
+        <lpage>731</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.926603</pub-id>
+        <pub-id pub-id-type="pmid">12654723</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Stoye</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Moulton</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Dress</surname>
+          <given-names>AWM</given-names>
+        </name>
+        <article-title>DCA: An Efficient Implementation of the Divide-and-Conquer Multiple Sequence Alignment Algorithm</article-title>
+        <source>CABIOS</source>
+        <year>1997</year>
+        <volume>13</volume>
+        <issue>6</issue>
+        <fpage>625</fpage>
+        <lpage>626</lpage>
+        <pub-id pub-id-type="pmid">9475994</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lipman</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Altschul</surname>
+          <given-names>SF</given-names>
+        </name>
+        <name>
+          <surname>Kececioglu</surname>
+          <given-names>JD</given-names>
+        </name>
+        <article-title>A tool for multiple sequence alignment</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>1989</year>
+        <volume>86</volume>
+        <issue>12</issue>
+        <fpage>4412</fpage>
+        <lpage>4415</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.86.12.4412</pub-id>
+        <pub-id pub-id-type="pmid">2734293</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="other">
+        <article-title>MISHIMA Homepage</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://esper.lab.nig.ac.jp/study/mishima/">http://esper.lab.nig.ac.jp/study/mishima/</ext-link>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

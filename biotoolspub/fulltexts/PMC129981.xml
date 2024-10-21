@@ -1,0 +1,1305 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">129981</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-3-25</article-id>
+    <article-id pub-id-type="pmid">12225620</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-3-25</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Prediction of MHC class I binding peptides, using SVMHC</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Dönnes</surname>
+          <given-names>Pierre</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>pierre@bioinf.uni-sb.de</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A2">
+        <name>
+          <surname>Elofsson</surname>
+          <given-names>Arne</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>arne@sbc.su.se</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Center for Bioinformatics Saar, Saarland University, D-660 41 Saarbrücken, Germany</aff>
+    <aff id="I2"><label>2</label>Stockholm Bioinformatics Center, SCFAB, Stockholm University, SE-106 91 Stockholm, Sweden</aff>
+    <pub-date pub-type="collection">
+      <year>2002</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>11</day>
+      <month>9</month>
+      <year>2002</year>
+    </pub-date>
+    <volume>3</volume>
+    <fpage>25</fpage>
+    <lpage>25</lpage>
+    <history>
+      <date date-type="received">
+        <day>22</day>
+        <month>3</month>
+        <year>2002</year>
+      </date>
+      <date date-type="accepted">
+        <day>11</day>
+        <month>9</month>
+        <year>2002</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2002 Dönnes and Elofsson; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL.</copyright-statement>
+      <copyright-year>2002</copyright-year>
+      <copyright-holder>Dönnes and Elofsson; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL.</copyright-holder>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/3/25"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>T-cells are key players in regulating a specific immune response. Activation of cytotoxic T-cells requires recognition of specific peptides bound to Major Histocompatibility Complex (MHC) class I molecules. MHC-peptide complexes are potential tools for diagnosis and treatment of pathogens and cancer, as well as for the development of peptide vaccines. Only one in 100 to 200 potential binders actually binds to a certain MHC molecule, therefore a good prediction method for MHC class I binding peptides can reduce the number of candidate binders that need to be synthesized and tested.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>Here, we present a novel approach, SVMHC, based on support vector machines to predict the binding of peptides to MHC class I molecules. This method seems to perform slightly better than two profile based methods, SYFPEITHI and HLA_BIND. The implementation of SVMHC is quite simple and does not involve any manual steps, therefore as more data become available it is trivial to provide prediction for more MHC types. SVMHC currently contains prediction for 26 MHC class I types from the MHCPEP database or alternatively 6 MHC class I types from the higher quality SYFPEITHI database. The prediction models for these MHC types are implemented in a public web service available at <ext-link ext-link-type="uri" xlink:href="http://www.sbc.su.se/svmhc/">http://www.sbc.su.se/svmhc/</ext-link>.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>Prediction of MHC class I binding peptides using Support Vector Machines, shows high performance and is easy to apply to a large number of MHC class I types. As more peptide data are put into MHC databases, SVMHC can easily be updated to give prediction for additional MHC class I types. We suggest that the number of binding peptides needed for SVM training is at least 20 sequences.</p>
+      </sec>
+    </abstract>
+    <kwd-group>
+      <kwd>MHC class I</kwd>
+      <kwd>Peptide prediction</kwd>
+      <kwd>Machine Learning</kwd>
+      <kwd>Support Vector Machines</kwd>
+    </kwd-group>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>As the genome projects proceed, we are presented with an exponentially increasing number of known protein sequences. Sequences from pathogens provide a huge amount of potential vaccine candidates, as the activation of cytotoxic T-cells requires recognition of specific peptides bound to Major Histocompatibility Complex (MHC) class I molecules (for humans the term Human Leukocyte Antigens, HLA, is often used instead of MHC). MHC-binding peptides (MHC-peptides) are also potential tools for diagnosis and treatment of cancer [<xref ref-type="bibr" rid="B1">1</xref>]. However, it is estimated that only one in 100 to 200 peptides actually binds to a particular MHC [<xref ref-type="bibr" rid="B2">2</xref>]. Therefore, a good computational prediction method could significantly reduce the number of peptides that have to be synthesized and tested.</p>
+    <p>Prediction of MHC-peptides can be divided into two groups: sequence based and structure based methods. Allele specific sequence motifs can be identified by studying the frequencies of amino acids in different positions of identified MHC-peptides. The peptides that bind to HLA-A*0201 are often 9 amino acids long (nonamers), and frequently have two anchor residues, a lysine in position 2 and a Valine in position 9 [<xref ref-type="bibr" rid="B3">3</xref>]. This type of sequence patterns has been used as a simple prediction method [<xref ref-type="bibr" rid="B4">4</xref>]. Besides the anchor residues, there are also weaker preferences for specific amino acids in other positions. One method to include this information is to use a profile, where a score is given for each type of amino acid in each position [<xref ref-type="bibr" rid="B5">5</xref>]. The scores can be calculated from observed amino-acid frequencies in each position or be set manually. The sum of the scores for a given peptide is then used to make predictions. One frequently used profile based prediction method is SYFPEITHI [<xref ref-type="bibr" rid="B6">6</xref>], which is freely available as a web service at <ext-link ext-link-type="uri" xlink:href="http://www.syfpeithi.de/">http://www.syfpeithi.de/</ext-link>. The matrices in SYFPEITHI were adjusted manually, by assigning a high score (10) for frequently occurring anchor residues, a score of 8 to amino acids that occur in a significant amount and a score of 6 to rarely occurring residues. Preferred amino acids in other positions have scores that range from 1 to 6 and amino acids regarded as unfavorable have scores ranging from -3 to -1. SYFPEITHI prediction can be done for 13 different MHC class I types. Another profile based MHC-peptide predictor is HLA_BIND at <ext-link ext-link-type="uri" xlink:href="http://bimas.dcrt.nih.gov/molbio/hla_bind/">http://bimas.dcrt.nih.gov/molbio/hla_bind/</ext-link>. This method estimates the half-time of dissociation of a given MHC-peptide complex [<xref ref-type="bibr" rid="B7">7</xref>]. HLA_BIND provides prediction for more than 40 different MHC class I types. It has been shown that profile based methods are correct in about 30% of the time, in the sense that one third of the predicted binders actually bind [<xref ref-type="bibr" rid="B8">8</xref>].</p>
+    <p>A profile based method does not take into account correlations between frequencies in different positions, neither they consider information from peptides that do not bind. This information can be used by machine learning methods [<xref ref-type="bibr" rid="B9">9</xref>]. Prediction of MHC-peptides has been made by using machine learning approaches such as artificial neural networks [<xref ref-type="bibr" rid="B10">10</xref>] and hidden Markov models [<xref ref-type="bibr" rid="B11">11</xref>]. Gulukota et al. (1997) [<xref ref-type="bibr" rid="B8">8</xref>] showed that one advantage of machine learning algorithms compared to profile methods seems to be that they have a higher specificity. This is possible due to the inclusion of non-binding data in the training. A machine learning approach extracts useful information from a large amount of data and creates a good probabilistic model [<xref ref-type="bibr" rid="B9">9</xref>]. In the case of MHC-peptide prediction, a data set of known binders and known (or supposed) non-binders is used. This set is then used to build a model that discriminates between binding peptides and non-binding peptides. This model can then be used to predict whether a novel peptide binds or not. Brusic reported a total accuracy of 88% on predictions for the mouse MHC H-2K<sup><italic>d</italic></sup>, using an artificial neural networks and hidden Markov models have been reported to perform 2–15% better than artificial neural networks [<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B12">12</xref>].</p>
+    <p>Structural approaches for prediction evaluate how well a peptide fit in the binding groove of a MHC molecule. A peptide is threaded through a structural template to obtain a rough estimate of the binding energy. The energy estimation is based on the interactions defined in the binding pocket of a particular MHC molecule [<xref ref-type="bibr" rid="B13">13</xref>]. To our knowledge no comparisons of the performance between structural and sequence based methods has been published. Obviously, a structural approach is limited to MHC types with a known structure. However, the advantage of a structural approach is that one known structure alone might be sufficient for creating a prediction model.</p>
+  </sec>
+  <sec>
+    <title>Results and Discussion</title>
+    <p>The amount of known binding data for different MHC molecules varies significantly. For some MHC molecules only a few MHC-peptides are known, while for others, there are several hundred verified binders. Since all machine learning methods need a sufficient amount of data for training, we investigated the number of known binders needed for training, using three examples with a large set of known binders. A varying number of training examples was tested using the nonamers in MHCPEP binding to HLA-A*0201, HLA-A3 and HLA-B*2705. The ratio of positive/negative examples was kept constant at 1:2. The test sets for each of the three HLA types consisted of 20 binders and 40 non-binders, unrelated from the training sets. The Mc for the test set was calculated for each size of the training set. A significant improvement of Mc was observed when the size of the training set was increased up to about 20 MHC-peptides, see figure <xref ref-type="fig" rid="F1">1</xref>. Further, a smaller improvement was observed for up to 50 peptides. From the similar behavior of these three examples we concluded that it seemed necessary to include at least 20 known peptides for successful predictions. This resulted in that the current version of SVMHC can make predictions for 26 different MHC molecules, using MHCPEP data. If SYFPEITHI data was used prediction could only be done for 6 different MHC molecules.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p>Performance of SVMHC for the MHC type HLA-A*0201, HLA-A3 and HLA-B*2705, measured by the Matthews correlation coefficient, Mc, versus the number of peptides used for training. For all sizes of the training-set the test-set was identical and no part of the test-set was contained in the training-set.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-3-25-1"/>
+    </fig>
+    <fig id="F2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p>Specificity/sensitivity plots for SVMHC HLA_BIND and SYFPEITHI. Sensitivity is defined as the number of correctly predicted binders (TP) found at a given cutoff, divided with the total number of binders, i.e. Sens = TP/(TP+FN), where FN is the number of . The specificity is defined as the fraction of the hits above this cutoff that is correct, i.e. Spec = TP/(TP+FP). It can be seen that the sensitivity of SVMHC is higher than of SYFPEITHI and HLA_BIND at any specificity.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-3-25-2"/>
+    </fig>
+    <fig id="F3" position="float">
+      <label>Figure 3</label>
+      <caption>
+        <p>The dependency of Matthew correlation coefficient on the reduction level for two HLA alleles (HLA-A*0201 and HLA-A3). The reduction level is measured as the maximum number of allowed identical measures between two peptides in the set.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-3-25-3"/>
+    </fig>
+    <p>The overall performance of SVMHC was compared to SYFPEITHI and HLA_BIND for the six MHC types common between the methods. In Table <xref ref-type="table" rid="T1">1</xref> it can be seen that SVMHC in general performs slightly better than SYFPEITHI and HLA_BIND. SVMHC correctly identified 95% of the peptides, while SYFPEITHI and HLA_BIND only classified 91% and 87% of the peptides correctly. In figure <xref ref-type="fig" rid="F2">2</xref>, it can also be seen that 90% of all MHC-peptides can be identified at a specificity of 90% by SVMHC, while this sensitivity is only reached at a specificity of 75% by SYFPEITHI and at 50% for HLA_BIND. It seems as if the hand-tuned profiles from SYFPEITHI performs slightly better than HLA_BIND and in agreement with earlier studies machine learning based methods, such as SVMHC, show a higher specificity than profile based methods [<xref ref-type="bibr" rid="B8">8</xref>]. When studying the performance of the individual alleles it can be seen that in five of these cases SVMHC show the best performance, only for HLA-B*8 HLA_BIND performs slightly better. HLA-B*8 is also the allele with the lowest number of known binders.</p>
+    <table-wrap id="T1" position="float">
+      <label>Table 1</label>
+      <caption>
+        <p>Comparison between SVMHC, SYFPEITHI (SYF) and HLA_BIND (HLA) of the six alleles common between them.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="center" colspan="3">Dataset</th>
+            <th align="center" colspan="3">Mc</th>
+            <th align="center" colspan="3">percentage correct predictions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">MHC</td>
+            <td align="center">Length</td>
+            <td align="center">Size</td>
+            <td align="center">SVMHC</td>
+            <td align="center">SYF</td>
+            <td align="center">HLA</td>
+            <td align="center">SVMHC</td>
+            <td align="center">SYF</td>
+            <td align="center">HLA</td>
+          </tr>
+          <tr>
+            <td colspan="9">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="center">Overall</td>
+            <td align="center">-</td>
+            <td align="center">-</td>
+            <td align="center">0.85</td>
+            <td align="center">0.75</td>
+            <td align="center">0.62</td>
+            <td align="center">95%</td>
+            <td align="center">91%</td>
+            <td align="center">87%</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*0201</td>
+            <td align="center">9</td>
+            <td align="center">113</td>
+            <td align="center">0.78</td>
+            <td align="center">0.77</td>
+            <td align="center">0.77</td>
+            <td align="center">90%</td>
+            <td align="center">89%</td>
+            <td align="center">89%</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*0201</td>
+            <td align="center">10</td>
+            <td align="center">40</td>
+            <td align="center">0.70</td>
+            <td align="center">0.61</td>
+            <td align="center">0.61</td>
+            <td align="center">87%</td>
+            <td align="center">80%</td>
+            <td align="center">83%</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A1</td>
+            <td align="center">9</td>
+            <td align="center">28</td>
+            <td align="center">0.96</td>
+            <td align="center">0.93</td>
+            <td align="center">0.96</td>
+            <td align="center">98%</td>
+            <td align="center">97%</td>
+            <td align="center">98%</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A3</td>
+            <td align="center">9</td>
+            <td align="center">73</td>
+            <td align="center">0.80</td>
+            <td align="center">0.73</td>
+            <td align="center">0.71</td>
+            <td align="center">91%</td>
+            <td align="center">86%</td>
+            <td align="center">84%</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*8</td>
+            <td align="center">9</td>
+            <td align="center">25</td>
+            <td align="center">0.79</td>
+            <td align="center">0.79</td>
+            <td align="center">0.82</td>
+            <td align="center">91%</td>
+            <td align="center">91%</td>
+            <td align="center">92%</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*2705</td>
+            <td align="center">9</td>
+            <td align="center">29</td>
+            <td align="center">1.00</td>
+            <td align="center">0.92</td>
+            <td align="center">0.93</td>
+            <td align="center">100%</td>
+            <td align="center">95%</td>
+            <td align="center">97%</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>The tables shows the MHC-type, the length of the binding peptides, the number of experimentally verified binders, the Matthew correlation coefficient (Mc) and the percentage correct predictions.</p>
+      </table-wrap-foot>
+    </table-wrap>
+    <p>In addition to the overall performance we have studied the performance of all MHC classes in SVMHC, see table <xref ref-type="table" rid="T3">3</xref>. It can be seen that the prediction quality varies between MC = 0.59 and 1.0. The worse predictions are for two datasets with few data-points, decamers for HLA-A2 and HLA-A11.</p>
+    <table-wrap id="T2" position="float">
+      <label>Table 2</label>
+      <caption>
+        <p>Performance of SVMHC for different HLA alleles, using MHCPEP- or SYFPEITHI-data.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="center">MHC</th>
+            <th align="center">Length</th>
+            <th align="center">Size</th>
+            <th align="center">Mc</th>
+            <th align="center">Kernel</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center" colspan="5">Predictions using MHCPEP</td>
+          </tr>
+          <tr>
+            <td colspan="5">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A1</td>
+            <td align="center">9</td>
+            <td align="center">28</td>
+            <td align="center">0.95</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*1101</td>
+            <td align="center">9</td>
+            <td align="center">40</td>
+            <td align="center">0.74</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A11</td>
+            <td align="center">9</td>
+            <td align="center">46</td>
+            <td align="center">0.75</td>
+            <td align="center">rbf</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A11</td>
+            <td align="center">10</td>
+            <td align="center">21</td>
+            <td align="center">0.59</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A2</td>
+            <td align="center">9</td>
+            <td align="center">118</td>
+            <td align="center">0.76</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A2</td>
+            <td align="center">10</td>
+            <td align="center">35</td>
+            <td align="center">0.65</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*2402</td>
+            <td align="center">9</td>
+            <td align="center">73</td>
+            <td align="center">0.90</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A3</td>
+            <td align="center">9</td>
+            <td align="center">73</td>
+            <td align="center">0.76</td>
+            <td align="center">rbf</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*0201</td>
+            <td align="center">9</td>
+            <td align="center">184</td>
+            <td align="center">0.73</td>
+            <td align="center">rbf</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*0201</td>
+            <td align="center">10</td>
+            <td align="center">96</td>
+            <td align="center">0.78</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*3301</td>
+            <td align="center">9</td>
+            <td align="center">32</td>
+            <td align="center">0.72</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*0301</td>
+            <td align="center">9</td>
+            <td align="center">38</td>
+            <td align="center">0.72</td>
+            <td align="center">rbf</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*0301</td>
+            <td align="center">10</td>
+            <td align="center">32</td>
+            <td align="center">0.77</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A31</td>
+            <td align="center">9</td>
+            <td align="center">39</td>
+            <td align="center">0.79</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*6801</td>
+            <td align="center">9</td>
+            <td align="center">42</td>
+            <td align="center">0.84</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B7</td>
+            <td align="center">9</td>
+            <td align="center">32</td>
+            <td align="center">0.95</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B8</td>
+            <td align="center">9</td>
+            <td align="center">26</td>
+            <td align="center">0.77</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*2705</td>
+            <td align="center">9</td>
+            <td align="center">41</td>
+            <td align="center">0.93</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*3501</td>
+            <td align="center">9</td>
+            <td align="center">67</td>
+            <td align="center">0.93</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*3501</td>
+            <td align="center">10</td>
+            <td align="center">34</td>
+            <td align="center">0.96</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B35</td>
+            <td align="center">9</td>
+            <td align="center">23</td>
+            <td align="center">0.71</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*2703</td>
+            <td align="center">9</td>
+            <td align="center">22</td>
+            <td align="center">0.90</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*5301</td>
+            <td align="center">9</td>
+            <td align="center">41</td>
+            <td align="center">0.95</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B27</td>
+            <td align="center">9</td>
+            <td align="center">34</td>
+            <td align="center">0.91</td>
+            <td align="center">rbf</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*2706</td>
+            <td align="center">9</td>
+            <td align="center">20</td>
+            <td align="center">0.93</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B51</td>
+            <td align="center">9</td>
+            <td align="center">67</td>
+            <td align="center">0.82</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*5102</td>
+            <td align="center">9</td>
+            <td align="center">29</td>
+            <td align="center">0.79</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*0702</td>
+            <td align="center">9</td>
+            <td align="center">52</td>
+            <td align="center">0.96</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*5103</td>
+            <td align="center">9</td>
+            <td align="center">29</td>
+            <td align="center">0.84</td>
+            <td align="center">rbf</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*5401</td>
+            <td align="center">9</td>
+            <td align="center">42</td>
+            <td align="center">0.98</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*5101</td>
+            <td align="center">9</td>
+            <td align="center">35</td>
+            <td align="center">0.89</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td colspan="5">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" colspan="5">Predictions using SYFPEITHI</td>
+          </tr>
+          <tr>
+            <td colspan="5">
+              <hr/>
+            </td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*0201</td>
+            <td align="center">9</td>
+            <td align="center">113</td>
+            <td align="center">0.78</td>
+            <td align="center">rbf</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A*0201</td>
+            <td align="center">10</td>
+            <td align="center">40</td>
+            <td align="center">0.70</td>
+            <td align="center">poly</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A1</td>
+            <td align="center">9</td>
+            <td align="center">28</td>
+            <td align="center">0.96</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-A3</td>
+            <td align="center">9</td>
+            <td align="center">73</td>
+            <td align="center">0.80</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*8</td>
+            <td align="center">8</td>
+            <td align="center">14</td>
+            <td align="center">0.89</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*8</td>
+            <td align="center">9</td>
+            <td align="center">25</td>
+            <td align="center">0.79</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B*2705</td>
+            <td align="center">9</td>
+            <td align="center">29</td>
+            <td align="center">1.00</td>
+            <td align="center">lin</td>
+          </tr>
+          <tr>
+            <td align="center">HLA-B7</td>
+            <td align="center">9</td>
+            <td align="center">23</td>
+            <td align="center">0.93</td>
+            <td align="center">lin</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <p>The first column explains shows the HLA allele, the second the length of the binding peptides, the third the number of binders included in the training set, the fourth the performance as measured by the Matthews correlation coefficient. The final column shows what type of kernel was used in the Support Vector Machine.</p>
+      </table-wrap-foot>
+    </table-wrap>
+    <p>Finally, we tested SVMHC by performing a prediction for four proteins with recently identified known MHC-peptides. All possible binding nonamers were run through the predictors and a ranked list of candidate binders was produced from the output (the SVMHC models used were trained on SYFPEITHI data). In table <xref ref-type="table" rid="T2">2</xref> it can be seen that for all four proteins SVMHC ranks the known binders higher than the other two methods. This also indicates that fewer non-binders are given high scores when using SVMHC.</p>
+    <p>This example further supports the suggestion that machine learning methods might improve the specificity over profile based methods. However, the increase over SYFPEITHI, seems quite marginal and the major advantage of SVMHC might be that it (a) contains more MHC-types, (b) the scores are comparable between different MHC types (c) a slightly higher specificity.</p>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>Here, we present a novel approach based on support vector machines to predict the binding of peptides to MHC class I molecules, SVMHC. This method seems to perform slightly better than profile based methods. Most importantly the scoring is more comparable between different MHC types and therefore provides a higher overall specificity. Moreover, the implementation of SVMHC was done in such way that so that it will be easy to update when new binding peptides are identified. Better methods for purification and sequencing of MHC-binding peptides are developed all the time, giving more accurate databases. Therefore, the use of more "high quality" data will increase the performance of SVMHC prediction in the future, and predictions of a larger number of MHC-I classes should also be available. SVMHC currently contains prediction models for 26 MHC class I types from the MHCPEP database and 6 MHC class I types from the SYFPEITHI database. The prediction models for these MHC types are implemented in a public web service available at <ext-link ext-link-type="uri" xlink:href="http://www.sbc.su.se/svmhc/">http://www.sbc.su.se/svmhc/</ext-link>.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <p>This paper presents a support vector machine based method (SVMHC) to predict peptides that bind MHC class I molecules. Support vector machines are a class of machine learning methods that recently has been applied for classification of microarray data, protein structure prediction and other biological problems [<xref ref-type="bibr" rid="B14">14</xref>-<xref ref-type="bibr" rid="B16">16</xref>]. In preliminary studies, it was indicated that support vector machines performed better than neural networks for MHC-peptide predictions. SVMHC is based on the support vector machine package SVM-LIGHT [<xref ref-type="bibr" rid="B17">17</xref>].</p>
+    <sec>
+      <title>Support vector machines</title>
+      <p>A full coverage of the use of SVM for pattern recognition is given by Vapnik [<xref ref-type="bibr" rid="B18">18</xref>], but some basic concepts are introduced here. Lets assume that we have a series of examples (or input vectors) <inline-graphic xlink:href="1471-2105-3-25-i1.gif"/> ∈ <italic>R</italic><sup><italic>d</italic></sup> (<italic>i</italic> = 1, 2 ..., <italic>N</italic>) with corresponding labels <italic>y</italic><sub><italic>i</italic></sub> ∈ {+1, -1} (<italic>i</italic> = 1, 2, ..., <italic>N</italic>). In the case of MHC class I binding peptides, <inline-graphic xlink:href="1471-2105-3-25-i1.gif"/> corresponds to the amino acid sequence of the peptide and <italic>y</italic><sub><italic>i</italic></sub> (+1 or -1) represents binder/non-binder. The amino acid sequence of a peptide is represented by sparse encoding [<xref ref-type="bibr" rid="B9">9</xref>].</p>
+      <p>This task is carried out by (i) mapping of the input vectors <inline-graphic xlink:href="1471-2105-3-25-i1.gif"/> into a high dimensional feature space <inline-graphic xlink:href="1471-2105-3-25-i2.gif"/> and (ii) construction of an optimal separating hyperplane (OSH) in the new feature space. The OSH is the hyperplane with the maximum distance to the nearest data points of each class in the feature space H. One of the most central points in using SVM is the choice of mapping φ (·), which is defined by a kernel function <italic>K</italic>(<inline-graphic xlink:href="1471-2105-3-25-i1.gif"/>,<inline-graphic xlink:href="1471-2105-3-25-i3.gif"/>). The decision function used by SVM can be written:<inline-graphic xlink:href="1471-2105-3-25-i4.gif"/></p>
+      <p>The coefficients α<sub><italic>i</italic></sub> are given by the solution of the quadratic programming task: Maximize<inline-graphic xlink:href="1471-2105-3-25-i5.gif"/></p>
+      <p>subject to<inline-graphic xlink:href="1471-2105-3-25-i6.gif"/></p>
+      <p><italic>c</italic> in equation (2) is a parameter controlling the trade off between the margin and and the training error. It is the kernel function that determines the dimension of the feature space, meaning that different kernels will represent the input vectors in different ways. The aim of the SVM is then to find an OSH without loosing the ability of generalization, often referred to as over-training. The kernels tested for MHC class I peptide predictions were linear, polynomial and radial basis function.</p>
+      <p>Equation (3) is an example of the radial basis function and equation (4) shows the polynomial kernel function.<inline-graphic xlink:href="1471-2105-3-25-i7.gif"/></p>
+      <p>The problem of choosing the most suitable kernel for a SVM is analogous to the problem of choosing the architecture for a neural network [<xref ref-type="bibr" rid="B15">15</xref>]. One main feature of SVM is that the quadratic programming task is a convex optimization problem, which ensure a global optimum. This can be compared to ANN that uses gradient based training functions with the risk of getting stuck in a local minimum.</p>
+    </sec>
+    <sec>
+      <title>SVMHC performance and parameter optimization</title>
+      <p>A central part of the process of developing a prediction method is to have a good measure of the prediction performance. The main goal is to have a prediction method that can generalize and correctly classify unseen data. Therefore, four-fold cross validation was used to verify SVM performance [<xref ref-type="bibr" rid="B19">19</xref>]. Further we have used redundancy reduction, such that no two peptides share more than four amino acids, see below. The main measure of performance used for SVMHC parameter optimization was Matthews Correlation coefficients (Mc) [<xref ref-type="bibr" rid="B20">20</xref>].</p>
+      <p>For each MHC-type the optimal kernel and trade off <italic>c</italic> was optimized by a systematic variation of the parameters and evaluation of prediction performance using Matthews Correlation coefficients. For the linear kernel the parameters <italic>j</italic>, a cost factor between errors on binding and non-binding peptides was also optimized. In the case of a polynomial and radial basis kernel the parameters describing the form of the function were optimized as well. The parameters chosen for each MHC class I type, were the ones that gave the best Matthews Correlation coefficient. For a more detailed explanation of the parameters, see the SVM-LIGHT documentation at <ext-link ext-link-type="uri" xlink:href="http://svmlight.joachims.org/">http://svmlight.joachims.org/</ext-link>.</p>
+    </sec>
+    <sec>
+      <title>MHC databases</title>
+      <p>In this study we have used two databases SYFPEITHI [<xref ref-type="bibr" rid="B6">6</xref>] and MHCPEP [<xref ref-type="bibr" rid="B21">21</xref>] to create MHC class I predictors for different alleles. MHCPEP is a curated database comprising over 13000 peptide sequences known to bind MHC molecules. Entries are compiled from published reports as well as from direct submissions of experimental data. SYFPEITHI is supposed to be of a higher quality and is restricted to published data and only contain sequences that are natural ligands to T-cell epitopes. The two databases have different advantages, MHCPEP contains signicantly more data (13000 vs 3500), while the quality of the data in SYFPEITHI is assumed to be higher. Therefore, using MHCPEP data for SVM training, it is possible to make predictions for 26 different MHC types. This can be compared with only 6 MHC types when SYFPEITHI data is used for SVM training. However, the predictions from SYFPEITHI might be more reliable and should therefore be used when enough data exists.</p>
+      <p>Peptide sequences known to bind a MHC class I alleles were extracted from one of the databases. All peptides from the two databases are considered as binding peptides, i.e. no difference between strong and weak binders is considered. Unfortunately, there are very few experimentally verified examples of peptides that do <italic>not</italic> bind to a particular MHC. Therefore, the non-binding training examples were extracted randomly from the ENSEMBL database of human proteins [<xref ref-type="bibr" rid="B22">22</xref>]. Protein sequences from the ENSEMBL database were chopped up into the length of interest and known MHC-peptides were removed. Obviously, there is a risk that some of the non-binders actually binds, but since less than 1% of the peptides are expected to bind to a MHC molecule, we do not expect this to cause any major problems. The ratio of binder/non-binders was kept to 1:2 for all MHC types.</p>
+    </sec>
+    <sec>
+      <title>Redundancy reduction</title>
+      <p>When utilizing machine learning methods it is important that the training data reproduces well what can be expected for unseen data. If the training data only contains a subset of what can be expected there is a risk for over-training, i.e. that the obtained performance is not representative for unseen data. One method to avoid over-training is to use a "redundancy reduced" test-set. To understand the risk of over-training the data we used two alleles to study the change in performance using different reduction levels. We examined the performance on cross validated test-sets using different reduction levels for two different MHC alleles. For HLA-A*0201 the performance is not dependent on the reduction level, while a small increase is seen for HLA-A3 (from Mc = 0.60 to 0.74) when a looser cutoff is used, see figure <xref ref-type="fig" rid="F3">3</xref>. Using a stricter redundancy reduction might improve future predictions but as the dataset is limited it makes less alleles available for prediction. Therefore, in all studied below we choose to include a restriction that no two peptides in the dataset should share more than 4 identical residues.</p>
+    </sec>
+    <sec>
+      <title>Comparison of different prediction methods</title>
+      <p>The performance of SVMHC was compared to the performance of two public prediction servers, SYFPEITHI and HLA_BIND. The prediction performances were measured using Matthews Correlation coefficients (Mc) [<xref ref-type="bibr" rid="B20">20</xref>], Specificity-Sensitivity plots [<xref ref-type="bibr" rid="B23">23</xref>] and the percentage correct predictions. For SYFPEITHI and HLA_BIND the cutoff distinguishing between binders and non-binders was optimized, while for SVMHC it was kept constant and 0. There are six MHC types common between the three methods and all of these were used for comparing the performance. Each binding and non-binding peptide tested was submitted to the public prediction servers and the different prediction performances were calculated. The threshold for binder/non-binder for the public prediction servers, were chosen to give the maximum Mc on the test set.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>PD carried out all of the work under the supervision of AE. All authors read and approved the final manuscript.</p>
+    <table-wrap id="T3" position="float">
+      <label>Table 3</label>
+      <caption>
+        <p>Study of recently detected binding peptides from proteins P17944, P17451, P31952 and P17944, binding to HLA-A*0201. The known binding nonamers and the rank of these with the different predictors are shown. Although all three methods detects these peptides, they are found at higher ranks using SVMHC than with the other methods.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="center">Protein</th>
+            <th align="center">No.</th>
+            <th align="center">SVMHC</th>
+            <th align="center">HLA_BIND</th>
+            <th align="center">SYFPEITHI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">P78395</td>
+            <td align="center">2</td>
+            <td align="center">1,6</td>
+            <td align="center">3,23</td>
+            <td align="center">2,8</td>
+          </tr>
+          <tr>
+            <td align="center">P17944</td>
+            <td align="center">2</td>
+            <td align="center">1,2</td>
+            <td align="center">1,3</td>
+            <td align="center">4,6</td>
+          </tr>
+          <tr>
+            <td align="center">P31952</td>
+            <td align="center">1</td>
+            <td align="center">2</td>
+            <td align="center">4</td>
+            <td align="center">14</td>
+          </tr>
+          <tr>
+            <td align="center">P17451</td>
+            <td align="center">3</td>
+            <td align="center">2,3,4</td>
+            <td align="center">1,4,12</td>
+            <td align="center">1,6,10</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>This work was supported by grants form the Swedish Natural Sciences Research Council and the Swedish Research Council for Engineering Sciences to AE.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sette</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Chesnut</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Fikes</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>HLA expression in cancer: implications for T cell-based immunotherapy.</article-title>
+        <source>Immunogenetics</source>
+        <year>2001</year>
+        <volume>53</volume>
+        <fpage>255</fpage>
+        <lpage>263</lpage>
+        <pub-id pub-id-type="doi">10.1007/s002510100334</pub-id>
+        <pub-id pub-id-type="pmid">11491528</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yewdell</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Bennink</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Immunodominance in major histocompatibility complex class I-restricted T lymphocyte responses.</article-title>
+        <source>Annu Rev Immunol</source>
+        <year>1999</year>
+        <volume>17</volume>
+        <fpage>51</fpage>
+        <lpage>81</lpage>
+        <pub-id pub-id-type="doi">10.1146/annurev.immunol.17.1.51</pub-id>
+        <pub-id pub-id-type="pmid">10358753</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rotzschke</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Falk</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Stevanovic</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Jung</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Rammensee</surname>
+          <given-names>H</given-names>
+        </name>
+        <article-title>Peptide motifs of closely related HLA class I molecules encompass substantial differences.</article-title>
+        <source>European Journal of Immunology</source>
+        <year>1992</year>
+        <volume>22</volume>
+        <fpage>2453</fpage>
+        <lpage>2456</lpage>
+        <pub-id pub-id-type="pmid">1516632</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rammensee</surname>
+          <given-names>H-G</given-names>
+        </name>
+        <name>
+          <surname>Friede</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Stevanovic</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>MHC ligands and peptide motifs: first listing.</article-title>
+        <source>Immunogenetics</source>
+        <year>1995</year>
+        <volume>41</volume>
+        <fpage>962</fpage>
+        <lpage>965</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gribskov</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>McLachlan</surname>
+          <given-names>AD</given-names>
+        </name>
+        <name>
+          <surname>Eisenberg</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Profile analysis: detection of distantly related proteins.</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>1987</year>
+        <volume>84</volume>
+        <fpage>4355</fpage>
+        <lpage>4358</lpage>
+        <pub-id pub-id-type="pmid">3474607</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rammensee</surname>
+          <given-names>H-G</given-names>
+        </name>
+        <name>
+          <surname>Bachman</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Philipp</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Emmerich</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Bachor</surname>
+          <given-names>OA</given-names>
+        </name>
+        <name>
+          <surname>Stevanovic</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>SYFPEITHI: a database for MHC ligands and peptide motifs.</article-title>
+        <source>Immunogenetics</source>
+        <year>1999</year>
+        <volume>50</volume>
+        <fpage>213</fpage>
+        <lpage>219</lpage>
+        <pub-id pub-id-type="doi">10.1007/s002510050595</pub-id>
+        <pub-id pub-id-type="pmid">10602881</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Parker</surname>
+          <given-names>KC</given-names>
+        </name>
+        <name>
+          <surname>Bednarek</surname>
+          <given-names>MA</given-names>
+        </name>
+        <name>
+          <surname>Coligan</surname>
+          <given-names>JE</given-names>
+        </name>
+        <article-title>Scheme for ranking potential HLA-A2 binding peptides based on independent binding of individual peptide side-chains.</article-title>
+        <source>J Immunol</source>
+        <year>1994</year>
+        <volume>152</volume>
+        <fpage>163</fpage>
+        <lpage>175</lpage>
+        <pub-id pub-id-type="pmid">8254189</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gulukota</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Sidney</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Sette</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>DeLisi</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Two complementary methods for predicting peptides binding major histocompatibility complex molecules.</article-title>
+        <source>J Mol Biol</source>
+        <year>1997</year>
+        <volume>267</volume>
+        <fpage>1258</fpage>
+        <lpage>1267</lpage>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1997.0937</pub-id>
+        <pub-id pub-id-type="pmid">9150410</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Baldi</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Brunak</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Bioinformatics, the machine learning approach.</article-title>
+        <source>MIT Press Cambridge Massachusetts, London England</source>
+        <year>1998</year>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Honeyman</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Brusic</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Stone</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Harrison</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>Neural network-based prediction of candidate t-cell epitopes.</article-title>
+        <source>Nature Biotechnology</source>
+        <year>1998</year>
+        <volume>16</volume>
+        <fpage>966</fpage>
+        <lpage>969</lpage>
+        <pub-id pub-id-type="pmid">9788355</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mamitsuka</surname>
+          <given-names>H</given-names>
+        </name>
+        <article-title>MHC molecules using supervised learning of hidden Markov models.</article-title>
+        <source>Proteins: Structure, Function and Genetics</source>
+        <year>1998</year>
+        <volume>33</volume>
+        <fpage>460</fpage>
+        <lpage>474</lpage>
+        <pub-id pub-id-type="doi">10.1002/(SICI)1097-0134(19981201)33:4&lt;460::AID-PROT2&gt;3.0.CO;2-M</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Brusic</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Harrison</surname>
+          <given-names>L</given-names>
+        </name>
+        <person-group person-group-type="editor">Stonier RJ, Yu XS</person-group>
+        <article-title>Prediction of MHC binding peptides using artificial neural networks, Complex Systems:</article-title>
+        <source>In Complex Systems: Mechanism of Adaptation</source>
+        <year>1994</year>
+        <publisher-name>IOS Press, Amsterdam, The Netherlands/OHMSHA Tokyo</publisher-name>
+        <fpage>253</fpage>
+        <lpage>260</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Schueler-Furman</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Altuvia</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Sette</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Structure-based prediction of binding peptides to MHC class I molecules: application to a broad range of MHC alleles.</article-title>
+        <source>Protein Science</source>
+        <year>2000</year>
+        <volume>9</volume>
+        <fpage>1838</fpage>
+        <lpage>1846</lpage>
+        <pub-id pub-id-type="pmid">11045629</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brown</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Grundy</surname>
+          <given-names>WN</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Cristianini</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Sugnet</surname>
+          <given-names>CW</given-names>
+        </name>
+        <name>
+          <surname>S</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Ares</surname>
+          <given-names>M</given-names>
+          <suffix>Jr</suffix>
+        </name>
+        <name>
+          <surname>Haussler</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Genetics knowledge-based analysis of microarray gene expression data by using support vector machines.</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2000</year>
+        <volume>97</volume>
+        <fpage>262</fpage>
+        <lpage>267</lpage>
+        <pub-id pub-id-type="pmid">10618406</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.97.1.262</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Cristianini</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Shawe-Taylor</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Support vector machines and other kernel-based learning methods.</article-title>
+        <source>Cambridge University Press, Cambridge England The Edinburgh Building, Cambridge, CB2 2RU, UK</source>
+        <year>2000</year>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ding</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Dubchak</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>Multi-class protein fold recognition using support vector machines and neural networks.</article-title>
+        <source>Bioinformatics</source>
+        <year>2001</year>
+        <volume>17</volume>
+        <fpage>349</fpage>
+        <lpage>358</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/17.4.349</pub-id>
+        <pub-id pub-id-type="pmid">11301304</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Joachims</surname>
+          <given-names>T</given-names>
+        </name>
+        <person-group person-group-type="editor">B Schölkopf and C Burges and A Smola</person-group>
+        <article-title>Making large-Scale SVM Learning Practical.</article-title>
+        <source>Advances in kernel methods – support vector learning</source>
+        <year>1999</year>
+        <publisher-name>MIT Press, Cambridge Massachusetts, London England</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Vapnik</surname>
+          <given-names>VN</given-names>
+        </name>
+        <article-title>The Nature of Statistical Learning Theory.</article-title>
+        <source>Wiley New York</source>
+        <year>1998</year>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rost</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Sander</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Prediction of protein secondary structure structure at better than 70% accuracy.</article-title>
+        <source>J Mol Biol</source>
+        <year>1993</year>
+        <volume>232</volume>
+        <fpage>584</fpage>
+        <lpage>599</lpage>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1993.1413</pub-id>
+        <pub-id pub-id-type="pmid">8345525</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Matthews</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Comparison of the predicted and observed secondary structure of T4 phage lysozyme.</article-title>
+        <source>Biochim Biophys Acta</source>
+        <year>1975</year>
+        <volume>405</volume>
+        <fpage>442</fpage>
+        <lpage>451</lpage>
+        <pub-id pub-id-type="doi">10.1016/0005-2795(75)90109-9</pub-id>
+        <pub-id pub-id-type="pmid">1180967</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brusic</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Rudy</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Harrsison</surname>
+          <given-names>LC</given-names>
+        </name>
+        <article-title>MHCPEP, a database of MHC-binding peptides: update 1997.</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>1998</year>
+        <volume>26</volume>
+        <fpage>368</fpage>
+        <lpage>171</lpage>
+        <pub-id pub-id-type="pmid">9399876</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/26.1.368</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hubbard</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Barker</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Birney</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Cameron</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Clark</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Cox</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Cuff</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Curwen</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Down</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Eyras</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Gilbert</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hammond</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Huminiecki</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Kasprzyk</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lehvaslaiho</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Lijnzaad</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Melsopp</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Mongin</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Pettett</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Pocock</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Potter</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Rust</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Schmidt</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Searle</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Slater</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Spooner</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Stabenau</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Stalker</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Stupka</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Ureta-Vidal</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Vastrik</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Clamp</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>The Ensembl genome database project.</article-title>
+        <source>Nucleic Acids Research</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <fpage>38</fpage>
+        <lpage>41</lpage>
+        <pub-id pub-id-type="pmid">11752248</pub-id>
+        <pub-id pub-id-type="doi">10.1093/nar/30.1.38</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lindahl</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Elofsson</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Identification of related proteins on family, superfamily and fold level.</article-title>
+        <source>J Mol Biol</source>
+        <year>2000</year>
+        <volume>295</volume>
+        <fpage>613</fpage>
+        <lpage>625</lpage>
+        <pub-id pub-id-type="doi">10.1006/jmbi.1999.3377</pub-id>
+        <pub-id pub-id-type="pmid">10623551</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

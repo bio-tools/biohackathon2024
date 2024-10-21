@@ -1,0 +1,1897 @@
+<?properties open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Nucleic Acids Res</journal-id>
+    <journal-id journal-id-type="publisher-id">Nucleic Acids Research</journal-id>
+    <journal-title>Nucleic Acids Research</journal-title>
+    <issn pub-type="ppub">0305-1048</issn>
+    <issn pub-type="epub">1362-4962</issn>
+    <publisher>
+      <publisher-name>Oxford University Press</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">1524906</article-id>
+    <article-id pub-id-type="doi">10.1093/nar/gkl486</article-id>
+    <article-id pub-id-type="pmid">16855291</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>SLiMDisc: short, linear motif discovery, correcting for common evolutionary descent</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Davey</surname>
+          <given-names>Norman E.</given-names>
+        </name>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Shields</surname>
+          <given-names>Denis C.</given-names>
+        </name>
+        <xref ref-type="corresp" rid="cor1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Edwards</surname>
+          <given-names>Richard J.</given-names>
+        </name>
+      </contrib>
+      <aff>
+        <institution>Conway Institute of Biomolecular and Biomedical Sciences, University College Dublin</institution>
+        <addr-line>Dublin 4, Ireland</addr-line>
+      </aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="cor1"><sup>*</sup>To whom correspondence should be addressed. Tel: +353 1 7166831; Email: <email>denis.shields@ucd.ie</email></corresp>
+    </author-notes>
+    <!--For NAR: both ppub and collection dates generated for PMC processing 1/27/05 beck-->
+    <pub-date pub-type="collection">
+      <year>2006</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <year>2006</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>19</day>
+      <month>7</month>
+      <year>2006</year>
+    </pub-date>
+    <volume>34</volume>
+    <issue>12</issue>
+    <fpage>3546</fpage>
+    <lpage>3554</lpage>
+    <history>
+      <date date-type="received">
+        <day>22</day>
+        <month>3</month>
+        <year>2006</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>22</day>
+        <month>6</month>
+        <year>2006</year>
+      </date>
+      <date date-type="accepted">
+        <day>26</day>
+        <month>6</month>
+        <year>2006</year>
+      </date>
+    </history>
+    <copyright-statement>© 2006 The Author(s)</copyright-statement>
+    <copyright-year>2006</copyright-year>
+    <license license-type="openaccess">
+      <p>This is an Open Access article distributed under the terms of the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/2.0/uk/"/>) which permits unrestricted non-commerical use, distribution, and reproduction in any medium, provided the original work is properly cited.</p>
+    </license>
+    <abstract>
+      <p>Many important interactions of proteins are facilitated by short, linear motifs (SLiMs) within a protein's primary sequence. Our aim was to establish robust methods for discovering putative functional motifs. The strongest evidence for such motifs is obtained when the same motifs occur in unrelated proteins, evolving by convergence. In practise, searches for such motifs are often swamped by motifs shared in related proteins that are identical by descent. Prediction of motifs among sets of biologically related proteins, including those both with and without detectable similarity, were made using the TEIRESIAS algorithm. The number of motif occurrences arising through common evolutionary descent were normalized based on treatment of BLAST local alignments. Motifs were ranked according to a score derived from the product of the normalized number of occurrences and the information content. The method was shown to significantly outperform methods that do not discount evolutionary relatedness, when applied to known SLiMs from a subset of the eukaryotic linear motif (ELM) database. An implementation of Multiple Spanning Tree weighting outperformed two other weighting schemes, in a variety of settings.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>INTRODUCTION</title>
+    <p>Many protein interactions are facilitated through short, linear motifs (SLiMs). Such motifs have been implicated in many fundamental biological processes, including sub-cellular targeting [e.g. The KDEL Golgi-to-Endoplasmic Reticulum retrieving signal (<xref ref-type="bibr" rid="b1">1</xref>)], post-translational modification [e.g. The C- Mannosylation site WxxW (<xref ref-type="bibr" rid="b2">2</xref>)] and protein–protein interactions [e.g. The LxCxE ligand motif for the B-domain of the retinoblastoma proteins (<xref ref-type="bibr" rid="b3">3</xref>)]. Over a hundred different eukaryotic SLiMs have been identified so far (<xref ref-type="bibr" rid="b4">4</xref>) and it has been estimated that hundreds have yet to be discovered (<xref ref-type="bibr" rid="b5">5</xref>). When eubacterial, archaebacterial and viral motifs are also considered, the true number of unknown functionally important linear motifs is likely to be huge. Given the fundamental roles these motifs play in the basic functions of proteins and cells, identifying these motifs is of crucial importance for all biological disciplines.</p>
+    <p>While identifying domains in proteins is relatively straightforward [see (<xref ref-type="bibr" rid="b6">6</xref>,<xref ref-type="bibr" rid="b7">7</xref>) for reviews] with methods such as PRATT (<xref ref-type="bibr" rid="b8">8</xref>), TEIRESIAS (<xref ref-type="bibr" rid="b9">9</xref>) and MEME (<xref ref-type="bibr" rid="b10">10</xref>) efficiently discovering protein family signatures and other conserved regions, identifying SLiMs presents an inherently greater challenge. Web servers, such as eukaryotic linear motif (ELM) (<xref ref-type="bibr" rid="b4">4</xref>) and QuasiMotiFinder (<xref ref-type="bibr" rid="b11">11</xref>) employ various methods, such as domain masking and evolutionary filtering respectively, to discover new occurrences of previously known motifs. However, the web-based LMD method (<xref ref-type="bibr" rid="b5">5</xref>) became the first method to explicitly attempt novel SLiM discovery. The majority of SLiMs are between 3 and 10 amino acids in length and most have one or more ambiguous (variable) or wildcard (totally variable) residues. These two factors make real SLiMs difficult to distinguish from the background distribution of randomly occurring false positive motifs. Evolutionary conservation in orthologs is frequently used for finding larger domains but is of less utility in SLiM discovery since, due to the degenerate nature of many SLiMs, similar non-functional motifs of the same complexity can show similar levels of conservation in closely related organisms. The short and degenerate nature of SLiMs makes them evolutionarily plastic and particularly amenable to convergent evolution (<xref ref-type="bibr" rid="b12">12</xref>). Rather than looking for similarities between evolutionarily related sequences therefore, a potentially powerful way to discover novel SLiMs is to look for motifs that are shared between functionally related proteins that otherwise have little or no sequence similarity.</p>
+    <p>Here, we present a new motif discovery method, SLiMDisc (Short Linear Motif Discovery), to find shared motifs in proteins with little or no primary sequence similarity from a group of proteins with a common attribute—be it biological function, sub-cellular location or a common interaction partner. The method builds on the basic pattern discovery abilities of simple motif discovery tools, such as the TEIRESIAS (<xref ref-type="bibr" rid="b9">9</xref>) algorithm, applying a number of filters to the returned motifs to up-weight those present in apparently unrelated sequences and down-weight those primarily arising due to common evolutionary descent. A key feature of this method is that it requires no pre-filtering of the dataset for evolutionarily conserved sequences and does not suffer from the potential loss of information (and SLiMs) incurred by arbitrarily retaining a single representative of any given group of homologous proteins. Furthermore, a number of filtering options are provided, giving the user a great deal of control over the type of motif returned. We have applied SLiMDisc to a benchmarking dataset from the ELM database (<xref ref-type="bibr" rid="b4">4</xref>) and demonstrate that it significantly outperform methods that do not account for evolutionary relationships between the searched proteins.</p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>MATERIALS AND METHODS</title>
+    <p>The method was implemented in a Python program, SLiMDisc, which outputs a ranked list of putatively interesting SLiMs from an input dataset of proteins. An overview of the method is given in <xref ref-type="fig" rid="fig1">Figure 1</xref>. First, TEIRESIAS is used to identify all motifs with user defined parameters for minimum support (the number of occurrences of a returned motif), motif length and number of non-wildcard positions, and which potential ambiguities are to be allowed. For analyses using ambiguity, the default TEIRESIAS ambiguity codes for amino acids were used (AG, FY, KR, DE, LIVM and QN). Motifs were filtered according to a number of optional criteria, including the evolutionary relatedness of the proteins containing the motif, information content and surface probability. Finally, the motifs are ranked according to information content (<xref ref-type="bibr" rid="b13">13</xref>) and normalized support among unrelated sequences, as described below. The SLiMDisc program is available on the SLiMDisc website at <ext-link ext-link-type="uri" xlink:href="http://bioinformatics.ucd.ie/shields/software/slimdisc/"/>.</p>
+    <sec>
+      <title>Input</title>
+      <p>SLiMDisc accepts input in FASTA (<xref ref-type="bibr" rid="b14">14</xref>) or UniProt (<xref ref-type="bibr" rid="b15">15</xref>) download format. UniProt annotations may be automatically used to restrict analysis to certain domains, or to eliminate certain domains. The user may therefore edit the annotation to customize the protein search space as desired. Areas, such as transmembrane regions, protein domains and inaccessible residues can be masked since, for certain purposes, they are areas which may have a lower likelihood of containing motifs. Alternatively, the user may wish to identify specific regions of the proteins in which to confine the search, e.g. the cytoplasmic regions of a set of proteins, or may have prior knowledge of a region possibly containing a functional motif. This allows easy incorporation of experimentally-derived knowledge without lengthy post-processing of results.</p>
+    </sec>
+    <sec>
+      <title>Motif discovery</title>
+      <p>Putative motifs are returned by the TEIRESIAS algorithm. TEIRESIAS is a flexible algorithm which allows the user to specify several settings controlling the class of motif returned (fixed/ambiguous patterns, minimum number of fixed positions, etc.) and guarantees to return all maximal motifs of that class in the input dataset (<xref ref-type="bibr" rid="b9">9</xref>). The number of motifs returned is typically related to the input database size and the relatedness of the proteins in the dataset (the more closely related sequences the dataset contains, the longer the search will take). Motifs which have a complexity below a user defined threshold can also be removed. Multiple hits between regions of low complexity, (such as poly-glutamine repeats) are a common problem in motif discovery searching so this filter may be useful for some datasets. However, it is worth noting that some important biological motifs have low complexity, e.g. the NR box nuclear receptor binding motif LxxLL (<xref ref-type="bibr" rid="b16">16</xref>). The Emini method (<xref ref-type="bibr" rid="b17">17</xref>) for predicting surface probability has also been implemented, so that motifs where less than a user defined percentage cut-off of residues are calculated to be on the surface of the protein can be optionally removed. However, this method is not as accurate as 3D structure-based methods, such as DSSP (<xref ref-type="bibr" rid="b18">18</xref>) and should be used with caution.</p>
+    </sec>
+    <sec>
+      <title>Information content</title>
+      <p>A motif <italic>M</italic> can be defined as:</p>
+      <p>M = R<sub>1</sub>, x(g<sub>1</sub>), R<sub>2</sub>, x(g<sub>2</sub>), R<sub>3</sub>, x(g<sub>3</sub>), …, R<sub>n-1</sub>, x(g<sub>n-1</sub>), R<sub>n</sub></p>
+      <p>where <italic>R</italic> is a fixed/ambiguous position and <italic>x</italic>(<italic>g</italic>) is a gap/wildcard of length <italic>g</italic>, there are <italic>n</italic> non-gap positions.</p>
+      <p>The Information Content is altered to give infrequent amino acids a higher score, their scores are up-weighted by modifying an element of the classical Information Content (<xref ref-type="bibr" rid="b13">13</xref>): 
+<disp-formula><mml:math id="M1"><mml:mrow><mml:msub><mml:mrow><mml:mtext>log</mml:mtext></mml:mrow><mml:mn>2</mml:mn></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mfrac><mml:mrow><mml:msub><mml:mi>p</mml:mi><mml:mi>a</mml:mi></mml:msub></mml:mrow><mml:mrow><mml:msub><mml:mi>P</mml:mi><mml:msub><mml:mi>R</mml:mi><mml:mi>i</mml:mi></mml:msub></mml:msub></mml:mrow></mml:mfrac></mml:mrow><mml:mo>)</mml:mo></mml:mrow><mml:mo>⇒</mml:mo><mml:msub><mml:mrow><mml:mo>log</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mo>(</mml:mo><mml:msub><mml:mi>p</mml:mi><mml:mi>a</mml:mi></mml:msub><mml:mo>−</mml:mo><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>b</mml:mi><mml:mo>∈</mml:mo><mml:mi>S</mml:mi></mml:mrow></mml:munder></mml:mstyle><mml:mrow><mml:msub><mml:mi>p</mml:mi><mml:mi>b</mml:mi></mml:msub></mml:mrow></mml:mrow><mml:mo>)</mml:mo></mml:mrow><mml:mo>/</mml:mo><mml:mn>20</mml:mn></mml:mrow><mml:mo>)</mml:mo><mml:mo>)</mml:mo></mml:mrow></mml:mrow></mml:math></disp-formula></p>
+      <p>The overall altered Information Content <italic>IC</italic> is calculated using the formula below:
+<disp-formula><mml:math id="M2"><mml:mtable columnalign="left"><mml:mtr><mml:mtd><mml:maligngroup/><mml:mi mathvariant="italic">IC</mml:mi><mml:mo>=</mml:mo><mml:malignmark/><mml:mstyle displaystyle="true"><mml:munderover><mml:mo>∑</mml:mo><mml:mrow><mml:mi>i</mml:mi><mml:mo>=</mml:mo><mml:mi>1</mml:mi></mml:mrow><mml:mi>n</mml:mi></mml:munderover></mml:mstyle><mml:mo>(</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>a</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mi>R</mml:mi><mml:mi>i</mml:mi></mml:msub></mml:mrow></mml:munder></mml:mstyle><mml:mfrac><mml:mrow><mml:msub><mml:mi>p</mml:mi><mml:mi>a</mml:mi></mml:msub></mml:mrow><mml:mrow><mml:msub><mml:mi>P</mml:mi><mml:msub><mml:mi>R</mml:mi><mml:mi>i</mml:mi></mml:msub></mml:msub></mml:mrow></mml:mfrac><mml:msub><mml:mrow><mml:mo>log</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mo>(</mml:mo><mml:msub><mml:mi>p</mml:mi><mml:mi>a</mml:mi></mml:msub><mml:mo>−</mml:mo><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>a</mml:mi><mml:mo>∈</mml:mo><mml:mi>S</mml:mi></mml:mrow></mml:munder></mml:mstyle><mml:mrow><mml:msub><mml:mi>p</mml:mi><mml:mi>a</mml:mi></mml:msub></mml:mrow></mml:mrow><mml:mo>)</mml:mo></mml:mrow><mml:mo>/</mml:mo><mml:mn>20</mml:mn></mml:mrow><mml:mo>)</mml:mo><mml:mo>)</mml:mo></mml:mrow></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:maligngroup/><mml:malignmark/><mml:mo>−</mml:mo><mml:mrow><mml:mrow><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>a</mml:mi><mml:mo>∈</mml:mo><mml:mi>S</mml:mi></mml:mrow></mml:munder></mml:mstyle><mml:msub><mml:mi>p</mml:mi><mml:mi>a</mml:mi></mml:msub><mml:msub><mml:mrow><mml:mo>log</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:msub><mml:mi>p</mml:mi><mml:mi>a</mml:mi></mml:msub><mml:mo>)</mml:mo></mml:mrow></mml:mrow><mml:mo>)</mml:mo></mml:mrow><mml:mo>−</mml:mo><mml:mi>w</mml:mi><mml:mstyle displaystyle="true"><mml:munderover><mml:mo>∑</mml:mo><mml:mrow><mml:mi>k</mml:mi><mml:mo>=</mml:mo><mml:mi>1</mml:mi></mml:mrow><mml:mrow><mml:mi>n</mml:mi><mml:mo>−</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:munderover></mml:mstyle><mml:mrow><mml:msub><mml:mi>g</mml:mi><mml:mi>k</mml:mi></mml:msub></mml:mrow></mml:mtd></mml:mtr></mml:mtable></mml:math></disp-formula>
+where <italic>R<sub>i</sub></italic> is the set of amino acids at position <italic>i</italic>, <italic>p<sub>Ri</sub></italic> is the probability of <italic>R<sub>i</sub></italic>, <italic>p<sub>a</sub></italic> is the probability of <italic>a</italic>, <italic>S</italic> is the set of all amino acids, <italic>w</italic> is a gap weight and <italic>g<sub>k</sub></italic> is the length of the gap at position <italic>k.</italic></p>
+    </sec>
+    <sec>
+      <title>Normalized number of occurrences of motifs</title>
+      <p>The number of occurrences of each motif is down-weighted according to the similarity of the sequences containing the motif. Ideally, the normalized support should have the following characteristics:</p>
+      <p>(i) If <italic>n</italic> motifs are found in identical proteins, the normalized support is 1; (ii) If <italic>n</italic> motifs are found within completely dissimilar proteins, the normalized support is <italic>n</italic> and (iii) the normalized support must increase from 1 towards <italic>n</italic> as similarity of the parent proteins decreases. We implemented three methods of varying stringency to normalize the score, each of which may be most applicable in different biological contexts.</p>
+    </sec>
+    <sec>
+      <title>(1) Minimum spanning tree (MST) normalization</title>
+      <p>The default method is to use a MST method (<xref ref-type="bibr" rid="b19">19</xref>) (Supplementary Figure 1), which groups together closely related proteins down-weighting their overall contribution to the normalized support. The MST is the network of edges connecting all nodes, which has the minimum sum of edge lengths. The MST is calculated using a slightly altered version of Prims algorithm (<xref ref-type="bibr" rid="b19">19</xref>) allowing for the weighting of edges in a biologically useful way (<xref ref-type="bibr" rid="b20">20</xref>). Here, the MST is calculated based on a distance matrix of the sequence similarity of the proteins containing the motif, normalized to a value between 1 and 0 (where 1 is no similarity). Weighting of the edge lengths, shortening the more closely related branches more harshly than the distantly related branches while still keeping the score between 1 and <italic>n (</italic>where <italic>n</italic> is the number of proteins containing the motif) is also possible.</p>
+      <p>Sequence similarity was calculated using the GABLAM (Global Analysis from BLAST Local AlignMents) method (Supplementary Figure 2), which gives a global percentage similarity for any pairwise comparison of proteins by mapping local BLAST alignments onto the two proteins. Since the GABLAM method calculates a separate % identity for each of two sequences, we took the minimum of the two % identities in each case. As a percentage of the protein, this score is normalized for sequence length (unlike BLAST scores and <italic>E</italic>-values). Furthermore, multiple hits to the same region (due to multiple domains or low complexity regions, for example) do not artificially inflate scores. GABLAM is not so sensitive to alignment artefacts when comparing unrelated proteins and, unlike pairwise sequence alignment (<xref ref-type="bibr" rid="b21">21</xref>), will give them a similarity score of zero. GABLAM will also account for domain rearrangements, which pairwise alignment does not.</p>
+    </sec>
+    <sec>
+      <title>(2) Unique homologous segments (UHS) normalization</title>
+      <p>The MST method has the apparent disadvantage that it ignores whether or not a motif lies within the evolutionarily conserved or unconserved region of the protein, as detected by BLAST alignment. For this reason, we considered an alternative weighting scheme. This defined a UHS weighting, defining the support as the number of occurrences within all sets of aligned and unaligned regions (<xref ref-type="fig" rid="fig2">Figure 2</xref>). In the case where three occurrences occurred within regions where A aligned with B, and B aligned with C, but A did not align with C, UHS considered this to represent only a single sequence in calculating the support.</p>
+      <p>Normalizing the support of a motif based on the number of UHS allows the proteins to be treated as modular entities (<xref ref-type="fig" rid="fig2">Figure 2</xref>). This method adequately deals with similarities both between proteins and within proteins. Given that many proteins in higher eukaryotes are multi-domain, and many domains exist in multiple copies within a protein, this is an important consideration. The number of UHS containing the motif then provides the normalized support for that motif.</p>
+    </sec>
+    <sec>
+      <title>(3) Unrelated proteins (UP) normalization</title>
+      <p>In certain circumstances, BLAST homology may tend to underestimate the degree of evolutionary relatedness, and may only define certain regions as being homologous, while many more regions, or the entire proteins, may be so. In this circumstance (e.g. in searches restricted to single domain proteins, such as cytokines) it may be appropriate to treat two occurrences in proteins sharing any BLAST similarity whatsoever as being a single occurrence (UP in <xref ref-type="fig" rid="fig2">Figure 2</xref>). This is the strictest normalization method available in SLiMDisc. Essentially, given a list of proteins containing a pattern, the technique clusters together proteins which have significant level of homology to each other even if inferred through another protein. For example, if a motif occurs in three sequences, where p1 has significant homology to p2 and p2 has significant homology to p3, but BLAST failed to detect similarity between p1 and p2, the inferred number of normalized occurrences is then estimated as 1 (<xref ref-type="fig" rid="fig2">Figure 2</xref>). UP clustering produces one or more groups of proteins with no detectable homology between groups (with the BLAST parameters used). The normalized support is the number of groups. By adjusting the BLAST parameters, this setting can be tailored for very stringent or very relaxed clustering.</p>
+    </sec>
+    <sec>
+      <title>Ranking</title>
+      <p>Having established a large number of motifs, the objective is to rank them according their information content and frequency of occurrence, adjusted for evolutionary relationships. Given <italic>IC</italic> and one of the above measures of the normalized support <italic>N</italic>, a motif score is then estimated as:
+<disp-formula><mml:math id="M3"><mml:mrow><mml:mtext>Score</mml:mtext><mml:mo>=</mml:mo><mml:mi>I</mml:mi><mml:mi>C</mml:mi><mml:mo>.</mml:mo><mml:mi>N</mml:mi></mml:mrow></mml:math></disp-formula>
+as suggested by Jonassen <italic>et al.</italic> (<xref ref-type="bibr" rid="b20">20</xref>). In practice, this provides a reasonable means of identifying the motifs of most interest. Scattergrams of information content versus the score (<xref ref-type="fig" rid="fig3">Figure 3</xref>) provide a visual approach to identify the degree to which the score of the motif of interest stands out from other returned motifs of equivalent IC, which may in part reflect the background distribution of false positives, although care needs to be taken to distinguish false positives from sub-motifs or alternative representations of the most interesting motif.</p>
+    </sec>
+    <sec>
+      <title>Creating the benchmarking dataset for the method</title>
+      <p>We adopted the same set of 22 benchmarking ELMs from the ELM database as the LMD method to facilitate comparison with their method. The web-based LMD method (<xref ref-type="bibr" rid="b5">5</xref>) is a recently published SLiM discovery method that deals with problems of common evolutionary descent by eliminating all but one representative of a group of homologous segments. This allows LMD to use a probabilistic scoring scheme (based on raw motif occurrences in a random dataset), which is suitable for motif occurrences that can be considered to be independent, when the random dataset approximates well the underlying background motif distribution of the particular group of proteins or protein regions under consideration. For the SLiMDisc method, given the inclusion of non-independent (related) proteins in datasets generating motifs, a simpler scoring scheme based on information content was applied. After testing the validity of their method on the benchmarking test set, the LMD method was applied to interaction datasets, where direct binding assays of synthetic oligopeptides revealed that predicted novel motifs bound the target proteins as expected (<xref ref-type="bibr" rid="b5">5</xref>). To compare like with like, we similarly restricted motif discovery to regions outside of documented protein domains (<xref ref-type="bibr" rid="b5">5</xref>) but also carried out searches without domain filtering. The benchmark set of 22 validated motifs comprises those considered to have greater than three motifs outside of protein domains, in what appeared to be unrelated proteins (<xref ref-type="bibr" rid="b5">5</xref>). Of these, we omitted the Groucho/TLE binding motif (LIG_EH1) (<xref ref-type="bibr" rid="b22">22</xref>) (no instances available at <ext-link ext-link-type="uri" xlink:href="www.elm.eu.org"/>), the Mannosylation site motif (MOD_CMANNOS) (<xref ref-type="bibr" rid="b2">2</xref>) (occurs in the annotated Thrombospondin type 1 domain), the TRAF2 binding motif (LIG_TRAF2_1) (<xref ref-type="bibr" rid="b23">23</xref>) (all instances available on web site are evolutionarily related) and the WRPW motif (LIG_WRPW_1) (<xref ref-type="bibr" rid="b24">24</xref>) (all instances available are from the Runt and Hairy protein families and the motif is easily discovered by looking down a multiple alignment of the dataset), leaving 18 motifs for comparison. SLiMDisc was used to discover motifs using several normalization techniques described in the Materials and Methods section, taking as input for each ELM in turn the set of sequences documented to contain the motif. The rank of the highest ranking motif matching the regular expression given for the documented ELM motif was then recorded for each ELM. All datasets used in this analysis are available on the SLiMDisc website at <ext-link ext-link-type="uri" xlink:href="http://bioinformatics.ucd.ie/shields/software/slimdisc/"/>.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>RESULTS</title>
+    <sec>
+      <title>ELM dataset</title>
+      <p>The ELM benchmarking dataset is based on a dataset proposed to validate the performance of the LMD program (<xref ref-type="bibr" rid="b5">5</xref>) in which every sequence contains the known motif. It is not clear if taking a set of sequences, all of which contain a known ELM, is a good validation of the process of discovering novel motifs, since most real discovery datasets will contain sequences that do not contain the motif. Nevertheless, it provides one potential comparison and, in the absence of a suitable alternative, represents the best validation resource. We consider the performance of SLiMDisc with other datasets, which do not have 100% support below. The default SLiMDisc method implemented was MST weighting, with two other algorithms, UHS and UP also explored (see Materials and Methods for details).</p>
+      <p>An overview of the results is presented in <xref ref-type="table" rid="tbl1">Table 1</xref>. This demonstrates a clear improvement of SLiMDisc over basic TEIRESIAS, regardless of whether fixed or ambiguous, and regardless of whether ELMs occurring in domains were filtered out. Typically, there was a very substantial improvement in motif rank, and a clear improvement in the number of identified sequences (support). In comparison with MST, UHS performed similarly, but not quite as well. The stricter UP algorithm, which might be expected to eliminate evolutionarily related sequences where the relationship was defined by a region that does not span the motif occurrences, performed more poorly, presumably because it erroneously excluded proteins sharing common domains that were irrelevant to the motif. However, it still clearly outperformed the basic TEIRESIAS method in terms of rank, while support was lowered by the exclusion of a greater number of sequences.</p>
+      <p>Looking at the results in more detail for each of the 18 motifs of the ELM dataset, SLiMDisc (MST) returned known ELMs in the top 100 ranked motifs for all motifs with the exception of one. A total of 10 (58%) were the top ranked motif and 15 (84%) were in the top 10 ranks (<xref ref-type="table" rid="tbl2">Table 2</xref>), compared to only 8 for TEIRESIAS. These results are similar to the LMD results reported previously (<xref ref-type="bibr" rid="b5">5</xref>), with both methods returning in first position the true ELM in 10 of the 18 cases. In our experience, we could not obtain such good performance applying the same datasets to the web version of LMD (<xref ref-type="bibr" rid="b5">5</xref>). This may reflect some differences in the test dataset applied here to SLiMDisc, or details of the web server implementation of LMD. The dataset is probably too small to comment in detail on differences between SLiMDisc and LMD. However, SLiMDisc missed only one ELM [the sparse N-glycosylation site (MOD_N-GLC_1) (<xref ref-type="bibr" rid="b25">25</xref>)] within the top 100, while the published evaluation of LMD missed three (<xref ref-type="bibr" rid="b5">5</xref>). A more detailed comparison would require running both methods on a larger identical test dataset.</p>
+      <p>It is instructive to consider why the alternative weighting schemes do not perform as well as MST (Supplementary Table 1). A particularly striking example is the CtBP motif, which is returned as the top motif by MST, but with a rank of 54 and 50 by UHS and UP. While the overall performance of UP was worse, in one instance it performed better than MST: for the PCNA ligand motif, the true motif was ranked 33 by MST, but third by UP. In this case, the set of proteins may share a degree of weak similarity below the threshold detectable by BLAST which vastly increases the number of background motifs returned by TEIRESIAS. Domain filtering is sometimes recommended for SLiM discovery. With the dataset of 18 ELMs used here, the difference was modest (Supplementary Table 1). However, overall performance was marginally better with domain filtering. The key question is whether this is valid for other motifs outside of those investigated here.</p>
+      <p>The method can return ambiguous motifs, such as the Golgi-to-ER targeting signal (KRH)(DENQ)EL (<xref ref-type="bibr" rid="b1">1</xref>). However our test sets showed that, with this dataset, the ambiguity did not increase the sensitivity of the searches (see Supplementary Table 1). In cases where there was already a highly ranked pattern, ambiguity occasionally returned a more accurate descriptor of the motif [for example the [KR]xTQT motif of the Dynein Light Chain binding motif (<xref ref-type="bibr" rid="b23">23</xref>)] and rarely caused the motif to drop down the rankings. On occasions where the motif was poorly ranked without ambiguity, the ambiguity added noise to the dataset causing their rank to worsen. Overall, from our experience with the ELM dataset, application of ambiguity slightly disimproved the performance. TEIRESIAS ambiguity coding is not perfect for amino acid analysis: it does not adequately capture the fact that certain amino acid properties are overlapping, rather than falling into discrete categories. Secondly, for certain motifs, or residues within motifs, the requirements may be very specific for one amino acid, or instead be permissive across the range of ambiguous residues.</p>
+      <p>Despite the shortcoming of the ELM test dataset that the SLiM was present in all input sequences, in practise there was &lt;100% support when considering the analyses performed without ambiguity: not all occurrences of a given motif had the same residues at the ambiguous positions, effectively generating a number of derived motifs that could be detected, which occur only in a subset of the whole dataset. For example, the SUMO motif recognized for modification by SUMO-1 (<xref ref-type="bibr" rid="b26">26</xref>) is described in the ELM database as [VILMAFP]KxE. The returned motif, IKxE, occurs in only 14 of the 28 proteins. This illustrates that it is not necessary for the motif to have very high support to be returned by SLiMDisc. On the other hand, it also highlights the problems of searching for SLiMs with ambiguous positions. Until a good method is developed for introducing ambiguities without generating overwhelming quantities of noise into the results, it may prove most sensible to search without ambiguities and then re-search the dataset for additional motifs that are highly similar to the best SLiMs returned. Only by further experimental validation can the true sequence of a given SLiM be elucidated. The analysis of test datasets with &lt;100% support is considered below.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>RECOVERY OF MOTIFS FROM DATASETS WHERE THERE IS &lt;100% SUPPORT</title>
+    <sec>
+      <title>Interaction datasets</title>
+      <p>A more challenging test for the method would come when noisy biological data are analysed. Large scale interaction databases provide readily available benchmarking datasets, which can be probed to re-discover known SLiMs (<xref ref-type="bibr" rid="b5">5</xref>). The datasets provide protein interaction data for a central hub protein known to interact with several spoke proteins. When searching for SLiMs in these datasets, we are looking for SLiMs involved in motif–domain interactions and motif–motif interactions. However, these interactions datasets often contain large numbers of domain–domain interactions, so that the signal of any SLiMs contained in the datasets can be overpowered. Secondly, very large proteins may have multiple domains and motifs involved in interactions, increasing the ‘noise’ around any given motif. Thirdly, high-throughput experimental datasets often contain considerable experimental noise.</p>
+      <p>To test the performance of SLiMDisc on a dataset with a more realistic level of noise, we took a set of 17 proteins from the literature, which are known to interact with several of their binding partners through ELMs, and also had an entry as a hub protein in the HPRD interaction database (<xref ref-type="bibr" rid="b27">27</xref>). We analysed their HPRD-defined binding partners for the presence of interesting motifs using SLiMDisc (default settings). In 7 of these 17 test sets, motifs from known binding sites were re-discovered in the top 10 ranked motifs returned (41% success rate) (<xref ref-type="table" rid="tbl3">Table 3</xref>). For these seven returned motifs, there is likely to be considerable noise in the dataset, since between 71 and 96% of the proteins in the datasets do not contain annotated instances of the ELMs (<xref ref-type="table" rid="tbl3">Table 3</xref>).When TEIRESIAS motifs ranked based on true support and information content were investigated only 1 of the 17 datasets returned the motifs from known binding sites in the top 100 ranked motifs (LIG_NRBOX motif ranked 96th). To establish how many motifs might be returned at random, we determined the numbers of motifs in the top ten returned for the reversed motif: none of the 17 reversed motifs were returned in the top 100. When restricting datasets to proteins interactions derived from Yeast Two Hybrid experiments (12 datasets), only 2 of these datasets returned the known motif in the top ten ranked motifs (a 17% success rate compared to 41% success rate for all HPRD interactions). This trend is not surprising, given the fairly high level of experimental noise in yeast two hybrid data: however, we would emphasize that the sample sizes are relatively small and the success rates only indicative.</p>
+      <p>The introduction of ‘noise’ in the form of false positives (spoke proteins not interacting with the hub through a SLiM) and false negatives (missing proteins) in these datasets clearly degrades performance in comparison to the highly-supported ELM benchmarking datasets. False positives increase the number of stochastically returned motifs, causing the rank of the true motif to decrease. Similarly, missing proteins will reduce the support for a motif, which negatively impacts its score and therefore its rank. Yet the SLiMDisc method appears to more strongly outperform TEIRESIAS (motifs ranked by true support and information content) in noisy biological data compared to the more idealized ELM benchmarking dataset, indicating that correcting for common evolutionary descent is even more critical in typical datasets where motif discovery is preformed.</p>
+    </sec>
+    <sec>
+      <title>RGD</title>
+      <p>The RGD motif (<xref ref-type="bibr" rid="b28">28</xref>) interacts directly with integrin extracellular domains and is critical for the cell adhesion of numerous proteins, such as fibrinogen, fibronectin and von Willebrand factor. We searched all 53 human proteins linked to the GO term ‘Integrin binding’, without filtering domains. The RGD motif was returned (MST rank: 4; UHS rank: 64; UP rank: &gt; 100). It has been reported that &lt;15% of SLiMs occur in domains (<xref ref-type="bibr" rid="b5">5</xref>). While there can be a substantial increase in sensitivity of a SLiM detection method if domains are removed, this must be used cautiously. Removal of Swiss-Prot annotated domains in this case would lower the pattern support from 23 to 13, significantly lowering the likelihood of RGD being detected.</p>
+      <p>A feature of SLiMDisc is its ability to specify a protein, or even a region within a protein, on which to focus a search (Only SLiMs that occur within this protein/region are then considered). The original discovery of the cell attachment site of fibronectin (<xref ref-type="bibr" rid="b29">29</xref>) narrowed it down to a 108 amino acid region. When we searched the ‘Integrin binding’ dataset again, this time requiring the true motif to occur within this 108 amino acid region, RGD was ranked first (MST: 1; UHS: 41; UP: &gt;100; TEIRESIAS &gt;100). Such restricted searches massively cut down search space, reducing both false positives and computational time and are strongly recommended where such information is available.</p>
+      <p>We then searched all human proteins with the GO cellular component term of ‘Extracellular Matrix’. This dataset consisted of 149 proteins, including the ‘Integrin binding’ dataset as a subset. When searched for interesting motifs (without domain elimination) the known RGD motif was not ranked in the top one hundred motifs. Even when the search was focused on the 108 amino acid region of Fibronectin the motif was only ranked in 32nd position. This illustrates the limits of searches for short motifs on large datasets. When the search was limited to surface accessible regions the ranking was increased to 18th. Protein interaction motifs are often restricted to the surface of proteins. Such motifs will be returned in datasets, and clues as to their nature can be revealed by investigating their positions in the protein, protein structure and by studying multiple alignments.</p>
+    </sec>
+    <sec>
+      <title>LPxTG</title>
+      <p>A dataset of 104 proteins from 37 bacterial species in UniProt (<xref ref-type="bibr" rid="b15">15</xref>) containing the keyword ‘Cell Wall’ and term ‘Anchor’ was investigated for its ability to return the known LPxTG motif (<xref ref-type="bibr" rid="b30">30</xref>), whose cleavage between Threonine and Glycine permits attachment to the cell wall. SLiMDisc analysis with MST normalization, and filtering out UniProt annotated domains, yielded over a million TEIRESIAS patterns for which 176 889 had an MST-normalized support of 2 or greater. The LPxTG motif occurred in just over half of the proteins present in the dataset, and was returned as the top ranked motif using MST normalization. Ranks of the matching motif using TEIRESIAS, UHS and UP were all &gt;100 when using the default BLAST cut-off of 1e−2. Using a BLAST cut-off of 1e−6, ranks of the motif using TEIRESIAS, UHS and UP were &gt;100, 2 and 61, respectively. This illustrates the sensitivity of the UHS and UP normalization techniques to choice of parameter settings.</p>
+    </sec>
+    <sec>
+      <title>Detection of the homologous cytokine receptor WSxWS motif</title>
+      <p>While the primary objective of this method is focussed on detection of motifs that have arisen by convergent evolution, and distinguishing them from motifs shared by common descent, it is clear that the resolution of the BLAST method will result in the detection of ancient motifs, identical by descent, that have been conserved in otherwise highly diverged proteins. We therefore tested the performance of the method to detect a known motif identical by descent, which defines a distinct signature for a protein family. We searched for motifs among a dataset of 37 human proteins linked to the GO term ‘Hematopoietin/interferon-class cytokine receptor activity’. These are all haematopoietic receptors. The analysis was performed without filtering of domains.</p>
+      <p>The highest ranked motif to be returned from the dataset was the well known WSxWS motif (<xref ref-type="bibr" rid="b31">31</xref>). This motif is not an interaction motif, but a structural motif that is homologous rather than convergent. Running the analysis eliminating UniProt domains would remove this motif, since it lies within a fibronectin domain. The three weighting schemes gave the following ranks for this motif (MST: 1; UHS: &gt;100; UP: &gt;100; TEIRESIAS: &gt;100). In this case UHS and UP ranked the motif poorly as they can detect and down-weight homology via an intermediate protein that MST cannot. Recovering homologous motifs for extremely diverged proteins may give clues regarding homology that may not be detected outside of the motif, or give clues regarding critical functional regions. In this case, the input proteins are too distant to be aligned by Clustalw (<xref ref-type="bibr" rid="b32">32</xref>), yet SLiMDisc was able to identify a known functionally important motif.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>DISCUSSION</title>
+    <p>Our implementation of weighting schemes to correct for close relationships shared by larger sequence regions provides a means to routinely discover motifs, without the requirement to discard in advance any sequences from the dataset under investigation. The weighting scheme which performed most strongly in a variety of settings was the MST weighting scheme. It is perhaps a little surprising that this simpler scheme appears the most robust, since it (and UHS) would appear sensitive to the problems of short motif sharing from evolutionary descent in regions that are just outside of a region alignable by BLAST. Perhaps BLAST is typically reasonably efficient at recovering most such short segments as part of a returned alignment. Clearly the datasets tested here are not representative of all possible biological scenarios, and even here we came across one case of a motif (PCNA), which is better recovered by the UP algorithm, which weights against any relationships among parent sequences, regardless of whether they overlap the motif of interest. Thus, these three weighting schemes may represent optimal strategies for particular problems, if enough is known about the domain and homology distributions of the datasets under consideration. The alternative LMD scheme is to simply discard all but one representative homologous segment from a group of related proteins (<xref ref-type="bibr" rid="b5">5</xref>); This is not so important for datasets, such as the ELM benchmarking dataset, where one knows that the motif is present in all proteins. In real applications, however, there is a big risk of accidentally discarding a region containing the motif of interest in favour of a related protein region that does not contain the motif. The methods we have presented represent a two-stage process, of motif discovery, followed by score normalization. Ultimately, the development of integrated motif discovery algorithms that incorporate a priori weighting schemes may improve or accelerate motif discovery.</p>
+    <p>While this method has been implemented here in conjunction with the most rapid motif discovery tool available to us (TEIRESIAS), clearly the same logic may also be applied to other motif discovery tools. Particularly important for certain classes of motifs are tools which permit flexible length gaps. Flexible length gapped motif discovery is of great interest as many biological motifs permit gaps, and the next major advances in SLiM discovery should find efficient approaches to incorporate gapped motif discovery into current techniques. In addition, an improved method for incorporating ambiguity into motifs is clearly desirable for future SLiM discovery tools. While the weighting schemes we propose are useful, the problem of motif discovery remains substantial. Most commonly, a SLiM discovery tool has to find a motif with relatively low support and relatively few fixed positions (low information content). There are problems associated with looking for SLiMs with low support; many motifs which have a biological activity can look less interesting than a pattern which has occurred by chance. Certain motifs which have low support and low information content are almost indistinguishable from random noise in most datasets [e.g. the PCSK cleavage site (<xref ref-type="bibr" rid="b33">33</xref>) [KR] R which plays a role in the proteolytic processing of both neuropeptide and peptide hormone precursors or the peroxisomal targeting motif WXXXY/F (<xref ref-type="bibr" rid="b34">34</xref>)]. It is vitally important, therefore, to reduce the search space as much as possible, restricting the input to only those proteins (and, where possible, the relevant regions of proteins) that are likely to contain the SLiM of interest. This reduction of search space has the greatest impact on reduction of false positives. The greatest impact in SLiM discovery may come from sensitive handling of biological classifications of proteins that assist in reducing the search space. These can be small scale careful analyses, such as probing a group of proteins which share a function, sub-cellular location or interacting partner; or can be large, genomic scale analyses, such as surveys of entire protein–protein interaction databases (<xref ref-type="bibr" rid="b5">5</xref>,<xref ref-type="bibr" rid="b27">27</xref>) or GO term analysis (<xref ref-type="bibr" rid="b35">35</xref>).</p>
+  </sec>
+  <sec>
+    <title>SUPPLEMENTARY DATA</title>
+    <p>Supplementary Data are available at NAR Online.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material id="PMC_1" content-type="local-data">
+      <caption>
+        <title>[Supplementary Material]</title>
+      </caption>
+      <media mimetype="text" mime-subtype="html" xlink:href="nar_34_12_3546__index.html"/>
+      <media xlink:role="associated-file" mimetype="image" mime-subtype="jpeg" xlink:href="nar_34_12_3546__Supplemental_Figure_2.jpg"/>
+      <media xlink:role="associated-file" mimetype="image" mime-subtype="jpeg" xlink:href="nar_34_12_3546__Supplementary_Figure_1.jpg"/>
+      <media xlink:role="associated-file" mimetype="application" mime-subtype="vnd.ms-excel" xlink:href="nar_34_12_3546__Supplementary_Table_1.xls"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>This work was supported by Science Foundation Ireland. Funding to pay the Open Access publication charges for this article was provided by Science Foundation Ireland.</p>
+    <p><italic>Conflict of interest statement.</italic> None declared.</p>
+  </ack>
+  <ref-list>
+    <title>REFERENCES</title>
+    <ref id="b1">
+      <label>1</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Munro</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Pelham</surname>
+            <given-names>H.R.</given-names>
+          </name>
+        </person-group>
+        <article-title>A C-terminal signal prevents secretion of luminal ER proteins</article-title>
+        <source>Cell</source>
+        <year>1987</year>
+        <volume>48</volume>
+        <fpage>899</fpage>
+        <lpage>907</lpage>
+        <pub-id pub-id-type="pmid">3545499</pub-id>
+      </citation>
+    </ref>
+    <ref id="b2">
+      <label>2</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Furmanek</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Hofsteenge</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>Protein C-mannosylation: facts and questions</article-title>
+        <source>Acta. Biochim. Pol.</source>
+        <year>2000</year>
+        <volume>47</volume>
+        <fpage>781</fpage>
+        <lpage>789</lpage>
+        <pub-id pub-id-type="pmid">11310977</pub-id>
+      </citation>
+    </ref>
+    <ref id="b3">
+      <label>3</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dahiya</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Gavin</surname>
+            <given-names>M.R.</given-names>
+          </name>
+          <name>
+            <surname>Luo</surname>
+            <given-names>R.X.</given-names>
+          </name>
+          <name>
+            <surname>Dean</surname>
+            <given-names>D.C.</given-names>
+          </name>
+        </person-group>
+        <article-title>Role of the LXCXE binding site in Rb function</article-title>
+        <source>Mol. Cell. Biol.</source>
+        <year>2000</year>
+        <volume>20</volume>
+        <fpage>6799</fpage>
+        <lpage>6805</lpage>
+        <pub-id pub-id-type="pmid">10958676</pub-id>
+      </citation>
+    </ref>
+    <ref id="b4">
+      <label>4</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Puntervoll</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Linding</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Gemund</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Chabanis-Davidson</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Mattingsdal</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Cameron</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Martin</surname>
+            <given-names>D.M.</given-names>
+          </name>
+          <name>
+            <surname>Ausiello</surname>
+            <given-names>G.</given-names>
+          </name>
+          <name>
+            <surname>Brannetti</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Costantini</surname>
+            <given-names>A.</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>ELM server: a new resource for investigating short functional sites in modular eukaryotic proteins</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>3625</fpage>
+        <lpage>3630</lpage>
+        <pub-id pub-id-type="pmid">12824381</pub-id>
+      </citation>
+    </ref>
+    <ref id="b5">
+      <label>5</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Neduva</surname>
+            <given-names>V.</given-names>
+          </name>
+          <name>
+            <surname>Linding</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Su-Angrand</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Stark</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Masi</surname>
+            <given-names>F.D.</given-names>
+          </name>
+          <name>
+            <surname>Gibson</surname>
+            <given-names>T.J.</given-names>
+          </name>
+          <name>
+            <surname>Lewis</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Serrano</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Russell</surname>
+            <given-names>R.B.</given-names>
+          </name>
+        </person-group>
+        <article-title>Systematic discovery of new recognition peptides mediating protein interaction networks</article-title>
+        <source>PLoS. Biol.</source>
+        <year>2005</year>
+        <volume>3</volume>
+        <fpage>e405</fpage>
+        <pub-id pub-id-type="pmid">16279839</pub-id>
+      </citation>
+    </ref>
+    <ref id="b6">
+      <label>6</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brazma</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Jonassen</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Eidhammer</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Gilbert</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>Approaches to the automatic discovery of patterns in biosequences</article-title>
+        <source>J. Comput. Biol.</source>
+        <year>1998</year>
+        <volume>5</volume>
+        <fpage>279</fpage>
+        <lpage>305</lpage>
+        <pub-id pub-id-type="pmid">9672833</pub-id>
+      </citation>
+    </ref>
+    <ref id="b7">
+      <label>7</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rigoutsos</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Floratos</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Parida</surname>
+            <given-names>L.</given-names>
+          </name>
+          <name>
+            <surname>Gao</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>Platt</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>The emergence of pattern discovery techniques in computational biology</article-title>
+        <source>Metab. Eng.</source>
+        <year>2000</year>
+        <volume>2</volume>
+        <fpage>159</fpage>
+        <lpage>177</lpage>
+        <pub-id pub-id-type="pmid">11056059</pub-id>
+      </citation>
+    </ref>
+    <ref id="b8">
+      <label>8</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jonassen</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Collins</surname>
+            <given-names>J.F.</given-names>
+          </name>
+          <name>
+            <surname>Higgins</surname>
+            <given-names>D.G.</given-names>
+          </name>
+        </person-group>
+        <article-title>Finding flexible patterns in unaligned protein sequences</article-title>
+        <source>Protein. Sci.</source>
+        <year>1995</year>
+        <volume>4</volume>
+        <fpage>1587</fpage>
+        <lpage>1595</lpage>
+        <pub-id pub-id-type="pmid">8520485</pub-id>
+      </citation>
+    </ref>
+    <ref id="b9">
+      <label>9</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rigoutsos</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Floratos</surname>
+            <given-names>A.</given-names>
+          </name>
+        </person-group>
+        <article-title>Combinatorial pattern discovery in biological sequences: the TEIRESIAS algorithm</article-title>
+        <source>Bioinformatics</source>
+        <year>1998</year>
+        <volume>14</volume>
+        <fpage>55</fpage>
+        <lpage>67</lpage>
+        <pub-id pub-id-type="pmid">9520502</pub-id>
+      </citation>
+    </ref>
+    <ref id="b10">
+      <label>10</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bailey</surname>
+            <given-names>T.L.</given-names>
+          </name>
+          <name>
+            <surname>Elkan</surname>
+            <given-names>C.</given-names>
+          </name>
+        </person-group>
+        <article-title>The value of prior knowledge in discovering motifs with MEME</article-title>
+        <source>Proc. Int. Conf. Intell. Syst. Mol. Biol.</source>
+        <year>1995</year>
+        <volume>3</volume>
+        <fpage>21</fpage>
+        <lpage>29</lpage>
+        <pub-id pub-id-type="pmid">7584439</pub-id>
+      </citation>
+    </ref>
+    <ref id="b11">
+      <label>11</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gutman</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Berezin</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Wollman</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Rosenberg</surname>
+            <given-names>Y.</given-names>
+          </name>
+          <name>
+            <surname>Ben-Tal</surname>
+            <given-names>N.</given-names>
+          </name>
+        </person-group>
+        <article-title>QuasiMotiFinder: protein annotation by searching for evolutionarily conserved motif-like patterns</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <fpage>W255</fpage>
+        <lpage>W261</lpage>
+        <pub-id pub-id-type="pmid">15980465</pub-id>
+      </citation>
+    </ref>
+    <ref id="b12">
+      <label>12</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Neduva</surname>
+            <given-names>V.</given-names>
+          </name>
+          <name>
+            <surname>Russell</surname>
+            <given-names>R.B.</given-names>
+          </name>
+        </person-group>
+        <article-title>Linear motifs: evolutionary interaction switches</article-title>
+        <source>FEBS. Lett.</source>
+        <year>2005</year>
+        <volume>579</volume>
+        <fpage>3342</fpage>
+        <lpage>3345</lpage>
+        <pub-id pub-id-type="pmid">15943979</pub-id>
+      </citation>
+    </ref>
+    <ref id="b13">
+      <label>13</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Shannon</surname>
+            <given-names>C.E.</given-names>
+          </name>
+        </person-group>
+        <article-title>The mathematical theory of communication. 1963</article-title>
+        <source>MD. Comput.</source>
+        <year>1997</year>
+        <volume>14</volume>
+        <fpage>306</fpage>
+        <lpage>317</lpage>
+        <pub-id pub-id-type="pmid">9230594</pub-id>
+      </citation>
+    </ref>
+    <ref id="b14">
+      <label>14</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pearson</surname>
+            <given-names>W.R.</given-names>
+          </name>
+        </person-group>
+        <article-title>Rapid and sensitive sequence comparison with FASTP and FASTA</article-title>
+        <source>Meth. Enzymol.</source>
+        <year>1990</year>
+        <volume>183</volume>
+        <fpage>63</fpage>
+        <lpage>98</lpage>
+        <pub-id pub-id-type="pmid">2156132</pub-id>
+      </citation>
+    </ref>
+    <ref id="b15">
+      <label>15</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bairoch</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Apweiler</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>C.H.</given-names>
+          </name>
+          <name>
+            <surname>Barker</surname>
+            <given-names>W.C.</given-names>
+          </name>
+          <name>
+            <surname>Boeckmann</surname>
+            <given-names>B.</given-names>
+          </name>
+          <name>
+            <surname>Ferro</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Gasteiger</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Huang</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Lopez</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Magrane</surname>
+            <given-names>M.</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The Universal Protein Resource (UniProt)</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2005</year>
+        <volume>33</volume>
+        <fpage>D154</fpage>
+        <lpage>D159</lpage>
+        <pub-id pub-id-type="pmid">15608167</pub-id>
+      </citation>
+    </ref>
+    <ref id="b16">
+      <label>16</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Heery</surname>
+            <given-names>D.M.</given-names>
+          </name>
+          <name>
+            <surname>Kalkhoven</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Hoare</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Parker</surname>
+            <given-names>M.G.</given-names>
+          </name>
+        </person-group>
+        <article-title>A signature motif in transcriptional co-activators mediates binding to nuclear receptors</article-title>
+        <source>Nature</source>
+        <year>1997</year>
+        <volume>387</volume>
+        <fpage>733</fpage>
+        <lpage>736</lpage>
+        <pub-id pub-id-type="pmid">9192902</pub-id>
+      </citation>
+    </ref>
+    <ref id="b17">
+      <label>17</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Emini</surname>
+            <given-names>E.A.</given-names>
+          </name>
+          <name>
+            <surname>Hughes</surname>
+            <given-names>J.V.</given-names>
+          </name>
+          <name>
+            <surname>Perlow</surname>
+            <given-names>D.S.</given-names>
+          </name>
+          <name>
+            <surname>Boger</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>Induction of hepatitis A virus-neutralizing antibody by a virus-specific synthetic peptide</article-title>
+        <source>J. Virol.</source>
+        <year>1985</year>
+        <volume>55</volume>
+        <fpage>836</fpage>
+        <lpage>839</lpage>
+        <pub-id pub-id-type="pmid">2991600</pub-id>
+      </citation>
+    </ref>
+    <ref id="b18">
+      <label>18</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kabsch</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Sander</surname>
+            <given-names>C.</given-names>
+          </name>
+        </person-group>
+        <article-title>Dictionary of protein secondary structure: pattern recognition of hydrogen-bonded and geometrical features</article-title>
+        <source>Biopolymers</source>
+        <year>1983</year>
+        <volume>22</volume>
+        <fpage>2577</fpage>
+        <lpage>2637</lpage>
+        <pub-id pub-id-type="pmid">6667333</pub-id>
+      </citation>
+    </ref>
+    <ref id="b19">
+      <label>19</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Prim</surname>
+            <given-names>R.C.</given-names>
+          </name>
+        </person-group>
+        <article-title>Shortest connection networks and some generalizations</article-title>
+        <source>Bell Syst. Tech. J.</source>
+        <year>1957</year>
+        <volume>36</volume>
+        <fpage>1389</fpage>
+        <lpage>1401</lpage>
+      </citation>
+    </ref>
+    <ref id="b20">
+      <label>20</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jonassen</surname>
+            <given-names>I.</given-names>
+          </name>
+          <name>
+            <surname>Helgesen</surname>
+            <given-names>C.</given-names>
+          </name>
+          <name>
+            <surname>Higgins</surname>
+            <given-names>D.G.</given-names>
+          </name>
+        </person-group>
+        <article-title>Scoring function for pattern discovery programs taking into account sequence diversity</article-title>
+        <source>Reports in Informatics</source>
+        <year>1996</year>
+        <comment>no. 116</comment>
+      </citation>
+    </ref>
+    <ref id="b21">
+      <label>21</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rosenberg</surname>
+            <given-names>M.S.</given-names>
+          </name>
+        </person-group>
+        <article-title>Evolutionary distance estimation and fidelity of pair wise sequence alignment</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2005</year>
+        <volume>6</volume>
+        <fpage>102</fpage>
+        <pub-id pub-id-type="pmid">15840174</pub-id>
+      </citation>
+    </ref>
+    <ref id="b22">
+      <label>22</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jimenez</surname>
+            <given-names>G.</given-names>
+          </name>
+          <name>
+            <surname>Verrijzer</surname>
+            <given-names>C.P.</given-names>
+          </name>
+          <name>
+            <surname>Ish-Horowicz</surname>
+            <given-names>D.</given-names>
+          </name>
+        </person-group>
+        <article-title>A conserved motif in goosecoid mediates groucho-dependent repression in <italic>Drosophila</italic> embryos</article-title>
+        <source>Mol. Cell. Biol.</source>
+        <year>1999</year>
+        <volume>19</volume>
+        <fpage>2080</fpage>
+        <lpage>2087</lpage>
+        <pub-id pub-id-type="pmid">10022895</pub-id>
+      </citation>
+    </ref>
+    <ref id="b23">
+      <label>23</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ye</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Park</surname>
+            <given-names>Y.C.</given-names>
+          </name>
+          <name>
+            <surname>Kreishman</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Kieff</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>H.</given-names>
+          </name>
+        </person-group>
+        <article-title>The structural basis for the recognition of diverse receptor sequences by TRAF2</article-title>
+        <source>Mol. Cell</source>
+        <year>1999</year>
+        <volume>4</volume>
+        <fpage>321</fpage>
+        <lpage>330</lpage>
+        <pub-id pub-id-type="pmid">10518213</pub-id>
+      </citation>
+    </ref>
+    <ref id="b24">
+      <label>24</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fisher</surname>
+            <given-names>A.L.</given-names>
+          </name>
+          <name>
+            <surname>Ohsako</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Caudy</surname>
+            <given-names>M.</given-names>
+          </name>
+        </person-group>
+        <article-title>The WRPW motif of the hairy-related basic helix-loop-helix repressor proteins acts as a 4-amino-acid transcription repression and protein–protein interaction domain</article-title>
+        <source>Mol. Cell. Biol.</source>
+        <year>1996</year>
+        <volume>16</volume>
+        <fpage>2670</fpage>
+        <lpage>2677</lpage>
+        <pub-id pub-id-type="pmid">8649374</pub-id>
+      </citation>
+    </ref>
+    <ref id="b25">
+      <label>25</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Vance</surname>
+            <given-names>B.A.</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Ribaudo</surname>
+            <given-names>R.K.</given-names>
+          </name>
+          <name>
+            <surname>Segal</surname>
+            <given-names>D.M.</given-names>
+          </name>
+          <name>
+            <surname>Kearse</surname>
+            <given-names>K.P.</given-names>
+          </name>
+        </person-group>
+        <article-title>Multiple dimeric forms of human CD69 result from differential addition of N-glycans to typical (Asn-X-Ser/Thr) and atypical (Asn-X-cys) glycosylation motifs</article-title>
+        <source>J. Biol. Chem.</source>
+        <year>1997</year>
+        <volume>272</volume>
+        <fpage>23117</fpage>
+        <lpage>23122</lpage>
+        <pub-id pub-id-type="pmid">9287313</pub-id>
+      </citation>
+    </ref>
+    <ref id="b26">
+      <label>26</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Melchior</surname>
+            <given-names>F.</given-names>
+          </name>
+        </person-group>
+        <article-title>SUMO—nonclassical ubiquitin</article-title>
+        <source>Annu. Rev. Cell. Dev. Biol.</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>591</fpage>
+        <lpage>626</lpage>
+        <pub-id pub-id-type="pmid">11031248</pub-id>
+      </citation>
+    </ref>
+    <ref id="b27">
+      <label>27</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mishra</surname>
+            <given-names>G.R.</given-names>
+          </name>
+          <name>
+            <surname>Suresh</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Kumaran</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Kannabiran</surname>
+            <given-names>N.</given-names>
+          </name>
+          <name>
+            <surname>Suresh</surname>
+            <given-names>S.</given-names>
+          </name>
+          <name>
+            <surname>Bala</surname>
+            <given-names>P.</given-names>
+          </name>
+          <name>
+            <surname>Shivakumar</surname>
+            <given-names>K.</given-names>
+          </name>
+          <name>
+            <surname>Anuradha</surname>
+            <given-names>N.</given-names>
+          </name>
+          <name>
+            <surname>Reddy</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Raghavan</surname>
+            <given-names>T.M.</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Human protein reference database—2006 update</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2006</year>
+        <volume>34</volume>
+        <fpage>D411</fpage>
+        <lpage>D414</lpage>
+        <pub-id pub-id-type="pmid">16381900</pub-id>
+      </citation>
+    </ref>
+    <ref id="b28">
+      <label>28</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Main</surname>
+            <given-names>A.L.</given-names>
+          </name>
+          <name>
+            <surname>Harvey</surname>
+            <given-names>T.S.</given-names>
+          </name>
+          <name>
+            <surname>Baron</surname>
+            <given-names>M.</given-names>
+          </name>
+          <name>
+            <surname>Boyd</surname>
+            <given-names>J.</given-names>
+          </name>
+          <name>
+            <surname>Campbell</surname>
+            <given-names>I.D.</given-names>
+          </name>
+        </person-group>
+        <article-title>The three-dimensional structure of the tenth type III module of fibronectin: an insight into RGD-mediated interactions</article-title>
+        <source>Cell</source>
+        <year>1992</year>
+        <volume>71</volume>
+        <fpage>671</fpage>
+        <lpage>678</lpage>
+        <pub-id pub-id-type="pmid">1423622</pub-id>
+      </citation>
+    </ref>
+    <ref id="b29">
+      <label>29</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pierschbacher</surname>
+            <given-names>M.D.</given-names>
+          </name>
+          <name>
+            <surname>Hayman</surname>
+            <given-names>E.G.</given-names>
+          </name>
+          <name>
+            <surname>Ruoslahti</surname>
+            <given-names>E.</given-names>
+          </name>
+        </person-group>
+        <article-title>Location of the cell-attachment site in fibronectin with monoclonal antibodies and proteolytic fragments of the molecule</article-title>
+        <source>Cell</source>
+        <year>1981</year>
+        <volume>26</volume>
+        <fpage>259</fpage>
+        <lpage>267</lpage>
+        <pub-id pub-id-type="pmid">6174240</pub-id>
+      </citation>
+    </ref>
+    <ref id="b30">
+      <label>30</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schneewind</surname>
+            <given-names>O.</given-names>
+          </name>
+          <name>
+            <surname>Mihaylova-Petkov</surname>
+            <given-names>D.</given-names>
+          </name>
+          <name>
+            <surname>Model</surname>
+            <given-names>P.</given-names>
+          </name>
+        </person-group>
+        <article-title>Cell wall sorting signals in surface proteins of gram-positive bacteria</article-title>
+        <source>EMBO. J.</source>
+        <year>1993</year>
+        <volume>12</volume>
+        <fpage>4803</fpage>
+        <lpage>4811</lpage>
+        <pub-id pub-id-type="pmid">8223489</pub-id>
+      </citation>
+    </ref>
+    <ref id="b31">
+      <label>31</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Baumgartner</surname>
+            <given-names>J.W.</given-names>
+          </name>
+          <name>
+            <surname>Wells</surname>
+            <given-names>C.A.</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>C.M.</given-names>
+          </name>
+          <name>
+            <surname>Waters</surname>
+            <given-names>M.J.</given-names>
+          </name>
+        </person-group>
+        <article-title>The role of the WSXWS equivalent motif in growth hormone receptor function</article-title>
+        <source>J. Biol. Chem.</source>
+        <year>1994</year>
+        <volume>269</volume>
+        <fpage>29094</fpage>
+        <lpage>29101</lpage>
+        <pub-id pub-id-type="pmid">7961876</pub-id>
+      </citation>
+    </ref>
+    <ref id="b32">
+      <label>32</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chenna</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Sugawara</surname>
+            <given-names>H.</given-names>
+          </name>
+          <name>
+            <surname>Koike</surname>
+            <given-names>T.</given-names>
+          </name>
+          <name>
+            <surname>Lopez</surname>
+            <given-names>R.</given-names>
+          </name>
+          <name>
+            <surname>Gibson</surname>
+            <given-names>T.J.</given-names>
+          </name>
+          <name>
+            <surname>Higgins</surname>
+            <given-names>D.G.</given-names>
+          </name>
+          <name>
+            <surname>Thompson</surname>
+            <given-names>J.D.</given-names>
+          </name>
+        </person-group>
+        <article-title>Multiple sequence alignment with the Clustal series of programs</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2003</year>
+        <volume>31</volume>
+        <fpage>3497</fpage>
+        <lpage>3500</lpage>
+        <pub-id pub-id-type="pmid">12824352</pub-id>
+      </citation>
+    </ref>
+    <ref id="b33">
+      <label>33</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fuller</surname>
+            <given-names>R.S.</given-names>
+          </name>
+          <name>
+            <surname>Brake</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Thorner</surname>
+            <given-names>J.</given-names>
+          </name>
+        </person-group>
+        <article-title>Yeast prohormone processing enzyme (KEX2 gene product) is a Ca2+-dependent serine protease</article-title>
+        <source>Proc. Natl Acad. Sci. USA</source>
+        <year>1989</year>
+        <volume>86</volume>
+        <fpage>1434</fpage>
+        <lpage>1438</lpage>
+        <pub-id pub-id-type="pmid">2646633</pub-id>
+      </citation>
+    </ref>
+    <ref id="b34">
+      <label>34</label>
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jardim</surname>
+            <given-names>A.</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>W.</given-names>
+          </name>
+          <name>
+            <surname>Zheleznova</surname>
+            <given-names>E.</given-names>
+          </name>
+          <name>
+            <surname>Ullman</surname>
+            <given-names>B.</given-names>
+          </name>
+        </person-group>
+        <article-title>Peroxisomal targeting signal-1 receptor protein PEX5 from Leishmania donovani. Molecular biochemical and. immunocytochemical. characterization</article-title>
+        <source>J. Biol. Chem.</source>
+        <year>2000</year>
+        <volume>275</volume>
+        <fpage>13637</fpage>
+        <lpage>13644</lpage>
+        <pub-id pub-id-type="pmid">10788481</pub-id>
+      </citation>
+    </ref>
+    <ref id="b35">
+      <label>35</label>
+      <citation citation-type="journal">
+        <collab>Gene Ontology Consortium</collab>
+        <article-title>The Gene Ontology (GO) project in 2006</article-title>
+        <source>Nucleic Acids Res.</source>
+        <year>2006</year>
+        <volume>34</volume>
+        <fpage>D322</fpage>
+        <lpage>D326</lpage>
+        <pub-id pub-id-type="pmid">16381878</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig id="fig1" position="float">
+      <label>Figure 1</label>
+      <caption>
+        <p>Simplified graphical representation of the SLiMDisc method. The steps completed by SLiMDisc are in green, those which occur outside the program are in red. The input dataset is given to the TEIRESIAS algorithm for pattern discovery and the BLAST algorithm to establish the evolutionary relationships of the parent proteins. The returned motifs are then filtered according to a number of user defined criteria. Finally, the motifs are ranked using information content (based on amino acid frequencies) and evolutionary relatedness.</p>
+      </caption>
+      <graphic xlink:href="gkl486f1"/>
+    </fig>
+    <fig id="fig2" position="float">
+      <label>Figure 2</label>
+      <caption>
+        <p>Graphical representation of UHS and UP normalization techniques. Four proteins, labelled 1–4, are shown with annotated domains marked as coloured regions. Regions of homology as detected by BLAST are shown as grey boxes linking the sequences. Sequences 1 and 2 share a large homologous (orange) domain. Sequences 2 and 3 also share a homologous region but this is not annotated as a domain. Three other domains are specific to proteins 1 (green), 3 (blue) and 4 (purple). All motifs a–f have three occurrences in the dataset but have different support (shown in the table on the right) after filtering. a.→Motif a occurs in a shared region between 1 and 2, which is reduced by UHS to a single occurrence. The third occurrence in sequence 3 is not in an homologous region to 1 or 2 and is treated as a separate occurrence by UHS. However, proteins 2 and 3 share a homologous region and so UP will cluster sequences 1, 2 and 3, reducing the number of occurrences to 1. Filtering domains reduces the support to 1 in either case. b.→Motif b occurs in a shared region between 2 and 3, which is reduced by both UHS and UP to a single occurrence. This time, the third occurrence lies in the totally unrelated protein 4 and is counted with either filter. Filtering domains removed the occurrence in 4, reducing the support to 1. c.→Motif c lies purely within a repeated domain in protein 3. This is reduced to a single occurrence by both UHS and UP (the protein is homologous with itself). Although, whole-protein self-hits are ignored by UHS, the additional local BLAST hits between different domains (shown in grey) will still cause motif c to be filtered by UHS. Domain filtering removes it completely. d.→Motif d is the same as motif b, except that none of the occurrences lie in domains and so domain filtering makes no difference. e.→Motif e lies in non-homologous regions of protein 1 and 4. UHS therefore keeps all three occurrences. Whole-protein self-hits are ignored during the UHS filtering, and so both occurrences of motif e in protein 4 are counted. In contrast, UP clusters sequence 4 with itself and reduces the support to 2. No occurrences lie in domains and so domain filtering makes no difference. f.→Motif f is found in proteins 1, 3 and 4. None of these regions are homologous and so UHS gives a support of 3. UP, however, will group proteins 1 and 3; even though they do not directly share homology, they both share homology with common protein 2. UP therefore reduces the support to 2.</p>
+      </caption>
+      <graphic xlink:href="gkl486f2"/>
+    </fig>
+    <fig id="fig3" position="float">
+      <label>Figure 3</label>
+      <caption>
+        <p>Scattergram of the information content versus the score for the KDEL (see Table 2) retrieving motif. Each blue point on the scattergram is a motif which has been considered by SLiMDisc. The points in green are the top three motifs ranked by the method. The actual SLiM for this dataset is the motif described by the regular expression [KRHQSAP][DENQT]EL.</p>
+      </caption>
+      <graphic xlink:href="gkl486f3"/>
+    </fig>
+    <table-wrap id="tbl1" position="float">
+      <label>Table 1</label>
+      <caption>
+        <p>Summary performance of the different normalization techniques on ELM benchmark dataset</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="left" rowspan="1" colspan="1">Ambiguity</th>
+            <th align="left" rowspan="1" colspan="1">Domain filter</th>
+            <th colspan="2" align="left" rowspan="1">MST</th>
+            <th colspan="2" align="left" rowspan="1">UHS</th>
+            <th colspan="2" align="left" rowspan="1">UP</th>
+            <th colspan="2" align="left" rowspan="1">TEIRESIAS</th>
+          </tr>
+          <tr>
+            <th rowspan="1" colspan="1"/>
+            <th rowspan="1" colspan="1"/>
+            <th align="left" rowspan="1" colspan="1">Rank</th>
+            <th align="left" rowspan="1" colspan="1">Support %</th>
+            <th align="left" rowspan="1" colspan="1">Rank</th>
+            <th align="left" rowspan="1" colspan="1">Support %</th>
+            <th align="left" rowspan="1" colspan="1">Rank</th>
+            <th align="left" rowspan="1" colspan="1">Support %</th>
+            <th align="left" rowspan="1" colspan="1">Rank</th>
+            <th align="left" rowspan="1" colspan="1">Support %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">No</td>
+            <td align="left" rowspan="1" colspan="1">No</td>
+            <td align="left" rowspan="1" colspan="1">18.06</td>
+            <td align="left" rowspan="1" colspan="1">73.9</td>
+            <td align="left" rowspan="1" colspan="1">24.83</td>
+            <td align="left" rowspan="1" colspan="1">69.8</td>
+            <td align="left" rowspan="1" colspan="1">50.56</td>
+            <td align="left" rowspan="1" colspan="1">51.5</td>
+            <td align="left" rowspan="1" colspan="1">62.17</td>
+            <td align="left" rowspan="1" colspan="1">64.3</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">No</td>
+            <td align="left" rowspan="1" colspan="1">Yes</td>
+            <td align="left" rowspan="1" colspan="1">16.61</td>
+            <td align="left" rowspan="1" colspan="1">70.5</td>
+            <td align="left" rowspan="1" colspan="1">20.83</td>
+            <td align="left" rowspan="1" colspan="1">66.4</td>
+            <td align="left" rowspan="1" colspan="1">49.83</td>
+            <td align="left" rowspan="1" colspan="1">48.1</td>
+            <td align="left" rowspan="1" colspan="1">66.61</td>
+            <td align="left" rowspan="1" colspan="1">59.6</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">Yes</td>
+            <td align="left" rowspan="1" colspan="1">No</td>
+            <td align="left" rowspan="1" colspan="1">41.61</td>
+            <td align="left" rowspan="1" colspan="1">70.9</td>
+            <td align="left" rowspan="1" colspan="1">56.56</td>
+            <td align="left" rowspan="1" colspan="1">69.6</td>
+            <td align="left" rowspan="1" colspan="1">69.11</td>
+            <td align="left" rowspan="1" colspan="1">57.9</td>
+            <td align="left" rowspan="1" colspan="1">84.22</td>
+            <td align="left" rowspan="1" colspan="1">52.6</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">Yes</td>
+            <td align="left" rowspan="1" colspan="1">Yes</td>
+            <td align="left" rowspan="1" colspan="1">28.39</td>
+            <td align="left" rowspan="1" colspan="1">72.5</td>
+            <td align="left" rowspan="1" colspan="1">48.61</td>
+            <td align="left" rowspan="1" colspan="1">64.0</td>
+            <td align="left" rowspan="1" colspan="1">53.56</td>
+            <td align="left" rowspan="1" colspan="1">56.6</td>
+            <td align="left" rowspan="1" colspan="1">57.33</td>
+            <td align="left" rowspan="1" colspan="1">62.6</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <fn>
+          <p>Comparison of the average rank of the motif matching the regular expression given in the ELM database and the average percentage support of the top ranked pattern for the ELM benchmark dataset between the three different normalization techniques and the TEIRESIAS algorithm with and without domain filtering and ambiguity. Rank is calculated using the arbitrary value of 200 when the motif of interest is not found in the top 100 motifs returned. Support for each ELM is the percentage of proteins in the dataset containing the returned ELM.</p>
+        </fn>
+      </table-wrap-foot>
+    </table-wrap>
+    <table-wrap id="tbl2" position="float">
+      <label>Table 2</label>
+      <caption>
+        <p>Comparison of methods based on results from the ELM benchmark dataset</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="left" rowspan="1" colspan="1">ELM</th>
+            <th rowspan="1" colspan="1"/>
+            <th colspan="3" align="left" rowspan="1">TEIRESIAS</th>
+            <th rowspan="1" colspan="1"/>
+            <th colspan="3" align="left" rowspan="1">SLiMDisc</th>
+            <th rowspan="1" colspan="1"/>
+            <th colspan="3" align="left" rowspan="1">LMD</th>
+          </tr>
+          <tr>
+            <th rowspan="1" colspan="1"/>
+            <th align="left" rowspan="1" colspan="1">Initial motifs</th>
+            <th align="left" rowspan="1" colspan="1">Rank</th>
+            <th align="left" rowspan="1" colspan="1">Motif</th>
+            <th align="left" rowspan="1" colspan="1">Support</th>
+            <th align="left" rowspan="1" colspan="1">Rank</th>
+            <th align="left" rowspan="1" colspan="1">Motif</th>
+            <th align="left" rowspan="1" colspan="1">Support</th>
+            <th align="left" rowspan="1" colspan="1">Initial motifs</th>
+            <th align="left" rowspan="1" colspan="1">Rank</th>
+            <th align="left" rowspan="1" colspan="1">Motif</th>
+            <th align="left" rowspan="1" colspan="1">Support</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>14-3-3(type 1)</bold>-R(SFYW)xSxP</td>
+            <td align="left" rowspan="1" colspan="1">2232</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>RSxSxP</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>4/4</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>RSxSxP</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>4/4</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">225</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>RSxSxP</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>3/4</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>14-3-3(type 3)</bold>-(RHK)(STALV)x(ST)x(PEDSIF)</td>
+            <td align="left" rowspan="1" colspan="1">11 130</td>
+            <td align="left" rowspan="1" colspan="1">6</td>
+            <td align="left" rowspan="1" colspan="1">SxSxP</td>
+            <td align="left" rowspan="1" colspan="1">6/6</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>5</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>SxSxP</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>6/6</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">1656</td>
+            <td align="left" rowspan="1" colspan="1">6</td>
+            <td align="left" rowspan="1" colspan="1">RSxSxE</td>
+            <td align="left" rowspan="1" colspan="1">7/12</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>c-adaptin</bold>-(DE)(DES)xFx(DE)(LVIMFD)</td>
+            <td align="left" rowspan="1" colspan="1">17 339</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>DxFxDFxS</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>5/8</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>DxFxDFxS</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>5/8</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">392</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>DDxFxxF</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>3/4</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>Clathrin box</bold>-L(ILM)x(ILMF)(DE)</td>
+            <td align="left" rowspan="1" colspan="1">53 613</td>
+            <td align="left" rowspan="1" colspan="1">80</td>
+            <td align="left" rowspan="1" colspan="1">LxDL</td>
+            <td align="left" rowspan="1" colspan="1">12/15</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>LxDL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>12/15</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">778</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>LlxLD</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>3/5</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>CtBP</bold>-Px(DEN)L(VAST)</td>
+            <td align="left" rowspan="1" colspan="1">157 438</td>
+            <td align="left" rowspan="1" colspan="1">53</td>
+            <td align="left" rowspan="1" colspan="1">PxDL</td>
+            <td align="left" rowspan="1" colspan="1">20/26</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>PxDL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>20/26</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">26 892</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>DxPxDL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>8/25</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>Cyclin</bold>-(RK)xLx{0–1}(FYLIVMP)</td>
+            <td align="left" rowspan="1" colspan="1">100 074</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/22</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>7</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>KKL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>11/22</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">13 179</td>
+            <td align="left" rowspan="1" colspan="1">15</td>
+            <td align="left" rowspan="1" colspan="1">KRRL</td>
+            <td align="left" rowspan="1" colspan="1">3/19</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>Dynein light chain</bold>-(KR)xTQT</td>
+            <td align="left" rowspan="1" colspan="1">1263</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>SxxKxTQT</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>3/4</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>SxxKxTQT</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>3/4</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">117</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>KxTQT</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>3/4</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>HP-1</bold>-PxVx(LM)</td>
+            <td align="left" rowspan="1" colspan="1">10 035</td>
+            <td align="left" rowspan="1" colspan="1">2</td>
+            <td align="left" rowspan="1" colspan="1">PxVxL</td>
+            <td align="left" rowspan="1" colspan="1">6/6</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>PxVxL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>6/6</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">5287</td>
+            <td align="left" rowspan="1" colspan="1">4</td>
+            <td align="left" rowspan="1" colspan="1">KVPxVxL</td>
+            <td align="left" rowspan="1" colspan="1">3/7</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>NRBOX</bold>-LxxLL</td>
+            <td align="left" rowspan="1" colspan="1">68 944</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>9</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>LxxLL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>8/9</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">10</td>
+            <td align="left" rowspan="1" colspan="1">LxxLL</td>
+            <td align="left" rowspan="1" colspan="1">8/9</td>
+            <td align="left" rowspan="1" colspan="1">27 874</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/18</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>PCNA</bold>-Qxx(ILM)xx(FHM)(FHM)</td>
+            <td align="left" rowspan="1" colspan="1">64 978</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/13</td>
+            <td align="left" rowspan="1" colspan="1">36</td>
+            <td align="left" rowspan="1" colspan="1">QxxLxxF</td>
+            <td align="left" rowspan="1" colspan="1">9/13</td>
+            <td align="left" rowspan="1" colspan="1">1505</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>QxxxxxFF</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>11/24</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>Retinoblastoma</bold>-(LI)xCx(DE)</td>
+            <td align="left" rowspan="1" colspan="1">131 943</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>LxCxE</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>18/25</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>LxCxE</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>18/25</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">24 581</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>LxCxE</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>14/24</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>Integrin</bold>-RGD</td>
+            <td align="left" rowspan="1" colspan="1">8351</td>
+            <td align="left" rowspan="1" colspan="1">25</td>
+            <td align="left" rowspan="1" colspan="1">RGD</td>
+            <td align="left" rowspan="1" colspan="1">9/15</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>RGD</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>9/15</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">154</td>
+            <td align="left" rowspan="1" colspan="1">2</td>
+            <td align="left" rowspan="1" colspan="1">R.DV</td>
+            <td align="left" rowspan="1" colspan="1">3/8</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>SH3 (type 2) domain</bold>-PxxPx(KR)</td>
+            <td align="left" rowspan="1" colspan="1">14 380</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>PPxP</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>7/9</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">1</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>PPxP</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>7/9</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">1406</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>PPxxPxR</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>4/7</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>TRAF6</bold>-PxE</td>
+            <td align="left" rowspan="1" colspan="1">9294</td>
+            <td align="left" rowspan="1" colspan="1">18</td>
+            <td align="left" rowspan="1" colspan="1">QxPxE</td>
+            <td align="left" rowspan="1" colspan="1">7/8</td>
+            <td align="left" rowspan="1" colspan="1">2</td>
+            <td align="left" rowspan="1" colspan="1">QxPxE</td>
+            <td align="left" rowspan="1" colspan="1">7/8</td>
+            <td align="left" rowspan="1" colspan="1">121</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>PQE</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>3/7</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>N-glycosylation</bold>-NxC</td>
+            <td align="left" rowspan="1" colspan="1">1982</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/4</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/4</td>
+            <td align="left" rowspan="1" colspan="1">53</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/4</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>SUMO-1</bold>-(VILAFP)Kx(EDNGP)</td>
+            <td align="left" rowspan="1" colspan="1">132 732</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/29</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>2</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>IKxE</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>15/29</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">13 722</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/14</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>Golgi-to-ER signal</bold>-(KRH)(DENQ)EL</td>
+            <td align="left" rowspan="1" colspan="1">17 236</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>DEL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>11/12</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>KDEL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>8/12</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">8</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>1</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>KDEL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>3/5</bold>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1"><bold>Endosome sorting signal</bold>-(DER)xxxL(LVI)</td>
+            <td align="left" rowspan="1" colspan="1">10 201</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">—</td>
+            <td align="left" rowspan="1" colspan="1">0/10</td>
+            <td align="left" rowspan="1" colspan="1">27</td>
+            <td align="left" rowspan="1" colspan="1">ExxxLL</td>
+            <td align="left" rowspan="1" colspan="1">5/10</td>
+            <td align="left" rowspan="1" colspan="1">1471</td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>22</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>ExxxLL</bold>
+            </td>
+            <td align="left" rowspan="1" colspan="1">
+              <bold>5/12</bold>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <fn>
+          <p>Results of the analysis of 18 datasets from the ELM database as proposed by Neduva <italic>et al</italic> (<xref ref-type="bibr" rid="b5">5</xref>). The table compares the first ranked position, support and number of initial motifs between TEIRESIAS (scored using the product of support and information content), SLiMDisc (using default settings) and the LMD method [as described in the LMD paper (<xref ref-type="bibr" rid="b5">5</xref>)]. Results in bold are motifs for which the method returns the best rank or equal best rank for that ELM across the three methods.</p>
+        </fn>
+      </table-wrap-foot>
+    </table-wrap>
+    <table-wrap id="tbl3" position="float">
+      <label>Table 3</label>
+      <caption>
+        <p>Results from ELM containing HPRD interaction datasets</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <th align="left" rowspan="1" colspan="1">Hub protein</th>
+            <th align="left" rowspan="1" colspan="1">HPRD _id</th>
+            <th align="left" rowspan="1" colspan="1">ELM name (annotated motif)</th>
+            <th align="left" rowspan="1" colspan="1">% True annotated motifs</th>
+            <th align="left" rowspan="1" colspan="1">Returned motif (rank)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">CtBP</td>
+            <td align="left" rowspan="1" colspan="1">04015</td>
+            <td align="left" rowspan="1" colspan="1"><bold>LIG_CtBP</bold> ([PG][LVIPME][DENS]L[VASTRGE])</td>
+            <td align="left" rowspan="1" colspan="1">0.29 (9/31)</td>
+            <td align="left" rowspan="1" colspan="1">DLS (6)</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">Clathrin</td>
+            <td align="left" rowspan="1" colspan="1">00350</td>
+            <td align="left" rowspan="1" colspan="1"><bold>LIG_Clathr_ClatBox_1</bold> (L[IVLMF]x[IVLMF][DE])</td>
+            <td align="left" rowspan="1" colspan="1">0.21 (5/24)</td>
+            <td align="left" rowspan="1" colspan="1">LxDL (2)</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">Peroxisome proliferator activated receptor gamma</td>
+            <td align="left" rowspan="1" colspan="1">03288</td>
+            <td align="left" rowspan="1" colspan="1"><bold>LIG_NRBOX</bold> (LxxLL)</td>
+            <td align="left" rowspan="1" colspan="1">0.14 (3/21)</td>
+            <td align="left" rowspan="1" colspan="1">LxxLL (4)</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">Integrin Alpha 5</td>
+            <td align="left" rowspan="1" colspan="1">00627</td>
+            <td align="left" rowspan="1" colspan="1"><bold>LIG_RGD</bold> (RGD)</td>
+            <td align="left" rowspan="1" colspan="1">0.1 (2/21)</td>
+            <td align="left" rowspan="1" colspan="1">RGD (4)</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">Grb2</td>
+            <td align="left" rowspan="1" colspan="1">00150</td>
+            <td align="left" rowspan="1" colspan="1"><bold>LIG_SH3_2</bold> (PxxPx[KR])</td>
+            <td align="left" rowspan="1" colspan="1">0.04 (6/159)</td>
+            <td align="left" rowspan="1" colspan="1">PxPP (3)</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">14-3-3- Eta</td>
+            <td align="left" rowspan="1" colspan="1">00215</td>
+            <td align="left" rowspan="1" colspan="1"><bold>LIG_14-3-3_1</bold> (R[SFYW]xSxP)</td>
+            <td align="left" rowspan="1" colspan="1">0.06 (2/31)</td>
+            <td align="left" rowspan="1" colspan="1">RSxS (4)</td>
+          </tr>
+          <tr>
+            <td align="left" rowspan="1" colspan="1">Ubiquitin conjugating enzyme E2I</td>
+            <td align="left" rowspan="1" colspan="1">09045</td>
+            <td align="left" rowspan="1" colspan="1"><bold>MOD_SUMO</bold> ([VILMAFP]KxE)</td>
+            <td align="left" rowspan="1" colspan="1">0.09 (4/43)</td>
+            <td align="left" rowspan="1" colspan="1">IKxE (8)</td>
+          </tr>
+        </tbody>
+      </table>
+      <table-wrap-foot>
+        <fn>
+          <p>Results for the seven datasets which returned true annotated binding motifs in the top 10 ranks for the HPRD interaction datasets. A returned motif is defined as one which is found at the annotated positions of the known instances of the motif (including motifs which account for at least 2 of the residues involved in the ELM interaction). % True annotated motifs is a measure of the extent of anticipated noise in the dataset: datasets with a low % have relatively few of the proteins where the ELM has been annotated.</p>
+        </fn>
+      </table-wrap-foot>
+    </table-wrap>
+  </sec>
+</back>

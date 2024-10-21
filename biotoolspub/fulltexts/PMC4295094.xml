@@ -1,0 +1,1090 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NPG//DTD XML Article//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName NPG_XML_Article.dtd?>
+<?SourceDTD.Version 2.7.10?>
+<?ConverterInfo.XSLTName nature2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Sci Rep</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Sci Rep</journal-id>
+    <journal-title-group>
+      <journal-title>Scientific Reports</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">2045-2322</issn>
+    <publisher>
+      <publisher-name>Nature Publishing Group</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">4295094</article-id>
+    <article-id pub-id-type="pii">srep07813</article-id>
+    <article-id pub-id-type="doi">10.1038/srep07813</article-id>
+    <article-id pub-id-type="pmid">25589474</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>qPMS9: An Efficient Algorithm for Quorum Planted Motif Search</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Nicolae</surname>
+          <given-names>Marius</given-names>
+        </name>
+        <xref ref-type="corresp" rid="c1">a</xref>
+        <xref ref-type="aff" rid="a1">1</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Rajasekaran</surname>
+          <given-names>Sanguthevar</given-names>
+        </name>
+        <xref ref-type="aff" rid="a1">1</xref>
+      </contrib>
+      <aff id="a1"><label>1</label><institution>Department of Computer Science and Engineering University of Connecticut</institution>, Storrs, CT, <country>USA</country></aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="c1">
+        <label>a</label>
+        <email>marius.nicolae@uconn.edu</email>
+      </corresp>
+    </author-notes>
+    <pub-date pub-type="epub">
+      <day>15</day>
+      <month>01</month>
+      <year>2015</year>
+    </pub-date>
+    <pub-date pub-type="collection">
+      <year>2015</year>
+    </pub-date>
+    <volume>5</volume>
+    <elocation-id>7813</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>02</day>
+        <month>09</month>
+        <year>2014</year>
+      </date>
+      <date date-type="accepted">
+        <day>10</day>
+        <month>12</month>
+        <year>2014</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2015, Macmillan Publishers Limited. All rights reserved</copyright-statement>
+      <copyright-year>2015</copyright-year>
+      <copyright-holder>Macmillan Publishers Limited. All rights reserved</copyright-holder>
+      <license xmlns:xlink="http://www.w3.org/1999/xlink" license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/4.0/">
+        <!--author-paid-->
+        <license-p>This work is licensed under a Creative Commons Attribution 4.0 International License. The images or other third party material in this article are included in the article's Creative Commons license, unless indicated otherwise in the credit line; if the material is not included under the Creative Commons license, users will need to obtain permission from the license holder in order to reproduce the material. To view a copy of this license, visit <ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</ext-link></license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p>Discovering patterns in biological sequences is a crucial problem. For example, the identification of patterns in DNA sequences has resulted in the determination of open reading frames, identification of gene promoter elements, intron/exon splicing sites, and SH RNAs, location of RNA degradation signals, identification of alternative splicing sites, etc. In protein sequences, patterns have led to domain identification, location of protease cleavage sites, identification of signal peptides, protein interactions, determination of protein degradation elements, identification of protein trafficking elements, discovery of short functional motifs, etc. In this paper we focus on the identification of an important class of patterns, namely, motifs. We study the (<italic>ℓ</italic>, <italic>d</italic>) motif search problem or Planted Motif Search (PMS). PMS receives as input <italic>n</italic> strings and two integers <italic>ℓ</italic> and <italic>d</italic>. It returns all sequences <italic>M</italic> of length <italic>ℓ</italic> that occur in each input string, where each occurrence differs from <italic>M</italic> in at most <italic>d</italic> positions. Another formulation is quorum PMS (qPMS), where the motif appears in at least <italic>q</italic>% of the strings. We introduce qPMS9, a parallel exact qPMS algorithm that offers significant runtime improvements on DNA and protein datasets. qPMS9 solves the challenging DNA (<italic>ℓ</italic>, <italic>d</italic>)-instances (28, 12) and (30, 13). The source code is available at <ext-link xmlns:xlink="http://www.w3.org/1999/xlink" ext-link-type="uri" xlink:href="https://code.google.com/p/qpms9/">https://code.google.com/p/qpms9/</ext-link>.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <p>The Planted Motif Search (PMS) problem, also known as the (<italic>l</italic>, <italic>d</italic>)-motif problem, has been introduced in Ref. <xref ref-type="bibr" rid="b1">1</xref> with the aim of detecting motifs and significant conserved regions in a set of DNA or protein sequences. PMS receives as input <italic>n</italic> biological sequences and two integers <italic>ℓ</italic> and <italic>d</italic>. It returns all possible biological sequences <italic>M</italic> of length <italic>ℓ</italic> such that <italic>M</italic> occurs in each of the input strings, and each occurrence differs from <italic>M</italic> in at most <italic>d</italic> positions. Any such <italic>M</italic> is called a motif.</p>
+  <p>Buhler and Tompa<xref ref-type="bibr" rid="b2">2</xref> have employed PMS algorithms to find known transcriptional regulatory elements upstream of several eukaryotic genes. In particular, they have used orthologous sequences from different organisms upstream of four different genes: preproinsulin, dihydrofolate reductase (DHFR), metallothioneins, and c-fos. These sequences are known to contain binding sites for specific transcription factors. Their algorithm successfully identified the experimentally determined transcription factor binding sites. They have also employed their algorithm to solve the ribosome binding site problem for various prokaryotes. Eskin and Pevzner<xref ref-type="bibr" rid="b3">3</xref> used PMS algorithms to find composite regulatory patterns using their PMS algorithm called MITRA. They have employed the upstream regions involved in purine metabolism from three <italic>Pyrococcus</italic> genomes. They have also tested their algorithm on four sets of <italic>S.cerevisiae</italic> genes which are regulated by two transcription factors such that the transcription factor binding sites occur near each other. Price, et al.<xref ref-type="bibr" rid="b4">4</xref> have employed their PatternBranching PMS technique to find motifs on a sample containing CRP binding sites in <italic>E.coli</italic>, upstream regions of many organisms of the eukaryotic genes: preproinsulin, DHFR, metallothionein, &amp; c-fos, and a sample of yeast promoter regions.</p>
+  <p>A problem that is very similar to (<italic>ℓ</italic>, <italic>d</italic>) motif search is the Closest Substring problem. The Closest Substring problem is essentially the PMS problem where the aim is to find the smallest <italic>d</italic> for which there exists at least one motif. These two problems have applications in PCR primer design, genetic probe design, discovering potential drug targets, antisense drug design, finding unbiased consensus of a protein family, creating diagnostic probes and motif finding (see e.g.<xref ref-type="bibr" rid="b5">5</xref>). Therefore, the development of efficient algorithms for solving the PMS problem constitute an active interest in biology and bioinformatics.</p>
+  <p>In a practical scenario, instances of the motif may not appear in all of the input strings. This has led to the introduction of a more general formulation of the problem, called quorum PMS (qPMS). In qPMS we are interested in motifs that appear in at least <italic>q</italic> percent of the <italic>n</italic> input strings. Therefore, the PMS problem is the same as qPMS when <italic>q</italic> = 100%.</p>
+  <p>The Closest Substring problem is NP-Hard<xref ref-type="bibr" rid="b5">5</xref>. The Closest Substring problem can be solved by a linear number of calls to PMS. Therefore, there is a polynomial time reduction from Closest Substring to PMS, which means that the PMS problem is also NP-Hard. Because of this, all known exact algorithms have an exponential runtime in the worst case. Thus, it is important to develop efficient algorithms in practice. The practical performance of PMS algorithms is typically evaluated on datasets generated as follows (see refs <xref ref-type="bibr" rid="b1">1</xref>, <xref ref-type="bibr" rid="b6">6</xref>): 20 DNA/protein strings of length 600 are generated according to the independent identically distributed (i.i.d.) model. Similarly, a random motif (<italic>ℓ</italic>-mer) <italic>M</italic> is generated and “planted” at a random location in each input string (or in <italic>q</italic>% of the input strings for qPMS). Every planted instance of the motif is mutated in exactly <italic>d</italic> positions.</p>
+  <p><bold>Definition 1.</bold><italic>An (ℓ, d) instance is defined to be a</italic><bold>challenging instance</bold><italic>if d is the largest integer for which the expected number of motifs of length ℓ that would occur in the input by random chance does not exceed a constant</italic> (<italic>500 in this paper, same as in</italic> Ref. <xref ref-type="bibr" rid="b7">7</xref>).</p>
+  <p>Intuitively the more we increase <italic>d</italic>, the more we increase the search space. However, if we increase <italic>d</italic> too much, we find many motifs just by random chance (spurious motifs). According to the above definition, the challenging instances for PMS are (13, 4), (15, 5), (17, 6), (19, 7), (21, 8), (23, 9), (25, 10), (26, 11), (28, 12), (30, 13), etc.</p>
+  <p>Note that in this paper we only address exact algorithms, which find all the existing motifs. Most of the exact PMS algorithms use a combination of two fundamental techniques. One is a sample driven technique and the other is a pattern driven technique. In the sample driven stage, the algorithm selects a tuple of <italic>ℓ</italic>-mers coming from distinct input strings. In the pattern driven stage, the algorithm generates the common <italic>d</italic>-neighborhood of the <italic>ℓ</italic>-mers in the tuple. Each such <italic>ℓ</italic>-mer becomes a motif candidate. The size of the tuple is usually fixed to a value such as 1 (see e.g.<xref ref-type="bibr" rid="b6">6</xref><xref ref-type="bibr" rid="b8">8</xref><xref ref-type="bibr" rid="b9">9</xref>), 2 (see e.g.<xref ref-type="bibr" rid="b10">10</xref>), 3 (see e.g.<xref ref-type="bibr" rid="b11">11</xref><xref ref-type="bibr" rid="b12">12</xref><xref ref-type="bibr" rid="b13">13</xref><xref ref-type="bibr" rid="b14">14</xref>) or <italic>n</italic> (see e.g.<xref ref-type="bibr" rid="b1">1</xref><xref ref-type="bibr" rid="b15">15</xref>). In contrast, PMS8<xref ref-type="bibr" rid="b7">7</xref> and qPMS9 (this paper) utilize a variable tuple size, which adapts to the problem instance under consideration.</p>
+  <p>There are many PMS algorithms in the literature. In a previous paper<xref ref-type="bibr" rid="b7">7</xref> we have introduced the PMS8 algorithm. In the same paper we have performed a comparison between PMS8 and all the exact algorithms we could find in the literature of the previous five years. We have shown that PMS8 outperforms these algorithms. Ever since the publishing of PMS8, one other exact qPMS algorithm has been published, called TraverStringRef<xref ref-type="bibr" rid="b11">11</xref>. Therefore, in this paper we compare qPMS9 with PMS8 and TraverStringRef.</p>
+  <p>The TraverStringRef algorithm<xref ref-type="bibr" rid="b11">11</xref> is an algorithm for the qPMS problem, based on the earlier qPMS7<xref ref-type="bibr" rid="b14">14</xref> algorithm. qPMS7<xref ref-type="bibr" rid="b14">14</xref> can solve, for example, the challenging DNA instance (23,9) whereas TraverStringRef<xref ref-type="bibr" rid="b11">11</xref> can solve (25,10), in a reasonable amount of time (no more than two days using commodity processors). In the case of the PMS problem, the PMS8 algorithm<xref ref-type="bibr" rid="b7">7</xref> can solve the DNA instances (25,10), on a single core machine, and (26,11) on a multi-core machine. We have used PMS8 as the basis for the new qPMS9 algorithm. The qPMS9 algorithm extends PMS8 in several ways. First, qPMS9 introduces a search procedure which significantly increases performance by allowing for better pruning of the search space. Second, qPMS9 adds support for solving the qPMS problem, which was lacking in PMS8. We compare qPMS9 with PMS8<xref ref-type="bibr" rid="b7">7</xref> and TraverStringRef<xref ref-type="bibr" rid="b11">11</xref> on several DNA and protein instances.</p>
+  <sec disp-level="1">
+    <title>Methods</title>
+    <p>We start by defining the PMS and qPMS problems more formally. A string of length <italic>ℓ</italic> is called an <italic>ℓ</italic>-mer. Given two <italic>ℓ</italic>-mers <italic>u</italic> and <italic>v</italic>, the number of positions where the two <italic>ℓ</italic>-mers differ is called their Hamming distance and is denoted as <italic>Hd</italic>(<italic>u</italic>, <italic>v</italic>). For any string <italic>T</italic>, we denote the substring of <italic>T</italic> starting at position <italic>i</italic> and ending at position <italic>j</italic> by <italic>T</italic>[<italic>i</italic>..<italic>j</italic>].</p>
+    <p><bold>Definition 2.</bold><italic>The PMS problem: Given n sequences s<sub>1</sub>, s<sub>2</sub>, …, s<sub>n</sub>, over an alphabet <italic>Σ</italic>, and two integers ℓ and d, identify all ℓ-mers M, M ∈ <italic>Σ</italic><sup>l</sup>, such that ∀i, 1 ≤ i ≤ n, ∃j<sub>i</sub>, 1 ≤ j<sub>i</sub> ≤ |s<sub>i</sub>| − l + 1, such that Hd(M, s<sub>i</sub><italic>[</italic>j<sub>i</sub>..j<sub>i</sub> + l − <italic>1]</italic>) ≤ d</italic>.</p>
+    <p><bold>Definition 3.</bold><italic>The qPMS problem: same as the PMS problem, however the motif appears in at least q% of the strings, instead of all of them. PMS is a special case of qPMS for which q</italic> = <italic>100%</italic>.</p>
+    <p>Another useful notion is that of a <italic>d</italic>-neighborhood. Given a tuple of <italic>ℓ</italic>-mers <italic>T</italic> = (<italic>t</italic><sub>1</sub>, <italic>t</italic><sub>2</sub>, …, <italic>t<sub>s</sub></italic>), the common <italic>d</italic>-neighborhood of <italic>T</italic> includes all the <italic>ℓ</italic>-mers <italic>r</italic> such that <italic>Hd</italic>(<italic>r</italic>, <italic>t<sub>i</sub></italic>) ≤ <italic>d</italic>, µ1 ≤ <italic>i</italic> ≤ <italic>s</italic>.</p>
+    <p>We now define the consensus <italic>ℓ</italic>-mer and the consensus total distance for a tuple of <italic>ℓ</italic>-mers. The consensus <italic>ℓ</italic>-mer for a tuple of <italic>ℓ</italic>-mers <italic>T</italic> = (<italic>t</italic><sub>1</sub>, …, <italic>t<sub>k</sub></italic>) is an <italic>ℓ</italic>-mer <italic>u</italic> where <italic>u</italic>[<italic>i</italic>] is the most common character among (<italic>t</italic><sub>1</sub>[<italic>i</italic>], <italic>t</italic><sub>2</sub>[<italic>i</italic>], …, <italic>t<sub>k</sub></italic>[<italic>i</italic>]) for each 1 ≤ <italic>i</italic> ≤ <italic>ℓ</italic>. If <italic>p</italic> is the consensus <italic>ℓ</italic>-mer for <italic>T</italic> then the consensus total distance of <italic>T</italic> is defined as <inline-formula id="m4"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e583" xlink:href="srep07813-m4.jpg"/></inline-formula>. While the consensus string is generally not a motif, the consensus total distance provides a lower bound on the total distance between any motif and a tuple of <italic>ℓ</italic>-mers.</p>
+    <sec disp-level="2">
+      <title>qPMS9</title>
+      <p>As indicated previously, most of the motif search algorithms combine a sample driven approach with a pattern driven approach. In the sample driven part, tuples of <italic>ℓ</italic>-mers (<italic>t</italic><sub>1</sub>, <italic>t</italic><sub>2</sub>, …, <italic>t<sub>k</sub></italic>) are generated, where <italic>t<sub>i</sub></italic> is an <italic>ℓ</italic>-mer in <italic>S<sub>i</sub></italic>. Then, in the pattern driven part, for each tuple, its common <italic>d</italic>-neighborhood is generated. Every <italic>ℓ</italic>-mer in the neighborhood is a candidate motif. In PMS8<xref ref-type="bibr" rid="b7">7</xref> and qPMS9, the tuple size <italic>k</italic> is variable. By default, a good value for <italic>k</italic> is estimated automatically based on the input parameters (see Ref. <xref ref-type="bibr" rid="b7">7</xref> for details), or <italic>k</italic> can be user specified.</p>
+    </sec>
+    <sec disp-level="2">
+      <title>Tuple Generation</title>
+      <p>In the sample driven part of PMS8, tuples <italic>T</italic> = (<italic>t</italic><sub>1</sub>, <italic>t</italic><sub>2</sub>, …, <italic>t<sub>k</sub></italic>), where <italic>t<sub>i</sub></italic> is an <italic>ℓ</italic>-mer from string <italic>s<sub>i</sub></italic>, ∀<italic>i</italic> = 1..<italic>k</italic>, are generated based on the following principles. First, if <italic>T</italic> has a common <italic>d</italic>-neighborhood, then every subset of <italic>T</italic> has a common <italic>d</italic>-neighborhood. Second, for a motif to exist, there has to be at least one <italic>ℓ</italic>-mer <italic>u</italic> in each of the remaining strings <italic>s<sub>k</sub></italic><sub> + 1</sub>, <italic>s<sub>k</sub></italic><sub> + 2</sub>, …, <italic>s<sub>n</sub></italic> such that <italic>T</italic> ∪ {<italic>u</italic>} has a common <italic>d</italic>-neighborhood. We call such <italic>ℓ</italic>-mers <italic>u</italic> “alive” with respect to tuple <italic>T</italic>. As we add <italic>ℓ</italic>-mers to <italic>T</italic> we update the alive <italic>ℓ</italic>-mers and reorder the strings in increasing order of the number of alive <italic>ℓ</italic>-mers. This reordering reduces the running time because it leads to generating fewer tuples overall.</p>
+      <p>In qPMS9 we change the criteria by which the strings are reordered, as follows. Let <italic>T</italic> be the current tuple of <italic>ℓ</italic>-mers and let <italic>u</italic> be an alive <italic>ℓ</italic>-mer with respect to <italic>T</italic>. If we add <italic>u</italic> to <italic>T</italic>, then the consensus total distance of <italic>T</italic> increases. We compute this additional distance <italic>Cd</italic>(<italic>T</italic>∪{<italic>u</italic>}) − <italic>Cd</italic>(<italic>T</italic>). For each of the remaining strings, we compute the minimum additional distance for any alive <italic>ℓ</italic>-mer in that string. Then we sort the strings decreasingly by the minimum additional distance. Therefore, we give priority to the string with the largest minimum additional distance. If two strings have the same minimum additional distance, we give priority to the string with fewer alive <italic>ℓ</italic>-mers. The intuition is that larger additional distance could indicate more “diversity” among the <italic>ℓ</italic>-mers in the tuple, which means smaller common <italic>d</italic>-neighborhoods. The pseudocode for generating tuples <italic>T</italic> is given in <xref ref-type="fig" rid="f1">Figure 1</xref>. We invoke the algorithm as <italic>GenTuples</italic>({}, <italic>k</italic>, <italic>R</italic>) where the matrix <italic>R</italic> contains all the <italic>ℓ</italic>-mers in all the input strings, grouped as one row per string.</p>
+    </sec>
+    <sec disp-level="2">
+      <title>Neighborhood Generation</title>
+      <p>For every tuple <italic>T</italic>, obtained as described in the previous section, we generate the common <italic>d</italic>-neighbors of the <italic>ℓ</italic>-mers in the tuple. In qPMS9, the neighbor generation uses the same process as in PMS8<xref ref-type="bibr" rid="b7">7</xref>. For the sake of completeness, we briefly review the process.</p>
+      <p>Given a tuple <italic>T</italic> = (<italic>t</italic><sub>1</sub>, <italic>t</italic><sub>2</sub>, …, <italic>t<sub>k</sub></italic>) of <italic>ℓ</italic>-mers, we want to generate all <italic>ℓ</italic>-mers <italic>M</italic> such that <italic>Hd</italic>(<italic>t<sub>i</sub></italic>, <italic>M</italic>) ≤ <italic>d</italic>, ∀<italic>i</italic> = 1..<italic>k</italic>. We traverse the tree of all possible <italic>ℓ</italic>-mers. A node at depth <italic>r</italic>, which represents an <italic>r</italic>-mer, is not explored deeper if certain pruning conditions are met. Necessary and sufficient conditions for 2 and 3 <italic>ℓ</italic>-mers to have a common neighbor are given in Ref. <xref ref-type="bibr" rid="b7">7</xref>. The same paper gives necessary conditions for more than 3 <italic>ℓ</italic>-mers to have a common neighbor. The interested reader is referred to the PMS8 paper<xref ref-type="bibr" rid="b7">7</xref> for a more in depth description of neighborhood generation.</p>
+    </sec>
+    <sec disp-level="2">
+      <title>Adding Quorum Support</title>
+      <p>We extend the algorithm to solve the qPMS problem. In the qPMS problem, when we generate tuples, we may “skip” some of the strings entirely. This translates to the implementation as follows: in the PMS version we successively try every alive <italic>ℓ</italic>-mer in a given string by adding it to the tuple <italic>T</italic> and recursively calling the algorithm for the remaining strings. For the qPMS version we have an additional step where, if the value of <italic>q</italic> permits, we skip the current string and try <italic>ℓ</italic>-mers from the next string. At all times we keep track of how many strings we have skipped. The pseudocode for this algorithm is given in <xref ref-type="fig" rid="f2">Figure 2</xref>. We invoke the algorithm as <italic>QGenerateTuples</italic>(<italic>n</italic> − <italic>Q</italic> + 1, {}, 0, <italic>k</italic>, <italic>R</italic>) where <inline-formula id="m5"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e963" xlink:href="srep07813-m5.jpg"/></inline-formula> and <italic>R</italic> contains all the <italic>ℓ</italic>-mers in all the strings.</p>
+    </sec>
+    <sec disp-level="2">
+      <title>Parallel Algorithm</title>
+      <p>In PMS8<xref ref-type="bibr" rid="b7">7</xref> the search space is split into <italic>m</italic> = |<italic>s</italic><sub>1</sub>| − <italic>ℓ</italic> + 1 independent subproblems <italic>P</italic><sub>1</sub>, <italic>P</italic><sub>2</sub>, …, <italic>P<sub>m</sub></italic>, where <italic>P<sub>i</sub></italic> explores the <italic>d</italic>-neighborhood of <italic>ℓ</italic>-mer <italic>s</italic><sub>1</sub>[<italic>i</italic>..<italic>i</italic> + <italic>ℓ</italic> − 1]. In the parallel implementation, processor 0 acts as both a master and a worker, the other processors are workers. Each worker requests a subproblem from the master, solves it, then repeats until all subproblems have been solved. Communication between processors is done using the Message Passing Interface (MPI).</p>
+      <p>In qPMS9, we extend the previous idea to the <italic>q</italic> version. We split the problem into subproblems <italic>P</italic><sub>1,1</sub>, <italic>P</italic><sub>1,2</sub>, …, <inline-formula id="m6"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e1048" xlink:href="srep07813-m6.jpg"/></inline-formula>, <italic>P</italic><sub>2,1</sub>, <italic>P</italic><sub>2,2</sub>, …, <inline-formula id="m7"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e1062" xlink:href="srep07813-m7.jpg"/></inline-formula>, …, <italic>P<sub>r</sub></italic><sub>,1</sub>, <italic>P<sub>r</sub></italic><sub>,2</sub>, …, <inline-formula id="m8"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e1080" xlink:href="srep07813-m8.jpg"/></inline-formula> where <italic>r</italic> = <italic>n</italic> − <italic>Q</italic> + 1 and <inline-formula id="m9"><inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e1093" xlink:href="srep07813-m9.jpg"/></inline-formula>. Problem <italic>P<sub>i</sub></italic><sub>,<italic>j</italic></sub> explores the <italic>d</italic>-neighborhood of the <italic>j</italic>-th <italic>ℓ</italic>-lmer in string <italic>s<sub>i</sub></italic> and searches for <italic>ℓ</italic>-mers <italic>M</italic> such that there are <italic>Q</italic> − 1 instances of <italic>M</italic> in strings <italic>s<sub>i</sub></italic><sub>+1</sub>, …, <italic>s<sub>n</sub></italic>. Notice that <italic>Q</italic> is fixed, therefore subproblems <italic>P<sub>i</sub></italic><sub>,<italic>j</italic></sub> get progressively easier as <italic>i</italic> increases.</p>
+    </sec>
+    <sec disp-level="2">
+      <title>Test Data Generation</title>
+      <p>As mentioned in the introduction, PMS algorithms are typically tested on datasets generated as follows. 20 strings of length 600 each are generated from the i.i.d. We choose an <italic>ℓ</italic>-mer <italic>M</italic> as a motif and plant modified versions of it in <italic>q</italic>% of the <italic>n</italic> strings. Each planted instance is modified in <italic>d</italic> random positions.</p>
+      <p>It is useful to estimate how many “spurious” motifs (motifs expected by random chance) will be found in a random sample. For that, we make the following observations. The probability that a random <italic>ℓ</italic>-mer <italic>u</italic> is within distance at most <italic>d</italic> from another <italic>ℓ</italic>-mer <italic>v</italic> is</p>
+      <p>
+        <disp-formula id="m1">
+          <inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e1199" xlink:href="srep07813-m1.jpg"/>
+        </disp-formula>
+      </p>
+      <p>The probability that an <italic>ℓ</italic>-mer is within distance <italic>d</italic> from any of the <italic>ℓ</italic>-mers in a string <italic>S</italic> of length <italic>m</italic> is:</p>
+      <p>
+        <disp-formula id="m2">
+          <inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e1219" xlink:href="srep07813-m2.jpg"/>
+        </disp-formula>
+      </p>
+      <p>The probability that an <italic>ℓ</italic>-mer is within distance <italic>d</italic> from at least <italic>q</italic> out of <italic>n</italic> strings of length <italic>m</italic> each is:</p>
+      <p>
+        <disp-formula id="m3">
+          <inline-graphic xmlns:xlink="http://www.w3.org/1999/xlink" id="d33e1239" xlink:href="srep07813-m3.jpg"/>
+        </disp-formula>
+      </p>
+      <p>Therefore, the expected number of motifs for a given qPMS instance is: |Σ|<italic><sup>ℓ</sup>Q</italic>(<italic>q</italic>, <italic>n</italic>, <italic>m</italic>, <italic>ℓ</italic>, Σ). Based on these formulas, we compute for every <italic>ℓ</italic> the largest value of <italic>d</italic> such that the number of spurious motifs does not exceed 500. These values are presented in <xref ref-type="table" rid="t1">table 1</xref> for DNA and <xref ref-type="table" rid="t2">table 2</xref> for protein.</p>
+    </sec>
+  </sec>
+  <sec disp-level="1">
+    <title>Results</title>
+    <p>In this section we analyze the running times of PMS8<xref ref-type="bibr" rid="b7">7</xref>, TraverStringRef<xref ref-type="bibr" rid="b11">11</xref> and qPMS9, on several synthetic DNA and protein instances. For every instance of the problem we generated 5 datasets as described in the Methods section. For <italic>q</italic> = 100% we compare all three algorithms, for <italic>q</italic> = 50% we compare only the algorithms that solve the quorum PMS problem: TraverStringRef and qPMS9. All programs were executed on the Hornet cluster at the University of Connecticut, which is a highend, 104-node, 1408-core High Performance Computing cluster. For our experiments we used Intel Xeon X5650 Westmere cores. Most results refer to single core execution, unless specified otherwise.</p>
+    <p>In <xref ref-type="table" rid="t3">table 3</xref> we compare the three algorithm on DNA data when <italic>q</italic> = 100%. In <xref ref-type="table" rid="t4">table 4</xref> we show a similar comparison on protein data.</p>
+    <p>In <xref ref-type="table" rid="t5">table 5</xref> we compare TraverStringRef and qPMS9 on DNA data when <italic>q</italic> = 50%. In <xref ref-type="table" rid="t6">table 6</xref> we compare TraverStringRef and qPMS9 on protein data when <italic>q</italic> = 50%.</p>
+    <p>In <xref ref-type="fig" rid="f3">Figure 3</xref> we present the running time of qPMS9 on DNA datasets for all combinations of <italic>ℓ</italic> and <italic>d</italic> with <italic>ℓ</italic> up to 50 and <italic>d</italic> up to 25, with <italic>q</italic> = 100%. In <xref ref-type="fig" rid="f4">Figure 4</xref> we present the running time of qPMS9 on protein datasets for all combinations of <italic>ℓ</italic> and <italic>d</italic> with <italic>ℓ</italic> up to 30 and <italic>d</italic> up to 21, with <italic>q</italic> = 100%.</p>
+  </sec>
+  <sec disp-level="1">
+    <title>Discussion</title>
+    <p>We have presented qPMS9, an efficient algorithm for Quorum Planted Motif Search. The algorithm is based on the PMS8 algorithm<xref ref-type="bibr" rid="b7">7</xref>. qPMS9 includes a new procedure for exploring the search space and adds support for the quorum version of PMS. We compared qPMS9 with two state of the art algorithms and showed that qPMS9 is very competitive. qPMS9 is the first algorithm to solve the challenging DNA instances (28, 12) and (30, 13). qPMS9 can also efficiently solve instances with larger <italic>ℓ</italic> and <italic>d</italic> such as (50, 21) for DNA data or (30, 18) for protein data.</p>
+    <p>For future work, one of our reviewers kindly pointed out that our approach of filtering <italic>ℓ</italic>-mers for Hamming Distances could benefit for the work in Ref. <xref ref-type="bibr" rid="b16">16</xref>.</p>
+  </sec>
+</body>
+<back>
+  <ref-list>
+    <ref id="b1">
+      <mixed-citation publication-type="journal"><name><surname>Pevzner</surname><given-names>P. A.</given-names></name> &amp; <name><surname>Sze</surname><given-names>S.-H.</given-names></name>
+<article-title>Combinatorial approaches to finding subtle signals in dna sequences</article-title>. In: <source>Proceedings of the Eighth International Conference on Intelligent Systems for Molecular Biology, La Jolla / San Diego, CA, USA,</source>
+<volume>vol. 8</volume>, <fpage>269</fpage>–<lpage>278</lpage> (AAAI Press <year>2000</year>).</mixed-citation>
+    </ref>
+    <ref id="b2">
+      <mixed-citation publication-type="journal"><name><surname>Buhler</surname><given-names>J.</given-names></name> &amp; <name><surname>Tompa</surname><given-names>M.</given-names></name>
+<article-title>Finding motifs using random projections</article-title>. <source>J. Comp. Biol.</source>
+<volume>9</volume>, <fpage>225</fpage>–<lpage>242</lpage> (<year>2002</year>).</mixed-citation>
+    </ref>
+    <ref id="b3">
+      <mixed-citation publication-type="journal"><name><surname>Eskin</surname><given-names>E.</given-names></name> &amp; <name><surname>Pevzner</surname><given-names>P. A.</given-names></name>
+<article-title>Finding composite regulatory patterns in dna sequences</article-title>. <source>Bioinformatics</source>
+<volume>18</volume>, <fpage>354</fpage>–<lpage>363</lpage> (<year>2002</year>).</mixed-citation>
+    </ref>
+    <ref id="b4">
+      <mixed-citation publication-type="journal"><name><surname>Price</surname><given-names>A.</given-names></name>, <name><surname>Ramabhadran</surname><given-names>S.</given-names></name> &amp; <name><surname>Pevzner</surname><given-names>P. A.</given-names></name>
+<article-title>Finding subtle motifs by branching from sample strings</article-title>. <source>Bioinformatics</source>
+<volume>19</volume>, <fpage>149</fpage>–<lpage>155</lpage> (<year>2003</year>).<pub-id pub-id-type="pmid">12499305</pub-id></mixed-citation>
+    </ref>
+    <ref id="b5">
+      <mixed-citation publication-type="journal"><name><surname>Kevin Lanctot</surname><given-names>J.</given-names></name>, <name><surname>Li</surname><given-names>M.</given-names></name>, <name><surname>Ma</surname><given-names>B.</given-names></name>, <name><surname>Wang</surname><given-names>S.</given-names></name> &amp; <name><surname>Zhang</surname><given-names>L.</given-names></name>
+<article-title>Distinguishing string selection problems</article-title>. <source>Inform. Comput.</source>
+<volume>185</volume>, <fpage>41</fpage>–<lpage>55</lpage> (<year>2003</year>).</mixed-citation>
+    </ref>
+    <ref id="b6">
+      <mixed-citation publication-type="journal"><name><surname>Davila</surname><given-names>J.</given-names></name>, <name><surname>Balla</surname><given-names>S.</given-names></name> &amp; <name><surname>Rajasekaran</surname><given-names>S.</given-names></name>
+<article-title>Fast and practical algorithms for planted (l, d) motif search</article-title>. <source>IEEE/ACM Trans. Comput. Biol. Bioinf.</source>
+<volume>4</volume>, <fpage>544</fpage>–<lpage>552</lpage> (<year>2007</year>).</mixed-citation>
+    </ref>
+    <ref id="b7">
+      <mixed-citation publication-type="journal"><name><surname>Nicolae</surname><given-names>M.</given-names></name> &amp; <name><surname>Rajasekaran</surname><given-names>S.</given-names></name>
+<article-title>Efficient sequential and parallel algorithms for planted motif search</article-title>. <source>BMC Bioinformatics</source>
+<volume>15</volume>, <fpage>34</fpage> (<year>2014</year>).<pub-id pub-id-type="pmid">24479443</pub-id></mixed-citation>
+    </ref>
+    <ref id="b8">
+      <mixed-citation publication-type="journal"><name><surname>Rajasekaran</surname><given-names>S.</given-names></name>, <name><surname>Balla</surname><given-names>S.</given-names></name> &amp; <name><surname>Huang</surname><given-names>C.-H.</given-names></name>
+<article-title>Exact algorithms for planted motif problems</article-title>. <source>J. Comp. Biol.</source>
+<volume>12</volume>, <fpage>1117</fpage>–<lpage>1128</lpage> (<year>2005</year>).</mixed-citation>
+    </ref>
+    <ref id="b9">
+      <mixed-citation publication-type="journal"><name><surname>Rajasekaran</surname><given-names>S.</given-names></name> &amp; <name><surname>Dinh</surname><given-names>H.</given-names></name>
+<article-title>A speedup technique for (l, d)-motif finding algorithms</article-title>. <source>BMC Res Notes</source>
+<volume>4</volume>, <fpage>54</fpage> (<year>2011</year>).<pub-id pub-id-type="pmid">21385438</pub-id></mixed-citation>
+    </ref>
+    <ref id="b10">
+      <mixed-citation publication-type="journal"><name><surname>Yu</surname><given-names>Q.</given-names></name>, <name><surname>Huo</surname><given-names>H.</given-names></name>, <name><surname>Zhang</surname><given-names>Y.</given-names></name> &amp; <name><surname>Guo</surname><given-names>H.</given-names></name>
+<article-title>Pairmotif: A new pattern-driven algorithm for planted (<italic>l</italic>, <italic>d</italic>) dna motif search</article-title>. <source>PLoS ONE</source>
+<volume>7</volume>, <fpage>e48442</fpage> (<year>2012</year>).<pub-id pub-id-type="pmid">23119020</pub-id></mixed-citation>
+    </ref>
+    <ref id="b11">
+      <mixed-citation publication-type="journal"><name><surname>Tanaka</surname><given-names>S.</given-names></name><article-title>Improved exact enumerative algorithms for the planted (l, d)-motif search problem</article-title>. <source>IEEE/ACM Trans. Comput. Biol. Bioinf.</source><volume>11</volume>, <fpage>361</fpage>–<lpage>374</lpage> (<year>2014</year>).</mixed-citation>
+    </ref>
+    <ref id="b12">
+      <mixed-citation publication-type="journal"><name><surname>Dinh</surname><given-names>H.</given-names></name>, <name><surname>Rajasekaran</surname><given-names>S.</given-names></name> &amp; <name><surname>Kundeti</surname><given-names>V.</given-names></name>
+<article-title>Pms5: an efficient exact algorithm for the (<italic>l</italic>, <italic>d</italic>)-motif finding problem</article-title>. <source>BMC bioinformatics</source>
+<volume>12</volume>, <fpage>410</fpage> (<year>2011</year>).<pub-id pub-id-type="pmid">22024209</pub-id></mixed-citation>
+    </ref>
+    <ref id="b13">
+      <mixed-citation publication-type="book"><name><surname>Bandyopadhyay</surname><given-names>S.</given-names></name>, <name><surname>Sahni</surname><given-names>S.</given-names></name> &amp; <name><surname>Rajasekaran</surname><given-names>S.</given-names></name>
+<article-title>Pms6: A fast algorithm for motif discovery</article-title>. In: <source>IEEE 2nd International Conference on Computational Advances in Bio and Medical Sciences, ICCABS 2012, Las Vegas, NV, USA, February 23–25, 2012</source>
+<fpage>1</fpage>–<lpage>6</lpage> (IEEE, <year>2012</year>).</mixed-citation>
+    </ref>
+    <ref id="b14">
+      <mixed-citation publication-type="journal"><name><surname>Dinh</surname><given-names>H.</given-names></name>, <name><surname>Rajasekaran</surname><given-names>S.</given-names></name> &amp; <name><surname>Davila</surname><given-names>J.</given-names></name>
+<article-title>qpms7: A fast algorithm for finding (<italic>l</italic>, <italic>d</italic>)-motifs in dna and protein sequences</article-title>. <source>PLoS ONE</source>
+<volume>7</volume>, <fpage>e41425</fpage> (<year>2012</year>).<pub-id pub-id-type="pmid">22848493</pub-id></mixed-citation>
+    </ref>
+    <ref id="b15">
+      <mixed-citation publication-type="book"><name><surname>Roy</surname><given-names>I.</given-names></name> &amp; <name><surname>Aluru</surname><given-names>S.</given-names></name>
+<article-title>Finding motifs in biological sequences using the micron automata processor</article-title>. In: <source>2014 IEEE 28th International Parallel and Distributed Processing Symposium, IPDPS 14, Washington, DC, USA</source>
+<fpage>415</fpage>–<lpage>424</lpage> (IEEE, <year>2014</year>).</mixed-citation>
+    </ref>
+    <ref id="b16">
+      <mixed-citation publication-type="journal"><name><surname>Peterlongo</surname><given-names>P.</given-names></name>, <name><surname>Pisanti</surname><given-names>N.</given-names></name>, <name><surname>Boyer</surname><given-names>F.</given-names></name>, <name><surname>do Lago</surname><given-names>A. P.</given-names></name> &amp; <name><surname>Sagot</surname><given-names>M.-F.</given-names></name>
+<article-title>Lossless filter for multiple repetitions with hamming distance</article-title>. <source>JDA</source>
+<volume>6</volume>, <fpage>497</fpage>–<lpage>509</lpage> (<year>2008</year>).</mixed-citation>
+    </ref>
+  </ref-list>
+  <fn-group>
+    <fn>
+      <p><bold>Author Contributions</bold> M.N. and S.R. designed and analyzed the algorithms. M.N. implemented the algorithms and carried out the empirical experiments. M.N. and S.R. analyzed the empirical results and drafted the manuscript. All authors read and approved the final manuscript.</p>
+    </fn>
+  </fn-group>
+  <fn-group content-type="nature-chghst">
+    <fn fn-type="update">
+      <p content-type="chgdate">03/27/2015</p>
+      <p content-type="chgmade">A correction has been published and is appended to both the HTML and PDF versions of this paper. The error has not been fixed in the paper.</p>
+    </fn>
+  </fn-group>
+</back>
+<floats-group>
+  <fig id="f1">
+    <label>Figure 1</label>
+    <caption>
+      <title>This pseudocode generates tuples of <italic>ℓ</italic>-mers that can potentially have common neighbors, for the PMS problem.</title>
+    </caption>
+    <graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep07813-f1"/>
+  </fig>
+  <fig id="f2">
+    <label>Figure 2</label>
+    <caption>
+      <title>This pseudocode generates tuples of <italic>ℓ</italic>-mers that can potentially have common neighbors, for the qPMS problem.</title>
+    </caption>
+    <graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep07813-f2"/>
+  </fig>
+  <fig id="f3">
+    <label>Figure 3</label>
+    <caption>
+      <title>qPMS9 runtimes on DNA datasets for multiple combinations of <italic>ℓ</italic> and <italic>d</italic> where <italic>q</italic> = 100%.</title>
+      <p>The runtimes are averages over 5 random datasets. The times are given in hours (h) minutes (m) or seconds (s). Grey cells indicate instances that are expected to have more than 500 motifs by random chance (spurious motifs). Blue cells indicate that the program used 48 cores whereas white cells indicate single core execution. Instances in orange could not be solved efficiently.</p>
+    </caption>
+    <graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep07813-f3"/>
+  </fig>
+  <fig id="f4">
+    <label>Figure 4</label>
+    <caption>
+      <title>qPMS9 runtimes on protein datasets for multiple combinations of <italic>ℓ</italic> and <italic>d</italic> where <italic>q</italic> = 100%.</title>
+      <p>The runtimes are averages over 5 random datasets. The times are given in hours (h) minutes (m) or seconds (s). Grey cells indicate instances that are expected to have more than 500 motifs by random chance (spurious motifs). Blue cells indicate that the program used 48 cores whereas white cells indicate single core execution. Instances in orange could not be solved efficiently.</p>
+    </caption>
+    <graphic xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="srep07813-f4"/>
+  </fig>
+  <table-wrap position="float" id="t1">
+    <label>Table 1</label>
+    <caption>
+      <title>Maximum value of <italic>d</italic> such that the expected number of spurious motifs in random datasets does not exceed 500, for <italic>ℓ</italic> up to 50 and <italic>q</italic> between 50% and 100%, on DNA data</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="left"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th align="left" valign="top" charoff="50"> </th>
+          <th colspan="3" align="center" valign="top" charoff="50">max d</th>
+        </tr>
+        <tr>
+          <th align="justify" valign="top" charoff="50">L</th>
+          <th align="center" valign="top" charoff="50"><italic>q</italic> = 50%</th>
+          <th align="center" valign="top" charoff="50"><italic>q</italic> = 75%</th>
+          <th align="center" valign="top" charoff="50"><italic>q</italic> = 100%</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="justify" valign="top" charoff="50">13</td>
+          <td align="char" valign="top" char="." charoff="50">3</td>
+          <td align="char" valign="top" char="." charoff="50">3</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">14</td>
+          <td align="char" valign="top" char="." charoff="50">3</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">17</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">19</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">20</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">21</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">22</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">23</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">24</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">25</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">10</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">26</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">10</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">27</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">10</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">28</td>
+          <td align="char" valign="top" char="." charoff="50">10</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">29</td>
+          <td align="char" valign="top" char="." charoff="50">10</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">30</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">31</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">32</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">33</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">34</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">35</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">36</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">37</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">38</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">39</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">40</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">41</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">42</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">20</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">43</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+          <td align="char" valign="top" char="." charoff="50">20</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">44</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+          <td align="char" valign="top" char="." charoff="50">21</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">45</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">20</td>
+          <td align="char" valign="top" char="." charoff="50">21</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">46</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+          <td align="char" valign="top" char="." charoff="50">21</td>
+          <td align="char" valign="top" char="." charoff="50">22</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">47</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+          <td align="char" valign="top" char="." charoff="50">21</td>
+          <td align="char" valign="top" char="." charoff="50">22</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">48</td>
+          <td align="char" valign="top" char="." charoff="50">20</td>
+          <td align="char" valign="top" char="." charoff="50">22</td>
+          <td align="char" valign="top" char="." charoff="50">23</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">49</td>
+          <td align="char" valign="top" char="." charoff="50">20</td>
+          <td align="char" valign="top" char="." charoff="50">22</td>
+          <td align="char" valign="top" char="." charoff="50">24</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">50</td>
+          <td align="char" valign="top" char="." charoff="50">21</td>
+          <td align="char" valign="top" char="." charoff="50">23</td>
+          <td align="char" valign="top" char="." charoff="50">24</td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+  <table-wrap position="float" id="t2">
+    <label>Table 2</label>
+    <caption>
+      <title>Maximum value of <italic>d</italic> such that the expected number of spurious motifs in random datasets does not exceed 500, for <italic>ℓ</italic> up to 30 and <italic>q</italic> between 50% and 100%, on protein data</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="left"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th align="left" valign="top" charoff="50"> </th>
+          <th colspan="3" align="center" valign="top" charoff="50">max d</th>
+        </tr>
+        <tr>
+          <th align="justify" valign="top" charoff="50">L</th>
+          <th align="center" valign="top" charoff="50"><italic>q</italic> = 50%</th>
+          <th align="center" valign="top" charoff="50"><italic>q</italic> = 75%</th>
+          <th align="center" valign="top" charoff="50"><italic>q</italic> = 100%</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="justify" valign="top" charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">10</td>
+          <td align="char" valign="top" char="." charoff="50">4</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">11</td>
+          <td align="char" valign="top" char="." charoff="50">5</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">12</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">13</td>
+          <td align="char" valign="top" char="." charoff="50">6</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">14</td>
+          <td align="char" valign="top" char="." charoff="50">7</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">8</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">10</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">17</td>
+          <td align="char" valign="top" char="." charoff="50">9</td>
+          <td align="char" valign="top" char="." charoff="50">10</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">10</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">19</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">20</td>
+          <td align="char" valign="top" char="." charoff="50">11</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">21</td>
+          <td align="char" valign="top" char="." charoff="50">12</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">22</td>
+          <td align="char" valign="top" char="." charoff="50">13</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">23</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">24</td>
+          <td align="char" valign="top" char="." charoff="50">14</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">25</td>
+          <td align="char" valign="top" char="." charoff="50">15</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">26</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">27</td>
+          <td align="char" valign="top" char="." charoff="50">16</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">28</td>
+          <td align="char" valign="top" char="." charoff="50">17</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">29</td>
+          <td align="char" valign="top" char="." charoff="50">18</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+          <td align="char" valign="top" char="." charoff="50">20</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">30</td>
+          <td align="char" valign="top" char="." charoff="50">19</td>
+          <td align="char" valign="top" char="." charoff="50">20</td>
+          <td align="char" valign="top" char="." charoff="50">21</td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+  <table-wrap position="float" id="t3">
+    <label>Table 3</label>
+    <caption>
+      <title>Runtimes for DNA data when <italic>q</italic> = 100%. The time is given in hours (h), minutes (m) or seconds (s), averaged over 5 datasets</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="left"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th align="justify" valign="top" charoff="50">(<italic>ℓ</italic>, <italic>d</italic>)</th>
+          <th align="center" valign="top" charoff="50">TraverStringRef</th>
+          <th align="center" valign="top" charoff="50">PMS8</th>
+          <th align="center" valign="top" charoff="50">qPMS9</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="justify" valign="top" charoff="50">(13,4)</td>
+          <td align="char" valign="top" char=" " charoff="50">14 s</td>
+          <td align="char" valign="top" char=" " charoff="50">7 s</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>6 s</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(15,5)</td>
+          <td align="char" valign="top" char=" " charoff="50">55 s</td>
+          <td align="char" valign="top" char=" " charoff="50">48 s</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>34 s</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(17,6)</td>
+          <td align="char" valign="top" char=" " charoff="50">3.5 m</td>
+          <td align="char" valign="top" char=" " charoff="50">5.2 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>2.7 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(19,7)</td>
+          <td align="char" valign="top" char=" " charoff="50">14.5 m</td>
+          <td align="char" valign="top" char=" " charoff="50">26.6 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>13.4 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(21,8)</td>
+          <td align="char" valign="top" char=" " charoff="50">59.8 m</td>
+          <td align="char" valign="top" char=" " charoff="50">1.64 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>45.4 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(23,9)</td>
+          <td align="char" valign="top" char=" " charoff="50">4.08 h</td>
+          <td align="char" valign="top" char=" " charoff="50">5.48 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>2.26 h</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(25,10)</td>
+          <td align="char" valign="top" char=" " charoff="50">17.55 h</td>
+          <td align="char" valign="top" char=" " charoff="50">15.45 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>6.3 h</bold>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+  <table-wrap position="float" id="t4">
+    <label>Table 4</label>
+    <caption>
+      <title>Runtimes for protein data when <italic>q</italic> = 100%. The time is given in hours (h), minutes (m) or seconds (s), averaged over 5 datasets. TL means that the program runs for more than 24 h</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="left"/>
+        <col align="center"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th align="justify" valign="top" charoff="50">(<italic>ℓ</italic>, <italic>d</italic>)</th>
+          <th align="justify" valign="top" charoff="50">TraverStringRef</th>
+          <th align="justify" valign="top" charoff="50">PMS8</th>
+          <th align="justify" valign="top" charoff="50">qPMS9</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="justify" valign="top" charoff="50">(10,5)</td>
+          <td align="char" valign="top" char=" " charoff="50">2.6 m</td>
+          <td align="char" valign="top" char=" " charoff="50">42 s</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>37 s</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(11,6)</td>
+          <td align="char" valign="top" char=" " charoff="50">1.67 h</td>
+          <td align="char" valign="top" char=" " charoff="50">11 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>6.1 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(13,7)</td>
+          <td align="char" valign="top" char=" " charoff="50">58.2 m</td>
+          <td align="char" valign="top" char=" " charoff="50">2.6 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>19 s</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(14,8)</td>
+          <td align="center" valign="top" charoff="50">TL</td>
+          <td align="char" valign="top" char=" " charoff="50">1.03 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>29.6 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(15,8)</td>
+          <td align="char" valign="top" char=" " charoff="50">28.5 m</td>
+          <td align="char" valign="top" char=" " charoff="50">1.2 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>1.1 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(17,9)</td>
+          <td align="char" valign="top" char=" " charoff="50">16.6 m</td>
+          <td align="char" valign="top" char=" " charoff="50">45 s</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>43 s</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(19,10)</td>
+          <td align="char" valign="top" char=" " charoff="50">5.9 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>32 s</bold>
+          </td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>32 s</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(19,11)</td>
+          <td align="center" valign="top" charoff="50">TL</td>
+          <td align="char" valign="top" char=" " charoff="50">1.23 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>30.1 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(22,12)</td>
+          <td align="char" valign="top" char=" " charoff="50">3.73 h</td>
+          <td align="char" valign="top" char=" " charoff="50">1.2 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>1.1 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(24,13)</td>
+          <td align="char" valign="top" char=" " charoff="50">1.84 h</td>
+          <td align="char" valign="top" char=" " charoff="50">48 s</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>47 s</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(26,14)</td>
+          <td align="char" valign="top" char=" " charoff="50">30.7 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>31 s</bold>
+          </td>
+          <td align="char" valign="top" char=" " charoff="50">32 s</td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(26,15)</td>
+          <td align="center" valign="top" charoff="50">TL</td>
+          <td align="char" valign="top" char=" " charoff="50">1.19 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>12.5 m</bold>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+  <table-wrap position="float" id="t5">
+    <label>Table 5</label>
+    <caption>
+      <title>Runtimes for DNA data when <italic>q</italic> = 50%. The time is given in hours (h), minutes (m) or seconds (s), averaged over 5 datasets</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="left"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th align="justify" valign="top" charoff="50">Instance</th>
+          <th align="justify" valign="top" charoff="50">TraverStringRef</th>
+          <th align="justify" valign="top" charoff="50">qPMS9</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="justify" valign="top" charoff="50">(20,6)</td>
+          <td align="char" valign="top" char=" " charoff="50">3 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>1.5 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(22,7)</td>
+          <td align="char" valign="top" char=" " charoff="50">12.9 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>6.3 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(23,7)</td>
+          <td align="char" valign="top" char=" " charoff="50">2.6 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>48 s</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(24,8)</td>
+          <td align="char" valign="top" char=" " charoff="50">56 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>26.3 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(25,8)</td>
+          <td align="char" valign="top" char=" " charoff="50">9.9 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>3.1 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(26,9)</td>
+          <td align="char" valign="top" char=" " charoff="50">4.31 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>1.55 h</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(27,9)</td>
+          <td align="char" valign="top" char=" " charoff="50">39.9 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>10.6 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(28,10)</td>
+          <td align="char" valign="top" char=" " charoff="50">20.86 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>5.15 h</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(29,10)</td>
+          <td align="char" valign="top" char=" " charoff="50">2.89 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>34.5 m</bold>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+  <table-wrap position="float" id="t6">
+    <label>Table 6</label>
+    <caption>
+      <title>Runtimes for protein data when <italic>q</italic> = 50%. The time is given in hours (h), minutes (m) or seconds (s), averaged over 5 datasets. TL means that the program runs for more than 24 h</title>
+    </caption>
+    <table frame="hsides" rules="groups" border="1">
+      <colgroup>
+        <col align="left"/>
+        <col align="center"/>
+        <col align="center"/>
+      </colgroup>
+      <thead valign="bottom">
+        <tr>
+          <th align="justify" valign="top" charoff="50">Instance</th>
+          <th align="justify" valign="top" charoff="50">TraverStringRef</th>
+          <th align="justify" valign="top" charoff="50">qPMS9</th>
+        </tr>
+      </thead>
+      <tbody valign="top">
+        <tr>
+          <td align="justify" valign="top" charoff="50">(9,4)</td>
+          <td align="char" valign="top" char=" " charoff="50">11.3 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>3.7 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(11,5)</td>
+          <td align="char" valign="top" char=" " charoff="50">14 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>4.1 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(12,6)</td>
+          <td align="char" valign="top" char=" " charoff="50">6.22 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>57.5 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(13,6)</td>
+          <td align="char" valign="top" char=" " charoff="50">17.4 m</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>4.9 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(14,7)</td>
+          <td align="char" valign="top" char=" " charoff="50">5.09 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>41.3 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(15,8)</td>
+          <td align="center" valign="top" charoff="50">TL</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>4.62 h</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(17,9)</td>
+          <td align="center" valign="top" charoff="50">TL</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>1.79 h</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(18,9)</td>
+          <td align="char" valign="top" char=" " charoff="50">2.71 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>33.1 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(20,10)</td>
+          <td align="char" valign="top" char=" " charoff="50">2.33 h</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>33.3 m</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="justify" valign="top" charoff="50">(21,11)</td>
+          <td align="center" valign="top" charoff="50">TL</td>
+          <td align="char" valign="top" char=" " charoff="50">
+            <bold>50.9 m</bold>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+</floats-group>

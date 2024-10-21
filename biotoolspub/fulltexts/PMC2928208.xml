@@ -1,0 +1,2478 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2928208</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-11-422</article-id>
+    <article-id pub-id-type="pmid">20698981</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-11-422</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>baySeq: Empirical Bayesian methods for identifying differential expression in sequence count data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Hardcastle</surname>
+          <given-names>Thomas J</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>tjh48@cam.ac.uk</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Kelly</surname>
+          <given-names>Krystyna A</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>kak28@cam.ac.uk</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Plant Sciences, University of Cambridge, Downing Street, Cambridge, UK</aff>
+    <pub-date pub-type="collection">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>10</day>
+      <month>8</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <fpage>422</fpage>
+    <lpage>422</lpage>
+    <history>
+      <date date-type="received">
+        <day>30</day>
+        <month>4</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>10</day>
+        <month>8</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Hardcastle and Kelly; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Hardcastle and Kelly; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/11/422"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>High throughput sequencing has become an important technology for studying expression levels in many types of genomic, and particularly transcriptomic, data. One key way of analysing such data is to look for elements of the data which display particular patterns of differential expression in order to take these forward for further analysis and validation.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We propose a framework for defining patterns of differential expression and develop a novel algorithm, baySeq, which uses an empirical Bayes approach to detect these patterns of differential expression within a set of sequencing samples. The method assumes a negative binomial distribution for the data and derives an empirically determined prior distribution from the entire dataset. We examine the performance of the method on real and simulated data.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>Our method performs at least as well, and often better, than existing methods for analyses of pairwise differential expression in both real and simulated data. When we compare methods for the analysis of data from experimental designs involving multiple sample groups, our method again shows substantial gains in performance. We believe that this approach thus represents an important step forward for the analysis of count data from sequencing experiments.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>The development of high-throughput sequencing technologies in recent years [<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B4">4</xref>] has led to a massive increase in genomic data represented by <italic>counts</italic>. These count data are distinct from those acquired using bead and array technologies in that they are fundamentally discrete, rather than continuous, in nature. Rather than measurements of intensity, we acquire counts of the number of times a particular sequence is observed in a library, whether the source is genomic DNA, DNA fragments produced by immunoprecipitation, mRNA or small RNAs. Analyses of such sequence data are often concerned with detecting differential representation, that is, the discovery of data which are differentially represented between sets of biological replicates, particularly, but not exclusively, in analyses of transcriptomic data. These analyses are often challenging due to the small sample sizes available as a consequence of the relatively high cost of sequencing experiments.</p>
+    <p>This type of data first emerged from the serial analysis of gene expression (SAGE) [<xref ref-type="bibr" rid="B5">5</xref>], and a number of approaches were put forward for its analysis. Most of the early methods did not properly allow for replication or, when they did, could only be used to compare two groups. Baggerly <italic>et al </italic>[<xref ref-type="bibr" rid="B6">6</xref>] and Lu <italic>et al </italic>[<xref ref-type="bibr" rid="B7">7</xref>] introduced modelling approaches based on the overdispersed logistic and overdispersed log-linear distributions respectively that are able to handle both replicate data and multiple comparisons between groups. Robinson and Smyth derived an 'exact test' method based on the negative binomial distribution [<xref ref-type="bibr" rid="B8">8</xref>], and further developed this approach using a moderated test statistic sharing information across genomic locations to stabilize dispersion estimation in small samples [<xref ref-type="bibr" rid="B9">9</xref>]. This approach showed improvements in accuracy compared with the overdispersed logistic and log-linear approaches, but the methods are limited to pairwise comparisons. A recently developed method, <monospace>DEGseq</monospace>[<xref ref-type="bibr" rid="B10">10</xref>] takes an alternative approach, assuming normality of the log-ratios of the data from different biological samples conditional on the log geometric mean of the data. Another recent method <monospace>DESeq</monospace>[<xref ref-type="bibr" rid="B11">11</xref>] also makes the assumption of a negative binomial distribution, but adds the assumption of a locally linear relationship between over-dispersion and mean expression levels of the data. These later methods have not yet been fully described, but again appear strictly limited to pairwise comparisons.</p>
+    <p>We develop here an empirical Bayesian approach that is able to increase the accuracy of predictions by borrowing information across the dataset, but which removes the restriction of only considering pairwise comparisons and allows us to analyse more complex experimental designs. We are able to show that our method gives equivalent or improved performance in both simulated and biological data when compared to existing methods for the discovery of differential expression in pairwise comparisons, and offers improvements in performance for more complex designs.</p>
+    <p>In order to address the problem of more complex experimental designs involving multiple groups of samples, we develop our method in a very general form by first establishing a framework for describing diverse patterns of differential expression within a dataset. Using this framework to define a set of models, we seek to establish posterior probabilities of each model. Finally, we demonstrate the applicability of our method to these experimental designs on simulated data, and are able to show substantial improvements in performance using our method.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <p>We adopt and adapt the nomenclature of Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>] to describe SAGE data as this seems generally applicable to the data from high-throughput sequencing technologies. A set of data acquired by sequencing a cDNA <italic>library </italic>contains a number of sequence tags. Since in SAGE data, there is only one tag per mRNA molecule, Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>] examine methods for detecting differentially expressed tags between samples. However, in a number of applications made possible by high-throughput sequencing, we may wish to group multiple tags together and acquire a single count for that grouping. For example, with whole transcriptome mRNA or small RNA data, we may wish to consider the total number of counts for all tags coming from a defined locus. In either case, for each distinct tag or grouping of tags, we have an ordered list, or <italic>tuple</italic>, of discrete counts with the sample order the same in each tuple. In the work that follows, we therefore refer simply to <italic>tuples</italic>, without needing to specify whether these are counts of individually sequenced tags or aggregated counts of multiple tags. The <italic>library size </italic>is a measure of the total number of counts in a given library, or some surrogate measure of library size as discussed by Bullard <italic>et al </italic>[<xref ref-type="bibr" rid="B12">12</xref>], and is used as a scaling factor for the observed data.</p>
+    <sec>
+      <title>Approach</title>
+      <p>We take an empirical Bayesian approach to estimate the posterior probabilities of each of a set of models that define patterns of differential expression for each tuple. This approach begins by defining each of our models in terms of similarity and difference between samples. For a given model, we seek to define which samples behave similarly to each other, and for which sets of samples there are identifiable differences. In order to assess the posterior probabilities of each model for each tuple, we consider a distribution for the tuple defined by a set of underlying parameters for which some prior distribution exists. Samples behaving similarly to each other should possess the same prior distribution on the underlying parameters of the tuple, while samples behaving differently should possess different prior distributions. We develop our method based on the negative binomial distribution for the tuple data, and derive an empirical distribution on the set of underlying parameters from the whole of the data set.</p>
+      <p>An important advantage of our method is that the evaluation of posterior probability for multiple models is simply achieved. For this reason, the techniques described are developed in a very general form.</p>
+    </sec>
+    <sec>
+      <title>Model definitions</title>
+      <p>In forming a set of models for the data, we consider which patterns are biologically likely. In the simplest case of a pairwise comparison, we have count data from some samples from both condition <italic>A </italic>and condition <italic>B</italic>. If we suppose that we have two biological replicates for each condition, then there are four libraries, <italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>, <italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>, where <italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2 </sub>and <italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2 </sub>are the replicates. In most cases, it is reasonable to suppose that at least some of the tuples may be unaffected by our experimental conditions <italic>A </italic>and <italic>B</italic>. The count data for each sample in these tuples will then share the same underlying parameters. However, some of the tuples may be influenced by the different experimental conditions <italic>A </italic>and <italic>B</italic>. For such a tuple, the data from samples <italic>A</italic><sub>1 </sub>and <italic>A</italic><sub>2 </sub>will share the same set of underlying parameters, the data from samples <italic>B</italic><sub>1 </sub>and <italic>B</italic><sub>2 </sub>will share the same set of underlying parameters, but, crucially, these sets of parameters will not be identical. We can thus treat our models as non-overlapping sets of samples. Our first model, of no differential expression, is thus defined by the set of samples {<italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>, <italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>}. Our second model, of differential expression between condition <italic>A </italic>and condition <italic>B </italic>is defined by the sets {<italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>} and {<italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>}.</p>
+      <sec>
+        <title>More complex models</title>
+        <p>In the simple example described, only two models are plausible, and this framework may seem overly complex. However, in experimental designs involving multiple sample groups, many more models are possible. As an example, we consider the next most complex experimental design, involving samples from three distinct conditions <italic>A</italic>, <italic>B </italic>and <italic>C</italic>. In this case, for a given tuple, either the data are equivalently distributed across all samples, or they are equivalently distributed under two conditions but not under the third, or they are differently distributed in all three conditions. There are thus five models which we need to consider.</p>
+        <p>In the first of these, all samples are equivalently distributed, and so the model is defined by the set {<italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>, ..., <italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>, ..., <italic>C</italic><sub>1</sub>, <italic>C</italic><sub>2</sub>, ...}. We then need to consider the three models under which there is equivalent distribution under two conditions but not the third. The first of these models can be described by the sets {<italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>, ..., <italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>, ...}, {<italic>C</italic><sub>1</sub>, <italic>C</italic><sub>2</sub>, ...}, in which the data from condition <italic>A </italic>and condition <italic>B </italic>are distributed equivalently, and the data from condition C are differently distributed. Similarly, we need to consider the other two models in which a single condition differs from the other two, {<italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>, ..., <italic>C</italic><sub>1</sub>, <italic>C</italic><sub>2</sub>, ...}, {<italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>, ...} and {<italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>, ..., <italic>C</italic><sub>1</sub>, <italic>C</italic><sub>2</sub>, ...}, {<italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>, ...}. Finally, we need to consider the model defined by the sets {<italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>, ... }, {<italic>C</italic><sub>1</sub>, <italic>C</italic><sub>2</sub>, ... }, {<italic>A</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>, ...}, in which the data from all three conditions are differently distributed.</p>
+        <p>It is clear from considering even this relatively simple example that the number of potential models rises rapidly as the number of different experimental conditions increases. We should also note, however, that in many cases we will be able to exclude particular models based on biological knowledge (if, for example, we know that condition <italic>B </italic>is a subtype of condition <italic>A</italic>, we might exclude the model defined by {<italic>A</italic><sub>1</sub>, <italic>A</italic><sub>2</sub>, ..., <italic>C</italic><sub>1</sub>, <italic>C</italic><sub>2</sub>, ...}, {<italic>B</italic><sub>1</sub>, <italic>B</italic><sub>2</sub>, ...}), and so the complexity of the system need not grow too rapidly. Our task is now to determine the posterior probability of each of our models, given the data, for each tuple. This will allow us to form ranked lists of the tuples, ordered by the posterior probabilities of a particular model (for instance, a model of differential expression between experimental conditions).</p>
+        <p>One interesting advantage of determining posterior probabilities, rather than significance values (<italic>p</italic>-values) for each comparison, is that, since we acquire posterior probabilities for each model and each tuple, and since these models are mutually exclusive, it is trivial to combine models of interest by summing the posterior probabilities. For example, if we are interested not in any specific type of differential expression, but simply in whether or not differential expression of any type exists in our data, we can acquire the probability of differential expression of any type by summing the posterior probabilities of all (biologically plausible) models that describe differential expression. We can then rank the tuples on these probabilities as well as on the probabilities of individual models.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Equivalence of distributions</title>
+      <p>Suppose we have the count data from a set of <italic>n </italic>samples <inline-formula><mml:math id="M1" name="1471-2105-11-422-i1" overflow="scroll"><mml:mi mathvariant="script">A</mml:mi></mml:math></inline-formula>= {<italic>A</italic><sub>1</sub>, ..., <italic>A</italic><sub><italic>n</italic></sub>}, such that the observed data for a particular tuple, <italic>c</italic>, is given by (<italic>u</italic><sub>1<italic>c</italic></sub>, ..., <italic>u</italic><sub><italic>nc</italic></sub>) where <italic>u</italic><sub><italic>ic </italic></sub>is the count for a particular tuple <italic>c </italic>for sample <italic>i</italic>. For each sample <italic>A</italic><sub><italic>i</italic></sub>, we also have the library size scaling factor <italic>l</italic><sub><italic>i</italic></sub>. For each tuple, then, we can consider the data to be</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M2" name="1471-2105-11-422-i2" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mi>D</mml:mi>
+                <mml:mi>c</mml:mi>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mo>{</mml:mo>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>u</mml:mi>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>c</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+              <mml:mo>⋯</mml:mo>
+              <mml:msub>
+                <mml:mi>u</mml:mi>
+                <mml:mrow>
+                  <mml:mi>n</mml:mi>
+                  <mml:mi>c</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>,</mml:mo>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>l</mml:mi>
+                <mml:mn>1</mml:mn>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+              <mml:mo>⋯</mml:mo>
+              <mml:mo>,</mml:mo>
+              <mml:msub>
+                <mml:mi>l</mml:mi>
+                <mml:mi>n</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>}</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>Now we consider some model <italic>M </italic>on these data defined by the sets {<italic>E</italic><sub>1</sub>, ..., <italic>E</italic><sub><italic>m</italic></sub>}. If, in this model, the samples <italic>A</italic><sub><italic>i </italic></sub>and <italic>A</italic><sub><italic>j </italic></sub>are in the same set <italic>E</italic><sub><italic>q</italic></sub>, then we know that they have the same parameters of underlying distribution <italic>θ</italic><sub><italic>q</italic></sub>. We can define a set <italic>K </italic>= {<italic>θ</italic><sub>1</sub>, ..., <italic>θ</italic><sub><italic>m</italic></sub>}. For notational simplicity, we will also define the data associated with the set <italic>E</italic><sub><italic>q </italic></sub>as <italic>D</italic><sub><italic>qc </italic></sub>= {(<italic>u</italic><sub><italic>ic </italic></sub>: <italic>A</italic><sub><italic>i </italic></sub>∈ <italic>E</italic><sub><italic>q</italic></sub>), (<italic>l</italic><sub><italic>i </italic></sub>: <italic>A</italic><sub><italic>i </italic></sub>∈ <italic>E</italic><sub><italic>q</italic></sub>)} Given a model <italic>M </italic>for the data, then the quantity of interest for each tuple <italic>c </italic>is the posterior probability of the model <italic>M </italic>given the data <italic>D</italic><sub><italic>c</italic></sub>, that is</p>
+      <p>
+        <disp-formula id="bmcM1">
+          <label>(1)</label>
+          <mml:math id="M3" name="1471-2105-11-422-i3" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>ℙ</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>M</mml:mi>
+              <mml:mo>|</mml:mo>
+              <mml:msub>
+                <mml:mi>D</mml:mi>
+                <mml:mi>c</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>ℙ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mi>D</mml:mi>
+                    <mml:mi>c</mml:mi>
+                  </mml:msub>
+                  <mml:mo>|</mml:mo>
+                  <mml:mi>M</mml:mi>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:mi>ℙ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mi>M</mml:mi>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>ℙ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mi>D</mml:mi>
+                    <mml:mi>c</mml:mi>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+              </mml:mfrac>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>We can then attempt to calculate ℙ(<italic>D</italic><sub><italic>c </italic></sub>|<italic>M</italic>) by considering the marginal likelihood</p>
+      <p>
+        <disp-formula id="bmcM2">
+          <label>(2)</label>
+          <mml:math id="M4" name="1471-2105-11-422-i4" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>ℙ</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>D</mml:mi>
+                <mml:mi>c</mml:mi>
+              </mml:msub>
+              <mml:mo>|</mml:mo>
+              <mml:mi>M</mml:mi>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>=</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:mrow>
+                  <mml:mo>∫</mml:mo>
+                  <mml:mi>ℙ</mml:mi>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>D</mml:mi>
+                <mml:mi>c</mml:mi>
+              </mml:msub>
+              <mml:mo>|</mml:mo>
+              <mml:mi>K</mml:mi>
+              <mml:mo>,</mml:mo>
+              <mml:mi>M</mml:mi>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mi>ℙ</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:mi>K</mml:mi>
+              <mml:mo>|</mml:mo>
+              <mml:mi>M</mml:mi>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mtext>d</mml:mtext>
+              <mml:mi>K</mml:mi>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+    </sec>
+    <sec>
+      <title>Negative binomially distributed data</title>
+      <p>There are a number of possible distributions which could be used for <italic>D</italic><sub><italic>c</italic></sub>|<italic>K</italic>, <italic>M </italic>and <italic>K</italic>|<italic>M</italic>. One approach that seems natural is to assume that the data are Poisson distributed and the parameters Gamma distributed, thus modelling the rarity of any individual molecule being sequenced and allowing a form of the Poisson-Gamma conjugacy to be used in calculating ℙ(<italic>D</italic><sub><italic>c </italic></sub>|<italic>M</italic>). However, as Robinson and Smyth [<xref ref-type="bibr" rid="B8">8</xref>] point out, this model fails to take into account the extra variability introduced by biological replication. An assumption that the data are negative binomially (over-dispersed Poisson) distributed may be used to account for this variability. Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>] showed the existance of over-dispersion in real data, and we are also able to see this in the data set we introduce below. Furthermore, Lu <italic>et al </italic>[<xref ref-type="bibr" rid="B7">7</xref>] show in simulated data that an assumption of a negative binomial distribution can be robust even if the data are not truly negative binomially distributed.</p>
+      <p>In the case of equal library sizes, it is possible under an assumption of a negative binomial distribution to develop an exact test for the likelihood of observing the data given non-differential expression. The problem of unequal library sizes can be approached by generating 'pseudodata' that is approximately identically distributed to the real data but has a common library size. This is the approach taken by Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>]. As an alternative to this approach, we use numerical methods in an empirical Bayesian approach that allows us to retain the real data, using library size as a scaling factor. We consider a sample <italic>A</italic><sub><italic>i </italic></sub>belonging to the set <italic>E</italic><sub><italic>q </italic></sub>with library size <italic>l</italic><sub><italic>i</italic></sub>. We now assume that the count in this sample at tuple <italic>c</italic>, <italic>u</italic><sub><italic>ic </italic></sub>is distributed negative binomially, with mean <italic>μ</italic><sub><italic>q</italic></sub>l<sub><italic>i </italic></sub>and dispersion <italic>ϕ</italic><sub><italic>q</italic></sub>, where <italic>θ</italic><sub><italic>q </italic></sub>= (<italic>μ</italic><sub><italic>q</italic></sub>, <italic>ϕ</italic><sub><italic>q</italic></sub>). Then one parametrization can be defined as</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M5" name="1471-2105-11-422-i5" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>ℙ</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>u</mml:mi>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mi>c</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>;</mml:mo>
+              <mml:msub>
+                <mml:mi>l</mml:mi>
+                <mml:mi>i</mml:mi>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+              <mml:msub>
+                <mml:mi>ϕ</mml:mi>
+                <mml:mi>q</mml:mi>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+              <mml:msub>
+                <mml:mi>μ</mml:mi>
+                <mml:mi>q</mml:mi>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>Γ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mi>u</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mi>c</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>+</mml:mo>
+                  <mml:msubsup>
+                    <mml:mi>ϕ</mml:mi>
+                    <mml:mi>q</mml:mi>
+                    <mml:mrow>
+                      <mml:mo>−</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                  </mml:msubsup>
+                  <mml:mo stretchy="false">)</mml:mo>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>Γ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msubsup>
+                    <mml:mi>ϕ</mml:mi>
+                    <mml:mi>q</mml:mi>
+                    <mml:mrow>
+                      <mml:mo>−</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                  </mml:msubsup>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:msub>
+                    <mml:mi>u</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mi>c</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>!</mml:mo>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mrow>
+                    <mml:mo>(</mml:mo>
+                    <mml:mrow>
+                      <mml:mfrac>
+                        <mml:mn>1</mml:mn>
+                        <mml:mrow>
+                          <mml:mn>1</mml:mn>
+                          <mml:mo>+</mml:mo>
+                          <mml:msub>
+                            <mml:mi>l</mml:mi>
+                            <mml:mi>i</mml:mi>
+                          </mml:msub>
+                          <mml:msub>
+                            <mml:mi>μ</mml:mi>
+                            <mml:mi>q</mml:mi>
+                          </mml:msub>
+                          <mml:msub>
+                            <mml:mi>ϕ</mml:mi>
+                            <mml:mi>q</mml:mi>
+                          </mml:msub>
+                        </mml:mrow>
+                      </mml:mfrac>
+                    </mml:mrow>
+                    <mml:mo>)</mml:mo>
+                  </mml:mrow>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msubsup>
+                    <mml:mi>ϕ</mml:mi>
+                    <mml:mi>q</mml:mi>
+                    <mml:mrow>
+                      <mml:mo>−</mml:mo>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                  </mml:msubsup>
+                </mml:mrow>
+              </mml:msup>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mrow>
+                    <mml:mo>(</mml:mo>
+                    <mml:mrow>
+                      <mml:mfrac>
+                        <mml:mrow>
+                          <mml:msub>
+                            <mml:mi>l</mml:mi>
+                            <mml:mi>i</mml:mi>
+                          </mml:msub>
+                          <mml:msub>
+                            <mml:mi>μ</mml:mi>
+                            <mml:mi>q</mml:mi>
+                          </mml:msub>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:msubsup>
+                            <mml:mi>ϕ</mml:mi>
+                            <mml:mi>q</mml:mi>
+                            <mml:mrow>
+                              <mml:mo>−</mml:mo>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                          </mml:msubsup>
+                          <mml:mo>+</mml:mo>
+                          <mml:msub>
+                            <mml:mi>l</mml:mi>
+                            <mml:mi>i</mml:mi>
+                          </mml:msub>
+                          <mml:msub>
+                            <mml:mi>μ</mml:mi>
+                            <mml:mi>q</mml:mi>
+                          </mml:msub>
+                        </mml:mrow>
+                      </mml:mfrac>
+                    </mml:mrow>
+                    <mml:mo>)</mml:mo>
+                  </mml:mrow>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mi>u</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mi>c</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:msup>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>There is unfortunately no obvious conjugacy that can be applied as in the Poisson-Gamma case. However, if we can define an empirical distribution on <italic>K </italic>then we can estimate ℙ(<italic>D</italic><sub><italic>c </italic></sub>| <italic>M</italic>) numerically. We assume first that the <italic>θ</italic><sub><italic>q </italic></sub>∈ <italic>K </italic>are independent with respect to <italic>q</italic>. Then</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M6" name="1471-2105-11-422-i6" overflow="scroll">
+            <mml:mtable columnalign="left">
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mi>ℙ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mi>D</mml:mi>
+                    <mml:mi>c</mml:mi>
+                  </mml:msub>
+                  <mml:mo>|</mml:mo>
+                  <mml:mi>M</mml:mi>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mo>=</mml:mo>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mstyle displaystyle="true">
+                    <mml:mrow>
+                      <mml:mo>∫</mml:mo>
+                      <mml:mi>ℙ</mml:mi>
+                    </mml:mrow>
+                  </mml:mstyle>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mi>D</mml:mi>
+                    <mml:mi>c</mml:mi>
+                  </mml:msub>
+                  <mml:mo>|</mml:mo>
+                  <mml:mi>K</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>M</mml:mi>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:mi>ℙ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mi>K</mml:mi>
+                  <mml:mo>|</mml:mo>
+                  <mml:mi>M</mml:mi>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:mtext>d</mml:mtext>
+                  <mml:mi>K</mml:mi>
+                </mml:mtd>
+              </mml:mtr>
+              <mml:mtr>
+                <mml:mtd>
+                  <mml:mtext/>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mo>=</mml:mo>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mstyle displaystyle="true">
+                    <mml:munder>
+                      <mml:mo>∏</mml:mo>
+                      <mml:mi>q</mml:mi>
+                    </mml:munder>
+                    <mml:mrow>
+                      <mml:mstyle displaystyle="true">
+                        <mml:mrow>
+                          <mml:mo>∫</mml:mo>
+                          <mml:mi>ℙ</mml:mi>
+                        </mml:mrow>
+                      </mml:mstyle>
+                    </mml:mrow>
+                  </mml:mstyle>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mi>D</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>q</mml:mi>
+                      <mml:mi>c</mml:mi>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>|</mml:mo>
+                  <mml:msub>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mi>q</mml:mi>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:mi>ℙ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:msub>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mi>q</mml:mi>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:mtext>d</mml:mtext>
+                  <mml:msub>
+                    <mml:mi>θ</mml:mi>
+                    <mml:mi>q</mml:mi>
+                  </mml:msub>
+                </mml:mtd>
+              </mml:mtr>
+            </mml:mtable>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>This assumption reduces the dimensionality of the integral and thus improves the accuracy of the numerical approximation to the integral.</p>
+      <p>Next we suppose that for each <italic>θ</italic><sub><italic>q </italic></sub>∈ <italic>K </italic>we have a set of values Θ<sub><italic>q </italic></sub>that are sampled from the distribution of <italic>θ</italic><sub><italic>q</italic></sub>. Then we can derive the approximation [<xref ref-type="bibr" rid="B13">13</xref>]</p>
+      <p>
+        <disp-formula id="bmcM3">
+          <label>(3)</label>
+          <mml:math id="M7" name="1471-2105-11-422-i7" overflow="scroll">
+            <mml:mrow>
+              <mml:mi>ℙ</mml:mi>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mi>D</mml:mi>
+                <mml:mi>c</mml:mi>
+              </mml:msub>
+              <mml:mo>|</mml:mo>
+              <mml:mi>M</mml:mi>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>≈</mml:mo>
+              <mml:mstyle displaystyle="true">
+                <mml:munder>
+                  <mml:mo>∏</mml:mo>
+                  <mml:mi>q</mml:mi>
+                </mml:munder>
+                <mml:mrow>
+                  <mml:mfrac>
+                    <mml:mn>1</mml:mn>
+                    <mml:mrow>
+                      <mml:mo>|</mml:mo>
+                      <mml:msub>
+                        <mml:mi>Θ</mml:mi>
+                        <mml:mi>q</mml:mi>
+                      </mml:msub>
+                      <mml:mo>|</mml:mo>
+                    </mml:mrow>
+                  </mml:mfrac>
+                </mml:mrow>
+              </mml:mstyle>
+              <mml:mtext> </mml:mtext>
+              <mml:mtext> </mml:mtext>
+              <mml:mstyle displaystyle="true">
+                <mml:munder>
+                  <mml:mo>∑</mml:mo>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>Θ</mml:mi>
+                      <mml:mi>q</mml:mi>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:munder>
+                <mml:mrow>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mtext> </mml:mtext>
+                  <mml:mrow>
+                    <mml:mo>[</mml:mo>
+                    <mml:mrow>
+                      <mml:mstyle displaystyle="true">
+                        <mml:munder>
+                          <mml:mo>∏</mml:mo>
+                          <mml:mrow>
+                            <mml:mo>{</mml:mo>
+                            <mml:mi>i</mml:mi>
+                            <mml:mo>:</mml:mo>
+                            <mml:msub>
+                              <mml:mi>A</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                            <mml:mo>∈</mml:mo>
+                            <mml:msub>
+                              <mml:mi>E</mml:mi>
+                              <mml:mi>q</mml:mi>
+                            </mml:msub>
+                            <mml:mo>}</mml:mo>
+                          </mml:mrow>
+                        </mml:munder>
+                        <mml:mrow>
+                          <mml:mfrac>
+                            <mml:mrow>
+                              <mml:mi>Γ</mml:mi>
+                              <mml:mo stretchy="false">(</mml:mo>
+                              <mml:msub>
+                                <mml:mi>u</mml:mi>
+                                <mml:mrow>
+                                  <mml:mi>i</mml:mi>
+                                  <mml:mi>c</mml:mi>
+                                </mml:mrow>
+                              </mml:msub>
+                              <mml:mo>+</mml:mo>
+                              <mml:msubsup>
+                                <mml:mi>ϕ</mml:mi>
+                                <mml:mi>q</mml:mi>
+                                <mml:mrow>
+                                  <mml:mo>−</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mrow>
+                              </mml:msubsup>
+                              <mml:mo stretchy="false">)</mml:mo>
+                            </mml:mrow>
+                            <mml:mrow>
+                              <mml:mi>Γ</mml:mi>
+                              <mml:mo stretchy="false">(</mml:mo>
+                              <mml:msubsup>
+                                <mml:mi>ϕ</mml:mi>
+                                <mml:mi>q</mml:mi>
+                                <mml:mrow>
+                                  <mml:mo>−</mml:mo>
+                                  <mml:mn>1</mml:mn>
+                                </mml:mrow>
+                              </mml:msubsup>
+                              <mml:mo stretchy="false">)</mml:mo>
+                              <mml:msub>
+                                <mml:mi>u</mml:mi>
+                                <mml:mrow>
+                                  <mml:mi>i</mml:mi>
+                                  <mml:mi>c</mml:mi>
+                                </mml:mrow>
+                              </mml:msub>
+                              <mml:mo>!</mml:mo>
+                            </mml:mrow>
+                          </mml:mfrac>
+                        </mml:mrow>
+                      </mml:mstyle>
+                      <mml:msup>
+                        <mml:mrow>
+                          <mml:mrow>
+                            <mml:mo>(</mml:mo>
+                            <mml:mrow>
+                              <mml:mfrac>
+                                <mml:mn>1</mml:mn>
+                                <mml:mrow>
+                                  <mml:mn>1</mml:mn>
+                                  <mml:mo>+</mml:mo>
+                                  <mml:msub>
+                                    <mml:mi>l</mml:mi>
+                                    <mml:mi>i</mml:mi>
+                                  </mml:msub>
+                                  <mml:msub>
+                                    <mml:mi>μ</mml:mi>
+                                    <mml:mi>q</mml:mi>
+                                  </mml:msub>
+                                  <mml:msub>
+                                    <mml:mi>ϕ</mml:mi>
+                                    <mml:mi>q</mml:mi>
+                                  </mml:msub>
+                                </mml:mrow>
+                              </mml:mfrac>
+                            </mml:mrow>
+                            <mml:mo>)</mml:mo>
+                          </mml:mrow>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:msubsup>
+                            <mml:mi>ϕ</mml:mi>
+                            <mml:mi>q</mml:mi>
+                            <mml:mrow>
+                              <mml:mo>−</mml:mo>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                          </mml:msubsup>
+                        </mml:mrow>
+                      </mml:msup>
+                      <mml:msup>
+                        <mml:mrow>
+                          <mml:mrow>
+                            <mml:mo>(</mml:mo>
+                            <mml:mrow>
+                              <mml:mfrac>
+                                <mml:mrow>
+                                  <mml:msub>
+                                    <mml:mi>l</mml:mi>
+                                    <mml:mi>i</mml:mi>
+                                  </mml:msub>
+                                  <mml:msub>
+                                    <mml:mi>μ</mml:mi>
+                                    <mml:mi>q</mml:mi>
+                                  </mml:msub>
+                                </mml:mrow>
+                                <mml:mrow>
+                                  <mml:msubsup>
+                                    <mml:mi>ϕ</mml:mi>
+                                    <mml:mi>q</mml:mi>
+                                    <mml:mrow>
+                                      <mml:mo>−</mml:mo>
+                                      <mml:mn>1</mml:mn>
+                                    </mml:mrow>
+                                  </mml:msubsup>
+                                  <mml:mo>+</mml:mo>
+                                  <mml:msub>
+                                    <mml:mi>l</mml:mi>
+                                    <mml:mi>i</mml:mi>
+                                  </mml:msub>
+                                  <mml:msub>
+                                    <mml:mi>μ</mml:mi>
+                                    <mml:mi>q</mml:mi>
+                                  </mml:msub>
+                                </mml:mrow>
+                              </mml:mfrac>
+                            </mml:mrow>
+                            <mml:mo>)</mml:mo>
+                          </mml:mrow>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:msub>
+                            <mml:mi>u</mml:mi>
+                            <mml:mi>i</mml:mi>
+                          </mml:msub>
+                        </mml:mrow>
+                      </mml:msup>
+                    </mml:mrow>
+                    <mml:mo>]</mml:mo>
+                  </mml:mrow>
+                </mml:mrow>
+              </mml:mstyle>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>The task that then remains is to derive the set Θ<sub><italic>q </italic></sub>from the data.</p>
+      <sec>
+        <title>Empirically derived distributions on K</title>
+        <p>We can derive an empirical distribution on <italic>K </italic>by examining the whole dataset. For each set of samples <italic>E</italic><sub><italic>q</italic></sub>, we would like to find some estimate of the mean and dispersion of the distribution underlying the data from a single tuple, <italic>D</italic><sub><italic>qc</italic></sub>. By similarly finding estimates of the mean and dispersion for a large number of tuples, we would have our sampling Θ<sub><italic>q</italic></sub>. The chief difficulty here lies in properly estimating the dispersion. For example, suppose that the data from a given tuple shows genuine differential expression. If the model that we are testing assumes that there is no differential expression, then the dispersion will be substantially over-estimated for this tuple. Since we do not know in advance which tuples are genuinely differentially expressed and which are not, we need to consider the replicate structure of the data in order to properly estimate the dispersions. We define the replicate structure by considering the sets {<italic>F</italic><sub>1</sub>, ... <italic>F</italic><sub><italic>s</italic></sub>} where <italic>i</italic>, <italic>j </italic>∈ <italic>F</italic><sub><italic>r </italic></sub>if and only if sample <italic>A</italic><sub><italic>j </italic></sub>is a replicate of <italic>A</italic><sub><italic>i</italic></sub>.</p>
+        <p>Given this structure for the data, we can estimate the dispersion of the data in a tuple <italic>D</italic><sub><italic>c </italic></sub>by quasi-likelihood methods [<xref ref-type="bibr" rid="B14">14</xref>]. Quasi-likelihood methods have been shown to give good estimations of the dispersion of a single tuple in this setting [<xref ref-type="bibr" rid="B8">8</xref>]. We first define <inline-formula><mml:math id="M8" name="1471-2105-11-422-i8" overflow="scroll"><mml:mrow><mml:msub><mml:mrow><mml:mover><mml:mi>μ</mml:mi><mml:mo>∧</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>r</mml:mi><mml:mi>c</mml:mi></mml:mrow></mml:msub><mml:mo>=</mml:mo><mml:mrow><mml:mrow><mml:mrow><mml:mo>〈</mml:mo><mml:mrow><mml:mrow><mml:mo>{</mml:mo><mml:mrow><mml:mfrac><mml:mrow><mml:msub><mml:mi>u</mml:mi><mml:mrow><mml:mi>i</mml:mi><mml:mi>c</mml:mi></mml:mrow></mml:msub></mml:mrow><mml:mrow><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub></mml:mrow></mml:mfrac><mml:mo>:</mml:mo><mml:mi>i</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mi>F</mml:mi><mml:mi>r</mml:mi></mml:msub></mml:mrow><mml:mo>}</mml:mo></mml:mrow></mml:mrow></mml:mrow></mml:mrow><mml:mo>〉</mml:mo></mml:mrow></mml:mrow></mml:math></inline-formula>, and then choose <italic>ϕ</italic><sub><italic>c </italic></sub>such that</p>
+        <p>
+          <disp-formula id="bmcM4">
+            <label>(4)</label>
+            <mml:math id="M9" name="1471-2105-11-422-i9" overflow="scroll">
+              <mml:mrow>
+                <mml:mtable columnalign="left">
+                  <mml:mtr columnalign="left">
+                    <mml:mtd columnalign="left">
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                        <mml:mtext> </mml:mtext>
+                        <mml:mstyle displaystyle="true">
+                          <mml:munder>
+                            <mml:mo>∑</mml:mo>
+                            <mml:mi>r</mml:mi>
+                          </mml:munder>
+                          <mml:mrow>
+                            <mml:mstyle displaystyle="true">
+                              <mml:munder>
+                                <mml:mo>∑</mml:mo>
+                                <mml:mrow>
+                                  <mml:mi>i</mml:mi>
+                                  <mml:mo>∈</mml:mo>
+                                  <mml:msub>
+                                    <mml:mi>F</mml:mi>
+                                    <mml:mi>r</mml:mi>
+                                  </mml:msub>
+                                </mml:mrow>
+                              </mml:munder>
+                              <mml:mrow>
+                                <mml:mrow>
+                                  <mml:mo>{</mml:mo>
+                                  <mml:mrow>
+                                    <mml:msub>
+                                      <mml:mi>u</mml:mi>
+                                      <mml:mrow>
+                                        <mml:mi>i</mml:mi>
+                                        <mml:mi>c</mml:mi>
+                                      </mml:mrow>
+                                    </mml:msub>
+                                    <mml:mi>log</mml:mi>
+                                    <mml:mrow>
+                                      <mml:mo>[</mml:mo>
+                                      <mml:mrow>
+                                        <mml:mfrac>
+                                          <mml:mrow>
+                                            <mml:msub>
+                                              <mml:mi>u</mml:mi>
+                                              <mml:mrow>
+                                                <mml:mi>i</mml:mi>
+                                                <mml:mi>c</mml:mi>
+                                              </mml:mrow>
+                                            </mml:msub>
+                                          </mml:mrow>
+                                          <mml:mrow>
+                                            <mml:msub>
+                                              <mml:mi>l</mml:mi>
+                                              <mml:mi>i</mml:mi>
+                                            </mml:msub>
+                                            <mml:msub>
+                                              <mml:mrow>
+                                                <mml:mover>
+                                                  <mml:mi>μ</mml:mi>
+                                                  <mml:mo>∧</mml:mo>
+                                                </mml:mover>
+                                              </mml:mrow>
+                                              <mml:mrow>
+                                                <mml:mi>r</mml:mi>
+                                                <mml:mi>c</mml:mi>
+                                              </mml:mrow>
+                                            </mml:msub>
+                                          </mml:mrow>
+                                        </mml:mfrac>
+                                      </mml:mrow>
+                                      <mml:mo>]</mml:mo>
+                                    </mml:mrow>
+                                    <mml:mo>−</mml:mo>
+                                    <mml:mrow>
+                                      <mml:mo>(</mml:mo>
+                                      <mml:mrow>
+                                        <mml:msub>
+                                          <mml:mi>u</mml:mi>
+                                          <mml:mrow>
+                                            <mml:mi>i</mml:mi>
+                                            <mml:mi>c</mml:mi>
+                                          </mml:mrow>
+                                        </mml:msub>
+                                        <mml:mo>+</mml:mo>
+                                        <mml:msubsup>
+                                          <mml:mi>ϕ</mml:mi>
+                                          <mml:mi>c</mml:mi>
+                                          <mml:mrow>
+                                            <mml:mo>−</mml:mo>
+                                            <mml:mn>1</mml:mn>
+                                          </mml:mrow>
+                                        </mml:msubsup>
+                                      </mml:mrow>
+                                      <mml:mo>)</mml:mo>
+                                    </mml:mrow>
+                                    <mml:mi>log</mml:mi>
+                                    <mml:mrow>
+                                      <mml:mo>[</mml:mo>
+                                      <mml:mrow>
+                                        <mml:mfrac>
+                                          <mml:mrow>
+                                            <mml:msub>
+                                              <mml:mi>u</mml:mi>
+                                              <mml:mrow>
+                                                <mml:mi>i</mml:mi>
+                                                <mml:mi>c</mml:mi>
+                                              </mml:mrow>
+                                            </mml:msub>
+                                            <mml:mo>+</mml:mo>
+                                            <mml:msubsup>
+                                              <mml:mi>ϕ</mml:mi>
+                                              <mml:mi>c</mml:mi>
+                                              <mml:mrow>
+                                                <mml:mo>−</mml:mo>
+                                                <mml:mn>1</mml:mn>
+                                              </mml:mrow>
+                                            </mml:msubsup>
+                                          </mml:mrow>
+                                          <mml:mrow>
+                                            <mml:msub>
+                                              <mml:mi>l</mml:mi>
+                                              <mml:mi>i</mml:mi>
+                                            </mml:msub>
+                                            <mml:msub>
+                                              <mml:mrow>
+                                                <mml:mover>
+                                                  <mml:mi>μ</mml:mi>
+                                                  <mml:mo>∧</mml:mo>
+                                                </mml:mover>
+                                              </mml:mrow>
+                                              <mml:mrow>
+                                                <mml:mi>r</mml:mi>
+                                                <mml:mi>c</mml:mi>
+                                              </mml:mrow>
+                                            </mml:msub>
+                                            <mml:mo>+</mml:mo>
+                                            <mml:msubsup>
+                                              <mml:mi>ϕ</mml:mi>
+                                              <mml:mi>c</mml:mi>
+                                              <mml:mrow>
+                                                <mml:mo>−</mml:mo>
+                                                <mml:mn>1</mml:mn>
+                                              </mml:mrow>
+                                            </mml:msubsup>
+                                          </mml:mrow>
+                                        </mml:mfrac>
+                                      </mml:mrow>
+                                      <mml:mo>]</mml:mo>
+                                    </mml:mrow>
+                                  </mml:mrow>
+                                  <mml:mo>}</mml:mo>
+                                </mml:mrow>
+                                <mml:mtext> </mml:mtext>
+                              </mml:mrow>
+                            </mml:mstyle>
+                          </mml:mrow>
+                        </mml:mstyle>
+                      </mml:mrow>
+                    </mml:mtd>
+                    <mml:mtd columnalign="left">
+                      <mml:mrow>
+                        <mml:mo>=</mml:mo>
+                        <mml:mtext> </mml:mtext>
+                        <mml:mtext> </mml:mtext>
+                        <mml:mtext> </mml:mtext>
+                        <mml:mi>n</mml:mi>
+                        <mml:mo>−</mml:mo>
+                        <mml:mn>1</mml:mn>
+                      </mml:mrow>
+                    </mml:mtd>
+                  </mml:mtr>
+                </mml:mtable>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>Taking this value for <italic>ϕ</italic><sub><italic>c </italic></sub>we can then re-estimate the values <inline-formula><mml:math id="M10" name="1471-2105-11-422-i10" overflow="scroll"><mml:mrow><mml:msub><mml:mover accent="true"><mml:mi>μ</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mi>c</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math></inline-formula> by maximum likelihood methods, choosing the values for <inline-formula><mml:math id="M11" name="1471-2105-11-422-i10" overflow="scroll"><mml:mrow><mml:msub><mml:mrow><mml:mover><mml:mi>μ</mml:mi><mml:mo>∧</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mi>c</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math></inline-formula> that maximise the likelihoods</p>
+        <p>
+          <disp-formula>
+            <mml:math id="M12" name="1471-2105-11-422-i11" overflow="scroll">
+              <mml:mrow>
+                <mml:mi>ℙ</mml:mi>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo>{</mml:mo>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mi>u</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>c</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo>:</mml:mo>
+                        <mml:mi>i</mml:mi>
+                        <mml:mo>∈</mml:mo>
+                        <mml:msub>
+                          <mml:mi>F</mml:mi>
+                          <mml:mi>r</mml:mi>
+                        </mml:msub>
+                      </mml:mrow>
+                      <mml:mo>}</mml:mo>
+                    </mml:mrow>
+                    <mml:mo>;</mml:mo>
+                    <mml:msub>
+                      <mml:mi>l</mml:mi>
+                      <mml:mi>i</mml:mi>
+                    </mml:msub>
+                    <mml:mo>:</mml:mo>
+                    <mml:mi>i</mml:mi>
+                    <mml:mo>∈</mml:mo>
+                    <mml:msub>
+                      <mml:mi>F</mml:mi>
+                      <mml:mi>r</mml:mi>
+                    </mml:msub>
+                    <mml:mo>,</mml:mo>
+                    <mml:msub>
+                      <mml:mi>ϕ</mml:mi>
+                      <mml:mi>c</mml:mi>
+                    </mml:msub>
+                    <mml:mo>,</mml:mo>
+                    <mml:msub>
+                      <mml:mrow>
+                        <mml:mover>
+                          <mml:mi>μ</mml:mi>
+                          <mml:mo>∧</mml:mo>
+                        </mml:mover>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>r</mml:mi>
+                        <mml:mi>c</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:mrow>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+                <mml:mo>=</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:munder>
+                    <mml:mo>∏</mml:mo>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>∈</mml:mo>
+                      <mml:msub>
+                        <mml:mi>F</mml:mi>
+                        <mml:mi>r</mml:mi>
+                      </mml:msub>
+                    </mml:mrow>
+                  </mml:munder>
+                  <mml:mrow>
+                    <mml:mtext> </mml:mtext>
+                    <mml:mtext> </mml:mtext>
+                    <mml:mfrac>
+                      <mml:mrow>
+                        <mml:mi>Γ</mml:mi>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>u</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo>+</mml:mo>
+                            <mml:msubsup>
+                              <mml:mi>ϕ</mml:mi>
+                              <mml:mi>c</mml:mi>
+                              <mml:mrow>
+                                <mml:mo>−</mml:mo>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                            </mml:msubsup>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>Γ</mml:mi>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:msubsup>
+                              <mml:mi>ϕ</mml:mi>
+                              <mml:mi>c</mml:mi>
+                              <mml:mrow>
+                                <mml:mo>−</mml:mo>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                            </mml:msubsup>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                        <mml:msub>
+                          <mml:mi>u</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>c</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo>!</mml:mo>
+                      </mml:mrow>
+                    </mml:mfrac>
+                  </mml:mrow>
+                </mml:mstyle>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo>(</mml:mo>
+                      <mml:mrow>
+                        <mml:mfrac>
+                          <mml:mn>1</mml:mn>
+                          <mml:mrow>
+                            <mml:mn>1</mml:mn>
+                            <mml:mo>+</mml:mo>
+                            <mml:msub>
+                              <mml:mi>l</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mover>
+                                  <mml:mi>μ</mml:mi>
+                                  <mml:mo>∧</mml:mo>
+                                </mml:mover>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>r</mml:mi>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mi>ϕ</mml:mi>
+                              <mml:mi>c</mml:mi>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                      <mml:mo>)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:msubsup>
+                      <mml:mi>ϕ</mml:mi>
+                      <mml:mi>c</mml:mi>
+                      <mml:mrow>
+                        <mml:mo>−</mml:mo>
+                        <mml:mn>1</mml:mn>
+                      </mml:mrow>
+                    </mml:msubsup>
+                  </mml:mrow>
+                </mml:msup>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo>(</mml:mo>
+                      <mml:mrow>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>l</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mover>
+                                  <mml:mi>μ</mml:mi>
+                                  <mml:mo>∧</mml:mo>
+                                </mml:mover>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>r</mml:mi>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:msubsup>
+                              <mml:mi>ϕ</mml:mi>
+                              <mml:mi>c</mml:mi>
+                              <mml:mrow>
+                                <mml:mo>−</mml:mo>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo>+</mml:mo>
+                            <mml:msub>
+                              <mml:mi>l</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mover>
+                                  <mml:mi>μ</mml:mi>
+                                  <mml:mo>∧</mml:mo>
+                                </mml:mover>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>r</mml:mi>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                      <mml:mo>)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>u</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>i</mml:mi>
+                        <mml:mi>c</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:msup>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>for each <italic>r</italic>.</p>
+        <p>We then iterate on our estimations of <italic>ϕ</italic><sub><italic>c </italic></sub>and <inline-formula><mml:math id="M13" name="1471-2105-11-422-i10" overflow="scroll"><mml:mrow><mml:msub><mml:mover accent="true"><mml:mi>μ</mml:mi><mml:mo>^</mml:mo></mml:mover><mml:mrow><mml:mi>i</mml:mi><mml:mi>c</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:math></inline-formula> until we achieve convergence.</p>
+        <p>This gives us a value for <italic>ϕ</italic><sub><italic>c</italic></sub>. We then need to estimate the mean of the distribution underlying the data <italic>D</italic><sub><italic>qc</italic></sub>, that is, for the set of samples in <italic>E</italic><sub><italic>q</italic></sub>, which we can easily do by fixing the value acquired for <italic>ϕ</italic><sub><italic>c </italic></sub>and estimating the mean <italic>μ</italic><sub><italic>qc </italic></sub>by maximum likelihood methods, choosing the value for <italic>μ</italic><sub><italic>qc </italic></sub>that maximises the likelihood</p>
+        <p>
+          <disp-formula>
+            <mml:math id="M14" name="1471-2105-11-422-i12" overflow="scroll">
+              <mml:mrow>
+                <mml:mi>ℙ</mml:mi>
+                <mml:mrow>
+                  <mml:mo>(</mml:mo>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>D</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>q</mml:mi>
+                        <mml:mi>c</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:mo>,</mml:mo>
+                    <mml:msub>
+                      <mml:mi>ϕ</mml:mi>
+                      <mml:mi>c</mml:mi>
+                    </mml:msub>
+                    <mml:mo>,</mml:mo>
+                    <mml:msub>
+                      <mml:mi>μ</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>q</mml:mi>
+                        <mml:mi>c</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:mrow>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+                <mml:mo>=</mml:mo>
+                <mml:mstyle displaystyle="true">
+                  <mml:munder>
+                    <mml:mo>∏</mml:mo>
+                    <mml:mrow>
+                      <mml:mo>{</mml:mo>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>:</mml:mo>
+                      <mml:msub>
+                        <mml:mi>A</mml:mi>
+                        <mml:mi>i</mml:mi>
+                      </mml:msub>
+                      <mml:mo>∈</mml:mo>
+                      <mml:msub>
+                        <mml:mi>E</mml:mi>
+                        <mml:mi>q</mml:mi>
+                      </mml:msub>
+                      <mml:mo>}</mml:mo>
+                    </mml:mrow>
+                  </mml:munder>
+                  <mml:mrow>
+                    <mml:mfrac>
+                      <mml:mrow>
+                        <mml:mi>Γ</mml:mi>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>u</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>i</mml:mi>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:mo>+</mml:mo>
+                            <mml:msubsup>
+                              <mml:mi>ϕ</mml:mi>
+                              <mml:mi>c</mml:mi>
+                              <mml:mrow>
+                                <mml:mo>−</mml:mo>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                            </mml:msubsup>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>Γ</mml:mi>
+                        <mml:mrow>
+                          <mml:mo>(</mml:mo>
+                          <mml:mrow>
+                            <mml:msubsup>
+                              <mml:mi>ϕ</mml:mi>
+                              <mml:mi>c</mml:mi>
+                              <mml:mrow>
+                                <mml:mo>−</mml:mo>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                            </mml:msubsup>
+                          </mml:mrow>
+                          <mml:mo>)</mml:mo>
+                        </mml:mrow>
+                        <mml:msub>
+                          <mml:mi>u</mml:mi>
+                          <mml:mrow>
+                            <mml:mi>i</mml:mi>
+                            <mml:mi>c</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo>!</mml:mo>
+                      </mml:mrow>
+                    </mml:mfrac>
+                  </mml:mrow>
+                </mml:mstyle>
+                <mml:mtext> </mml:mtext>
+                <mml:mtext> </mml:mtext>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo>(</mml:mo>
+                      <mml:mrow>
+                        <mml:mfrac>
+                          <mml:mn>1</mml:mn>
+                          <mml:mrow>
+                            <mml:mn>1</mml:mn>
+                            <mml:mo>+</mml:mo>
+                            <mml:msub>
+                              <mml:mi>l</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mi>μ</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>q</mml:mi>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mi>ϕ</mml:mi>
+                              <mml:mi>c</mml:mi>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                      <mml:mo>)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:msubsup>
+                      <mml:mi>ϕ</mml:mi>
+                      <mml:mi>c</mml:mi>
+                      <mml:mrow>
+                        <mml:mo>−</mml:mo>
+                        <mml:mn>1</mml:mn>
+                      </mml:mrow>
+                    </mml:msubsup>
+                  </mml:mrow>
+                </mml:msup>
+                <mml:msup>
+                  <mml:mrow>
+                    <mml:mrow>
+                      <mml:mo>(</mml:mo>
+                      <mml:mrow>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mi>l</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mi>μ</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>q</mml:mi>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:msubsup>
+                              <mml:mi>ϕ</mml:mi>
+                              <mml:mi>c</mml:mi>
+                              <mml:mrow>
+                                <mml:mo>−</mml:mo>
+                                <mml:mn>1</mml:mn>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo>+</mml:mo>
+                            <mml:msub>
+                              <mml:mi>l</mml:mi>
+                              <mml:mi>i</mml:mi>
+                            </mml:msub>
+                            <mml:msub>
+                              <mml:mi>μ</mml:mi>
+                              <mml:mrow>
+                                <mml:mi>q</mml:mi>
+                                <mml:mi>c</mml:mi>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                      <mml:mo>)</mml:mo>
+                    </mml:mrow>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:msub>
+                      <mml:mi>u</mml:mi>
+                      <mml:mrow>
+                        <mml:mi>i</mml:mi>
+                        <mml:mi>c</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:mrow>
+                </mml:msup>
+              </mml:mrow>
+            </mml:math>
+          </disp-formula>
+        </p>
+        <p>for each q.</p>
+        <p>We can then form the set Θ<sub><italic>q </italic></sub>= {(<italic>μ</italic><sub><italic>qc</italic></sub>, <italic>ϕ</italic><sub><italic>c</italic></sub>)} by repeating this process for multiple <italic>h</italic>, and are then able to calculate ℙ(<italic>D</italic><sub><italic>c </italic></sub>| <italic>M</italic>) from Eqn 3.</p>
+        <p>This method of estimating the dispersion assumes that the dispersion of a tuple is constant across different sets of samples. In most cases, where the number of samples is low, this is likely to be the best approach. Where there is some expectation that the dispersion will be substantially different between sets of replicates, there may be advantages to estimating the dispersions individually for each of the different sets of samples in each model, while still considering the replicate structure within these sets. This is easily done by restricting the data (and corresponding replicate structure) to <italic>D</italic><sub><italic>qc </italic></sub>when estimating the dispersion in Eqn 4. We found no substantial differences between these approaches in simulation studies (unpublished data) and so show only the results acquired when the dispersion of each tuple is assumed constant.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Estimation of prior probabilities of each model</title>
+      <p>A number of options are available when considering the prior probabilities of each model ℙ(<italic>M</italic>) required in Eqn 1. If we are able to estimate these from other sources, this may provide the optimum solution. However, in many cases we may not be able to provide a reasonable estimate of prior probabilities. We propose that the methods suggested by Smyth [<xref ref-type="bibr" rid="B15">15</xref>] for estimating proportions of differentially expressed genes in analysis of microarray experiments may reasonably be adapted to estimate these priors. We begin by choosing (ideally based on our prior knowledge about the models) some value <italic>p </italic>to use as the prior probability for the model <italic>M </italic>in order to estimate the posterior probability ℙ(<italic>M </italic>| <italic>D</italic><sub><italic>c</italic></sub>) for the <italic>c</italic>th tuple. But then we can derive a new estimate</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M15" name="1471-2105-11-422-i13" overflow="scroll">
+            <mml:mrow>
+              <mml:msup>
+                <mml:mi>p</mml:mi>
+                <mml:mo>′</mml:mo>
+              </mml:msup>
+              <mml:mtext> </mml:mtext>
+              <mml:mo>=</mml:mo>
+              <mml:mtext> </mml:mtext>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mo>〈</mml:mo>
+                  <mml:mi>ℙ</mml:mi>
+                  <mml:mo stretchy="false">(</mml:mo>
+                  <mml:mi>M</mml:mi>
+                  <mml:mo>|</mml:mo>
+                  <mml:msub>
+                    <mml:mi>D</mml:mi>
+                    <mml:mi>c</mml:mi>
+                  </mml:msub>
+                  <mml:mo stretchy="false">)</mml:mo>
+                  <mml:mo>〉</mml:mo>
+                </mml:mrow>
+                <mml:mi>c</mml:mi>
+              </mml:msub>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>for the prior probability of model <italic>M</italic>. By iterating until convergence, we acquire estimates of the prior probabilities for each model. In practice, we find that the initial choice of the <italic>p</italic>s has no substantial effect on the values to which they finally converge. This method is straightforward to implement, but potentially allows for positive feedback and hence over-estimation of the prior probability of a model (and corresponding under-estimation of the prior probabilities of the other models).</p>
+      <p>An alternative to this approach would be to establish some distribution on the prior probabilities of our models and find the marginal posterior probability of the data based on this distribution. One approach to this might be to use the distribution of posterior probabilities as an approximation to a distribution on the priors. We could then use a numerical integration method to re-estimate the posterior probabilities, and iterate as before. However, in practice this method is extremely computationally intensive and offers little improvement in the accuracy of the predictions made (unpublished data).</p>
+    </sec>
+    <sec>
+      <title>The scaling factor ℙ(<italic>D</italic><sub><italic>c</italic></sub>)</title>
+      <p>Finally, we need to consider the scaling factor ℙ(<italic>D</italic><sub><italic>c</italic></sub>) in Eqn. 1. Since the number of possible models on <italic>M </italic>on <inline-formula><mml:math id="M16" name="1471-2105-11-422-i1" overflow="scroll"><mml:mi mathvariant="script">A</mml:mi></mml:math></inline-formula> is finite, though potentially large, the scaling factor ℙ(<italic>D</italic><sub><italic>c</italic></sub>) can be determined by summing over all possible <italic>M</italic>, given appropriate priors ℙ(<italic>M</italic>). In practice, the number of models may be limited by only considering those that are biologically plausible, or by imposing some distribution on the number of sets in <italic>M </italic>in a similar manner to Lönnstedt <italic>et al</italic>'s approach [<xref ref-type="bibr" rid="B16">16</xref>] for analysis of variance in microarray data.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and Discussion</title>
+    <p>We use both simulated and real data to compare the method we have developed to the previously developed methods of Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>] as implemented in the <monospace>edgeR </monospace>[<xref ref-type="bibr" rid="B17">17</xref>,<xref ref-type="bibr" rid="B18">18</xref>] (version 1.4.7) Bioconductor [<xref ref-type="bibr" rid="B19">19</xref>] package, the overdispersed log-linear model of Lu <italic>et al </italic>[<xref ref-type="bibr" rid="B7">7</xref>], the overdispersed logistic model of Baggerly <italic>et al </italic>[<xref ref-type="bibr" rid="B6">6</xref>], and the recently released methods <monospace>DEGseq</monospace>[<xref ref-type="bibr" rid="B10">10</xref>] (version 1.2.2) and <monospace>DESeq</monospace>[<xref ref-type="bibr" rid="B11">11</xref>] (version 1.0.4). We compare these methods to our empirical Bayes approach as implemented in the R package <monospace>baySeq</monospace> (version 1.1.23), with the default settings used for the <monospace>baySeq</monospace> and <monospace>edgeR </monospace>packages. Overall, we found that the default settings of the <monospace>edgeR </monospace>package seem to give good performance. Alterations to the default settings, in particular to the 'moderation' parameter, caused some small improvements in performance for some simulations but degraded it slightly in others. We have, therefore, used the default settings here as in real-world applications it will be difficult to determine how to alter these settings to optimise performance. The recommended method of operation for the <monospace>DESeq</monospace> package is to infer library sizes from the data. However, we observed that this gave extremely poor performance in simulations in which a large proportion of the data are differentially expressed in a single direction. We therefore use the known library sizes in the implementation of the <monospace>DESeq</monospace> method, as we also do for all other methods, with the exception of <monospace>DEGseq</monospace>, which does not accept library size as a parameter. The <monospace>DEGseq</monospace> package has multiple modes of operation; we found that the MA plot-based method with random sampling (MARS) performed best on simulated data (unpublished data) and have therefore used this approach (with default settings otherwise) in the comparison studies.</p>
+    <sec>
+      <title>Comparison of methods for pairwise comparisons: simulated data</title>
+      <p>We begin by applying the methods being evaluated to the simulation studies described in Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>]. We choose to replicate these simulation studies, and the manner in which the results are presented, in order to allow direct comparisons between our method and previous approaches to this problem. The purpose of these simulations is to establish the ability of the methods to rank the tuples in order of differential expression and evaluate the number of true and false positives for the top <italic>N </italic>tuples.</p>
+      <sec>
+        <title>Random dispersion simulations</title>
+        <p>Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>] suggest one possible simulation for high-throughput sequencing count data. The library sizes, <italic>l</italic><sub><italic>i</italic></sub>, are sampled from a uniform distribution between 30000 and 90000. These library sizes are considerably smaller than those available from the current generation of sequencing technologies. However, increasing the library size to better reflect current levels does not significantly alter the conclusions drawn, because the 'library size' is, in effect, a scaling factor. All tuples are simulated from a negative binomial distribution, and we simulate differential expression by varying the means of the distribution from which they are sampled.</p>
+        <p>For a non-differentially expressed tuple <italic>c</italic>, we simulate the data with means <italic>λ</italic><sub><italic>c</italic></sub><italic>l</italic><sub><italic>i </italic></sub>where the <italic>λ</italic><sub>c </sub>are sampled randomly from a a set of values empirically estimated by the <monospace>edgeR </monospace>method from a SAGE dataset consisting of both normal and cancerous cells [<xref ref-type="bibr" rid="B20">20</xref>].</p>
+        <p>Ten percent of the ten thousand simulated tuples are differentially expressed. In order to produce both over and under-expression in our simulated data, we simulate the differentially expressed data in one of two ways, where the alternatives are chosen at random for each tuple. We can simulate the data for the first <italic>n</italic><sub>1 </sub>samples with means <inline-formula><mml:math id="M17" name="1471-2105-11-422-i14" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo>/</mml:mo><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula> while the data from the remaining <italic>n</italic><sub>2 </sub>samples are simulated with mean <inline-formula><mml:math id="M18" name="1471-2105-11-422-i15" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula> Alternatively, we can simulate the data for the first <italic>n</italic><sub>1 </sub>samples with mean <inline-formula><mml:math id="M19" name="1471-2105-11-422-i15" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula> while the data from the remaining <italic>n</italic><sub>2 </sub>samples are simulated with mean <inline-formula><mml:math id="M20" name="1471-2105-11-422-i14" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo>/</mml:mo><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula>.</p>
+        <p>Small (<italic>n</italic><sub>1 </sub>= <italic>n</italic><sub>2 </sub>= 2) and moderate (<italic>n</italic><sub>1 </sub>= <italic>n</italic><sub>2 </sub>= 5) numbers of libraries are compared, with large (<italic>b </italic>= 8) and moderate (<italic>b </italic>= 4) differential expression. Dispersions are randomly sampled from a gamma distribution with shape = 0.85 and scale = 0.5.</p>
+        <p>For the <monospace>baySeq</monospace> method, posterior probabilities were calculated for each tuple for each of two models, one defining differential expression between the first <italic>n</italic><sub>1 </sub>libraries and the second <italic>n</italic><sub>2 </sub>libraries and one defining no differential expression between any library. Figure <xref ref-type="fig" rid="F1">1</xref> shows the estimated posterior probability of differential expression plotted against the estimated log fold change for a single simulation with <italic>b </italic>= 8 and <italic>n</italic><sub>1 </sub>= <italic>n</italic><sub>2 </sub>= 5. We see a 'wine glass' shaped plot, characteristic of this analysis.</p>
+        <fig id="F1" position="float">
+          <label>Figure 1</label>
+          <caption>
+            <p><bold>Estimated posterior probabilities of differential expression against observed fold-change</bold>. Estimated posterior probabilities of differential expression against observed fold-change from a single simulation of ten thousand tuples, of which one thousand are truly differentially expressed (DE) and nine thousand are not differentially expressed (non-DE).</p>
+          </caption>
+          <graphic xlink:href="1471-2105-11-422-1"/>
+        </fig>
+        <p>The 'stem' of the goblet is made up of tuples with low fold change and reasonably high levels of expression. With these tuples, it is relatively easy to identify them as non-differentially expressed, and so these tuples have low posterior probability of differential expression. However, some tuples with low fold change also have very low absolute values. With low absolute values in a tuple, it becomes harder to determine whether or not the tuple is genuinely differentially expressed or not, and so these values tend to have slightly higher posterior probabilities of differential expression than tuples with high absolute values but low fold change. The top of the stem, with a posterior probability of differential expression of around 0.2, is thus composed of tuples that have only one or two counts observed in any sample. For these very low expression tuples, changes of only one or two counts in a sample can lead to a relatively large fold change difference. However, these small changes do not substantially affect the posterior probability and so, although we see a spread in the fold change at the top of the stem, the posterior probability of differential expression remains low for these tuples. We tend not to see a similar spread for the tuples near the base of the stem as these tuples tend to have a high expression. For a tuple with a high expression to show a high fold change, but nevertheless have a low posterior probability of differential expression, there must be a very high dispersion associated with such a tuple, which will not often occur.</p>
+        <p>In the arms of the wine glass, we see that as the fold change increases, the posterior probability of differential expression also increases, although there is a wide range of posterior probabilities for (for example) a fold change of 4. We see this range of posterior probabilities of differential expression for a given fold change as the posterior probability also depends heavily on both the dispersion observed within the data, and the level of expression of the tuple, since, as before, it is easier to tell whether or not a highly expressed tuple is genuinely differentially expressed or not. For high posterior probabilities of differential expression, we see an increased density of tuples, predominately consisting of truly differentially expressed tuples.</p>
+        <p>As in Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>], false discovery rate (FDR) curves are used to assess the ability of the methods to successfully rank the tuples. False discovery rates for these data are calculated by [<xref ref-type="bibr" rid="B9">9</xref>] on the basis of one simulation. For increased robustness, we estimate mean false discovery rates for the top <italic>N </italic>tuples over 100 simulations (Figure <xref ref-type="fig" rid="F2">2</xref>). For the <monospace>baySeq</monospace> method, the tuples were ordered by the posterior probability of differential expression and true and false positive rates were calculated on the basis of this ordering. For the edgeR, the overdispersed log-linear, overdispersed logistic, <monospace>DESeq</monospace> and <monospace>DEGseq</monospace> methods, the tuples were ordered on the basis of the <italic>p</italic>-values estimated by each method.</p>
+        <fig id="F2" position="float">
+          <label>Figure 2</label>
+          <caption>
+            <p><bold>Mean FDR curves for different numbers of libraries and degrees of differential expression</bold>. Mean FDR curves, based on 100 simulations, comparing the performance of multiple methods in identifying pairwise differential expression. The data contain 1000 truly DE tuples and 9000 non-DE tuples and are simulated with varying number of libraries <italic>n</italic><sub>1 </sub>and <italic>n</italic><sub>2</sub>, different degrees of differential expression <italic>b</italic>, and randomly chosen dispersions for each tuple (~ Γ (0.85, 0.5)).</p>
+          </caption>
+          <graphic xlink:href="1471-2105-11-422-2"/>
+        </fig>
+        <p>In these simulations, the <monospace>baySeq</monospace> method appears to perform as well or better than the existing methods. The performance of the <monospace>baySeq</monospace> approach is virtually identical to that of edgeR for small numbers of libraries (<italic>n</italic><sub>1 </sub>= <italic>n</italic><sub>2 </sub>= 2). For larger numbers of libraries, <monospace>baySeq</monospace> appears to offer an improvement in performance over edgeR. For small <italic>b</italic>, the overdispersed log-linear approach seems to show comparable performance to edgeR and <monospace>baySeq</monospace>. For larger <italic>b</italic>, however, particularly for higher numbers of selected tuples, the edgeR and <monospace>baySeq</monospace> methods perform considerably better than the log-linear approach. The log logistic, <monospace>DESeq</monospace> and <monospace>DEGseq</monospace> methods always perform poorly compared with both the edgeR method and the <monospace>baySeq</monospace> approach.</p>
+        <p>To establish whether this difference in performance for these methods is meaningful in a practical sense, we estimate from these analyses that if we were to validate the top 200 tuples identified by edgeR, <monospace>baySeq</monospace>, and the overdispersed log-linear model fit, for <italic>n</italic><sub>1 </sub>= <italic>n</italic><sub>2 </sub>= 2, <italic>b </italic>= 4 we would expect 92.66 false positives for the <monospace>baySeq</monospace> method, 91.13 from edgeR and 98.65 for the overdispersed log-linear approach. For <italic>n</italic><sub>1 </sub>= <italic>n</italic><sub>2 </sub>= 2, <italic>b </italic>= 8, we would expect 36.88, 36.46, and 64.43 false positives from <monospace>baySeq</monospace>, edgeR and the overdispersed log-linear approaches respectively. However, for the higher numbers of libraries, where <italic>n</italic><sub>1 </sub>= <italic>n</italic><sub>2 </sub>= 5, for <italic>b </italic>= 4 we expect 18.60, 29.44 and 24.74 false positives, while for <italic>b </italic>= 8 we expect 1.33, 3.25 and 5.42 false positives from the <monospace>baySeq</monospace> method, edgeR and the overdispersed log-linear approach respectively. For higher numbers of libraries, therefore, we achieve a practically meaningful improvement by using the <monospace>baySeq</monospace> method.</p>
+      </sec>
+      <sec>
+        <title>Fixed dispersion simulations</title>
+        <p>For completeness of comparison with previous methods, we also consider a less realistic simulation first developed by Lu <italic>et al </italic>[<xref ref-type="bibr" rid="B7">7</xref>]. We simulate ten library sizes as before. The tuples are again simulated from a negative binomial distribution but now with a fixed dispersion <italic>ϕ </italic>of either 0.17, 0.42 or 0.95. 5000 non-differentially expressed tuples are simulated with mean <italic>λl</italic><sub><italic>i</italic></sub>, and 5000 tuples are chosen to be differentially expressed; those from libraries 1-5 are again simulated with mean <italic>λl</italic><sub><italic>i </italic></sub>while those from libraries 6-10 are simulated with mean <italic>bλl</italic><sub><italic>i</italic></sub>, and so we see only over-expression of libraries 6-10 in the data. These simulations are applied with <italic>λ </italic>= 0.0002 and <italic>b </italic>= 4.</p>
+        <p>As in Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>], we examine the results by considering receiver-operating characteristic (ROC) curves for all analyses (Figure <xref ref-type="fig" rid="F3">3</xref>). The performance of the <monospace>DEGseq</monospace> methods is strikingly poor. Further investigation showed that this loss of performance is associated with the large proportion of tuples that are differentially expressed in the same direction, that is, all up-regulated in libraries 6-10. If either the proportion of differentially expressed tuples is reduced sufficiently, or if similar proportions of up-regulation and down-regulation exist in the data, then the performance the <monospace>DEGseq</monospace> method improves substantially. This poor performance occurs becuase of the assumption by the <monospace>DEGseq</monospace> method that the mean of the log-ratios between samples is approximately zero. In this case, because the differential expression always occurs in the same direction, this assumption fails. This may be a problem in real-life applications if large numbers of genomic features are all affected similarly.</p>
+        <fig id="F3" position="float">
+          <label>Figure 3</label>
+          <caption>
+            <p><bold>Mean ROC curves for data with constant dispersion</bold>. Mean ROC curves, based on 100 simulations, comparing the performance of multiple methods in identifying pairwise differential expression. The data contain 5000 truly DE tuples and 5000 non-DE tuples and are simulated from a negative binomial distribution with constant dispersion for all tuples <italic>ϕ </italic>= 0.17, 0.42 or 0.95.</p>
+          </caption>
+          <graphic xlink:href="1471-2105-11-422-3"/>
+        </fig>
+        <p>Of the remaining methods, we see that as the dispersion increases, the performance of all the methods decreases; however, the <monospace>baySeq</monospace> approach appears to outperform all existing methods for all values of <italic>ϕ</italic>, in that, for low false positive rates, the <monospace>baySeq</monospace> method has higher true positive rates. This effect is particularly noticeable for simulations involving higher dispersion. The overdispersed logistic model in general performs worse than the overdispersed log-linear method. In turn, the overdispersed log-linear approach is outperformed by the <monospace>DESeq</monospace> method, which is outperformed by the edgeR method. This roughly corresponds to the relative performance of these methods on the more realistic simulations.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Comparison of methods for pairwise comparisons: biological data</title>
+      <p>We next apply the methods to a set of data acquired by Illumina sequencing small RNAs (20-24 nucleotide) from leaf samples of <italic>Arabidopsis thaliana </italic>(Gene Expression Omnibus accession number GSE16959). The experimental data are taken from two wild-type samples and two RDR6 (RNA-dependent RNA polymerase 6) knockout samples. It is known that RDR6 is required for production of tasRNAs (trans-acting small RNAs) [<xref ref-type="bibr" rid="B21">21</xref>]. We would therefore expect to see differential expression of tasRNAs in a comparison between the wild-type and the mutant samples; specifically, under-expression of tasRNA associated small RNA sequences in the RDR6 knockouts.</p>
+      <p>We consider only those sequence reads that perfectly matched the <italic>Arabidopsis </italic>genome as defined by The Arabidopsis Information Resource (TAIR) [<xref ref-type="bibr" rid="B22">22</xref>] (version 9). Sequences were matched using the PatMaN algorithm [<xref ref-type="bibr" rid="B23">23</xref>]. A total of 70619 unique small RNA sequences matching the genome were observed in the data, and the total number of genome matching reads, used to define the library sizes, were 1840563, 594356, 1477155 and 276006 for the two wildtype and two RDR6 mutant knockout samples respectively. We examined this data for overdispersion by performing likelihood-ratio tests on the reads acquired for each sequence by fitting both a Poisson model and an alternative negative binomial model, allowing for both differences in library size and between the two sample types. Although many sequences showed no significant variation from the Poisson model, a substantial number showed very significant variation (Figure <xref ref-type="fig" rid="F4">4</xref>). This effect is noticeable particularly in those sequences which have a high average count, presumably because it is for these sequences that overdispersion can reasonably be detected.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>(Log) p-values of real sequence data under null hypothesis of no overdispersion against mean expression levels of each sequence</bold>. (Log) p-values of real sequence data under the null hypothesis of no overdispersion and alternative hypothesis of overdispersion. We acquire these for each sequence by performing likelihood-ratio tests on the fit of a Poisson model and an alternative negative binomial model, allowing for both differences in library size and between the two sample types. Although a number of sequences show no significant variation from the Poisson model, a substantial number show very significant variation. The sequences for which overdispersion is particularly significant are those with high mean expression levels, as these are the sequences for which overdispersion can most easily be detected.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-422-4"/>
+      </fig>
+      <p>We identified 678 different small RNA sequences that perfectly matched the tasRNA loci (TAS1a, TAS1b, TAS1c, TAS2, TAS3 and TAS3b) and matched nowhere else in the genome. 21 of these small RNA sequences showed higher expression in the RDR6 mutant than in the wild-type samples and these were excluded, leaving 657 potential true positives. We applied the methods to the count data for each small RNA sequence, seeking differential expression between the wild-type samples and the RDR6 knockout samples. We then ranked the sequences by the extent to which they are reported as differentially expressed by each method. We would expect a sizeable fraction of our 657 potential true positives to appear near the top of the list.</p>
+      <p>Figure <xref ref-type="fig" rid="F5">5</xref> shows the number of tasRNA associated sequences that are identified by the various methods against the number of small RNA sequences selected as differentially expressed for the top three thousand small RNA sequences. Both edgeR and <monospace>baySeq</monospace> identify considerably more tasRNA-associated small RNAs than the <monospace>DESeq</monospace> method and the overdispersed logistic and overdispersed log-linear approaches, with the overdispersed logistic model performing particularly poorly. The <monospace>baySeq</monospace> method in general identifies more tasRNA associated small RNA sequences than edgeR for a given number of selected small RNA sequences. Perhaps surprisingly, <monospace>DEGseq</monospace> does well in this comparison, identifying only slightly fewer tasRNA-associated small RNAs than <monospace>baySeq</monospace> and edgeR for low numbers of selected small RNAs, and slightly more tasRNA-associated small RNAs once the number of small RNAs selected is greater than 500.</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Number of tasRNA-associated small RNAs identified as differentially expressed in RDR6 knockout experiment</bold>. Number of tasRNA-associated small RNAs against the number of differentially expressed small RNAs at the top of each list acquired by each method in an analysis of small RNA data from two wild-type samples and two RDR6 knockout samples. We expect tasRNA-associated small RNAs to be under-expressed in the RDR6 knockout samples, and hence to find these amongst the differentially expressed tuples.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-422-5"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Multi-group experimental designs</title>
+      <p>We next illustrate the application of our method to a more complex experimental design involving multiple experimental conditions. We return to the example discussed in the Methods section, in which we have sequence data from three conditions; condition <italic>A</italic>, condition <italic>B </italic>and condition <italic>C</italic>, with <italic>n </italic>libraries from each condition. There are five different models for these data; one in which there is no differential expression of any kind, three models in which one of the conditions shows differential expression compared to the other two conditions, and one model in which data from all three conditions are different from each other.</p>
+      <p>We investigate the ability of our method to detect such patterns of differential expression by adapting the more realistic simulations proposed by Robinson and Smyth [<xref ref-type="bibr" rid="B9">9</xref>]. In total, data from 3<italic>n </italic>libraries are simulated, of which two thousand tuples are in some manner differentially expressed. The library sizes, and dispersions of each tuple are simulated as before, as are tuples with no true differential expression.</p>
+      <p>Five hundred tuples are simulated to have equivalently distributed data between condition <italic>A </italic>and condition <italic>B</italic>, with data from condition <italic>C </italic>differently distributed. In order to simulate both over and under-expression in the data, we simulate the data in one of two ways, where the alternatives are chosen at random for each tuple. We can simulate the data from condition <italic>A </italic>and condition <italic>B </italic>from a distribution with mean <inline-formula><mml:math id="M21" name="1471-2105-11-422-i14" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo>/</mml:mo><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula> and the data from condition <italic>C </italic>from a distribution with mean <inline-formula><mml:math id="M22" name="1471-2105-11-422-i15" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula>. Alternatively, we simulate the data from condition <italic>A </italic>and condition <italic>B </italic>from a distribution with mean <inline-formula><mml:math id="M23" name="1471-2105-11-422-i15" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula> and the data from condition <italic>C </italic>from a distribution with mean <inline-formula><mml:math id="M24" name="1471-2105-11-422-i14" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo>/</mml:mo><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula>.</p>
+      <p>Another five hundred tuples are simulated similarly such that tuples have equivalently distributed data in conditions <italic>A </italic>and <italic>C</italic>, but differently distributed data in condition <italic>B</italic>, while a third five hundred tuples are simulated such that tuples have equivalently distributed data in conditions B and C, but differently distributed data in condition <italic>A</italic>.</p>
+      <p>A further five hundred tuples are simulated in such a way that the data from all three conditions are differently distributed. For a given tuple, we simulate data from condition <italic>X</italic><sub>1 </sub>from a distribution with mean <italic>λ</italic><sub><italic>cli</italic></sub>. For condition <italic>X</italic><sub>2</sub>, we simulate from a distribution with mean <inline-formula><mml:math id="M25" name="1471-2105-11-422-i16" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mn>2</mml:mn><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula>, and for condition <italic>X</italic><sub>3 </sub>we simulate from a distribution with mean <inline-formula><mml:math id="M26" name="1471-2105-11-422-i16" overflow="scroll"><mml:mrow><mml:msub><mml:mi>λ</mml:mi><mml:mi>c</mml:mi></mml:msub><mml:msub><mml:mi>l</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mn>2</mml:mn><mml:msqrt><mml:mi>b</mml:mi></mml:msqrt></mml:mrow></mml:math></inline-formula> Conditions <italic>A</italic>, <italic>B </italic>and <italic>C </italic>are randomly allocated to be conditions <italic>X</italic><sub>1,</sub><italic>X</italic><sub>2</sub>, <italic>X</italic><sub>3 </sub>for each tuple, and so we see various patterns of differential expression between these samples.</p>
+      <p>We again evaluate the methods by looking at the false discovery rates. In this analysis, we are interested in the ability of our method to accurately identify each of the different types of differential expression by simultaneously considering all possible models for the data. We can also consider the ability of our method to detect differential expression of any kind by taking the sum, for each tuple, of the posterior probabilities of all five models describing differential expression. We can thus consider four FDR curves for each type of differential expression present in the data, and an additional FDR curve for data showing differential expression of any kind.</p>
+      <p>For the pre-existing methods, in the overdispersed log-linear and the overdispersed logistic approaches, we are able to form linear models that describe all possible patterns of differential expression present in the data. For the edgeR, <monospace>DEGseq</monospace> and <monospace>DESeq</monospace> methods, we are only able to carry out pairwise comparisons and so we carry out three analyses on each dataset, one for each pattern of differential expression in which a single experimental condition is differentially expressed when compared to the other two. We are unable to consider directly, by the method of pairwise comparisons, the pattern of differential expression in which all three experimental conditions are differentially expressed, and so we do not use the edgeR, <monospace>DEGseq</monospace> or <monospace>DESeq</monospace> methods for the identification of tuples of this type.</p>
+      <p>We present the data (Figure <xref ref-type="fig" rid="F6">6</xref>) for <italic>b </italic>= 8 and <italic>n </italic>= 2 or <italic>n </italic>= 5. Again, for increased robustness, we estimate mean false discovery rates for the top <italic>N </italic>tuples over 100 simulations for all models. As would be expected, for all methods the false discovery rates are almost identical for the three models in which a single experimental condition is differentially expressed when compared to the other two conditions. We therefore show only the results for differential expression of conditions <italic>A </italic>and <italic>B </italic>compared with condition <italic>C</italic>, together with the results for the case where all three experimental conditions are differentially expressed. In this more complex experimental design, <monospace>baySeq</monospace> outperforms all existing methods, particularly as the number of libraries available increases. Perhaps surprisingly, the edgeR method does better than either the overdispersed log-linear or overdispersed logistic method in discovery of differential expression that can be expressed in terms of a pairwise comparison, as, to a lesser extent, does the <monospace>DESeq</monospace> method. The <monospace>DEGseq</monospace> method, however, does not perform as well as any of the alternatives in these comparisons.</p>
+      <fig id="F6" position="float">
+        <label>Figure 6</label>
+        <caption>
+          <p><bold>Mean FDR curves for analyses of more complex experimental designs</bold>. Mean FDR curves, based on 100 simulations, comparing the performance of multiple methods in identifying more complex patterns of differential expression. The data are simulated from samples coming from three experimental conditions <italic>A</italic>, <italic>B </italic>and <italic>C</italic>, giving a total of five possible patterns of differential expression. We show here the false discovery rates for the identification of tuples where one experimental condition differs from the other two ({<italic>A</italic><sub>1</sub>, ..., <italic>A</italic><sub><italic>n</italic></sub>, <italic>B</italic><sub>1</sub>, ..., <italic>B</italic><sub><italic>n</italic></sub>} {<italic>C</italic><sub>1</sub>, ... <italic>C</italic><sub><italic>n</italic></sub>}) and for the identification of tuples where all three experimental conditions are different ({<italic>A</italic><sub>1</sub>, ..., <italic>A</italic><sub><italic>n</italic></sub>}{<italic>B</italic><sub>1</sub>, ... <italic>B</italic><sub><italic>n</italic></sub>}{<italic>C</italic><sub>1</sub>, ... <italic>C</italic><sub><italic>n</italic></sub>}). The data are simulated with varying number of libraries <italic>n </italic>in each experimental condition.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-422-6"/>
+      </fig>
+      <p>Figure <xref ref-type="fig" rid="F7">7</xref> shows how <monospace>baySeq</monospace> performs for the different models. The false discovery rate for the model in which all three experimental conditions differ from each other is considerably higher than that for pairwise comparisons, indicating the additional difficulty of fitting this more complex model. If we consider the suggestion described in the Methods section, of finding differential expression of any type by summing the posterior probabilities of all models describing differential expression, we see that the false discovery rate for tuples identified in this way is very low, particularly as the number of libraries available increases. This might suggest that some of the false discovery of the individual models may be due to differential expression of one type on occasion being mistaken for differential expression of another type.</p>
+      <fig id="F7" position="float">
+        <label>Figure 7</label>
+        <caption>
+          <p><bold>Comparison of </bold><monospace>baySeq</monospace><bold>method's performance for different models in complex experimental designs</bold>. Mean FDR curves, based on 100 simulations, comparing the performance of the <monospace>baySeq</monospace> method in identifying differential expression of different types in an analysis of more complex experimental designs. The data are simulated from samples coming from three experimental conditions <italic>A</italic>, <italic>B </italic>and <italic>C</italic>, giving a total of five possible patterns of differential expression. We show here the false discovery rates for the identification of tuples where one experimental condition differs from the other two ({<italic>A</italic><sub>1</sub>, ..., <italic>A</italic><sub><italic>n</italic></sub>, <italic>B</italic><sub>1</sub>, ... <italic>B</italic><sub><italic>n</italic></sub>}{<italic>C</italic><sub>1</sub>, ... <italic>C</italic><sub><italic>n</italic></sub>}) and for the identification of tuples where all three experimental conditions are different ({<italic>A</italic><sub>1</sub>, ..., <italic>A</italic><sub><italic>n</italic></sub>}{<italic>B</italic><sub>1</sub>, ... <italic>B</italic><sub><italic>n</italic></sub>}{<italic>C</italic><sub>1</sub>, ... <italic>C</italic><sub><italic>n</italic></sub>}). We also show false discovery rates for the identification of tuples showing differential expression of any kind.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-11-422-7"/>
+      </fig>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>We present an empirical Bayes method, <monospace>baySeq</monospace>, that can simultaneously establish posterior probabilities of multiple models of differential expression and performs as well as or better than any existing techniques for identifying pairwise differential expression in count data. More significantly, this method enables the analysis of experimental designs involving multiple sample groups while using the whole data set to establish parameters on the level of dispersion present. This allows considerably greater accuracy in the analysis of more complex experimental designs than has previously been possible, and is hence a significant step forward in the analysis of the data being produced by high-throughput sequencing technologies. That the method produces posterior probabilities of models of differential expression, rather than significance values, offers a number of advantages in downstream analysis; for example, it becomes a simple matter to find an expected number of differentially expressed tuples, or to combine posterior probabilities of multiple models.</p>
+    <p>In developing this method, we have established a well-defined framework for describing diverse patterns of differential expression between samples. We then take an empirical Bayes approach in order to establish posterior probabilities of each model for each tuple. We achieve this by assuming that the data for each tuple is negative binomially distributed. This assumption is supported by the presence of over-dispersion in true data (Figure <xref ref-type="fig" rid="F4">4</xref>) and the work by Lu <italic>et al </italic>[<xref ref-type="bibr" rid="B7">7</xref>] showing that an assumption of a negative binomial distribution can be robust even if the data are not truly negative binomially distributed. We then estimate empirical prior distributions for the parameters of these negative binomial distributions. This is a very natural approach as high-throughput sequencing provides a large set of data from which to estimate prior distributions. An interesting feature of this approach is the flexibility we gain in choosing how to estimate the parameters of the negative binomial distributions. We have chosen to use quasi-likelihood methods here as they seem to give better performance than maximum-likelihood approaches (unpublished data). However, other methods of estimating these parameters (for example, Robinson and Smyth's [<xref ref-type="bibr" rid="B9">9</xref>] moderated conditional maximum likelihood, or Anders and Huber's [<xref ref-type="bibr" rid="B11">11</xref>] method for linking the variance of the negative binomial distribution to the mean) might be adapted to further improve the performance of our method. We can also deal easily with the problem of different library sizes, as this parameter can be built directly into the assumptions about the distribution of the data.</p>
+    <p>Our method is relatively computationally intensive, but has been implemented to take advantage of parallel processing, such that an analysis of pairwise differential expression of ten thousand tuples coming from ten samples takes approximately 7.5 minutes running on a machine with eight 2 GHz processors. We compare <monospace>baySeq</monospace> to the method implemented in the edgeR package, because this has been reported to outperform other existing approaches for pairwise comparisons [<xref ref-type="bibr" rid="B9">9</xref>], and is the most commonly used method for analysis of count data (based on Bioconductor download statistics). We also include comparisons to two recently developed methods for pairwise comparisons, <monospace>DESeq</monospace> and <monospace>DEGseq</monospace>, and to the older overdispersed logistic and overdispersed log-linear methods as these latter approaches allow for analysis of more complex experimental designs.</p>
+    <p>Comparisons of the methods on pairwise data are made on the basis of previously developed simulation studies [<xref ref-type="bibr" rid="B9">9</xref>], as well as on real biological data, and the <monospace>baySeq</monospace> method developed here performs comparably to, and in some cases better than any existing approach. We also see that one of the recently developed methods, <monospace>DEGseq</monospace>, shows extremely poor performance when there is a high proportion of unidirectional differential expression, although it is comparable to both edgeR and <monospace>baySeq</monospace> in other circumstances. When the dispersion of data is constant, the proportion of differentially expressed tuples is high, and the differential expression is unidirectional, there appears to be a clear improvement in performance by <monospace>baySeq</monospace> compared to all other methods using their default parameters (Figure <xref ref-type="fig" rid="F3">3</xref>).</p>
+    <p>For analyses of data with random dispersions (Figure <xref ref-type="fig" rid="F2">2</xref>), <monospace>baySeq</monospace> performs almost identically to edgeR for small numbers of libraries, but show a marked improvement in performance for larger numbers of libraries. The overdispersed log-linear method performs almost identically to <monospace>baySeq</monospace> for low levels of differential expression, but shows substantially worse performance for higher levels of differential expression. The <monospace>DESeq</monospace> and <monospace>DEGseq</monospace> methods show noticably worse performance compared to <monospace>baySeq</monospace> as both the level of differential expression and the number of libraries increases, with <monospace>DEGseq</monospace> performing particularly poorly. The overdispersed logistic method is always amongst the worst performers.</p>
+    <p>Analysis of real biological data again suggests that our method performs at least as well, and potentially better, than edgeR, while both methods appear to substantially outperform the overdispersed log-linear and logistic methods. The <monospace>DESeq</monospace> method again appears to perform poorly compared to <monospace>baySeq</monospace>. However, in these data <monospace>DEGseq</monospace> shows performance comparable to <monospace>baySeq</monospace>.</p>
+    <p>The chief advantage of the empirical Bayes method developed here, however, is its ready applicability to more complex experimental designs, although at present these methods remain limited to comparisons involving multiple groups, and are not able to account for, for example, paired samples. One possible extension to this work is thus the generalisation of the methods to some form of generalised linear model approach. However, our method is able to simultaneously identify multiple types of differential expression from a single experiment. In comparisons of the methods using simulations of an experimental design involving multiple groups (Figure <xref ref-type="fig" rid="F6">6</xref>), the <monospace>baySeq</monospace> method appears to offer substantial improvements over existing methods. Figure <xref ref-type="fig" rid="F7">7</xref>, which compares the performance of the <monospace>baySeq</monospace> method in identifying different patterns of differential expression, suggests that we should expect some loss of performance for the <monospace>baySeq</monospace> method for more complex patterns of differential expression. However, we can also see that combining models to acquire, for example, posterior probabilities of differential expression of any kind, is a valuable approach.</p>
+    <p>Our method thus provides performance as good as or better than previous methods whilst enabling experimenters to simultaneously consider many diverse sample types in a single sequencing experiment. We believe that this is a valuable approach representing an important step forward for the analysis of count data from sequencing experiments.</p>
+  </sec>
+  <sec>
+    <title>Availability and Requirements</title>
+    <p>The empirical Bayes method developed in this paper are implemented in the software package <monospace>baySeq</monospace>[<xref ref-type="bibr" rid="B24">24</xref>] for the cross-platform computing environment R [<xref ref-type="bibr" rid="B25">25</xref>] (version 2.3 or greater). <monospace>baySeq</monospace> is released under the GPL-3 licence as part of the Bioconductor project [<xref ref-type="bibr" rid="B19">19</xref>] at <ext-link ext-link-type="uri" xlink:href="http://www.bioconductor.org/packages/2.6/bioc/html/baySeq.html">http://www.bioconductor.org/packages/2.6/bioc/html/baySeq.html</ext-link></p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>TJH designed and implemented the <monospace>baySeq</monospace> package and drafted the manuscript. KAK drafted the manuscript. All authors read and approved the final manuscript.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>The authors wish to thank Ericka R. Havecker and David C. Baulcombe for valuable discussions. David C. Baulcombe and Nataliya Yelina supplied the biological data. We would like to thank two anonymous reviewers for their helpful suggestions.</p>
+    <p>Thomas J. Hardcastle is supported by the European Commission Seventh Framework Programme grant number 233325. This work was supported by the European Commission Sixth Framework Programme Integrated Project SIROCCO; contract number LSHG-CT-2006-037900.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Margulies</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Egholm</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Altman</surname>
+          <given-names>WE</given-names>
+        </name>
+        <name>
+          <surname>Attiya</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Bader</surname>
+          <given-names>JS</given-names>
+        </name>
+        <name>
+          <surname>Bemben</surname>
+          <given-names>LA</given-names>
+        </name>
+        <name>
+          <surname>Berka</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Braverman</surname>
+          <given-names>MS</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>YJ</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Dewell</surname>
+          <given-names>SB</given-names>
+        </name>
+        <name>
+          <surname>Du</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Fierro</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Gomes</surname>
+          <given-names>XV</given-names>
+        </name>
+        <name>
+          <surname>Godwin</surname>
+          <given-names>BC</given-names>
+        </name>
+        <name>
+          <surname>He</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Helgesen</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ho</surname>
+          <given-names>CH</given-names>
+        </name>
+        <name>
+          <surname>Ho</surname>
+          <given-names>CH</given-names>
+        </name>
+        <name>
+          <surname>Irzyk</surname>
+          <given-names>GP</given-names>
+        </name>
+        <name>
+          <surname>Jando</surname>
+          <given-names>SC</given-names>
+        </name>
+        <name>
+          <surname>Alenquer</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Jarvie</surname>
+          <given-names>TP</given-names>
+        </name>
+        <name>
+          <surname>Jirage</surname>
+          <given-names>KB</given-names>
+        </name>
+        <name>
+          <surname>Kim</surname>
+          <given-names>JB</given-names>
+        </name>
+        <name>
+          <surname>Knight</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Lanza</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Leamon</surname>
+          <given-names>JH</given-names>
+        </name>
+        <name>
+          <surname>Lefkowitz</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Lei</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Lohman</surname>
+          <given-names>KL</given-names>
+        </name>
+        <name>
+          <surname>Lu</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Makhijani</surname>
+          <given-names>VB</given-names>
+        </name>
+        <name>
+          <surname>McDade</surname>
+          <given-names>KE</given-names>
+        </name>
+        <name>
+          <surname>McKenna</surname>
+          <given-names>MP</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>EW</given-names>
+        </name>
+        <name>
+          <surname>Nickerson</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Nobile</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Plant</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Puc</surname>
+          <given-names>BP</given-names>
+        </name>
+        <name>
+          <surname>Ronan</surname>
+          <given-names>MT</given-names>
+        </name>
+        <name>
+          <surname>Roth</surname>
+          <given-names>GT</given-names>
+        </name>
+        <name>
+          <surname>Sarkis</surname>
+          <given-names>GJ</given-names>
+        </name>
+        <name>
+          <surname>Simons</surname>
+          <given-names>JF</given-names>
+        </name>
+        <name>
+          <surname>Simpson</surname>
+          <given-names>JW</given-names>
+        </name>
+        <name>
+          <surname>Srinivasan</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Tartaro</surname>
+          <given-names>KR</given-names>
+        </name>
+        <name>
+          <surname>Tomasz</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Vogt</surname>
+          <given-names>KA</given-names>
+        </name>
+        <name>
+          <surname>Volkmer</surname>
+          <given-names>GA</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>SH</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Weiner</surname>
+          <given-names>MP</given-names>
+        </name>
+        <name>
+          <surname>Yu</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Begley</surname>
+          <given-names>RF</given-names>
+        </name>
+        <name>
+          <surname>Rothberg</surname>
+          <given-names>JM</given-names>
+        </name>
+        <article-title>Genome sequencing in microfabricated high-density picolitre reactors</article-title>
+        <source>Nature</source>
+        <year>2005</year>
+        <volume>437</volume>
+        <fpage>376</fpage>
+        <lpage>380</lpage>
+        <pub-id pub-id-type="pmid">16056220</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bentley</surname>
+          <given-names>DR</given-names>
+        </name>
+        <article-title>Whole-genome re-sequencing</article-title>
+        <source>Curr Opin Genet Dev</source>
+        <year>2006</year>
+        <volume>16</volume>
+        <fpage>545</fpage>
+        <lpage>552</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.gde.2006.10.009</pub-id>
+        <pub-id pub-id-type="pmid">17055251</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Schuster</surname>
+          <given-names>SC</given-names>
+        </name>
+        <article-title>Next-generation sequencing transforms today's biology</article-title>
+        <source>Nat Methods</source>
+        <year>2008</year>
+        <volume>5</volume>
+        <fpage>16</fpage>
+        <lpage>18</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth1156</pub-id>
+        <pub-id pub-id-type="pmid">18165802</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mardis</surname>
+          <given-names>ER</given-names>
+        </name>
+        <article-title>The impact of next-generation sequencing technology on genetics</article-title>
+        <source>Trends Genet</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <fpage>133</fpage>
+        <lpage>141</lpage>
+        <pub-id pub-id-type="pmid">18262675</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Velculescu</surname>
+          <given-names>VE</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Vogelstein</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Kinzler</surname>
+          <given-names>KW</given-names>
+        </name>
+        <article-title>Serial analysis of gene expression</article-title>
+        <source>Science</source>
+        <year>1995</year>
+        <volume>270</volume>
+        <fpage>484</fpage>
+        <lpage>487</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.270.5235.484</pub-id>
+        <pub-id pub-id-type="pmid">7570003</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Baggerly</surname>
+          <given-names>KA</given-names>
+        </name>
+        <name>
+          <surname>Deng</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Morris</surname>
+          <given-names>JS</given-names>
+        </name>
+        <name>
+          <surname>Aldaz</surname>
+          <given-names>CM</given-names>
+        </name>
+        <article-title>Overdispersed logistic regression for SAGE: modelling multiple groups and covariates</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>144</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-5-144</pub-id>
+        <pub-id pub-id-type="pmid">15469612</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Tomfohr</surname>
+          <given-names>JK</given-names>
+        </name>
+        <name>
+          <surname>Kepler</surname>
+          <given-names>TB</given-names>
+        </name>
+        <article-title>Identifying differential expression in multiple SAGE libraries: an overdispersed log-linear model approach</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2005</year>
+        <volume>6</volume>
+        <fpage>165</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-6-165</pub-id>
+        <pub-id pub-id-type="pmid">15987513</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <article-title>Small-sample estimation of negative binomial dispersion, with applications to SAGE data</article-title>
+        <source>Biostatistics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>321</fpage>
+        <lpage>332</lpage>
+        <pub-id pub-id-type="doi">10.1093/biostatistics/kxm030</pub-id>
+        <pub-id pub-id-type="pmid">17728317</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <article-title>Moderated statistical tests for assessing differences in tag abundance</article-title>
+        <source>Bioinformatics</source>
+        <year>2007</year>
+        <volume>23</volume>
+        <fpage>2881</fpage>
+        <lpage>2887</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btm453</pub-id>
+        <pub-id pub-id-type="pmid">17881408</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wang</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Feng</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>X</given-names>
+        </name>
+        <article-title>DEGseq: an R package for identifying differentially expressed genes from RNA-seq data</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>136</fpage>
+        <lpage>138</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp612</pub-id>
+        <pub-id pub-id-type="pmid">19855105</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Anders</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Huber</surname>
+          <given-names>W</given-names>
+        </name>
+        <article-title>Differential expression analysis for sequence count data</article-title>
+        <source>Nature Precedings</source>
+        <year>2010</year>
+        <ext-link ext-link-type="uri" xlink:href="http://precedings.nature.com/documents/4282/version/2">http://precedings.nature.com/documents/4282/version/2</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bullard</surname>
+          <given-names>JH</given-names>
+        </name>
+        <name>
+          <surname>Purdom</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Hansen</surname>
+          <given-names>KD</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Evaluation of statistical methods for normalization and differential expression in mRNA-Seq experiments</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>94</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-11-94</pub-id>
+        <pub-id pub-id-type="pmid">20167110</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Evans</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Swartz</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Methods for Approximating Integrals in Statistics with Special Emphasis on Bayesian Integration Problems</article-title>
+        <source>Statistical Science</source>
+        <year>1995</year>
+        <volume>10</volume>
+        <issue>3</issue>
+        <fpage>254</fpage>
+        <lpage>272</lpage>
+        <pub-id pub-id-type="doi">10.1214/ss/1177009938</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Nelder</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Quasi-likelihood and psuedo-likelihood are not the same thing</article-title>
+        <source>Journal of Applied Statistics</source>
+        <year>2000</year>
+        <volume>27</volume>
+        <issue>8</issue>
+        <fpage>1007</fpage>
+        <lpage>1011</lpage>
+        <pub-id pub-id-type="doi">10.1080/02664760050173328</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <article-title>Linear models and empirical Bayes methods for assessing differential expression in microarray experiments</article-title>
+        <source>Statistical Applications in Genetics and Molecular Biology</source>
+        <year>2004</year>
+        <volume>3</volume>
+        <pub-id pub-id-type="doi">10.2202/1544-6115.1027</pub-id>
+        <pub-id pub-id-type="pmid">16646809</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lönnstedt</surname>
+          <given-names>IM</given-names>
+        </name>
+        <name>
+          <surname>Rimini</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Nilsson</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Empirical Bayes Microarray ANOVA and Grouping Cell Lines by Equal Expression Levels</article-title>
+        <source>Statistical Applications in Genetics and Molecular Biology</source>
+        <year>2005</year>
+        <volume>4</volume>
+        <pub-id pub-id-type="doi">10.2202/1544-6115.1125</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>edgeR: Methods for differential expression in digital gene expression datasets</article-title>
+        <source>Bioconductor</source>
+        <year>2009</year>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>McCarthy</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>GK</given-names>
+        </name>
+        <article-title>edgeR: a Bioconductor package for differential expression analysis of digital gene expression data</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>139</fpage>
+        <lpage>140</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp616</pub-id>
+        <pub-id pub-id-type="pmid">19910308</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gentleman</surname>
+          <given-names>RC</given-names>
+        </name>
+        <name>
+          <surname>Carey</surname>
+          <given-names>VJ</given-names>
+        </name>
+        <name>
+          <surname>Bates</surname>
+          <given-names>DM</given-names>
+        </name>
+        <name>
+          <surname>Bolstad</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Dettling</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Dudoit</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ellis</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Gautier</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Ge</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Gentry</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hornik</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Hothorn</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Huber</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Iacus</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Irizarry</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Leisch</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Maechler</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Rossini</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Sawitzki</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Smyth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Tierney</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Yang</surname>
+          <given-names>JY</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Bioconductor: open software development for computational biology and bioinformatics</article-title>
+        <source>Genome Biol</source>
+        <year>2004</year>
+        <volume>5</volume>
+        <fpage>R80</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2004-5-10-r80</pub-id>
+        <pub-id pub-id-type="pmid">15461798</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zhang</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Zhou</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Velculescu</surname>
+          <given-names>VE</given-names>
+        </name>
+        <name>
+          <surname>Kern</surname>
+          <given-names>SE</given-names>
+        </name>
+        <name>
+          <surname>Hruban</surname>
+          <given-names>RH</given-names>
+        </name>
+        <name>
+          <surname>Hamilton</surname>
+          <given-names>SR</given-names>
+        </name>
+        <name>
+          <surname>Vogelstein</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Kinzler</surname>
+          <given-names>KW</given-names>
+        </name>
+        <article-title>Gene expression profiles in normal and cancer cells</article-title>
+        <source>Science</source>
+        <year>1997</year>
+        <volume>276</volume>
+        <fpage>1268</fpage>
+        <lpage>1272</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.276.5316.1268</pub-id>
+        <pub-id pub-id-type="pmid">9157888</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Peragine</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Yoshikawa</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Wu</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Albrecht</surname>
+          <given-names>HL</given-names>
+        </name>
+        <name>
+          <surname>Poethig</surname>
+          <given-names>RS</given-names>
+        </name>
+        <article-title>SGS3 and SGS2/SDE1/RDR6 are required for juvenile development and the production of trans-acting siRNAs in Arabidopsis</article-title>
+        <source>Genes Dev</source>
+        <year>2004</year>
+        <volume>18</volume>
+        <fpage>2368</fpage>
+        <lpage>2379</lpage>
+        <pub-id pub-id-type="doi">10.1101/gad.1231804</pub-id>
+        <pub-id pub-id-type="pmid">15466488</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Swarbreck</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Wilks</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Lamesch</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Berardini</surname>
+          <given-names>TZ</given-names>
+        </name>
+        <name>
+          <surname>Garcia-Hernandez</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Foerster</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Meyer</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Muller</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Ploetz</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Radenbaugh</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Singh</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Swing</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Tissier</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Huala</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>The Arabidopsis Information Resource (TAIR): gene structure and function annotation</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2008</year>
+        <volume>36</volume>
+        <fpage>D1009</fpage>
+        <lpage>1014</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkm965</pub-id>
+        <pub-id pub-id-type="pmid">17986450</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Prüfer</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Stenzel</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Dannemann</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Green</surname>
+          <given-names>RE</given-names>
+        </name>
+        <name>
+          <surname>Lachmann</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Kelso</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>PatMaN: rapid alignment of short sequences to large databases</article-title>
+        <source>Bioinformatics</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <fpage>1530</fpage>
+        <lpage>1531</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btn223</pub-id>
+        <pub-id pub-id-type="pmid">18467344</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Hardcastle</surname>
+          <given-names>TJ</given-names>
+        </name>
+        <source>baySeq: Patterns of Differential Expression in Discrete Data</source>
+        <year>2009</year>
+        <ext-link ext-link-type="uri" xlink:href="http://www.bioconductor.org">http://www.bioconductor.org</ext-link>
+        <comment>[Software manual]</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="book">
+        <collab>R Development Core Team</collab>
+        <source>R: A Language and Environment for Statistical Computing</source>
+        <year>2007</year>
+        <publisher-name>R Foundation for Statistical Computing, Vienna, Austria</publisher-name>
+        <ext-link ext-link-type="uri" xlink:href="http://www.R-project.org">http://www.R-project.org</ext-link>
+        <comment>[ISBN 3-900051-07-0]</comment>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

@@ -1,0 +1,1531 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">4053813</article-id>
+    <article-id pub-id-type="publisher-id">gb-2014-15-3-r46</article-id>
+    <article-id pub-id-type="pmid">24580807</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2014-15-3-r46</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Method</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Kraken: ultrafast metagenomic sequence classification using exact alignments</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>Wood</surname>
+          <given-names>Derrick E</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>dwood@cs.umd.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>Steven L</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <xref ref-type="aff" rid="I3">3</xref>
+        <email>salzberg@jhu.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Computer Science and Center for Bioinformatics and Computational Biology, University of Maryland, College Park, MD, USA</aff>
+    <aff id="I2"><label>2</label>Center for Computational Biology, McKusick-Nathans Institute of Genetic Medicine, Johns Hopkins University School of Medicine, Baltimore, MD, USA</aff>
+    <aff id="I3"><label>3</label>Department of Biostatistics, Bloomberg School of Public Health, Johns Hopkins University, Baltimore, MD, USA</aff>
+    <pub-date pub-type="ppub">
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>3</day>
+      <month>3</month>
+      <year>2014</year>
+    </pub-date>
+    <volume>15</volume>
+    <issue>3</issue>
+    <fpage>R46</fpage>
+    <lpage>R46</lpage>
+    <history>
+      <date date-type="received">
+        <day>17</day>
+        <month>11</month>
+        <year>2013</year>
+      </date>
+      <date date-type="accepted">
+        <day>3</day>
+        <month>3</month>
+        <year>2014</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2014 Wood and Salzberg; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2014</copyright-year>
+      <copyright-holder>Wood and Salzberg; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited. </license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/2014/15/3/R46"/>
+    <abstract>
+      <p>Kraken is an ultrafast and highly accurate program for assigning taxonomic labels to metagenomic DNA sequences. Previous programs designed for this task have been relatively slow and computationally expensive, forcing researchers to use faster abundance estimation programs, which only classify small subsets of metagenomic data. Using exact alignment of <italic>k</italic>-mers, Kraken achieves classification accuracy comparable to the fastest BLAST program. In its fastest mode, Kraken classifies 100 base pair reads at a rate of over 4.1 million reads per minute, 909 times faster than Megablast and 11 times faster than the abundance estimation program MetaPhlAn. Kraken is available at <ext-link ext-link-type="uri" xlink:href="http://ccb.jhu.edu/software/kraken/">http://ccb.jhu.edu/software/kraken/</ext-link>.</p>
+    </abstract>
+    <kwd-group>
+      <kwd>metagenomics</kwd>
+      <kwd>sequence classification</kwd>
+      <kwd>sequence alignment</kwd>
+      <kwd>next-generation sequencing</kwd>
+      <kwd>microbiome</kwd>
+    </kwd-group>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Metagenomics, the study of genomic sequences obtained directly from an environment, has become an increasingly popular field of study in the past decade. In projects that have studied environments as varied as seawater [<xref ref-type="bibr" rid="B1">1</xref>], acidic mine drainage [<xref ref-type="bibr" rid="B2">2</xref>] and the human body [<xref ref-type="bibr" rid="B3">3</xref>], metagenomics has allowed researchers to create a picture of an environment’s microbial life without the need to isolate and culture individual microbes. Combined with an ability to sequence DNA quickly, metagenomics projects can generate a huge amount of sequence data that describes these previously invisible worlds.</p>
+    <p>For many metagenomic samples, the species, genera and even phyla present in the sample are largely unknown at the time of sequencing, and the goal of sequencing is to determine this microbial composition as precisely as possible. Of course, if an organism is completely unlike anything previously seen, then its DNA sequence cannot be characterized other than to label it as novel. Many species, though, have some detectable similarity to a known species, and this similarity can be detected by a sensitive alignment algorithm. The most well-known such algorithm, and one of the best methods for assigning a taxonomic label to an unknown sequence, is the BLAST program [<xref ref-type="bibr" rid="B4">4</xref>], which can classify a sequence by finding the best alignment to a large database of genomic sequences. Although BLAST was not designed for metagenomic sequences, it is easily adapted to this problem and it remains one of the best methods available [<xref ref-type="bibr" rid="B5">5</xref>].</p>
+    <p>Other methods of sequence classification have been proposed, utilizing sequence alignment and machine learning techniques in an attempt to improve upon BLAST’s accuracy. In the MEGAN [<xref ref-type="bibr" rid="B6">6</xref>] program, a sequence is searched (using BLAST) against multiple databases, and the lowest common ancestor (LCA) of the best matches against each database is assigned to the sequence. PhymmBL [<xref ref-type="bibr" rid="B5">5</xref>,<xref ref-type="bibr" rid="B7">7</xref>] combines the results of BLAST with scores produced from interpolated Markov models to a achieve higher accuracy than BLAST alone. The Naïve Bayes Classifier (NBC) [<xref ref-type="bibr" rid="B8">8</xref>] applies a Bayesian rule to distributions of <italic>k</italic>-mers within a genome. However, all these programs perform at speeds slower than BLAST, which itself takes very substantial CPU time to align the millions of sequences generated by a typical Illumina sequencing run. This processing burden is so demanding that it suggested another, faster approach to metagenomic sequence analysis: abundance estimation.</p>
+    <p>Abundance estimation programs work by creating a database that is much smaller than the collection of all genomes, which allows them to perform classification much faster than methods that attempt to identify every read in a data set. These databases are engineered to contain ‘marker’ genes (single-copy genes present in nearly all microbes) [<xref ref-type="bibr" rid="B9">9</xref>], or genes that have been found to be specific to certain clades [<xref ref-type="bibr" rid="B10">10</xref>]. Because the databases only contain a very small sample of each genome, these programs can only classify a small percentage of sequences from a typical metagenomics sample. They are meant to be used to characterize the distribution of organisms present in a given sample, rather than labelling every single read. For example, the initial analysis of the Human Microbiome Project [<xref ref-type="bibr" rid="B3">3</xref>] used one of these programs, MetaPhlAn [<xref ref-type="bibr" rid="B10">10</xref>], to analyze several trillion bases (terabases) of metagenomic sequences collected from hundreds of humans. Although abundance estimation programs provide a summary-level characterization of a metagenome, they cannot help with analyses that require more details about the sample. For example, they cannot be used to estimate the gene content in a sample because this requires every read to be compared to known genes. If a sample contains a large number of reads from one species, then it is sometimes possible to assemble those reads to reconstruct part or all of the genome [<xref ref-type="bibr" rid="B11">11</xref>], and then to classify the resulting contigs.</p>
+    <p>Here we describe Kraken, a new sequence classification tool whose accuracy is comparable to the best sequence classification techniques, and whose speed far exceeds both classifiers and abundance estimation programs. This speed advantage derives in large part from the use of exact-match database queries of <italic>k</italic>-mers, rather than inexact alignment of sequences. Its accuracy is made possible by the very large and still-growing number of sequenced microbial genomes, currently numbering over 8,500, which makes it likely that very similar sequences from a given species have been seen before. Through the use of a novel algorithm to process the disparate results returned by its database, Kraken is able to achieve genus-level sensitivity and precision that are very similar to that obtained by the fastest BLAST program, Megablast.</p>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <sec>
+      <title><italic>k</italic>-mer to lowest common ancestor database</title>
+      <p>At the core of Kraken is a database that contains records consisting of a <italic>k</italic>-mer and the LCA of all organisms whose genomes contain that <italic>k</italic>-mer. This database, built using a user-specified library of genomes, allows a quick lookup of the most specific node in the taxonomic tree that is associated with a given <italic>k</italic>-mer. Sequences are classified by querying the database for each <italic>k</italic>-mer in a sequence, and then using the resulting set of LCA taxa to determine an appropriate label for the sequence (Figure <xref ref-type="fig" rid="F1">1</xref> and Materials and methods). Sequences that have no <italic>k</italic>-mers in the database are left unclassified by Kraken. By default, Kraken builds the database with <italic>k</italic> = 31, but this value is user-modifiable.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>The Kraken sequence classification algorithm.</bold> To classify a sequence, each <italic>k</italic>-mer in the sequence is mapped to the lowest common ancestor (LCA) of the genomes that contain that <italic>k</italic>-mer in a database. The taxa associated with the sequence’s <italic>k</italic>-mers, as well as the taxa’s ancestors, form a pruned subtree of the general taxonomy tree, which is used for classification. In the classification tree, each node has a weight equal to the number of <italic>k</italic>-mers in the sequence associated with the node’s taxon. Each root-to-leaf (RTL) path in the classification tree is scored by adding all weights in the path, and the maximal RTL path in the classification tree is the classification path (nodes highlighted in yellow). The leaf of this classification path (the orange, leftmost leaf in the classification tree) is the classification used for the query sequence.</p>
+        </caption>
+        <graphic xlink:href="gb-2014-15-3-r46-1"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Simulated metagenome data</title>
+      <p>Although genuine metagenomic reads might provide the most realistic test of performance, such data would not allow us to assess classification accuracy, because the true species in metagenomic data sets today are mostly unknown. We instead used two simulated metagenomes created by combining real sequences obtained from projects that sequenced isolated microbial genomes. When creating these simulated metagenomes, we used data sequenced by the Illumina HiSeq and MiSeq sequencing platforms, and thus we call these the HiSeq and MiSeq metagenomes, respectively (see Materials and methods). These metagenomes were constructed to measure classification speed and genus-level accuracy for data generated by current and widely used sequencing platforms.</p>
+      <p>In addition to the two simulated metagenomes constructed with sequences from isolated genomes, we created a third metagenomic sample covering a much broader range of the sequenced phylogeny. This sample, featuring simulated bacterial and archaeal reads (called simBA-5), was created with an error rate five times higher than would be expected, to evaluate Kraken’s performance on data that contain many errors or have strong differences from Kraken’s genomic library (see Materials and methods).</p>
+    </sec>
+    <sec>
+      <title>Classification accuracy</title>
+      <p>Classifiers generally adopt one of two strategies: for example, PhymmBL and NBC classify all sequences as accurately as possible, while Kraken and Megablast leave some sequences unclassified if insufficient evidence exists. Because PhymmBL and NBC label everything, they will tend to produce more false positives than methods like Kraken. In turn, one can expect a selective classifier to have higher precision at some cost to sensitivity. Uniquely among metagenomics classifiers, PhymmBL supplies confidence scores for its classifications, which can be used to discard low-confidence predictions and improve accuracy. Using a lower bound of 0.65 for genus-level confidence, we created a selective classifier based on PhymmBL’s predictions that we denote as PhymmBL65.</p>
+      <p>To compare Kraken’s accuracy to these of other classification methods, we classified 10,000 sequences from each of our simulated metagenomes and measured genus-level sensitivity and precision (Figure <xref ref-type="fig" rid="F2">2</xref> and Table <xref ref-type="table" rid="T1">1</xref>). Here, sensitivity refers to the proportion of sequences assigned to the correct genus. Precision, also known as positive predictive value, refers to the proportion of correct classifications, out of the total number of classifications attempted. Kraken’s sensitivity and precision are very close to that of Megablast. For all three metagenomes, Kraken’s sensitivity was within 2.5 percentage points of Megablast’s. The use of exact 31-base matches, however, appears to yield a higher precision for Kraken, as its precision was the highest of all classifiers for each of the three metagenomes. As may be expected, the nonselective classifiers were able to achieve slightly higher sensitivity than the selective classifiers, but at the cost of a significantly lower precision, approximately 80% versus close to 100% for Kraken.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Classification accuracy and speed comparison of classification programs for three simulated metagenomes.</bold> For each metagenome, genus precision and sensitivity are shown for five classifiers, and speed is shown for five programs (PhymmBL65 is simply a confidence-filtered version of PhymmBL’s results, and MetaPhlAn only classifies a subset of reads that map to one of its marker genes, as it is an abundance estimation program). Results shown are for: <bold>(a)</bold> the HiSeq metagenome, consisting of HiSeq reads (mean length <italic>μ</italic> = 92 bp) in equal proportion from ten bacterial sequencing projects; <bold>(b)</bold> the MiSeq metagenome, consisting of MiSeq reads (<italic>μ</italic> = 156 bp) in equal proportion from ten bacterial projects; and <bold>(c)</bold> the simBA-5 metagenome, consisting of simulated 100-bp reads with a high error rate from 1,967 bacterial and archaeal taxa. Note that the horizontal axes in all speed graphs have a logarithmic scale.</p>
+        </caption>
+        <graphic xlink:href="gb-2014-15-3-r46-2"/>
+      </fig>
+      <table-wrap position="float" id="T1">
+        <label>Table 1</label>
+        <caption>
+          <p>Genus-level classification accuracy for three simulated metagenomes</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left" valign="bottom"> <hr/></th>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>HiSeq</bold>
+                <hr/>
+              </th>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>MiSeq</bold>
+                <hr/>
+              </th>
+              <th colspan="2" align="center" valign="bottom">
+                <bold>simBA-5</bold>
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th align="left">
+                <bold>Classifier</bold>
+              </th>
+              <th align="center">
+                <bold>Precision</bold>
+              </th>
+              <th align="center">
+                <bold>Sensitivity</bold>
+              </th>
+              <th align="center">
+                <bold>Precision</bold>
+              </th>
+              <th align="center">
+                <bold>Sensitivity</bold>
+              </th>
+              <th align="center">
+                <bold>Precision</bold>
+              </th>
+              <th align="center">
+                <bold>Sensitivity</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="left" valign="bottom">Megablast<hr/></td>
+              <td align="center" valign="bottom">99.03<hr/></td>
+              <td align="center" valign="bottom">79.00<hr/></td>
+              <td align="center" valign="bottom">92.44<hr/></td>
+              <td align="center" valign="bottom">75.76<hr/></td>
+              <td align="center" valign="bottom">96.93<hr/></td>
+              <td align="center" valign="bottom">93.67<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NBC<hr/></td>
+              <td align="center" valign="bottom">82.33<hr/></td>
+              <td align="center" valign="bottom">82.33<hr/></td>
+              <td align="center" valign="bottom">77.78<hr/></td>
+              <td align="center" valign="bottom">77.78<hr/></td>
+              <td align="center" valign="bottom">97.64<hr/></td>
+              <td align="center" valign="bottom">97.64<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">PhymmBL<hr/></td>
+              <td align="center" valign="bottom">79.14<hr/></td>
+              <td align="center" valign="bottom">79.14<hr/></td>
+              <td align="center" valign="bottom">76.21<hr/></td>
+              <td align="center" valign="bottom">76.21<hr/></td>
+              <td align="center" valign="bottom">96.11<hr/></td>
+              <td align="center" valign="bottom">96.11<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">PhymmBL65<hr/></td>
+              <td align="center" valign="bottom">99.13<hr/></td>
+              <td align="center" valign="bottom">73.95<hr/></td>
+              <td align="center" valign="bottom">92.47<hr/></td>
+              <td align="center" valign="bottom">73.03<hr/></td>
+              <td align="center" valign="bottom">99.08<hr/></td>
+              <td align="center" valign="bottom">95.45<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Kraken<hr/></td>
+              <td align="center" valign="bottom">99.20<hr/></td>
+              <td align="center" valign="bottom">77.15<hr/></td>
+              <td align="center" valign="bottom">94.71<hr/></td>
+              <td align="center" valign="bottom">73.46<hr/></td>
+              <td align="center" valign="bottom">99.90<hr/></td>
+              <td align="center" valign="bottom">91.25<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Kraken-Q<hr/></td>
+              <td align="center" valign="bottom">99.12<hr/></td>
+              <td align="center" valign="bottom">76.31<hr/></td>
+              <td align="center" valign="bottom">94.69<hr/></td>
+              <td align="center" valign="bottom">70.41<hr/></td>
+              <td align="center" valign="bottom">99.92<hr/></td>
+              <td align="center" valign="bottom">89.54<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">MiniKraken<hr/></td>
+              <td align="center" valign="bottom">99.44<hr/></td>
+              <td align="center" valign="bottom">66.12<hr/></td>
+              <td align="center" valign="bottom">97.41<hr/></td>
+              <td align="center" valign="bottom">67.95<hr/></td>
+              <td align="center" valign="bottom">99.95<hr/></td>
+              <td align="center" valign="bottom">65.87<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">MiniKraken-Q<hr/></td>
+              <td align="center" valign="bottom">99.36<hr/></td>
+              <td align="center" valign="bottom">65.67<hr/></td>
+              <td align="center" valign="bottom">97.32<hr/></td>
+              <td align="center" valign="bottom">65.84<hr/></td>
+              <td align="center" valign="bottom">99.98<hr/></td>
+              <td align="center" valign="bottom">65.31<hr/></td>
+            </tr>
+            <tr>
+              <td align="left">Kraken-GB</td>
+              <td align="center">99.51</td>
+              <td align="center">93.75</td>
+              <td align="center">98.48</td>
+              <td align="center">86.23</td>
+              <td align="center">99.48</td>
+              <td align="center">91.13</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p>We also note the recent publication of a method, LMAT [<xref ref-type="bibr" rid="B12">12</xref>], which uses a <italic>k</italic>-mer indexing scheme similar to Kraken’s, but otherwise differs in its classification strategy. LMAT cannot easily be downloaded and run on our simulated data (see Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>: Note 1) so instead we ran Kraken on a data set used for LMAT’s published results. For that data (the PhymmBL set), Kraken exceeded LMAT’s accuracy in both identifying read origin and identifying the presence of species in the sample. Both methods had essentially perfect (near 100%) precision, but Kraken correctly labelled the species of 89% of the reads while LMAT only did so for 74% of the reads. However, as we note, that data set does not provide a good basis for comparison because the reads are simulated without error from genomes included in both Kraken’s and LMAT’s databases.</p>
+    </sec>
+    <sec>
+      <title>Classification speed</title>
+      <p>Because of the very large size of metagenomic data sets today, classification speed is critically important, as demonstrated by the emergence of rapid abundance estimation programs such as MetaPhlAn. To evaluate classification speed, we ran each classifier, as well as MetaPhlAn, against each of the three metagenomes that we used to test accuracy (Figure <xref ref-type="fig" rid="F2">2</xref>).</p>
+      <p>Kraken classified reads much faster than any other classifier, with performance ranging from 150 to 240 times faster than the closest competitor. Kraken processed data at a rate of over 1.5 million reads per minute (rpm) for the HiSeq metagenome, over 1.3 million rpm for the simBA-5 metagenome and over 890,000 rpm for the MiSeq metagenome. The next fastest classifier, Megablast, had speeds of 7,143 rpm for the HiSeq metagenome, 4,511 rpm for the simBA-5 metagenome and 2,830 rpm for the MiSeq metagenome. For all three metagenomes, PhymmBL classified at a rate of &lt;100 rpm and NBC at &lt;10 rpm. Kraken is also more than three times as fast as MetaPhlAn (which only classifies a subset of reads), which had speeds of 445,000 rpm, 371,000 rpm and 276,000 rpm for the HiSeq, simBA-5 and MiSeq metagenomes, respectively. These results are shown in Figure <xref ref-type="fig" rid="F2">2</xref>. As expected, all tools processed the longer MiSeq reads (mean length <italic>μ</italic> = 156 bp) more slowly than the simBA-5 (<italic>μ</italic> = 100 bp) or HiSeq (<italic>μ</italic> = 92 bp) reads. We also performed a speed comparison against LMAT using one of the real samples discussed in LMAT’s published results; on this sample Kraken was 38.82 times faster than LMAT and 7.55 times faster than a version of LMAT using a smaller database (Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>: Note 1).</p>
+    </sec>
+    <sec>
+      <title>Other variants of Kraken</title>
+      <p>To obtain maximal speed, Kraken needs to avoid page faults (instances where data must be brought from a hard drive into physical memory), so it is important that Kraken runs on a computer with enough RAM to hold the entire database. Although Kraken’s default database requires 70 GB of RAM, we also developed a method to remove <italic>k</italic>-mers from the database, which dramatically reduces the memory requirements. We call this version of Kraken, which uses a smaller database, MiniKraken. For our results here, we used a 4 GB database. Compared to Kraken, the ability of MiniKraken to recognize species from short reads is lower, with sensitivity for our real sequence metagenomes dropping approximately 11% (Figure <xref ref-type="fig" rid="F3">3</xref> and Table <xref ref-type="table" rid="T1">1</xref>). On the high-error simBA-5 metagenome, MiniKraken’s sensitivity was more than 25 percentage points lower than Kraken’s, indicating that for short reads, high error rates can cause substantial loss in sensitivity. However, for all three metagenomes, MiniKraken was more precise than Kraken.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>Classification accuracy and speed comparison of variants of Kraken for three simulated metagenomes.</bold> For each metagenome, genus precision and sensitivity are shown for five classifiers, and speed is shown for Kraken, along with a reduced memory version of Kraken (MiniKraken), quick execution versions of both (Kraken-Q and MiniKraken-Q), and Kraken run with a database containing draft and completed microbial genomes from GenBank (Kraken-GB). Results shown are for the same metagenomes used in Figure <xref ref-type="fig" rid="F2">2</xref>. Note that the scales of the axes differ from Figure <xref ref-type="fig" rid="F2">2</xref>, as the precision and speed of Kraken (and its variants) exceed that of the other classifiers used. <bold>(a)</bold> HiSeq metagenome. <bold>(b)</bold> MiSeq metagenome. <bold>(c)</bold> simBA-5 metagenome.</p>
+        </caption>
+        <graphic xlink:href="gb-2014-15-3-r46-3"/>
+      </fig>
+      <p>MiniKraken’s high precision demonstrates that in many cases we do not need to examine all <italic>k</italic>-mers in a sequence to get the correct classification. Taking this idea to its extreme, we developed a ‘quick operation’ mode for Kraken (and MiniKraken), where instead of querying all <italic>k</italic>-mers in a sequence against our database, we instead stop at the first <italic>k</italic>-mer that exists in the database, and use the LCA associated with that <italic>k</italic>-mer to classify the sequence. This operation mode (denoted by appending -Q to the classifier name) allows Kraken to skip tens or hundreds of <italic>k</italic>-mer queries per sequence, significantly increasing its classification speed with only a small fall in accuracy (Figure <xref ref-type="fig" rid="F3">3</xref> and Table <xref ref-type="table" rid="T1">1</xref>). Because a database containing fewer <italic>k</italic>-mers requires more queries from a sequence to find a hit, MiniKraken-Q is slower than Kraken-Q, even when MiniKraken is faster than Kraken.</p>
+      <p>We also created a variant Kraken database that contains GenBank’s draft and completed genomes for bacteria and archaea, which we call Kraken-GB. The regular version of Kraken only includes RefSeq complete genomes, of which there are 2,256, while Kraken-GB contains 8,517 genomes. Our hypothesis was that Kraken-GB would have a higher sensitivity than standard Kraken for our metagenomes, by virtue of its larger database. Kraken-GB has a much higher sensitivity for the HiSeq and MiSeq metagenomes compared to Kraken (Figure <xref ref-type="fig" rid="F3">3</xref> and Table <xref ref-type="table" rid="T1">1</xref>), primarily due to the presence of two genomes in these simulated metagenomic samples that have close relatives only in Kraken-GB’s database (Materials and methods).</p>
+      <p>Although Kraken-GB does have higher sensitivity than Kraken, it sometimes makes surprising errors, which we discovered were caused by contaminant and adapter sequences in the contigs of some draft genomes. These contaminant sequences come from other bacteria, viruses or even human genomes, and they result in incorrectly labelled <italic>k</italic>-mers in the database. We attempted to remove these from Kraken-GB (Materials and methods), but some contaminants may still slip through any filters. Thus for now, the default version of Kraken uses only complete RefSeq genomes.</p>
+    </sec>
+    <sec>
+      <title>Clade exclusion experiments</title>
+      <p>An important goal of metagenomics is the discovery of new organisms, and the proper classification of novel organisms is a challenge for any classifier. Although a classifier cannot possibly give a novel species the proper species label, it may be able to identify the correct genus. To simulate the presence of novel organisms, we re-analyzed the simBA-5 metagenome after first removing organisms from the Kraken database that belonged to the same clade. That is, for each read, we masked out database hits for the species of the read’s origin, and evaluated Kraken’s accuracy at the higher ranks (e.g., genus and family). We continued this masking and evaluation process for clades of origin up to the phylum rank. This procedure approximates how Kraken would classify the metagenomic reads if that clade were not present in the database.</p>
+      <p>Table <xref ref-type="table" rid="T2">2</xref> contains the results of this analysis. Kraken exhibited high rank-level precision in all cases where a clade was excluded, with rank-level precision remaining at or above 93% for all pairs of measured and excluded ranks. However, sensitivity was dramatically lower: at best, Kraken was able to classify approximately 33% of reads when their species has never been seen before. This is not surprising in light of Kraken's reliance on exact matches of relatively long <italic>k</italic>-mers: sequences deriving from different genera rarely share long exact matches. Nonetheless, the high precision in this experiment indicates that when Kraken is presented with novel organisms, it is likely to either classify them properly at higher levels or not classify them at all.</p>
+      <table-wrap position="float" id="T2">
+        <label>Table 2</label>
+        <caption>
+          <p>Classification statistics with clade exclusion for Kraken on the simBA-5 metagenome</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th rowspan="2" align="left" valign="top">
+                <bold>Measured rank</bold>
+              </th>
+              <th colspan="6" align="center" valign="bottom">
+                <bold>Excluded rank</bold>
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th align="center">
+                <bold>Species</bold>
+              </th>
+              <th align="center">
+                <bold>Genus</bold>
+              </th>
+              <th align="center">
+                <bold>Family</bold>
+              </th>
+              <th align="center">
+                <bold>Order</bold>
+              </th>
+              <th align="center">
+                <bold>Class</bold>
+              </th>
+              <th align="center">
+                <bold>Phylum</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="left" valign="bottom">Kingdom<hr/></td>
+              <td align="center" valign="bottom">100/24.4/24.4<hr/></td>
+              <td align="center" valign="bottom">100/7.9/7.9<hr/></td>
+              <td align="center" valign="bottom">100/2.8/2.8<hr/></td>
+              <td align="center" valign="bottom">100/2.3/2.3<hr/></td>
+              <td align="center" valign="bottom">100/1.5/1.5<hr/></td>
+              <td align="center" valign="bottom">100/1.1/1.1<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Phylum<hr/></td>
+              <td align="center" valign="bottom">99.9/23.9/24.5<hr/></td>
+              <td align="center" valign="bottom">99.6/7.2/7.9<hr/></td>
+              <td align="center" valign="bottom">98.7/2.5/2.8<hr/></td>
+              <td align="center" valign="bottom">98.0/1.6/2.4<hr/></td>
+              <td align="center" valign="bottom">96.8/1.2/1.7<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Class<hr/></td>
+              <td align="center" valign="bottom">99.7/24.7/25.3<hr/></td>
+              <td align="center" valign="bottom">99.1/7.1/7.9<hr/></td>
+              <td align="center" valign="bottom">96.7/2.0/3.0<hr/></td>
+              <td align="center" valign="bottom">93.2/1.0/2.3<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Order<hr/></td>
+              <td align="center" valign="bottom">99.7/24.1/25.3<hr/></td>
+              <td align="center" valign="bottom">98.9/6.8/8.5<hr/></td>
+              <td align="center" valign="bottom">96.4/2.0/3.4<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Family<hr/></td>
+              <td align="center" valign="bottom">99.7/25.4/26.7<hr/></td>
+              <td align="center" valign="bottom">98.5/8.5/10.8<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+              <td align="center" valign="bottom">–<hr/></td>
+            </tr>
+            <tr>
+              <td align="left">Genus</td>
+              <td align="center">99.2/26.3/33.2</td>
+              <td align="center">–</td>
+              <td align="center">–</td>
+              <td align="center">–</td>
+              <td align="center">–</td>
+              <td align="center">–</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>For each measured rank, Kraken’s rank-level precision, sensitivity and classification percentage are shown. Classification percentage is defined here as the percentage of reads with taxonomic entries at both the measured and excluded ranks that were classified by Kraken with the clade of origin excluded.</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+    <sec>
+      <title>Human Microbiome Project data</title>
+      <p>We used Kraken to classify reads from three saliva samples collected as part of the Human Microbiome Project. Because these samples were obtained from humans, we created a Kraken database containing bacterial, viral and human genomes to classify these reads. Combining the three samples together, we report the taxonomic distribution of the classified reads (Figure <xref ref-type="fig" rid="F4">4</xref>). An analysis of the classified reads from the combined samples reveals that a majority of those reads were classified into one of three genera: <italic>Streptococcus</italic> (30%), <italic>Haemophilus</italic> (17%) and <italic>Prevotella</italic> (13%). <italic>Streptococcus mitis</italic>[<xref ref-type="bibr" rid="B13">13</xref>], <italic>Haemophilus parainfluenzae</italic>[<xref ref-type="bibr" rid="B14">14</xref>] and <italic>Prevotella melaninogenica</italic>[<xref ref-type="bibr" rid="B15">15</xref>], the most abundant species (by read count) of each of these three genera, are all known to be associated with human saliva. We also performed the classification on each sample separately (Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>: Figures S1,S2,S3).</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Taxonomic distribution of saliva microbiome reads classified by Kraken.</bold> Sequences from saliva samples collected from three individuals were classified by Kraken. The distribution of those reads that were classified by Kraken is shown.</p>
+        </caption>
+        <graphic xlink:href="gb-2014-15-3-r46-4"/>
+      </fig>
+      <p>Of note is that 68.2% of the reads were not classified by Kraken. To determine why these reads were not classified by Kraken, we aligned a randomly selected subset of 2,500 of these unclassified reads to the RefSeq bacterial genomes using BLASTN. Only 11% (275) of the subset of unclassified reads had a BLASTN alignment with E-value ≤ 10<sup>−5</sup> and identity ≥90%. This suggests that the vast majority of the reads not classified by Kraken were significantly different from any known species, and thus simply impossible to identify.</p>
+    </sec>
+  </sec>
+  <sec sec-type="conclusions">
+    <title>Conclusions</title>
+    <p>Kraken’s accuracy is comparable to that of Megablast for classifying short sequence reads, as might be expected given that both require long exact sequence matches (Kraken requires 31 bp exact matches, while Megablast requires 28 bp [<xref ref-type="bibr" rid="B16">16</xref>]). As we showed for the simBA-5 metagenome, where high sequence error rates were simulated, Megablast’s inexact alignment strategy allowed it to tolerate more errors and achieve higher sensitivity than Kraken, which uses only exact alignment. We note that even in the face of this high error rate, Kraken’s sensitivity still exceeded 90% and its precision was 99.9%. With Kraken’s high precision, users concerned with maximizing sensitivity could run Kraken first, and then run another classification program on the reads not classified by Kraken, obtaining high sensitivity results much faster than with a single program.</p>
+    <p>An important constraint for Kraken is its memory usage: at present, the default database requires 70 GB, a value that will grow in linear proportion to the number of distinct <italic>k</italic>-mers in the genomic library (the database’s records occupy 12 bytes per <italic>k</italic>-mer). For comparison, the only other <italic>k</italic>-mer-based classifier, LMAT, uses a far larger database of 619 GB. While Kraken only stores the LCA for each <italic>k</italic>-mer, LMAT also records all genomes associated with a <italic>k</italic>-mer, resulting in a record size bounded only by the number of genomes in the library. The use of a reduced database by MiniKraken offers a nearly equivalent alternative, if Kraken’s database is too large for the available computational resources.</p>
+    <p>One important potential alternative use of Kraken is to identify contaminant sequences rapidly. As we noted, some of the draft microbial genomes in GenBank contain contaminating sequences from many different sources. A fast classifier like Kraken can quickly identify many such contaminants before they are included in a draft assembly. Similarly, for microbial samples collected from humans, a Kraken database can be created, which can be used to identify contaminating human reads in a metagenomic sample quickly.</p>
+    <p>Finally, Kraken’s results demonstrate the high speed and accuracy that are achievable through the use of short exact alignments. The Kraken database structure, which is tuned to query overlapping <italic>k</italic>-mers rapidly, enables Kraken to produce results faster than would be possible without the database facilitating this type of query. We believe that this structure can find a use in other applications beyond taxonomic classification; for example, de Bruijn graphs, commonly used in genome assembly programs, can effectively be traversed by querying a database with overlapping <italic>k</italic>-mers [<xref ref-type="bibr" rid="B17">17</xref>], and that process can be made faster through the caching behavior of the Kraken database. Likewise, most operations that need to query overlapping <italic>k</italic>-mers should be able to run significantly faster by using a data structure like the Kraken database.</p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec>
+      <title>Sequence classification algorithm</title>
+      <p>To classify a DNA sequence <italic>S</italic>, we collect all <italic>k</italic>-mers within that sequence into a set, denoted as <italic>K</italic>(<italic>S</italic>). We then map each <italic>k</italic>-mer in <italic>K</italic>(<italic>S</italic>), using the algorithm described below, to the LCA taxon of all genomes that contain that <italic>k</italic>-mer. These LCA taxa and their ancestors in the taxonomy tree form what we term the <italic>classification tree</italic>, a pruned subtree that is used to classify <italic>S</italic>. Each node in the classification tree is weighted with the number of <italic>k</italic>-mers in <italic>K</italic>(<italic>S</italic>) that mapped to the taxon associated with that node. Then, each root-to-leaf (RTL) path in the classification tree is scored by calculating the sum of all node weights along the path. The maximum scoring RTL path in the classification tree is the <italic>classification path</italic>, and <italic>S</italic> is assigned the label corresponding to its leaf (if there are multiple maximally scoring paths, the LCA of all those paths’ leaves is selected). This algorithm, illustrated in Figure <xref ref-type="fig" rid="F1">1</xref>, allows Kraken to consider each <italic>k</italic>-mer within a sequence as a separate piece of evidence, and then attempt to resolve any conflicting evidence if necessary. Note that for an appropriate choice of <italic>k</italic>, most <italic>k</italic>-mers will map uniquely to a single species, greatly simplifying the classification process. Sequences for which none of the <italic>k</italic>-mers in <italic>K</italic>(<italic>S</italic>) are found in any genome are left unclassified by this algorithm.</p>
+      <p>The use of RTL path scoring in the classification tree is necessary in light of the inevitable differences between the sequences to be classified and the sequences present in any library of genomes. Such differences can, even for large values of <italic>k</italic>, result in a <italic>k</italic>-mer that is present in the library but associated with a species far removed from the true source species. By scoring the various RTL paths in the classification tree, we can compensate for these differences and correctly classify sequences even when a small minority of <italic>k</italic>-mers in a sequence indicate that the sequence should be assigned an incorrect taxonomic label.</p>
+    </sec>
+    <sec>
+      <title>Database creation</title>
+      <p>Efficient implementation of Kraken’s classification algorithm requires that the mapping of <italic>k</italic>-mers to taxa is performed by querying a pre-computed database. Kraken creates this database through a multi-step process, beginning with the selection of a library of genomic sequences. Kraken includes a default library, based on completed microbial genomes in the National Center for Biotechnology Information’s (NCBI) RefSeq database, but the library can be customized as needed by individual users [<xref ref-type="bibr" rid="B18">18</xref>].</p>
+      <p>Once the library is chosen, we use the Jellyfish multithreaded <italic>k</italic>-mer counter [<xref ref-type="bibr" rid="B19">19</xref>] to create a database containing every distinct 31-mer in the library. Once the database is complete, the 4-byte spaces Jellyfish used to store the <italic>k</italic>-mer counts in the database file are instead used by Kraken to store the taxonomic ID numbers of the <italic>k</italic>-mers’ LCA values. After the database has been created by Jellyfish, the genomic sequences in the library are processed one at a time. For each sequence, the taxon associated with it is used to set the stored LCA values of all <italic>k</italic>-mers in the sequence. As sequences are processed, if a <italic>k</italic>-mer from a sequence has had its LCA value previously set, then the LCA of the stored value and the current sequence’s taxon is calculated and that LCA is stored for the <italic>k</italic>-mer. Taxon information is obtained from the NCBI taxonomy database.</p>
+    </sec>
+    <sec>
+      <title>Database structure and search algorithm</title>
+      <p>Because Kraken very frequently uses a <italic>k</italic>-mer as a database query immediately after querying an adjacent <italic>k</italic>-mer, and because adjacent <italic>k</italic>-mers share a substantial amount of sequence, we utilize the minimizer concept [<xref ref-type="bibr" rid="B20">20</xref>] to group similar <italic>k</italic>-mers together. To explain our application of this concept, we here define the canonical representation of a DNA sequence <italic>S</italic> as the lexicographically smaller of <italic>S</italic> and the reverse complement of <italic>S</italic>. To determine a <italic>k</italic>-mer’s minimizer of length <italic>M</italic>, we consider the canonical representation of all <italic>M</italic>-mers in the <italic>k</italic>-mer, and select the lexicographically smallest of those <italic>M</italic>-mers as the <italic>k</italic>-mer’s minimizer. In practice, adjacent <italic>k</italic>-mers will often have the same minimizer.</p>
+      <p>In Kraken’s database, all <italic>k</italic>-mers with the same minimizer are stored consecutively, and are sorted in lexicographical order of their canonical representations. A query for a <italic>k</italic>-mer <italic>R</italic> can then be processed by looking up in an index the positions in the database where the <italic>k</italic>-mers with <italic>R</italic>’s minimizer would be stored, and then performing a binary search within that region (Figure <xref ref-type="fig" rid="F5">5</xref>). Because adjacent <italic>k</italic>-mers often have the same minimizer, the search range is often the same between two consecutive queries, and the search in the first query can often bring data into the CPU cache that will be used in the second query. By allowing memory accesses in subsequent queries to access data in the CPU cache instead of RAM, this strategy makes subsequent queries much faster than they would otherwise be. The index containing the offsets of each group of <italic>k</italic>-mers in the database requires 8 × 4<sup><italic>M</italic></sup> bytes. By default Kraken uses 15-bp minimizers, but the user can modify this value; for example, in creating MiniKraken, we used 13-bp minimizers to ensure the total database size stayed under 4 GB.</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Kraken database structure.</bold> Each <italic>k</italic>-mer to be queried against the database has a specific substring that is its minimizer. To search for a <italic>k</italic>-mer in the database, the positions in the database that contain <italic>k</italic>-mers with the same minimizer are examined. These positions are quickly found by examining the minimizer offset array for the start positions of records with the <italic>k</italic>-mer’s minimizer (orange) and the next possible minimizer (blue). Within a range of records associated with a given minimizer, records are sorted by lexicographical ordering of their <italic>k</italic>-mers, allowing a query to be completed by using a binary search over this range.</p>
+        </caption>
+        <graphic xlink:href="gb-2014-15-3-r46-5"/>
+      </fig>
+      <p>In implementing Kraken, we made further optimizations to the structure and search algorithm described above. First, as noted by Roberts <italic>et al</italic>. [<xref ref-type="bibr" rid="B20">20</xref>], a simple lexicographical ordering of <italic>M</italic>-mers can result in a skewed distribution of minimizers that over-represents low-complexity <italic>M</italic>-mers. In Kraken, such a bias would create many large search ranges, which would require more time to search. To create a more even distribution of minimizers (and thus speed up searches), we use the exclusive-or (XOR) operation to toggle half of the bits of each <italic>M</italic>-mer’s canonical representation prior to comparing the <italic>M</italic>-mers to each other using lexicographical ordering. This XOR operation effectively scrambles the standard ordering, and prevents the large bias toward low-complexity minimizers.</p>
+      <p>We also take advantage of the fact that the search range is often the same between queries to make Kraken’s queries faster. Rather than compute the minimizer each time we perform a query, we first search the previous range. If our queried <italic>k</italic>-mer is found in this range, the query can return immediately. If the <italic>k</italic>-mer is not found, then the minimizer is computed; if the <italic>k</italic>-mer’s minimizer is the same as the last queried <italic>k</italic>-mer’s, then the query fails, as the minimizer’s search space has been shown not to have the <italic>k</italic>-mer. Only if the minimizer has changed does Kraken have to adjust the search range and search again for the <italic>k</italic>-mer.</p>
+    </sec>
+    <sec>
+      <title>Constructing simulated metagenomes</title>
+      <p>The HiSeq and MiSeq metagenomes were built using 20 sets of bacterial whole-genome shotgun reads. These reads were found either as part of the GAGE-B project [<xref ref-type="bibr" rid="B21">21</xref>] or in the NCBI Sequence Read Archive. Each metagenome contains sequences from ten genomes (Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>: Table S1). For both the 10,000 and 10 million read samples of each of these metagenomes, 10% of their sequences were selected from each of the ten component genome data sets (i.e., each genome had equal sequence abundance). All sequences were trimmed to remove low quality bases and adapter sequences.</p>
+      <p>The composition of these two metagenomes poses certain challenges to our classifiers. For example, <italic>Pelosinus fermentans</italic>, found in our HiSeq metagenome, cannot be correctly identified at the genus level by Kraken (or any of the other previously described classifiers), because there are no <italic>Pelosinus</italic> genomes in the RefSeq complete genomes database; however, there are seven such genomes in Kraken-GB’s database, including six strains of <italic>P. fermentans</italic>. Similarly, in our MiSeq metagenome, <italic>Proteus vulgaris</italic> is often classified incorrectly at the genus level because the only <italic>Proteus</italic> genome in Kraken’s database is a single <italic>Proteus mirabilis</italic> genome. Five more <italic>Proteus</italic> genomes are present in Kraken-GB’s database, allowing Kraken-GB to classify reads better from that genus. In addition, the MiSeq metagenome contains five genomes from the Enterobacteriaceae family (<italic>Citrobacter</italic>, <italic>Enterobacter</italic>, <italic>Klebsiella</italic>, <italic>Proteus</italic> and <italic>Salmonella</italic>). The high sequence similarity between the genera in this family can make distinguishing between genera difficult for any classifier.</p>
+      <p>The simBA-5 metagenome was created by simulating reads from the set of complete bacterial and archaeal genomes in RefSeq. Replicons from those genomes were used if they were associated with a taxon that had an entry associated with the genus rank, resulting in a set of replicons from 607 genera. We then used the Mason read simulator [<xref ref-type="bibr" rid="B22">22</xref>] with its Illumina model to produce 10 million 100-bp reads from these genomes. First we created simulated genomes for each species, using a SNP rate of 0.1% and an indel rate of 0.1% (both default parameters), from which we generated the reads. For the simulated reads, we multiplied the default mismatch and indel rates by five, resulting in an average mismatch rate of 2% (ranging from 1% at the beginning of reads to 6% at the ends) and an indel rate of 1% (0.5% insertion probability and 0.5% deletion probability). For the simBA-5 metagenome, the 10,000 read set was generated from a random sample of the 10 million read set.</p>
+    </sec>
+    <sec>
+      <title>Evaluation of accuracy and speed</title>
+      <p>We elected to measure accuracy primarily at the genus level, which was the lowest level for which we could easily determine the taxonomy information for PhymmBL and NBC’s predictions in an automated fashion. (This is due to the manner in which PhymmBL and NBC report their results). Because some genomes do not have taxonomic entries at all seven ranks (species, genus, family, order, class, phylum and kingdom), we defined genus-level sensitivity as <italic>A</italic>/<italic>B</italic>, where <italic>A</italic> is the number of reads with an assigned genus that were correctly classified at that rank, and <italic>B</italic> is the total number of reads with any assigned genus. We defined sensitivity similarly for other taxonomic ranks.</p>
+      <p>Because Kraken may classify a read at levels above the species, measuring its precision requires us to define the effect on precision of assigning the correct genus (for example) while not assigning a species at all. For this reason, we defined rank-level precision as <italic>C</italic>/(<italic>D</italic> + <italic>E</italic>), where <italic>C</italic> is the number of reads labeled at or below the correct taxon at the measured rank, <italic>D</italic> is the number of reads labeled at or below the measured rank, and <italic>E</italic> is the number of reads incorrectly labeled above the measured rank. For example, given a read <italic>R</italic> that should be labeled as <italic>Escherichia coli</italic>, a labeling of <italic>R</italic> as <italic>E. coli</italic>, <italic>E. fergusonii</italic> or <italic>Escherichia</italic> would improve genus-level precision. A label of Enterobacteriaceae (correct family) or Proteobacteria (correct phylum) would have no effect on genus-level precision. A label for <italic>R</italic> of <italic>Bacillus</italic> (incorrect genus) or Firmicutes (incorrect phylum) would decrease the genus-level precision.</p>
+      <p>When evaluating PhymmBL’s accuracy, following its developers’ advice [<xref ref-type="bibr" rid="B7">7</xref>], we selected a genus confidence threshold for our comparisons. We selected 3,333 reads from the simulated medium complexity (simMC) [<xref ref-type="bibr" rid="B23">23</xref>] data set, covering 31 different genera. To simulate short reads from the Sanger sequence data in the simMC set, we selected the last 100 bp from each of the reads. We then ran PhymmBL against those 100-bp reads, and evaluated the genus-level sensitivity and precision of PhymmBL’s predictions with genus confidence thresholds from 0 to 1, in increments of 0.05. We found that a threshold of 0.65 yielded the highest <italic>F</italic>-score (the harmonic mean of sensitivity and precision), with 0.60 and 0.70 also having <italic>F</italic>-scores within 0.5 percentage points of the maximum (Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>: Table S2). We therefore used the 0.65 genus confidence threshold in our comparisons. Although the selection of a threshold depends on a user’s individual needs, and so is to some extent arbitrary, a threshold selected in this manner provides a more proper comparison to a selective classifier such as Kraken than no threshold at all.</p>
+      <p>The time and accuracy results when using Megablast as a classifier were obtained from the log data produced by PhymmBL, as PhymmBL uses Megablast for its alignment step. When assigning a taxonomic label to a read with Megablast, we used the taxon associated with the first reported alignment. Megablast was run with default options.</p>
+      <p>Speed was evaluated using the single-threaded operation of each program (except for NBC). PhymmBL was altered so that its call to the blastn program used one thread instead of two. NBC was run with 36 concurrent processes operating on disjoint sets of genomes in its genomic library, and the total time for the classifier was determined by summing the decompression and scoring times for each genome. Wall clock times were recorded for all classifiers. In comparing Kraken to the other classifiers, we used BLAST+ 2.2.27, PhymmBL 4.0, NBC 1.1 and MetaPhlAn 1.7.6. Classifiers were all run on the same computer, with 48 AMD Opteron 6172 2.1 GHz CPUs and 252 GB of RAM, running Red Hat Enterprise Linux 5. The data sets used for speed evaluation had 10,000 reads each for all programs other than Kraken (and its variants) and MetaPhlAn, which used 10,000,000 read data sets. Higher read numbers were used with these faster programs to minimize the effect of the initial and final operations that take place during the programs’ execution.</p>
+      <p>Although Kraken is the only one of the programs we examined that explicitly performs operations to ensure its data is in physical memory before classification, we wanted to be sure that all programs were evaluated in a similar manner. When evaluating speed, for each program, we read all database files (e.g. IMM files and BLAST databases for PhymmBL, <italic>k</italic>-mer frequency lists for NBC and the Bowtie index for MetaPhlAn) into memory three times before running the program, in order to place the database content in the operating system cache (which is stored in physical memory).</p>
+    </sec>
+    <sec>
+      <title>Reduced database sizes</title>
+      <p>To generate the 4-GB database for our MiniKraken results, we removed the first 18 of every block of 19 records in the standard Kraken database. A shrinking factor of 19 was selected as it was the smallest integer factor that would reduce the size to less than 4 GB, a size that can easily fit into the memory of many common personal computers. For users that have more RAM available, Kraken allows a smaller shrinking factor to be used, which will give increased sensitivity.</p>
+    </sec>
+    <sec>
+      <title>Use of draft genomes</title>
+      <p>When constructing the Kraken-GB database, we noticed there were several contigs with known adapter sequences at the ends. In subsequent tests, we also found that some sequences in samples with large amounts of human sequence were consistently misclassified by this database, leading us to conclude that contamination was likely present in the draft genomes. In an attempt to counteract this contamination, we removed from the database those <italic>k</italic>-mers from known adapter sequences, as well as the first and last 20 <italic>k</italic>-mers from each of the draft contigs. While this did improve classification, it did not eliminate the misclassification problem. For this reason, we believe that if draft genomes are used in a Kraken database, very stringent measures should be used to remove contaminant sequences from the genomic library.</p>
+    </sec>
+    <sec>
+      <title>Clade exclusion experiments</title>
+      <p>When re-analyzing the simBA-5 data set for our clade exclusion experiments, some reads were not used for certain pairs of measured and excluded ranks. If a read’s origin lacked a taxonomic entry at either of the measured or excluded ranks, it was not used for that particular experiment.</p>
+      <p>In addition, a read was not used in an experiment unless at least two other taxa represented in our database (aside from the excluded clade) at the excluded rank shared the clade of origin’s taxon at the measured rank. For example, a read from genus <italic>G</italic> would not be used in an experiment measuring accuracy at the class rank and excluding the genus rank unless <italic>G</italic>’s home class had at least two other genera with genomes in Kraken’s genomic library. Without this filtering step, were a genus excluded when it was the only genus in its class, Kraken could not possibly name the correct class, as all entries in the database from that class would be excluded as well. This is the same approach taken in similar experiments that were used to evaluate PhymmBL [<xref ref-type="bibr" rid="B5">5</xref>].</p>
+    </sec>
+    <sec>
+      <title>Human microbiome data classification</title>
+      <p>We classified the Human Microbiome Project data using a Kraken database made from complete RefSeq bacterial, archaeal and viral genomes, along with the GRCh37 human genome. We retrieved the sequences of three accessions (SRS019120, SRS014468 and SRS015055) from the NCBI Sequence Read Archive, and each accession had two runs submitted. All reads were trimmed to remove low quality bases and adapter sequences. Krona [<xref ref-type="bibr" rid="B24">24</xref>] was used to generate all taxonomic distribution plots.</p>
+      <p>Because the sequences were all paired reads, we joined the reads together by concatenating the mates with a sequence of ‘NNNNN’ between them. Kraken ignores <italic>k</italic>-mers with ambiguous nucleotides, so the <italic>k</italic>-mers that span these ‘N’ characters do not affect classification. This operation allowed Kraken to classify a pair of reads as a single unit rather than having to classify the mates separately.</p>
+    </sec>
+    <sec>
+      <title>Software and data availability</title>
+      <p>Kraken is written in C++ and Perl, and is available for download at [<xref ref-type="bibr" rid="B25">25</xref>] along with the metagenome data used to evaluate the accuracy of the classifiers presented here, and a downloadable 4-GB MiniKraken database similar to the one used here. The source code is also available from GitHub [<xref ref-type="bibr" rid="B26">26</xref>].</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>bp: base pair; CPU: central processing unit; LCA: lowest common ancestor; NBC: Naïve Bayes Classifier; NCBI: National Center for Biotechnology Information; rpm: reads per minute; RTL: root-to-leaf; simMC: simulated medium complexity; SNP: single nucleotide polymorphism.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors’ contributions</title>
+    <p>DEW wrote the software and performed the experiments and analysis. DEW and SLS designed the experiments and wrote the paper. Both authors read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p>Supplementary information.</p>
+      </caption>
+      <media xlink:href="gb-2014-15-3-r46-S1.pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>This work was supported in part by National Institutes of Health grants R01 HG006677 and R01 GM083873 to SLS.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Venter</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Remington</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Heidelberg</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Halpern</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Rusch</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Eisen</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Wu</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Paulsen</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Nelson</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Nelson</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Fouts</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Levy</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Knap</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Lomas</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Nealson</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>White</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Peterson</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hoffman</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Parsons</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Baden-Tillson</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Pfannkoch</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Rogers</surname>
+          <given-names>Y-H</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>H</given-names>
+        </name>
+        <article-title>Environmental genome shotgun sequencing of the Sargasso Sea</article-title>
+        <source>Science</source>
+        <year>2004</year>
+        <volume>304</volume>
+        <fpage>66</fpage>
+        <lpage>74</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1093857</pub-id>
+        <?supplied-pmid 15001713?>
+        <pub-id pub-id-type="pmid">15001713</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tyson</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Chapman</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hugenholtz</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Allen</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Ram</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Richardson</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Solovyev</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Rubin</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Rokhsar</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Banfield</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Community structure and metabolism through reconstruction of microbial genomes from the environment</article-title>
+        <source>Nature</source>
+        <year>2004</year>
+        <volume>428</volume>
+        <fpage>37</fpage>
+        <lpage>43</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature02340</pub-id>
+        <?supplied-pmid 14961025?>
+        <pub-id pub-id-type="pmid">14961025</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Huttenhower</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Gevers</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Knight</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Abubucker</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Badger</surname>
+          <given-names>JH</given-names>
+        </name>
+        <name>
+          <surname>Chinwalla</surname>
+          <given-names>AT</given-names>
+        </name>
+        <name>
+          <surname>Creasy</surname>
+          <given-names>HH</given-names>
+        </name>
+        <name>
+          <surname>Earl</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>FitzGerald</surname>
+          <given-names>MG</given-names>
+        </name>
+        <name>
+          <surname>Fulton</surname>
+          <given-names>RS</given-names>
+        </name>
+        <name>
+          <surname>Giglio</surname>
+          <given-names>MG</given-names>
+        </name>
+        <name>
+          <surname>Hallsworth-Pepin</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Lobos</surname>
+          <given-names>EA</given-names>
+        </name>
+        <name>
+          <surname>Madupu</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Magrini</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Martin</surname>
+          <given-names>JC</given-names>
+        </name>
+        <name>
+          <surname>Mitreva</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Muzny</surname>
+          <given-names>DM</given-names>
+        </name>
+        <name>
+          <surname>Sodergren</surname>
+          <given-names>EJ</given-names>
+        </name>
+        <name>
+          <surname>Versalovic</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Wollam</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Worley</surname>
+          <given-names>KC</given-names>
+        </name>
+        <name>
+          <surname>Wortman</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Young</surname>
+          <given-names>SK</given-names>
+        </name>
+        <name>
+          <surname>Zeng</surname>
+          <given-names>Q</given-names>
+        </name>
+        <name>
+          <surname>Aagaard</surname>
+          <given-names>KM</given-names>
+        </name>
+        <name>
+          <surname>Abolude</surname>
+          <given-names>OO</given-names>
+        </name>
+        <name>
+          <surname>Allen-Vercoe</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Alm</surname>
+          <given-names>EJ</given-names>
+        </name>
+        <name>
+          <surname>Alvarado</surname>
+          <given-names>L</given-names>
+        </name>
+        <etal/>
+        <article-title>Structure, function and diversity of the healthy human microbiome</article-title>
+        <source>Nature</source>
+        <year>2012</year>
+        <volume>486</volume>
+        <fpage>207</fpage>
+        <lpage>214</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature11234</pub-id>
+        <?supplied-pmid 22699609?>
+        <pub-id pub-id-type="pmid">22699609</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Altschul</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Gish</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Miller</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Myers</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Lipman</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Basic local alignment search tool</article-title>
+        <source>J Mol Biol</source>
+        <year>1990</year>
+        <volume>215</volume>
+        <fpage>403</fpage>
+        <lpage>410</lpage>
+        <?supplied-pmid 2231712?>
+        <pub-id pub-id-type="pmid">2231712</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brady</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>Phymm and PhymmBL: metagenomic phylogenetic classification with interpolated Markov models</article-title>
+        <source>Nat Methods</source>
+        <year>2009</year>
+        <volume>6</volume>
+        <fpage>673</fpage>
+        <lpage>676</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1358</pub-id>
+        <?supplied-pmid 19648916?>
+        <pub-id pub-id-type="pmid">19648916</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Huson</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Auch</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Qi</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Schuster</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>MEGAN analysis of metagenomic data</article-title>
+        <source>Genome Res</source>
+        <year>2007</year>
+        <volume>17</volume>
+        <fpage>377</fpage>
+        <lpage>386</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.5969107</pub-id>
+        <?supplied-pmid 17255551?>
+        <pub-id pub-id-type="pmid">17255551</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brady</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>PhymmBL expanded: confidence scores, custom databases, parallelization and more</article-title>
+        <source>Nat Methods</source>
+        <year>2011</year>
+        <volume>8</volume>
+        <fpage>367</fpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth0511-367</pub-id>
+        <?supplied-pmid 21527926?>
+        <pub-id pub-id-type="pmid">21527926</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rosen</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Garbarine</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Caseiro</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Polikar</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Sokhansanj</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Metagenome fragment classification using <italic>N</italic>-mer frequency profiles</article-title>
+        <source>Adv Bioinformatics</source>
+        <year>2008</year>
+        <volume>2008</volume>
+        <fpage>1</fpage>
+        <lpage>12</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Liu</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Gibbons</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Ghodsi</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Treangen</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Accurate and fast estimation of taxonomic profiles from metagenomic shotgun sequences</article-title>
+        <source>BMC Genomics</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>S4</fpage>
+        <pub-id pub-id-type="pmid">21989143</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Segata</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Waldron</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Ballarini</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Narasimhan</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Jousson</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Huttenhower</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Metagenomic microbial community profiling using unique clade-specific marker genes</article-title>
+        <source>Nat Methods</source>
+        <year>2012</year>
+        <volume>9</volume>
+        <fpage>811</fpage>
+        <lpage>814</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.2066</pub-id>
+        <?supplied-pmid 22688413?>
+        <pub-id pub-id-type="pmid">22688413</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Treangen</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Koren</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Sommer</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Astrovskaya</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Ondov</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Darling</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Phillippy</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Pop</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>MetAMOS: a modular and open source metagenomic assembly and analysis pipeline</article-title>
+        <source>Genome Biol</source>
+        <year>2013</year>
+        <volume>14</volume>
+        <fpage>R2</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2013-14-1-r2</pub-id>
+        <?supplied-pmid 23320958?>
+        <pub-id pub-id-type="pmid">23320958</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ames</surname>
+          <given-names>SK</given-names>
+        </name>
+        <name>
+          <surname>Hysom</surname>
+          <given-names>DA</given-names>
+        </name>
+        <name>
+          <surname>Gardner</surname>
+          <given-names>SN</given-names>
+        </name>
+        <name>
+          <surname>Lloyd</surname>
+          <given-names>GS</given-names>
+        </name>
+        <name>
+          <surname>Gokhale</surname>
+          <given-names>MB</given-names>
+        </name>
+        <name>
+          <surname>Allen</surname>
+          <given-names>JE</given-names>
+        </name>
+        <article-title>Scalable metagenomic taxonomy classification using a reference genome database</article-title>
+        <source>Bioinformatics</source>
+        <year>2013</year>
+        <volume>29</volume>
+        <fpage>2253</fpage>
+        <lpage>2260</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btt389</pub-id>
+        <?supplied-pmid 23828782?>
+        <pub-id pub-id-type="pmid">23828782</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kindblom</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Davies</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Herzberg</surname>
+          <given-names>MC</given-names>
+        </name>
+        <name>
+          <surname>Svensäter</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Wickström</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Salivary proteins promote proteolytic activity in <italic>Streptococcus mitis</italic> biovar 2 and <italic>Streptococcus mutans</italic></article-title>
+        <source>Mol Oral Microbiol</source>
+        <year>2012</year>
+        <volume>27</volume>
+        <fpage>362</fpage>
+        <lpage>372</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.2041-1014.2012.00650.x</pub-id>
+        <?supplied-pmid 22958385?>
+        <pub-id pub-id-type="pmid">22958385</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Foweraker</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Cooke</surname>
+          <given-names>NJ</given-names>
+        </name>
+        <name>
+          <surname>Hawkey</surname>
+          <given-names>PM</given-names>
+        </name>
+        <article-title>Ecology of <italic>Haemophilus influenzae</italic> and <italic>Haemophilus parainfluenzae</italic> in sputum and saliva and effects of antibiotics on their distribution in patients with lower respiratory tract infections</article-title>
+        <source>Antimicrob Agents Chemother</source>
+        <year>1993</year>
+        <volume>37</volume>
+        <fpage>804</fpage>
+        <lpage>809</lpage>
+        <pub-id pub-id-type="doi">10.1128/AAC.37.4.804</pub-id>
+        <?supplied-pmid 8494378?>
+        <pub-id pub-id-type="pmid">8494378</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Könönen</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Saarela</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Karjalainen</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Jousimies-Somer</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Alaluusua</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Asikainen</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Transmission of oral <italic>Prevotella melaninogenica</italic> between a mother and her young child</article-title>
+        <source>Oral Microbiol Immunol</source>
+        <year>1994</year>
+        <volume>9</volume>
+        <fpage>310</fpage>
+        <lpage>314</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.1399-302X.1994.tb00077.x</pub-id>
+        <?supplied-pmid 7808775?>
+        <pub-id pub-id-type="pmid">7808775</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Camacho</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Coulouris</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Avagyan</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Ma</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Papadopoulos</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Bealer</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Madden</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>BLAST+: architecture and applications</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>421</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-10-421</pub-id>
+        <?supplied-pmid 20003500?>
+        <pub-id pub-id-type="pmid">20003500</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zimin</surname>
+          <given-names>AV</given-names>
+        </name>
+        <name>
+          <surname>Marçais</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Puiu</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Roberts</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <name>
+          <surname>Yorke</surname>
+          <given-names>JA</given-names>
+        </name>
+        <article-title>The MaSuRCA genome assembler</article-title>
+        <source>Bioinformatics</source>
+        <year>2013</year>
+        <volume>29</volume>
+        <fpage>2669</fpage>
+        <lpage>2677</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btt476</pub-id>
+        <?supplied-pmid 23990416?>
+        <pub-id pub-id-type="pmid">23990416</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pruitt</surname>
+          <given-names>KD</given-names>
+        </name>
+        <name>
+          <surname>Tatusova</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>GR</given-names>
+        </name>
+        <name>
+          <surname>Maglott</surname>
+          <given-names>DR</given-names>
+        </name>
+        <article-title>NCBI Reference Sequences (RefSeq): current status, new features and genome annotation policy</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2012</year>
+        <volume>40</volume>
+        <fpage>D130</fpage>
+        <lpage>D135</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkr1079</pub-id>
+        <?supplied-pmid 22121212?>
+        <pub-id pub-id-type="pmid">22121212</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marçais</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Kingsford</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>A fast, lock-free approach for efficient parallel counting of occurrences of <italic>k</italic>-mers</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <fpage>764</fpage>
+        <lpage>770</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr011</pub-id>
+        <?supplied-pmid 21217122?>
+        <pub-id pub-id-type="pmid">21217122</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Roberts</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hayes</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Hunt</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Mount</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Yorke</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Reducing storage requirements for biological sequence comparison</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>3363</fpage>
+        <lpage>3369</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bth408</pub-id>
+        <?supplied-pmid 15256412?>
+        <pub-id pub-id-type="pmid">15256412</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Magoc</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Pabinger</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Canzar</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Su</surname>
+          <given-names>Q</given-names>
+        </name>
+        <name>
+          <surname>Puiu</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Tallon</surname>
+          <given-names>LJ</given-names>
+        </name>
+        <name>
+          <surname>Salzberg</surname>
+          <given-names>SL</given-names>
+        </name>
+        <article-title>GAGE-B: an evaluation of genome assemblers for bacterial organisms</article-title>
+        <source>Bioinformatics</source>
+        <year>2013</year>
+        <volume>29</volume>
+        <fpage>1718</fpage>
+        <lpage>1725</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btt273</pub-id>
+        <?supplied-pmid 23665771?>
+        <pub-id pub-id-type="pmid">23665771</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Holtgrewe</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Mason</article-title>
+        <comment>
+          <ext-link ext-link-type="uri" xlink:href="http://www.seqan.de/projects/mason/">http://www.seqan.de/projects/mason/</ext-link>
+        </comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Mavromatis</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Ivanova</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Barry</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Shapiro</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Goltsman</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>McHardy</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Rigoutsos</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Salamov</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Korzeniewski</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Land</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Lapidus</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Grigoriev</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Richardson</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Hugenholtz</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Kyrpides</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>Use of simulated data sets to evaluate the fidelity of metagenomic processing methods</article-title>
+        <source>Nat Methods</source>
+        <year>2007</year>
+        <volume>4</volume>
+        <fpage>495</fpage>
+        <lpage>500</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth1043</pub-id>
+        <?supplied-pmid 17468765?>
+        <pub-id pub-id-type="pmid">17468765</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ondov</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Bergman</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Phillippy</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Interactive metagenomic visualization in a web browser</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>385</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-12-385</pub-id>
+        <?supplied-pmid 21961884?>
+        <pub-id pub-id-type="pmid">21961884</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="other">
+        <article-title>Kraken homepage</article-title>
+        <comment>
+          <ext-link ext-link-type="uri" xlink:href="http://ccb.jhu.edu/software/kraken/">http://ccb.jhu.edu/software/kraken/</ext-link>
+        </comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="other">
+        <article-title>Kraken GitHub repository</article-title>
+        <comment>
+          <ext-link ext-link-type="uri" xlink:href="https://github.com/DerrickWood/kraken">https://github.com/DerrickWood/kraken</ext-link>
+        </comment>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

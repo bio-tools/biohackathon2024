@@ -1,0 +1,694 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD Journal Publishing DTD v2.3 20050630//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName journalpublishing.dtd?>
+<?SourceDTD.Version 2.3?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 1?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Bioinformation</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Bioinformation</journal-id>
+    <journal-id journal-id-type="publisher-id">Bioinformation</journal-id>
+    <journal-title-group>
+      <journal-title>Bioinformation</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">0973-2063</issn>
+    <publisher>
+      <publisher-name>Biomedical Informatics</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">5450252</article-id>
+    <article-id pub-id-type="publisher-id">97320630013101</article-id>
+    <article-id pub-id-type="doi">10.6026/97320630013101</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>optCluster: An R Package for Determining the Optimal Clustering Algorithm</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Sekula</surname>
+          <given-names>Michael</given-names>
+        </name>
+        <xref ref-type="aff" rid="A1">1</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Datta</surname>
+          <given-names>Somnath</given-names>
+        </name>
+        <xref ref-type="aff" rid="A2">2</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Datta</surname>
+          <given-names>Susmita</given-names>
+        </name>
+        <xref ref-type="aff" rid="A2">2</xref>
+        <xref ref-type="corresp" rid="COR1">*</xref>
+      </contrib>
+      <aff id="A1"><label>1</label>Department of Bioinformatics and Biostatistics, University of Louisville, Louisville, Kentucky, 40202, USA;</aff>
+      <aff id="A2"><label>2</label>Department of Biostatistics, University of Florida, Gainesville, Florida, 32611, USA;</aff>
+    </contrib-group>
+    <author-notes>
+      <corresp id="COR1"><label>*</label>Susmita Datta<email>susmita.datta@ufl.edu</email></corresp>
+    </author-notes>
+    <pub-date pub-type="collection">
+      <year>2017</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>31</day>
+      <month>3</month>
+      <year>2017</year>
+    </pub-date>
+    <volume>13</volume>
+    <issue>3</issue>
+    <fpage>101</fpage>
+    <lpage>103</lpage>
+    <history>
+      <date date-type="received">
+        <day>27</day>
+        <month>2</month>
+        <year>2017</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>10</day>
+        <month>3</month>
+        <year>2017</year>
+      </date>
+      <date date-type="accepted">
+        <day>11</day>
+        <month>3</month>
+        <year>2017</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© 2017 Biomedical Informatics</copyright-statement>
+      <copyright-year>2017</copyright-year>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/3.0/">
+        <license-p>This is an Open Access article which permits unrestricted use, distribution, 
+and reproduction in any medium, provided the original work is properly credited. This is distributed under the terms of the Creative Commons Attribution License.</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p>There exist numerous programs and packages that perform validation for a given clustering solution; however, clustering algorithms
+fare differently as judged by different validation measures. If more than one performance measure is used to evaluate multiple
+clustering partitions, an optimal result is often difficult to determine by visual inspection alone. This paper introduces optCluster, an R
+package that uses a single function to simultaneously compare numerous clustering partitions (created by different algorithms and/or
+numbers of clusters) and obtain a “best” option for a given dataset. The method of weighted rank aggregation is utilized by this
+package to objectively aggregate various performance measure scores, thereby taking away the guesswork that often follows a visual
+inspection of cluster results. The optCluster package contains biological validation measures as well as clustering algorithms
+developed specifically for RNA sequencing data, making it a useful tool for clustering genomic data.</p>
+      <sec id="s0">
+        <title>Availability:</title>
+        <p>This package is available for free through the Comprehensive R Archive Network (CRAN) at <ext-link ext-link-type="uri" xlink:href="http://cran.rproject.org/web/packages/optCluster/">
+http://cran.rproject.org/web/packages/optCluster/</ext-link></p>
+      </sec>
+    </abstract>
+    <kwd-group>
+      <kwd>Clustering</kwd>
+      <kwd>Validation</kwd>
+      <kwd>Gene Expression</kwd>
+      <kwd>RNA-Seq</kwd>
+    </kwd-group>
+  </article-meta>
+</front>
+<body>
+  <sec id="s1">
+    <title>Background</title>
+    <p>Cluster analysis is playing an increasingly important role with
+many of the new advancements in the field of bioinformatics.
+Researchers often attempt to expose underlying structures inside
+large datasets in hopes that molecular profiles are organized into
+biologically meaningful clusters. For example, genes with similar
+biological functions would ideally be grouped into the same
+cluster. When “little” or “no” information is known about the
+data, clustering algorithms are necessary for assigning similar
+observations together into the same group. Different algorithms
+naturally create different clustering partitions, so choosing the
+“best” partition can be a potentially daunting endeavor. Since
+clustering is an unsupervised learning task, there is no correct
+answer to what the “best” partition for a dataset really is.
+Therefore, researchers turn to validation measures as a method of
+comparing multiple clustering results. These validation measures
+evaluate clusters based on specific performance criteria such as
+compactness, separation, or biological homogeneity. An inherent
+problem with cluster validation is that a clustering algorithm may
+perform well for one index but perform poorly for another. In
+fact, it is quite common for a different choice of validation
+measure to result in a different optimal clustering solution. The
+detailed article by [<xref rid="R01" ref-type="bibr">1</xref>] examines the potential issues associated
+with cluster validation in the field of bioinformatics and suggests
+using multiple validation indices to compare different partitions.
+Unfortunately, choosing the “best” clustering option based on a
+visual inspection of multiple validation results can be problematic
+since the results typically consist of multiple “best” options.
+Hence, an algorithmic method that can provide a unique solution
+to this problem would be useful.</p>
+    <p>In this paper, we present an R [<xref rid="R02" ref-type="bibr">2</xref>] package called optCluster to
+help researchers establish an optimal or “best” solution to cluster
+analysis. Using a single function call, the user is able to evaluate
+various combinations of clustering algorithms and numbers of
+clusters with multiple validation measures, and determine the
+most ideal clustering partition for a particular dataset through an
+aggregation of ranked validation measure lists.</p>
+  </sec>
+  <sec sec-type="methods" id="s2">
+    <title>Methodology</title>
+    <p>The core of the optCluster package is weighted rank aggregation,
+which was proposed by [<xref rid="R03" ref-type="bibr">3</xref>] as a technique to evaluate a set of
+validation measure results. Clustering partitions, created by
+different algorithms and/or numbers of clusters, can be sorted 
+into a ranked list, Vi, based on their performances for a specific
+validation index. When using more than one validation measure
+in a cluster analysis, a set of ranked lists is created. The idea
+behind rank aggregation is to combine these lists together and
+generate an optimally ranked list that is as close as possible to the
+entire collection of original lists. In this context, rank aggregation
+is essentially an optimization problem. Suppose there are m
+number of ranked lists (V1, … , Vm) such that each Vi is associated
+with a corresponding importance weight wi. An objective function
+for a proposed list L can be defined as</p>
+    <p>
+      <mml:math id="M1">
+        <mml:mstyle displaystyle="true">
+          <mml:mrow>
+            <mml:mi>Φ</mml:mi>
+          </mml:mrow>
+          <mml:mrow>
+            <mml:mo>(</mml:mo>
+          </mml:mrow>
+          <mml:mrow>
+            <mml:mi>L</mml:mi>
+          </mml:mrow>
+          <mml:mrow>
+            <mml:mo>)</mml:mo>
+          </mml:mrow>
+          <mml:mrow>
+            <mml:mo>=</mml:mo>
+          </mml:mrow>
+          <mml:munderover>
+            <mml:mrow>
+              <mml:mi>∑</mml:mi>
+            </mml:mrow>
+            <mml:mrow>
+              <mml:mi>i=1</mml:mi>
+            </mml:mrow>
+            <mml:mrow>
+              <mml:mi>m</mml:mi>
+            </mml:mrow>
+          </mml:munderover>
+          <mml:msub>
+            <mml:mrow>
+              <mml:mi>w</mml:mi>
+            </mml:mrow>
+            <mml:mrow>
+              <mml:mi>i</mml:mi>
+            </mml:mrow>
+          </mml:msub>
+          <mml:mrow>
+            <mml:mi>×</mml:mi>
+          </mml:mrow>
+          <mml:mrow>
+            <mml:mi>dist</mml:mi>
+          </mml:mrow>
+          <mml:mrow>
+            <mml:mo>(</mml:mo>
+          </mml:mrow>
+          <mml:mrow>
+            <mml:mi>L</mml:mi>
+          </mml:mrow>
+          <mml:mrow>
+            <mml:mi>¸</mml:mi>
+          </mml:mrow>
+          <mml:msub>
+            <mml:mrow>
+              <mml:mi>V</mml:mi>
+            </mml:mrow>
+            <mml:mrow>
+              <mml:mi>i</mml:mi>
+            </mml:mrow>
+          </mml:msub>
+          <mml:msup>
+            <mml:mrow>
+              <mml:mo>)</mml:mo>
+            </mml:mrow>
+            <mml:mrow>
+              <mml:mi>´</mml:mi>
+            </mml:mrow>
+          </mml:msup>
+        </mml:mstyle>
+      </mml:math>
+    </p>
+    <p>where dist(L,Vi) represents a distance function. The ultimate
+goal is to use an aggregation algorithm to minimize this
+objective function and find some list L* that has the smallest
+total distance between itself and all of the Vi’s. In the
+simplest sense, all of the ranked lists can be given the same
+value of importance weight; however, a researcher may
+choose to weigh lists differently for more control over the
+aggregation process. For example, one might choose to give
+validation indices with more relevance heavier weights
+while down-weighting indices measuring similar
+characteristics.</p>
+    <sec id="s2a">
+      <title>Software input</title>
+      <p>The optCluster package extends the popular validation
+package clValid [<xref rid="R04" ref-type="bibr">4</xref>] by producing an optimal clustering
+solution based on rank aggregation of multiple validation
+scores and including clustering algorithm options
+appropriate for genomic count data. The main function,
+optCluster, has a simple interface that only requires the user
+to input a minimum of four initial arguments. These
+arguments are: ‘obj’ = dataset, ‘nClust’ = number of clusters,
+‘clMethods’ = clustering algorithm names, and ‘validation’ =
+validation measure types. The user must provide a matrix
+or data frame for the ‘obj’ argument (where the samples to
+be clustered are the rows of the data) and input a range of
+numbers of clusters (or a specific number of clusters) for
+‘nClust’. For the other two arguments, the optCluster
+package provides a variety of options for the user to select
+from. These options are displayed in <xref ref-type="table" rid="T1">table 1</xref>.</p>
+      <p>The ten clustering algorithms offered by clValid for
+continuous data are available for the user to input into the
+‘clMethods’ argument, as well as six model-based clustering
+approaches for RNA sequencing (RNA-Seq) read count
+data (or any other count data). The expectation
+maximization (EM) algorithm and two of its variations, the
+deterministic annealing (DA) algorithm and the simulated
+annealing (SA) algorithm, were proposed by [<xref rid="R05" ref-type="bibr">5</xref>] for
+clustering RNA-Seq count data based on a mixture of either
+Poisson or negative binomial distributions. Combining each
+related algorithm with each discrete distribution results in
+the six available options for clustering count data in this
+package.</p>
+      <p>There are nine possible validation measures offered by
+optCluster that are categorized into three distinct types for
+the ‘validation’ argument input: “internal”, “stability”, and
+“biological”. Internal validation measures examine the
+statistical properties of clusters while using only
+information from the dataset and the created clustering
+partition. Stability validation measures are specialized
+internal measures that evaluate whether the cluster
+assignments remain stable with respect to small
+perturbations to the dataset. Biological validation measures
+are external measures that assess the performance of an
+algorithm to produce clusters of biologically similar genes
+in an analysis of gene expression data such as microarray or
+RNA-Seq data.</p>
+      <p>For weighted rank aggregation, this package provides the
+weighted Spearman’s footrule and the weighted Kendall’s
+tau as possible distance measures, and the cross-entropy
+Monte Carlo algorithm and the genetic algorithm as options
+for aggregation algorithms. Details on the use of these
+measures and algorithms in rank aggregation can be found
+in [<xref rid="R03" ref-type="bibr">3</xref>,<xref rid="R06" ref-type="bibr">6</xref>]. As default, optCluster assumes equal weights on
+each validation measure list while using the weighted
+Spearman’s footrule distance and the cross-entropy Monte
+Carlo algorithm. The user may change these options with
+the arguments of ‘importance’, ‘distance’, and ‘rankMethod’,
+respectively. In addition to the arguments listed above, the
+optCluster function has a variety of other arguments to
+allow the analysis to be fine-tuned according to the user’s preferences. A complete list of these arguments is included
+in the reference manual of the package.</p>
+    </sec>
+    <sec id="s2b">
+      <title>Software output</title>
+      <p>An S4 object of class “optCluster” is generated as the output
+from the optCluster function. This object contains detailed
+information on the created clustering partitions, calculated
+validation measure scores, and optimized rank aggregation
+results. In addition to obtaining the “best” clustering
+partition, this package includes several methods developed
+specifically for accessing the information contained within
+an “optCluster” object. For viewing the results from cluster
+validation, the valScores method outputs the calculated
+scores for each validation measure of interest and the
+optimalScores method displays the top performing
+clustering algorithm and number of clusters for each
+measure. The ordered lists used in rank aggregation
+consisting of either clustering partitions or validation scores
+are extracted with the methodRanks and scoreRanks
+methods, respectively. Additionally, clustering results for a
+specific algorithm are obtained with the clusterResults
+method.</p>
+    </sec>
+    <sec id="s2c">
+      <title>Comparison to similar packages</title>
+      <p>There are only a handful of packages currently available in
+R that offer some form of simultaneous optimization of
+cluster analysis with respect to multiple validation
+measures. Two packages, MOCCA [<xref rid="R07" ref-type="bibr">7</xref>] and NbClust [<xref rid="R08" ref-type="bibr">8</xref>],
+both find an appropriate number of clusters for a dataset,
+but only for a limited number of clustering algorithms.
+MOCCA provides a multi-objective optimization of
+validation indices to determine an optimal number of
+clusters based on three different clustering algorithms and
+four validation measures. NbClust finds the ideal number
+of clusters for either the K-means algorithm or a
+hierarchical clustering algorithm by analyzing up to thirty
+validity indices. A third package, COMMUNAL [<xref rid="R09" ref-type="bibr">9</xref>], offers
+one function that evaluates up to fourteen clustering
+algorithms across up to eighteen performance measures
+and a second function that combines the results of selected
+clustering algorithms to create a clustering partition for a
+given number of clusters. This package, however, does not
+generate the optimal number of clusters for the user.
+Instead, it relies on the user to determine the “best” number
+based on a visualization of performance measure results.</p>
+      <p>The optCluster package is unique compared to these three
+packages because it provides a solution (both clustering
+algorithm and number of clusters) using a single function.
+In addition, algorithms for clustering count data and
+validation measures for evaluating clusters based on
+biological gene functionality are included in this package
+but not in the others.</p>
+      <p>A cluster analysis was performed on a subset of RNA-Seq
+count data from [<xref rid="R10" ref-type="bibr">10</xref>] to compare the results obtained by
+optCluster to the results provided by the three similar
+packages. After normalizing the data (which is available in
+the optCluster package) with respect to library size, the
+appropriate function in each package was run using a range
+of two to four clusters and all possible validation measures
+and clustering algorithms suitable for continuous data.
+Hierarchical clustering using the Unweighted Pair Group
+Method with Arithmetic Mean (UPGMA) and three clusters
+was chosen by optCluster as the optimal clustering
+algorithm and number of clusters for this normalized
+dataset. The visualization produced by COMMUNAL
+agreed with this result as it suggested that three clusters
+was ideal, and the NbClust analysis, using either UPGMA
+or K-means, also selected three clusters as the most
+appropriate number. MOCCA was the only package that
+provided a different result, as it determined four clusters to
+be the “best”. With the continuous data, the optimal
+number of clusters determined by optCluster was
+consistent with two out of the three similar packages.
+Interestingly, when optCluster was run on the count data,
+two clusters was determined to be the ideal number with
+the “best” clustering algorithm being the DA algorithm
+based on the negative binomial distribution.</p>
+    </sec>
+    <sec id="s2d">
+      <title>Caveats and future development</title>
+      <p>The optCluster package is suitable for a variety of different
+cluster analyses. As new clustering and validation methodology
+is developed for genomic data, future developments may include
+adding more options for validation measures and clustering
+algorithms.</p>
+    </sec>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>This work was supported by the research
+funding from NIH grant CA 170091-01A1 to Susmita Datta.</p>
+  </ack>
+  <fn-group>
+    <fn id="FN" fn-type="other">
+      <p>
+        <bold>Edited by P Kangueane</bold>
+      </p>
+    </fn>
+  </fn-group>
+  <fn-group>
+    <fn id="FN1" fn-type="other">
+      <p><bold>Citation: </bold>Sekula <italic>et al.</italic> Bioinformation 13(3): 100-103 (2017)</p>
+    </fn>
+  </fn-group>
+  <ref-list>
+    <title>References</title>
+    <ref id="R01">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Handl</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Bioinformatics.</source>
+        <year>2005</year>
+        <volume>21(15):</volume>
+        <fpage>3201</fpage>
+        <?supplied-pmid 15914541?>
+        <pub-id pub-id-type="pmid">15914541</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R02">
+      <label>2</label>
+      <element-citation publication-type="webpage">
+        <comment>
+          <ext-link ext-link-type="uri" xlink:href="https://www.R-project.org/">http://www.R-project.org/</ext-link>
+        </comment>
+      </element-citation>
+    </ref>
+    <ref id="R03">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pihur</surname>
+            <given-names>V</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Bioinformatics.</source>
+        <year>2007</year>
+        <volume>23(13):</volume>
+        <fpage>1607</fpage>
+        <?supplied-pmid 17483500?>
+        <pub-id pub-id-type="pmid">17483500</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R04">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brock</surname>
+            <given-names>G</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>J Stat Softw.</source>
+        <year>2008</year>
+        <volume>25</volume>
+        <fpage>1</fpage>
+      </element-citation>
+    </ref>
+    <ref id="R05">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Si</surname>
+            <given-names>Y</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Bioinformatics.</source>
+        <year>2014</year>
+        <volume>30(2):</volume>
+        <fpage>197</fpage>
+        <?supplied-pmid 24191069?>
+        <pub-id pub-id-type="pmid">24191069</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R06">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pihur</surname>
+            <given-names>V</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>BMC Bioinformatics.</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>62</fpage>
+        <?supplied-pmid 19228411?>
+        <pub-id pub-id-type="pmid">19228411</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R07">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kraus</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Comput Stat.</source>
+        <year>2011</year>
+        <volume>26(2):</volume>
+        <fpage>341</fpage>
+      </element-citation>
+    </ref>
+    <ref id="R08">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Charrad</surname>
+            <given-names>M</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>J Stat Softw.</source>
+        <year>2014</year>
+        <volume>61</volume>
+        <fpage>1</fpage>
+      </element-citation>
+    </ref>
+    <ref id="R09">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sweeney</surname>
+            <given-names>TE</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Sci Rep.</source>
+        <year>2015</year>
+        <volume>5</volume>
+        <fpage>16971</fpage>
+        <?supplied-pmid 26581809?>
+        <pub-id pub-id-type="pmid">26581809</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Di</surname>
+            <given-names>Y</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <source>Stat Appl Genet Mol Biol.</source>
+        <year>2011</year>
+        <volume>10(1):</volume>
+        <fpage>1</fpage>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<floats-group>
+  <table-wrap id="T1" position="float">
+    <label>Table 1</label>
+    <caption>
+      <title>Clustering algorithm and validation measure options
+offered by the optCluster package. Clustering algorithms are selected
+individually and divided into two categories: continuous data and count
+data. Validation measures are selected in groups and divided into three
+classifications: internal, stability, and biological.</title>
+    </caption>
+    <table frame="hsides" rules="groups">
+      <thead>
+        <tr>
+          <td colspan="2" rowspan="1">Clustering algorithms</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="10" colspan="1">Continuous data</td>
+          <td rowspan="1" colspan="1">Hierarchical</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Agnes</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Diana</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">K-means</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Pam</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Clara</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Fanny</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Model-based</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">SOM</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">SOTA</td>
+        </tr>
+        <tr>
+          <td rowspan="6" colspan="1">Count data</td>
+          <td rowspan="1" colspan="1">EM negative binomial</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">DA negative binomial</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">SA negative binomial</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">EM Poisson</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">DA Poisson</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">SA Poisson</td>
+        </tr>
+        <tr>
+          <td colspan="2" rowspan="1">Validation measures</td>
+        </tr>
+        <tr>
+          <td rowspan="3" colspan="1">Internal</td>
+          <td rowspan="1" colspan="1">Connectivity</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Dunn index</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Silhouette width</td>
+        </tr>
+        <tr>
+          <td rowspan="4" colspan="1">Stability</td>
+          <td rowspan="1" colspan="1">Average proportion of non-overlap</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Average distance</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Average distance between means</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Figure of merit</td>
+        </tr>
+        <tr>
+          <td rowspan="2" colspan="1">Biological</td>
+          <td rowspan="1" colspan="1">Biological homogeneity index</td>
+        </tr>
+        <tr>
+          <td rowspan="1" colspan="1">Biological stability index</td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+</floats-group>

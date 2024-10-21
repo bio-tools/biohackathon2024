@@ -1,0 +1,1695 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3046488</article-id>
+    <article-id pub-id-type="publisher-id">gb-2010-11-12-r128</article-id>
+    <article-id pub-id-type="pmid">21194472</article-id>
+    <article-id pub-id-type="doi">10.1186/gb-2010-11-12-r128</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Enhanced structural variant and breakpoint detection using SVMerge by integration of multiple detection methods and local assembly</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" equal-contrib="yes" id="A1">
+        <name>
+          <surname>Wong</surname>
+          <given-names>Kim</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>kw10@sanger.ac.uk</email>
+      </contrib>
+      <contrib contrib-type="author" equal-contrib="yes" id="A2">
+        <name>
+          <surname>Keane</surname>
+          <given-names>Thomas M</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>tk2@sanger.ac.uk</email>
+      </contrib>
+      <contrib contrib-type="author" id="A3">
+        <name>
+          <surname>Stalker</surname>
+          <given-names>James</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>jws@sanger.ac.uk</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A4">
+        <name>
+          <surname>Adams</surname>
+          <given-names>David J</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>da1@sanger.ac.uk</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Wellcome Trust Sanger Institute, Hinxton, Cambridge, CB10 1SA, UK</aff>
+    <pub-date pub-type="ppub">
+      <year>2010</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>31</day>
+      <month>12</month>
+      <year>2010</year>
+    </pub-date>
+    <volume>11</volume>
+    <issue>12</issue>
+    <fpage>R128</fpage>
+    <lpage>R128</lpage>
+    <history>
+      <date date-type="received">
+        <day>9</day>
+        <month>8</month>
+        <year>2010</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>9</day>
+        <month>11</month>
+        <year>2010</year>
+      </date>
+      <date date-type="accepted">
+        <day>31</day>
+        <month>12</month>
+        <year>2010</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2010 Wong et al.; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2010</copyright-year>
+      <copyright-holder>Wong et al.; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an open access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://genomebiology.com/2011/11/12/R128"/>
+    <abstract>
+      <p>We present a pipeline, SVMerge, to detect structural variants by integrating calls from several existing structural variant callers, which are then validated and the breakpoints refined using local <italic>de novo </italic>assembly. SVMerge is modular and extensible, allowing new callers to be incorporated as they become available. We applied SVMerge to the analysis of a HapMap trio, demonstrating enhanced structural variant detection, breakpoint refinement, and a lower false discovery rate. SVMerge can be downloaded from <ext-link ext-link-type="uri" xlink:href="http://svmerge.sourceforge.net">http://svmerge.sourceforge.net</ext-link>.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Rationale</title>
+    <p>Next-generation sequencing technologies promise a revolution in our ability to understand the architecture of the human genome, and to decipher how this architecture contributes to disease [<xref ref-type="bibr" rid="B1">1</xref>]. This understanding is dependent on our ability to accurately detect differences between individuals on a genome-wide scale. Although nucleotide level variants such as SNPs and insertions/deletions (indels) are numerous, large structural variants, such as deletions, duplications and inversions, affect more sequence, and as much as 15% of the human genome falls into copy number variable regions [<xref ref-type="bibr" rid="B1">1</xref>]. Many of the software packages currently available to detect structural variants (SVs) employ algorithms that utilize data derived from the mapping of paired-end sequence reads, using anomalously mapped read pairs as a means for detecting and cataloguing these variants. Deletions, for example, are detected when the distance between mapped paired-end reads is significantly smaller than the average size distribution of other mapped read pairs from the same mate-pair sequencing library. Similarly, inversions may be identified when read pairs are mapped to the same strand of the reference genome. Examples of software using this approach include BreakDancer [<xref ref-type="bibr" rid="B2">2</xref>] and VariationHunter [<xref ref-type="bibr" rid="B3">3</xref>]. Other software packages such as Pindel [<xref ref-type="bibr" rid="B4">4</xref>] apply a split-mapping approach where one end of a pair of sequence reads is mapped uniquely to the genome and acts as an anchor, while the other end is mapped so as to detect the SV breakpoint. A third approach used to detect SVs involves ascertaining changes in read depth coverage, which reflect gains and losses in sequence copy number. Calling variants in this way will report regions of the reference genome that appear to be duplicated or deleted. This analysis, however, will not report the precise location of the duplicated sequence. Several algorithms have been developed for calling copy number variants in this way, including cnD, which applies a hidden Markov model to detect copy number variants [<xref ref-type="bibr" rid="B5">5</xref>], and RDXplorer, which uses a novel algorithm based on significance testing [<xref ref-type="bibr" rid="B6">6</xref>].</p>
+    <p>The location of large insertions can also be identified from mapping of paired-end sequence reads, where one end read is mapped to the reference sequence and the other end is either unmapped (for example, a novel sequence insertion), or mapped to another copy of the particular repeat element present in the reference (for example, insertion of a repetitive element, such as LINEs). We have developed two in-house tools, SECluster and RetroSeq[<xref ref-type="bibr" rid="B7">7</xref>], to detect these insertion events (see Materials and methods).</p>
+    <p>Independently, each of these approaches has limitations in terms of the type and size of SVs that they are able to detect, and no single SV caller is able to detect the full range of structural variants. The approach of utilizing paired-end mapping information, for example, cannot detect SVs where the read pairs do not flank the SV breakpoints, which can occur due to sequence features such as SNPs near the SV breakpoint, or where the number of supporting read pairs is low. Furthermore, the size of insertions that can be identified by paired-end analysis is limited by the library insert size. Insertion calls made using the split-mapping approach are also size-limited because the whole insertion breakpoint must be contained within a read. Read-depth approaches can identify copy number changes without the need for read-pair support, but cannot find copy number neutral events such as inversions, and read depth alone cannot be used to indicate the exact location of the duplicated sequence. For these reasons we developed SVMerge, a meta SV calling pipeline, which makes SV predictions with a collection of SV callers that are then merged, and computationally validated using local <italic>de novo </italic>assembly to gain a more comprehensive picture of the structural variants found within a genome. We show that SVMerge generates a more complete set of SV calls (&gt;100 bp) compared to any single method alone, and provides refined SV breakpoints for downstream analysis. We have designed SVMerge to be both modular and extensible so that new SV calling methods may be incorporated into the analysis pipeline. Here we describe the main components of the pipeline, and results obtained from the analysis of three genomes from a HapMap trio sequenced using the Illumina platform. SVMerge is written in Perl and is freely available from [<xref ref-type="bibr" rid="B8">8</xref>].</p>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <sec>
+      <title>The SVMerge pipeline</title>
+      <p>The SVMerge pipeline consists of four major modules: set-up and organization with a specific data structure, structural variant calling, filtering and merging of variant calls, and computational validation by <italic>de novo </italic>assembly using sequence reads mapped proximally to predicted breakpoints (Figure <xref ref-type="fig" rid="F1">1</xref>). The final output of SVMerge is in a standard Browser Extensible Data (BED) format, which greatly facilitates downstream analysis such as comparison of SV calls to gene lists using packages such as BEDTools [<xref ref-type="bibr" rid="B9">9</xref>], or visualization of SV calls using the UCSC [<xref ref-type="bibr" rid="B10">10</xref>] or Ensembl [<xref ref-type="bibr" rid="B11">11</xref>] genome browsers.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>An overview of the SVMerge pipeline</bold>. SVMerge uses a suite of software tools to detect structural variants (SVs) from mapped reads. The calls are filtered, merged and then validated computationally by local <italic>de novo </italic>assembly. The output is in BED format, allowing for easy downstream analysis or viewing in a genome browser. The SVMerge pipeline is extendable so that calls made by other software can be included in the downstream analysis. BAM, Binary Alignment/Map format.</p>
+        </caption>
+        <graphic xlink:href="gb-2010-11-12-r128-1"/>
+      </fig>
+      <p>Each dataset to be analyzed is set up as a new project, and specific subdirectories are created to aid in the management of the data through each step of the pipeline. All configurable parameters, discussed below, are specified in a single configuration file that is used by SVMerge at each step of analysis as the pipeline is deployed. For each dataset to be analyzed, the user must supply either a single standard Binary Alignment/Map (BAM) formatted file with the reads aligned to a reference genome, or a set of BAMs consisting of one BAM per chromosome [<xref ref-type="bibr" rid="B12">12</xref>].</p>
+      <p>For the analysis presented here we have incorporated a variety of SV calling software packages into SVMerge. Table <xref ref-type="table" rid="T1">1</xref> lists the software, analysis method, and SV types called by these algorithms. The pipeline also allows for user-defined SV calls to be included, as the only requirement for subsequent steps of the pipeline is for SV calls to be in a specific tab-delimited format. Additional filtering, if required, is performed on the raw output of each SV caller to remove calls with weak support, or those calls that may be artifacts. This filtering includes the removal of calls of low quality, which is indicated by a score assigned to each SV prediction, and filtering of calls by their proximity to reference sequence assembly gaps, highly repetitive regions of the genome, and centromeres and telomeres. After filtering, the SV calls are separated by SV type, and calls of the same type from all SV callers are merged to generate a non-redundant set of calls (see Materials and methods). The raw, merged SV calls are output in tab-delimited format, indicating the chromosomal coordinates, and a unique identifier that provides information about the predicted SV type. This call set is used for subsequent steps in the SVMerge pipeline.</p>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Structural variation callers used in SVMerge</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Software</th>
+              <th align="left">Analysis method</th>
+              <th align="left">SV types called</th>
+              <th align="left">Size detection limitations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">BDMax</td>
+              <td align="left">Paired-end mapping</td>
+              <td align="left">D, I, Inv, T</td>
+              <td align="left">Insertions limited by library insert size</td>
+            </tr>
+            <tr>
+              <td align="left">Pindel</td>
+              <td align="left">Split-mapping</td>
+              <td align="left">D, I, D+I</td>
+              <td align="left">Insertions limited by read size; deletions &lt;1 Mb</td>
+            </tr>
+            <tr>
+              <td align="left">SECluster</td>
+              <td align="left">Clusters of one-end-mapped reads</td>
+              <td align="left">I</td>
+              <td align="left">Minimum size dependent on insert size</td>
+            </tr>
+            <tr>
+              <td align="left">RetroSeq</td>
+              <td align="left">Targeted insertion calling</td>
+              <td align="left">RI</td>
+              <td align="left">Minimum size dependent on insert size</td>
+            </tr>
+            <tr>
+              <td align="left">RDXplorer</td>
+              <td align="left">Read depth</td>
+              <td align="left">D, G</td>
+              <td align="left">Minimum size approximately 1 kb</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Listed are the software used to call structural variants (SVs), the analysis method used, SV types called, and limitations of the SV caller. 'BDMax' is BreakDancerMax. D, deletion; D+I, deletion with small insertion; G, copy number gain; I, insertion; Inv, inversion; RI, repeat insertion; T, translocation.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Following filtering and merging of SV calls, computational validation is performed using local <italic>de novo </italic>assembly of reads at predicted SV breakpoints, and comparison of the resulting contigs back to the reference genome. This serves to reduce the number of false positive SV calls, as well as aid in the refinement of SV breakpoints. This validation uses reads from the original BAM file mapped proximally to the predicted SV breakpoints. Because the accuracy of the SV boundaries in the raw, merged SV call set is dependent on which software is applied and the quality of the read mappings, the local assemblies are performed using SV boundaries that extend by at least 1 kb on either side (see Materials and methods). To simplify the process of potentially performing thousands of assemblies, SVMerge automatically generates configuration files, which specify all of the required parameters for the local assemblies and subsequent contig alignment steps. Currently, the assemblers supported by the pipeline are ABySS [<xref ref-type="bibr" rid="B13">13</xref>] and Velvet [<xref ref-type="bibr" rid="B14">14</xref>], but other assemblers can be incorporated by the user. ABySS and Velvet both provide an option to utilize scaffolding to join adjacent, non-overlapping contigs, which may be particularly useful when the reads used for a local assembly flank, but do not overlap, an SV breakpoint. Contigs generated from the local assembly step can be aligned to a reference chromosome, or to the slice of the reference to which the reads were mapped. The alignment tool used for this step of the pipeline is Exonerate, as the parameters of this mapper are easily configurable and the output format can be customized [<xref ref-type="bibr" rid="B15">15</xref>].</p>
+      <p>The final steps in SVMerge are automated parsing and interpretation of the contig alignment results to provide evidence supporting or refuting the original SV call. The first source of evidence is a breakpoint-containing contig, which either contains both ends of an SV breakpoint (for example, a contig contains an entire 300-bp insertion), or a single breakpoint (for example, half of a contig aligns to the reference and the other half is part of a larger insertion). For deletions, another source of evidence may simply be the lack of contigs covering the region predicted to be deleted (for example, homozygous deletions). Because heterozygous deletions may be difficult to validate by local assembly, an additional examination of mapped read depth is performed to ensure that heterozygous deletions are not falsely invalidated (see Materials and methods). For all SV calls with breakpoint-containing contigs, the alignment information is used to refine the original SV breakpoint predictions. We evaluated the accuracy of breakpoint localization obtained from the local assembly and contig alignment method using simulated data. Deletions, insertions, and inversions were added to the human chromosome 20 reference sequence, and reads were generated to produce a depth of coverage of 40 × (see Materials and methods). The breakpoint refinement step was able to determine the exact SV breakpoints for 60 to 89% of homozygous SVs, depending on SV type; this is significantly higher than the proportion from the raw output of the SV callers (Table <xref ref-type="table" rid="T2">2</xref>). As expected, breakpoint refinement for heterozygous SVs was more difficult, especially for heterozygous insertions.</p>
+      <table-wrap id="T2" position="float">
+        <label>Table 2</label>
+        <caption>
+          <p>Improvement of breakpoint resolution using local <italic>de novo </italic>assembly and breakpoint refinement in SVMerge</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th align="center" colspan="3">Raw</th>
+              <th align="center" colspan="3">Refined</th>
+            </tr>
+            <tr>
+              <th/>
+              <th colspan="6">
+                <hr/>
+              </th>
+            </tr>
+            <tr>
+              <th align="left">SV type</th>
+              <th align="center">Called</th>
+              <th align="center">Correct</th>
+              <th align="center">Mean distance</th>
+              <th align="center">Breakpoints detected</th>
+              <th align="center">Correct</th>
+              <th align="center">Mean distance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">Homozygous</td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Deletion (random)</td>
+              <td align="center">99</td>
+              <td align="center">9</td>
+              <td align="center">+5/-3</td>
+              <td align="center">99</td>
+              <td align="center">77</td>
+              <td align="center">-1/-1</td>
+            </tr>
+            <tr>
+              <td align="left"> Deletion (repeat)</td>
+              <td align="center">99</td>
+              <td align="center">4</td>
+              <td align="center">+11/-8</td>
+              <td align="center">99</td>
+              <td align="center">89</td>
+              <td align="center">0/0</td>
+            </tr>
+            <tr>
+              <td align="left"> Inversion</td>
+              <td align="center">100</td>
+              <td align="center">0</td>
+              <td align="center">-169/175</td>
+              <td align="center">85</td>
+              <td align="center">46</td>
+              <td align="center">51/24</td>
+            </tr>
+            <tr>
+              <td align="left"> Insertion</td>
+              <td align="center">99</td>
+              <td align="center">0</td>
+              <td align="center">0/205</td>
+              <td align="center">97</td>
+              <td align="center">60</td>
+              <td align="center">-1/1</td>
+            </tr>
+            <tr>
+              <td align="left">Heterozygous</td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left"> Deletion (random)</td>
+              <td align="center">96</td>
+              <td align="center">2</td>
+              <td align="center">+6/-4</td>
+              <td align="center">96</td>
+              <td align="center">40</td>
+              <td align="center">-35/+18</td>
+            </tr>
+            <tr>
+              <td align="left"> Deletion (repeat)</td>
+              <td align="center">94</td>
+              <td align="center">0</td>
+              <td align="center">+19/-15</td>
+              <td align="center">91</td>
+              <td align="center">35</td>
+              <td align="center">0/2</td>
+            </tr>
+            <tr>
+              <td align="left"> Inversion</td>
+              <td align="center">99</td>
+              <td align="center">0</td>
+              <td align="center">-166/+165</td>
+              <td align="center">73</td>
+              <td align="center">30</td>
+              <td align="center">-58/+287</td>
+            </tr>
+            <tr>
+              <td align="left"> Insertion</td>
+              <td align="center">96</td>
+              <td align="center">0</td>
+              <td align="center">+1/+202</td>
+              <td align="center">18</td>
+              <td align="center">18</td>
+              <td align="center">0/0</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>To evaluate the performance of the local assembly and breakpoint refinement step in SVMerge, structural variants (SVs) were generated in human chromosome 20. For each category, 100 SVs were generated by random selection of location and size. Repeat deletions were selected from a list of LINEs and SINEs on chromosome 20. The raw, unfiltered calls are from BreakDancer raw output, except insertion calls, which are from SECluster raw output. 'Called' is the total number of SVs out of the 100 simulated SVs that were found in the raw output; 'Breakpoints detected' is the number of SVs, out of the total called, for which the SVMerge pipeline was able to detect breakpoints with the local assembly, and contig alignment and analysis steps; 'Correct' is the number of predictions that had matches to the actual breakpoint coordinates; 'Mean distance' is the mean distance from the actual breakpoints, where the numbers represent the 5'/3' breakpoints. The '+' indicates the mean distance was upstream of the actual breakpoint, and '-' indicates the mean distance was downstream. Raw and refined breakpoints were considered 'correct' if the direction and deviation at both the 5' and 3' breakpoints were equal.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Current SV callers do not attempt to call complex SVs, where more than one event appears to have taken place at a single locus. Local assembly analysis may reveal that a particular region is, in fact, complex, with more than one type of SV. SVMerge attempts to detect complex SVs, such as inversions that have occurred with a deletion or insertion, or a deletion that also contains an insertion at or near to the breakpoint. The final SV call set consists of deletions and copy number gains supported by read depth analysis, and complex SVs, deletions, insertions and inversions supported by local assembly analysis.</p>
+    </sec>
+    <sec>
+      <title>Application of SVMerge to a HapMap trio dataset</title>
+      <p>We demonstrate the application of SVMerge to a dataset consisting of a high-depth HapMap trio (NA18506, NA18507, NA18508), which was sequenced on the Illumina platform [<xref ref-type="bibr" rid="B16">16</xref>]. The sequence data for these individuals were downloaded from the Sequence Read Archive (accession numbers [SRA009347], [SRA009225], [SRA000271]) and aligned to the GRCh37 human reference using BWA v0.5.5 [<xref ref-type="bibr" rid="B17">17</xref>] with default parameters. Sequence coverage depths for each genome were determined to be 42 ×, 42 × and 40 × for NA18506, NA18507, and NA18508, respectively. A single BAM file for each individual was produced for SV analysis (see Materials and methods).</p>
+      <p>The BAM file for each individual was used as input for BreakDancerMax [<xref ref-type="bibr" rid="B2">2</xref>], RDXplorer [<xref ref-type="bibr" rid="B6">6</xref>], SECluster (unpublished; see Materials and methods), and RetroSeq [<xref ref-type="bibr" rid="B7">7</xref>]; SVMerge provides a tool to read data from a BAM file to produce the necessary Pindel input file. Specific parameters for each SV caller are provided in the Materials and methods section. The resulting BreakDancerMax and Pindel calls were filtered, allowing a minimum score of 25. All SV calls were filtered by location, and calls less than 600 bp from a reference sequence assembly gap and 1 Mb from a centromere or telomere were excluded from further analysis. Only calls greater than 100 bp were considered; for RDXplorer the minimum size of SV calls included was 10 kb. BreakDancerMax is able to call inter-chromosomal translocations, although even with stringent filtering by score the number of translocation calls in these datasets was high (data not shown); since the majority of these are not likely to be real, they were excluded from further analysis. Table <xref ref-type="table" rid="T3">3</xref> shows the number and type of SV calls produced for the child, NA18506. Similar results were obtained for the parents (Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>). A clear advantage was obtained by using a variety of SV calling methods, as demonstrated by comparing both the number of candidate calls and SV types for individual callers versus the 'merged raw' call set. Although read-pair analysis is able to find a large number of candidate deletions, deletions with low or no read-pair support require different approaches, such as split-read and read-depth analyses, which are provided by Pindel and RDXplorer, respectively. Similarly, the nominal overlap between the insertion calls from the different SV callers reflects the ability of the various callers to find insertions of a specific size or type.</p>
+      <table-wrap id="T3" position="float">
+        <label>Table 3</label>
+        <caption>
+          <p>Structural variant calls for individual NA18506</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Call set</th>
+              <th align="center">Deletion</th>
+              <th align="center">Insertion</th>
+              <th align="center">Inversion</th>
+              <th align="center">CNG</th>
+              <th align="center">
+                <bold>Complex</bold>
+                <sup>
+                  <bold>a</bold>
+                </sup>
+              </th>
+              <th align="center">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">BDMax</td>
+              <td align="center">4,141</td>
+              <td align="center">1,844</td>
+              <td align="center">324</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">6,309</td>
+            </tr>
+            <tr>
+              <td align="left">Pindel</td>
+              <td align="center">458</td>
+              <td align="center">0</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">458</td>
+            </tr>
+            <tr>
+              <td align="left">SECluster</td>
+              <td align="center">-</td>
+              <td align="center">1,215</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">1,215</td>
+            </tr>
+            <tr>
+              <td align="left">RetroSeq</td>
+              <td align="center">-</td>
+              <td align="center">2,297</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">2,297</td>
+            </tr>
+            <tr>
+              <td align="left">RDXplorer</td>
+              <td align="center">575</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">280</td>
+              <td align="center">-</td>
+              <td align="center">855</td>
+            </tr>
+            <tr>
+              <td align="left">Merged raw</td>
+              <td align="center">4,717</td>
+              <td align="center">5,252</td>
+              <td align="center">324</td>
+              <td align="center">280</td>
+              <td align="center">-</td>
+              <td align="center">10,573</td>
+            </tr>
+            <tr>
+              <td align="left">SVMerge final</td>
+              <td align="center">4,184</td>
+              <td align="center">575</td>
+              <td align="center">38</td>
+              <td align="center">280</td>
+              <td align="center">99</td>
+              <td align="center">5,176</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p><sup>a</sup>'Complex' refers to any locus with more than one structural variant type - for example, an inversion with a deletion. Shown are the numbers of raw calls (&gt;100 bp) from each structural variation (SV) caller, filtered by score and location only (see Materials and methods), for NA18506, the child in the HapMap trio dataset. 'BDMax' is BreakDancerMax. Pindel is able to identify deletions that also contain small insertions; these are included in the total deletion count. 'Merged raw' is the resulting number of calls after merging of these calls by their coordinates (see Materials and methods). 'SVMerge final' is the total number of calls made after refinement of the SV call list by local assembly and read depth analysis. Copy number gains (CNG) are not subject to validation by local assembly.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>The 'merged raw' SV calls, excluding copy number gains and deletions without supporting read pairs or split-reads, were subjected to computational validation by local assembly. The 'final' calls for the child (NA18506) are shown in Table <xref ref-type="table" rid="T3">3</xref>. Similar results were obtained for the parents (Additional file <xref ref-type="supplementary-material" rid="S1">1</xref>). The final call set contains all copy number gain calls and deletion calls unique to RDXplorer, insertions and inversions with evidence of breakpoints from local assembly analysis, and deletions with either supporting evidence from local assembly analysis or read-depth analysis (see Materials and methods). A number of complex SVs (for example, inversions with internal deletions) were also identified. Local assembly analysis was able to provide refined coordinates for approximately 60% of deletions in the 'final' call set. For the remaining deletions, where breakpoint refinement failed but read-depth analysis provided evidence of low or no read coverage, the original breakpoint coordinates from the 'merged raw' call set were used in the 'final' call set. Only 11% of insertions in the 'merged raw' call set were validated by local assembly and included in the 'final' call set, reflecting both the difficulty in detecting true insertions, as well as the difficulty validating these calls by local assembly.</p>
+      <p>Table <xref ref-type="table" rid="T4">4</xref> shows the number of SV calls in the 'final' call set that are unique to a specific SV caller, and those shared by at least one other caller. These numbers illustrate a clear benefit of complementing paired-end mapping analysis with read-depth analysis and other methods that target specific classes of repetitive elements. BreakDancerMax alone produced 3,874 of the 5,176 calls to the 'final' call set; the addition of the other callers provided an additional 1,302 calls that would have otherwise been undetected.</p>
+      <table-wrap id="T4" position="float">
+        <label>Table 4</label>
+        <caption>
+          <p>Contribution of individual structural variant callers to the 'SVMerge final' call set for NA18506</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th/>
+              <th align="center" colspan="4">Unique SV calls</th>
+              <th/>
+              <th/>
+            </tr>
+            <tr>
+              <th/>
+              <th colspan="4">
+                <hr/>
+              </th>
+              <th/>
+              <th/>
+            </tr>
+            <tr>
+              <th/>
+              <th align="center">Deletion</th>
+              <th align="center">Insertion</th>
+              <th align="center">Inversion</th>
+              <th align="center">CNG</th>
+              <th align="center">Shared SV calls</th>
+              <th align="center">Total SVs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">BDMax</td>
+              <td align="center">3,283</td>
+              <td align="center">45</td>
+              <td align="center">124</td>
+              <td align="center">-</td>
+              <td align="center">442</td>
+              <td align="center">3,874</td>
+            </tr>
+            <tr>
+              <td align="left">Pindel</td>
+              <td align="center">25</td>
+              <td align="center">0</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">404</td>
+              <td align="center">429</td>
+            </tr>
+            <tr>
+              <td align="left">SECluster</td>
+              <td align="center">-</td>
+              <td align="center">449</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">40</td>
+              <td align="center">489</td>
+            </tr>
+            <tr>
+              <td align="left">RetroSeq</td>
+              <td align="center">-</td>
+              <td align="center">44</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">7</td>
+              <td align="center">51</td>
+            </tr>
+            <tr>
+              <td align="left">RDXplorer</td>
+              <td align="center">526</td>
+              <td align="center">-</td>
+              <td align="center">-</td>
+              <td align="center">280</td>
+              <td align="center">49</td>
+              <td align="center">855</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>Shown are the number of structural variant (SV) calls (&gt;100 bp) from each SV caller that are included in the 'final' call set for NA18506. 'Unique SV calls' are those that are made by a single SV caller only, and 'Shared SV calls' are SVs that were found by more than one method. 'BDMax' is BreakDancerMax. CNG, copy number gain.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>To evaluate the final SV call set from SVMerge for the HapMap trio, we compared the overlap of the deletion, gain, and inversion calls against the curated Database of Genomic Variants (DGV; March 2010 release) [<xref ref-type="bibr" rid="B18">18</xref>]. SVMerge calls overlapped with calls in DGV at a rate significantly higher than expected by random chance (<italic>P </italic>&lt; 0.001; Additional file <xref ref-type="supplementary-material" rid="S2">2</xref>). Of the deletion calls made by SVMerge, 71% (NA18506), 81% (NA18507), and 71% (NA18508) had a minimum 50% reciprocal overlap with regions of known copy number variation in DGV, while 29% (NA18506), 32% (NA18507), and 36% (NA18508) of the copy number gains overlap entries in DGV. The proportion of SVMerge inversion calls overlapping with known inversions in DGV was 47% (NA18506), 69% (NA18507), and 51% (NA18508). We further evaluated the calls in the child that did not overlap DGV calls by determining their presence in either parent's raw SV call set. This accounted for a further 18% of deletions, 32% of inversions, and 54% of duplications in the child to give us estimated maximum false discovery rates of 11%, 21%, and 17% for deletions, inversions, and copy number gains, respectively. Child-only insertions, with coordinates greater than 200 bp from any parental insertion, account for 14.4% of insertion calls. Collectively, all child-only SV calls comprise 11% of the child's final SV call set. This is a considerable improvement from what was observed in the 'merged raw' SV call set, in which 50% of the calls are unique to the child. The majority of these are false insertion calls from read pair analysis, which may be due to an artifact of the library construction; there is a significant tail at the lower end of the library insert size distribution (data not shown), which generates read pairs that align closer than expected based on the mean and standard deviation of the distribution. The maximum false negative rates, which can be estimated by assuming all of the child SV calls are real and comparing them to parental SV calls, are 21% for deletions, 40% for inversions, 23% for duplications, and 25% for insertions. False positive rates for individual structural variant callers and a comparison of confidence scores for child-only calls versus shared calls are provided in Additional files <xref ref-type="supplementary-material" rid="S3">3</xref> and <xref ref-type="supplementary-material" rid="S4">4</xref>, respectively.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <p>Genomic structural variation is increasingly being recognized as an important source of phenotypic variation [<xref ref-type="bibr" rid="B19">19</xref>]. The advent of new sequencing technologies means that it is now possible to create high-resolution maps of these variants; however, the range of SVs detected by individual SV callers is somewhat limited. For this reason, we have developed SVMerge, the first meta SV caller that integrates calls made from multiple sources and validates these calls using local <italic>de novo </italic>assembly. We illustrate that this approach produces a more comprehensive set of variant calls, compared to calls made by any single caller alone. SVMerge is an extensible pipeline that allows calls from any method to be easily incorporated. As more algorithms and a wider variety of SV callers become available, we expect that our complementary method will be able to produce an even wider spectrum of calls.</p>
+    <p>A key part of the SVMerge pipeline is the computational validation step, which performs local assembly and breakpoint refinement. Analysis of the HapMap trio has enabled us to demonstrate that this part of the pipeline can significantly reduce the false discovery rate. With simulated data, we show that this step also increases the accuracy of the predicted SV breakpoints compared to those produced by the individual callers (Table <xref ref-type="table" rid="T2">2</xref>). However, computational validation of insertions and heterozygous SVs remains challenging. The proportion of computationally validated insertions is notably lower than other SV types. Local assembly of a <italic>de novo </italic>insertion is hampered by the lack of reads, since the reads provided for assembly are those that map near the breakpoint, or unmapped reads with mates that align near the breakpoint. Heterozygous breakpoint detection and refinement would be improved by advancements in methods such as short read assemblers that can perform diploid assemblies, or the use of assembly graphs to detect breakpoints. In the case of copy number gain and loss calls based only on read depth, local assembly is not a suitable validation strategy. As an alternative strategy, a high-confidence set of copy number gain and loss calls could be derived by applying more than one read-depth-based copy number caller and considering the intersection of calls.</p>
+    <p>Identifying SVs from short read data has its limitations, in particular with complex SVs where multiple rearrangement events occur at a single locus. SVMerge attempts to identify a subset of complex SVs by interpreting alignments of contigs generated from local assembly. However, these complex SVs are initially identified from read pair analysis only as single SV type. Improvements to SV calling algorithms, which can interpret complex read pair patterns, and the development of new long range sequencing techniques, such as strobe sequencing [<xref ref-type="bibr" rid="B20">20</xref>], will enable identification and elucidation of complex SVs that are currently difficult to characterize.</p>
+  </sec>
+  <sec sec-type="materials|methods">
+    <title>Materials and methods</title>
+    <sec>
+      <title>Data</title>
+      <p>Sequence data for individuals NA18506, NA18507 and NA18508 were downloaded from the Sequence Read Archive (accession numbers [SRA009347], [SRA009225], [SRA000271]) and aligned to the GRCh37 human genome reference sequence using BWA v0.5.5 [<xref ref-type="bibr" rid="B17">17</xref>] with default parameters. After alignment, the quality values were recalibrated using software tools from GATK [<xref ref-type="bibr" rid="B21">21</xref>], merged to the library level where duplicates were removed with Picard [<xref ref-type="bibr" rid="B22">22</xref>] and then a single BAM file for each individual was produced.</p>
+    </sec>
+    <sec>
+      <title>Structural variant callers</title>
+      <p>BreakDancerMax is included in the BreakDancer software package. The results described here were generated using BreakDancer-0.0.1r89 [<xref ref-type="bibr" rid="B23">23</xref>]. Default BreakDancerMax parameters were used, except a minimum mapping quality score of 20 and the minimum thresholds (expressed in standard deviations from the mean) for distance between mate pairs were set to 8, 8, and 7 for NA18506, NA18507, NA18508, respectively. All BreakDancerMax results were further filtered by score and size (100 bp minimum) to remove low confidence calls. Insertions with a score of 35 or less, and deletions with scores 30 or less, were excluded from further analysis. For inversions, the minimum BreakDancerMax score accepted was 30 with supporting reads from at least 3 read pairs, and a minimal size of 100 bp required. Pindel was downloaded from [<xref ref-type="bibr" rid="B24">24</xref>]. The insert size parameter was set to 200 bp and calls with scores less than 25 were excluded from further analysis. Deletions and insertions of at least 100 bp in size were considered for further analysis. SECluster, an in-house tool, attempts to locate large insertions by identifying adjacent clusters of forward and reverse-strand reads with unmapped mates. A minimum of five supporting reads mapped to the same strand, with minimal mapping qualities of 20, were required to form a cluster. Insertion signatures were then identified by comparing the outer coordinates of the forward and reverse clusters of reads allowing up to a 100-bp separation or a 50-bp overlap between the clusters. Mobile element insertions were identified using RetroSeq [<xref ref-type="bibr" rid="B7">7</xref>], which looks for clusters of reads with one end mapping to the reference and the other mapping to a mobile element in Repbase [<xref ref-type="bibr" rid="B25">25</xref>], or clusters of reads with mates mapped to a canonical mobile element on a different chromosome on the reference genome. Alignments to Repbase were performed with SSAHA2 [<xref ref-type="bibr" rid="B26">26</xref>] with a minimum of 90% identify and hit length of 36 bp for a match. For read-depth-based copy number calling using RDXplorer, the default Z-score of 5 threshold was used, but we applied a minimum size cutoff of 10 kb. In addition to the above parameters and filtering criteria, calls in all call sets were excluded if they fell within 600 bp of a reference sequence assembly gap, or within 1 Mb of a centromere or telomere. We refer to this resulting filtered set as the 'raw' calls.</p>
+    </sec>
+    <sec>
+      <title>Merging of raw calls</title>
+      <p>The raw call sets were merged by SV type and chromosomal coordinate to generate a non-redundant SV call set. For example, all deletion calls from BreakDancer, Pindel, and RDXplorer were compared; if the coordinate spans from a BreakDancer deletion call and Pindel deletion call overlapped, then the calls were merged. The deletion calls from RDXplorer were then compared to the merged BreakDancer and Pindel set to identify additional deletions not detected by either BreakDancer or Pindel. The rules applied for merging calls are outlined as follows: (1) if the overlap is less than 75 bp and the non-overlapping portion from each call is between 50 and 200 bp, take the outer coordinates of the union of the spans; (2) if the overlap is less than 75 bp and the non-overlapping portion from each call is ≥200 bp, do not merge the spans; (3) otherwise, merge the calls and use the intersect of the spans.</p>
+      <p>Insertions from BreakDancerMax, RetroSeq, and SECluster were compared and merged by taking the intersection of overlapping spans. Inversions and copy number gains were only called by a single SV caller. The resulting 'merged raw' set consists of deletions, insertion calls, inversions, and copy number gains.</p>
+    </sec>
+    <sec>
+      <title>Local assemblies and contig alignments</title>
+      <p>All SV calls, with the exception of copy number gains and deletion calls without any read pair support, were evaluated with local assembly of reads mapped near predicted SV breakpoints. Mapped reads, and any unmapped mate-pairs, within 1 kb of a predicted insertion breakpoint, or 2 kb of all other SV types, were extracted from the BAM files, formatted to FASTA format with interleaved read pairs, and assembled by Velvet (v.0.7.53). For inversions spanning over 10 kb, reads mapping within 5 kb of the insertion breakpoint were used for assembly. If the number of reads exceeded the maximum (over 10,000 reads for insertions, 200,000 for all other variant types), the SV call was deemed to be an artifact and was excluded from further analysis. The Velvet parameters used for each individual are shown in Table <xref ref-type="table" rid="T5">5</xref>. Each local assembly was run with and without Velvet's scaffolding option. All contigs generated for each SV call were aligned to the corresponding region in the reference genome using Exonerate (v.2.2.0) using the parameters described in Table <xref ref-type="table" rid="T6">6</xref>.</p>
+      <table-wrap id="T5" position="float">
+        <label>Table 5</label>
+        <caption>
+          <p>Velvet parameters for each individual</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Sample</th>
+              <th align="center">hash_length</th>
+              <th align="center">ins_len</th>
+              <th align="center">Exp_cov</th>
+              <th align="center">cov_cutoff</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">NA18506</td>
+              <td align="center">29</td>
+              <td align="center">220</td>
+              <td align="center">35</td>
+              <td align="center">2</td>
+            </tr>
+            <tr>
+              <td align="left">NA18507</td>
+              <td align="center">27</td>
+              <td align="center">200</td>
+              <td align="center">35</td>
+              <td align="center">2</td>
+            </tr>
+            <tr>
+              <td align="left">NA18508</td>
+              <td align="center">29</td>
+              <td align="center">200</td>
+              <td align="center">35</td>
+              <td align="center">2</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <table-wrap id="T6" position="float">
+        <label>Table 6</label>
+        <caption>
+          <p>Exonerate (v.2.2.0) parameters used for mapping <italic>de novo </italic>contigs back to the reference genome</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">Parameter</th>
+              <th align="left">Value</th>
+              <th align="left">Parameter</th>
+              <th align="left">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">model</td>
+              <td align="left">affine:local</td>
+              <td align="left">gappedextension</td>
+              <td align="left">FALSE</td>
+            </tr>
+            <tr>
+              <td align="left">bestn</td>
+              <td align="left">50; 100 for inversions</td>
+              <td align="left">joinrangeext</td>
+              <td align="left">300</td>
+            </tr>
+            <tr>
+              <td align="left">gapexend</td>
+              <td align="left">-3</td>
+              <td align="left">score</td>
+              <td align="left">15</td>
+            </tr>
+            <tr>
+              <td align="left">dnahspdropoff</td>
+              <td align="left">10</td>
+              <td align="left">dna submatrix values (inversions)</td>
+              <td align="left">5 for match, -15 for mismatch</td>
+            </tr>
+            <tr>
+              <td align="left">hspfilter</td>
+              <td align="left">200</td>
+              <td/>
+              <td/>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+    </sec>
+    <sec>
+      <title>Final call set</title>
+      <p>For each SV call evaluated by local assembly, contig alignments were computationally parsed to determine if there was supporting evidence for the SV, and to localize the breakpoints of the SV. Because reads that map to the breakpoints of heterozygous deletions are a mixture of reads that match the reference and reads that cross a breakpoint, local assembly may not always generate a breakpoint-containing contig. Therefore, for deletions with supporting read pairs flanking the predicted breakpoints, but no breakpoints found in assembled contigs, the original BAM files were used to check the read depth coverage across the predicted region. The Samtools 'pileup' utility [<xref ref-type="bibr" rid="B12">12</xref>] is used to report the depth of coverage and mapping quality of each base in the region. Any base with a root mean square mapping quality less than 30 is considered repetitive. If the majority of bases are not repetitive and the mean depth of coverage across the region is less than 0.85 times the mean depth of coverage across the genome, the predicted deletion is retained in the 'final' call set and the coordinates from the raw, merged set are used. Short read aligners such as Maq [<xref ref-type="bibr" rid="B27">27</xref>] and BWA [<xref ref-type="bibr" rid="B17">17</xref>] place non-uniquely mapping read pairs randomly at one of all possible sites, meaning reads will be mapped even where LINEs, SINEs or other repetitive elements are absent in the query genome. Therefore, in regions where the root mean square &lt;30 and the depth is lower than 1.2 times the mean depth of coverage across the whole genome, the original deletion call (which was supported by spanning read pairs) is retained in the final call set. The 'SVMerge final' call set, therefore, consists of all SVs with breakpoints verified by local assembly analysis (deletions, inversions, insertions, complex SVs), deletions passing the read depth check, and all copy number gains from RDXplorer that passed initial filtering.</p>
+    </sec>
+    <sec>
+      <title>Simulation data set</title>
+      <p>To evaluate the breakpoint refinement step in SVMerge, we generated deletions, insertions, and inversions on the human reference chromosome 20, and simulated 38-bp paired short reads, with a mean insert size distribution of 220 bp. For each type of SV, 100 homozygous and 100 heterozygous SVs were generated by random selection of location and size, and the exact breakpoints were recorded. Sizes were selected from a size distribution of those found by SVMerge in the NA18506 genome. Insertion sizes were selected from the deletion size distribution. Repeat deletions were randomly selected from a list of RepeatMasker LINE and SINE elements &gt;100 bp on chromosome 20 downloaded from the UCSC genome browser website [<xref ref-type="bibr" rid="B10">10</xref>]. SNPs and indels were added at a rate of 1 per 1,000 bp, and read errors were added at rate of 1 per 100 bp. Reads were generated to produce a depth of coverage of 40 ×. Reads were aligned with BWA, as described above in the 'Data' section, and a BAM file was generated. BreakDancerMax and SECluster were run as described above.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>SVMerge software availability and requirements</title>
+    <p>All published software used for SV calling is freely available, and must be installed prior to running SVMerge. SVMerge is written in Perl and is freely available from <ext-link ext-link-type="uri" xlink:href="http://svmerge.sourceforge.net">http://svmerge.sourceforge.net</ext-link>. Additional Perl modules are described in the SVMerge documentation and available from CPAN [<xref ref-type="bibr" rid="B28">28</xref>].</p>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>BAM: Binary Alignment/Map; bp: base pair; BED: Browser Extensible Data; DGV: Database of Genomic Variants; GATK: genome analysis toolkit; LINE: long interspersed nuclear element; SINE: short interspersed nuclear element; SNP: single nucleotide polymorphism; SV: structural variant.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>KW, TMK, JWS, and DJA conceived the ideas in the paper. KW and TMK implemented the software and carried out the data analysis. All authors read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>SV calls for individuals NA18507 and NA18508, made by individual SV callers and the final merged set</bold>.</p>
+      </caption>
+      <media xlink:href="gb-2010-11-12-r128-S1.doc" mimetype="application" mime-subtype="msword">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S2">
+      <caption>
+        <title>Additional file 2</title>
+        <p><bold>Number of SVMerge final SV calls overlapping DGV entries for the trio, compared to random sets</bold>.</p>
+      </caption>
+      <media xlink:href="gb-2010-11-12-r128-S2.doc" mimetype="application" mime-subtype="msword">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S3">
+      <caption>
+        <title>Additional file 3</title>
+        <p><bold>Comparison of the false discovery rates of individual SV callers</bold>.</p>
+      </caption>
+      <media xlink:href="gb-2010-11-12-r128-S3.doc" mimetype="application" mime-subtype="msword">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S4">
+      <caption>
+        <title>Additional file 4</title>
+        <p><bold>Comparison of the confidence scores of SVs unique to the child and those shared with the parents</bold>.</p>
+      </caption>
+      <media xlink:href="gb-2010-11-12-r128-S4.doc" mimetype="application" mime-subtype="msword">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>This work was supported by the Medical Research Council, UK and the Wellcome Trust. DJA is supported by Cancer Research-UK.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Stankiewicz</surname>
+          <given-names>PÇ</given-names>
+        </name>
+        <name>
+          <surname>Lupski</surname>
+          <given-names>JR</given-names>
+        </name>
+        <article-title>Structural variation in the human genome and its role in disease.</article-title>
+        <source>Annu Rev Med</source>
+        <year>2010</year>
+        <volume>61</volume>
+        <fpage>437</fpage>
+        <lpage>455</lpage>
+        <pub-id pub-id-type="doi">10.1146/annurev-med-100708-204735</pub-id>
+        <pub-id pub-id-type="pmid">20059347</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Chen</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Wallis</surname>
+          <given-names>JW</given-names>
+        </name>
+        <name>
+          <surname>McLellan</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>Larson</surname>
+          <given-names>DE</given-names>
+        </name>
+        <name>
+          <surname>Kalicki</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Pohl</surname>
+          <given-names>CS</given-names>
+        </name>
+        <name>
+          <surname>McGrath</surname>
+          <given-names>SD</given-names>
+        </name>
+        <name>
+          <surname>Wendl</surname>
+          <given-names>MC</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>Q</given-names>
+        </name>
+        <name>
+          <surname>Locke</surname>
+          <given-names>DP</given-names>
+        </name>
+        <name>
+          <surname>Shi</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Fulton</surname>
+          <given-names>RS</given-names>
+        </name>
+        <name>
+          <surname>Ley</surname>
+          <given-names>TJ</given-names>
+        </name>
+        <name>
+          <surname>Wiilson</surname>
+          <given-names>RK</given-names>
+        </name>
+        <name>
+          <surname>Ding</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Mardis</surname>
+          <given-names>ER</given-names>
+        </name>
+        <article-title>BreakDancer: an algorithm for high-resolution mapping of genomic structural variation.</article-title>
+        <source>Nat Methods</source>
+        <year>2009</year>
+        <volume>6</volume>
+        <fpage>677</fpage>
+        <lpage>681</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1363</pub-id>
+        <pub-id pub-id-type="pmid">19668202</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hormozdiari</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Hajirasouliha</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Dao</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Hach</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Yorukoglu</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Alkan</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Eichler</surname>
+          <given-names>EE</given-names>
+        </name>
+        <name>
+          <surname>Sahinalp</surname>
+          <given-names>SC</given-names>
+        </name>
+        <article-title>Next-generation VariationHunter: combinatorial algorithms for transposon insertion discovery.</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>i350</fpage>
+        <lpage>357</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq216</pub-id>
+        <pub-id pub-id-type="pmid">20529927</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ye</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Schulz</surname>
+          <given-names>MH</given-names>
+        </name>
+        <name>
+          <surname>Long</surname>
+          <given-names>Q</given-names>
+        </name>
+        <name>
+          <surname>Apweiler</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Ning</surname>
+          <given-names>Z</given-names>
+        </name>
+        <article-title>Pindel: a pattern growth approach to detect break points of large deletions and medium sized insertions from paired-end short reads.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2865</fpage>
+        <lpage>2871</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp394</pub-id>
+        <pub-id pub-id-type="pmid">19561018</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Simpson</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>McIntyre</surname>
+          <given-names>RE</given-names>
+        </name>
+        <name>
+          <surname>Adams</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Copy number variant detection in inbred strains from short read sequence data.</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>565</fpage>
+        <lpage>567</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp693</pub-id>
+        <pub-id pub-id-type="pmid">20022973</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yoon</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Xuan</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Makarov</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Ye</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Sebat</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Sensitive and accurate detection of copy number variants using read depth of coverage.</article-title>
+        <source>Genome Res</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1586</fpage>
+        <lpage>1592</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.092981.109</pub-id>
+        <pub-id pub-id-type="pmid">19657104</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="other">
+        <article-title>RetroSeq</article-title>
+        <ext-link ext-link-type="uri" xlink:href="https://github.com/tk2/RetroSeq">https://github.com/tk2/RetroSeq</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="other">
+        <article-title>SVMerge</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://svmerge.sourceforge.net">http://svmerge.sourceforge.net</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Quinlan</surname>
+          <given-names>AR</given-names>
+        </name>
+        <name>
+          <surname>Hall</surname>
+          <given-names>IM</given-names>
+        </name>
+        <article-title>BEDTools: a flexible suite of utilities for comparing genomic features.</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>841</fpage>
+        <lpage>842</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq033</pub-id>
+        <pub-id pub-id-type="pmid">20110278</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="other">
+        <article-title>UCSC Genome Browser</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://genome.ucsc.edu/">http://genome.ucsc.edu/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="other">
+        <article-title>Ensembl Genome Browser</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.ensembl.org">http://www.ensembl.org</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Handsaker</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Wysoker</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Fennell</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Homer</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Marth</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Abecasis</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <collab>Genome Project Data Processing S</collab>
+        <article-title>The Sequence Alignment/Map format and SAMtools.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2078</fpage>
+        <lpage>2079</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp352</pub-id>
+        <pub-id pub-id-type="pmid">19505943</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Simpson</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>Wong</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Jackman</surname>
+          <given-names>SD</given-names>
+        </name>
+        <name>
+          <surname>Schein</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Jones</surname>
+          <given-names>SJM</given-names>
+        </name>
+        <name>
+          <surname>Birol</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>ABySS: A parallel assembler for short read sequence data.</article-title>
+        <source>Genome Res</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <fpage>1117</fpage>
+        <lpage>1123</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.089532.108</pub-id>
+        <pub-id pub-id-type="pmid">19251739</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zerbino</surname>
+          <given-names>DR</given-names>
+        </name>
+        <name>
+          <surname>Birney</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Velvet: Algorithms for de novo short read assembly using de Bruijn graphs.</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>821</fpage>
+        <lpage>829</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.074492.107</pub-id>
+        <pub-id pub-id-type="pmid">18349386</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Slater</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Birney</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Automated generation of heuristics for biological sequence comparison.</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2005</year>
+        <volume>6</volume>
+        <fpage>31</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-6-31</pub-id>
+        <pub-id pub-id-type="pmid">15713233</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bentley</surname>
+          <given-names>DR</given-names>
+        </name>
+        <name>
+          <surname>Balasubramanian</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Swerdlow</surname>
+          <given-names>HP</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>GP</given-names>
+        </name>
+        <name>
+          <surname>Milton</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Brown</surname>
+          <given-names>CG</given-names>
+        </name>
+        <name>
+          <surname>Hall</surname>
+          <given-names>KP</given-names>
+        </name>
+        <name>
+          <surname>Evers</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Barnes</surname>
+          <given-names>CL</given-names>
+        </name>
+        <name>
+          <surname>Bignell</surname>
+          <given-names>HR</given-names>
+        </name>
+        <name>
+          <surname>Boutell</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Bryant</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Carter</surname>
+          <given-names>RJ</given-names>
+        </name>
+        <name>
+          <surname>Keira Cheetham</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Cox</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Ellis</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Flatbush</surname>
+          <given-names>MR</given-names>
+        </name>
+        <name>
+          <surname>Gormley</surname>
+          <given-names>NA</given-names>
+        </name>
+        <name>
+          <surname>Humphray</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Irving</surname>
+          <given-names>LJ</given-names>
+        </name>
+        <name>
+          <surname>Karbelashvili</surname>
+          <given-names>MS</given-names>
+        </name>
+        <name>
+          <surname>Kirk</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Maisinger</surname>
+          <given-names>KS</given-names>
+        </name>
+        <name>
+          <surname>Murray</surname>
+          <given-names>LJ</given-names>
+        </name>
+        <name>
+          <surname>Obradovic</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Ost</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Parkinson</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Pratt</surname>
+          <given-names>MR</given-names>
+        </name>
+        <etal/>
+        <article-title>Accurate whole human genome sequencing using reversible terminator chemistry.</article-title>
+        <source>Nature</source>
+        <year>2008</year>
+        <volume>456</volume>
+        <fpage>53</fpage>
+        <lpage>59</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature07517</pub-id>
+        <pub-id pub-id-type="pmid">18987734</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Fast and accurate short read alignment with Burrows-Wheeler transform.</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>1754</fpage>
+        <lpage>1760</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp324</pub-id>
+        <pub-id pub-id-type="pmid">19451168</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Iafrate</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Feuk</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Rivera</surname>
+          <given-names>MN</given-names>
+        </name>
+        <name>
+          <surname>Listewnik</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Donahoe</surname>
+          <given-names>PK</given-names>
+        </name>
+        <name>
+          <surname>Qi</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Scherer</surname>
+          <given-names>SW</given-names>
+        </name>
+        <name>
+          <surname>Lee</surname>
+          <given-names>C</given-names>
+        </name>
+        <article-title>Detection of large-scale variation in the human genome.</article-title>
+        <source>Nat Genet</source>
+        <year>2004</year>
+        <volume>36</volume>
+        <fpage>949</fpage>
+        <lpage>951</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng1416</pub-id>
+        <pub-id pub-id-type="pmid">15286789</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pleasance</surname>
+          <given-names>ED</given-names>
+        </name>
+        <name>
+          <surname>Cheetham</surname>
+          <given-names>RK</given-names>
+        </name>
+        <name>
+          <surname>Stephens</surname>
+          <given-names>PJ</given-names>
+        </name>
+        <name>
+          <surname>McBride</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Humphray</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <name>
+          <surname>Greenman</surname>
+          <given-names>CD</given-names>
+        </name>
+        <name>
+          <surname>Varela</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>ML</given-names>
+        </name>
+        <name>
+          <surname>Ordóñez</surname>
+          <given-names>GR</given-names>
+        </name>
+        <name>
+          <surname>Bignell</surname>
+          <given-names>GR</given-names>
+        </name>
+        <name>
+          <surname>Ye</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Alipaz</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Bauer</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Beare</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Butler</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Carter</surname>
+          <given-names>RJ</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Cox</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Edkins</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Kokko-Gonzales</surname>
+          <given-names>PI</given-names>
+        </name>
+        <name>
+          <surname>Gormley</surname>
+          <given-names>NA</given-names>
+        </name>
+        <name>
+          <surname>Grocock</surname>
+          <given-names>RJ</given-names>
+        </name>
+        <name>
+          <surname>Haudenschild</surname>
+          <given-names>CD</given-names>
+        </name>
+        <name>
+          <surname>Hims</surname>
+          <given-names>MM</given-names>
+        </name>
+        <name>
+          <surname>James</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Jia</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Kingsbury</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Leroy</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Marshall</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Menzies</surname>
+          <given-names>A</given-names>
+        </name>
+        <etal/>
+        <article-title>A comprehensive catalogue of somatic mutations from a human cancer genome.</article-title>
+        <source>Nature</source>
+        <year>2010</year>
+        <volume>463</volume>
+        <fpage>191</fpage>
+        <lpage>196</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature08658</pub-id>
+        <pub-id pub-id-type="pmid">20016485</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Eid</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Fehr</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Gray</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Luong</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Lyle</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Otto</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Peluso</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Rank</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Baybayan</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Bettman</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Bibillo</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Bjornson</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Chaudhuri</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Christians</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Cicero</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Clark</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Dalal</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Dewinter</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Dixon</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Foquet</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gaertner</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Hardenbol</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Heiner</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Hester</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Holden</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Kearns</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Kong</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Kuse</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Lacroix</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Lin</surname>
+          <given-names>S</given-names>
+        </name>
+        <etal/>
+        <article-title>Real-Time DNA Sequencing from Single Polymerase Molecules.</article-title>
+        <source>Science</source>
+        <year>2009</year>
+        <volume>323</volume>
+        <fpage>133</fpage>
+        <lpage>138</lpage>
+        <pub-id pub-id-type="doi">10.1126/science.1162986</pub-id>
+        <pub-id pub-id-type="pmid">19023044</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>McKenna</surname>
+          <given-names>AH</given-names>
+        </name>
+        <name>
+          <surname>Hanna</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Banks</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Sivachenko</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Cibulskis</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Kernytsky</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Garimella</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Altshuler</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Gabriel</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Daly</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>DePristo</surname>
+          <given-names>MA</given-names>
+        </name>
+        <article-title>The Genome Analysis Toolkit: A MapReduce framework for analyzing next-generation DNA sequencing data.</article-title>
+        <source>Genome Res</source>
+        <year>2010</year>
+        <volume>20</volume>
+        <fpage>1297</fpage>
+        <lpage>1303</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.107524.110</pub-id>
+        <pub-id pub-id-type="pmid">20644199</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="other">
+        <article-title>Picard</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://picard.sourceforge.net">http://picard.sourceforge.net</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="other">
+        <article-title>BreakDancer Website</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://breakdancer.sourceforge.net">http://breakdancer.sourceforge.net</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="other">
+        <article-title>Pindel Website</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.ebi.ac.uk/~kye/pindel/">http://www.ebi.ac.uk/~kye/pindel/</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Jurka</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Repbase Update: a database and an electronic journal of repetitive elements.</article-title>
+        <source>Trends Genet</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>418</fpage>
+        <lpage>420</lpage>
+        <pub-id pub-id-type="doi">10.1016/S0168-9525(00)02093-X</pub-id>
+        <pub-id pub-id-type="pmid">10973072</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ning</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Cox</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Mullikin</surname>
+          <given-names>JC</given-names>
+        </name>
+        <article-title>SSAHA: A Fast Search Method for Large DNA Databases.</article-title>
+        <source>Genome Res</source>
+        <year>2001</year>
+        <volume>11</volume>
+        <fpage>1725</fpage>
+        <lpage>1729</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.194201</pub-id>
+        <pub-id pub-id-type="pmid">11591649</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Ruan</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Durbin</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Mapping short DNA sequencing reads and calling variants using mapping quality scores.</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>1851</fpage>
+        <lpage>1858</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.078212.108</pub-id>
+        <pub-id pub-id-type="pmid">18714091</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="other">
+        <article-title>CPAN</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.cpan.org">http://www.cpan.org</ext-link>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

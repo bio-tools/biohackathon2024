@@ -1,0 +1,1257 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3439685</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-13-56</article-id>
+    <article-id pub-id-type="pmid">22507266</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-13-56</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>‘maskBAD’ – a package to detect and remove Affymetrix probes with binding affinity differences</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Dannemann</surname>
+          <given-names>Michael</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>michael_dannemann@eva.mpg.de</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Lachmann</surname>
+          <given-names>Michael</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>lachmann@eva.mpg.de</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A3">
+        <name>
+          <surname>Lorenc</surname>
+          <given-names>Anna</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>lorenc@evolbio.mpg.de</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Max Planck Institute for Evolutionary Biology, August–Thienemann–Str. 2, 24306, Plön, Germany</aff>
+    <aff id="I2"><label>2</label>Max Planck Institute for Evolutionary Anthropology, Deutscher Platz 6, 04103, Leipzig, Germany</aff>
+    <pub-date pub-type="collection">
+      <year>2012</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>16</day>
+      <month>4</month>
+      <year>2012</year>
+    </pub-date>
+    <volume>13</volume>
+    <fpage>56</fpage>
+    <lpage>56</lpage>
+    <history>
+      <date date-type="received">
+        <day>4</day>
+        <month>12</month>
+        <year>2011</year>
+      </date>
+      <date date-type="accepted">
+        <day>16</day>
+        <month>3</month>
+        <year>2012</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2012 Dannemann et al.; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2012</copyright-year>
+      <copyright-holder>Dannemann et al.; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/13/56"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Hybridization differences caused by target sequence differences can be a confounding factor in analyzing gene expression on microarrays, lead to false positives and reduce power to detect real expression differences. We prepared an R Bioconductor compatible package to detect, characterize and remove such probes in Affymetrix 3’IVT and exon-based arrays on the basis of correlation of signal intensities from probes within probe sets.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>Using completely mouse genomes we determined type 1 (false negatives) and type 2 (false positives) errors with high accuracy and we show that our method routinely outperforms previous methods. When detecting 76.2% of known SNP/indels in mouse expression data, we obtain at most 5.5% false positives. At the same level of false positives, best previous method detected 72.6%. We also show that probes with differing binding affinity both hinder differential expression detection and introduce artifacts in cancer-healthy tissue comparison.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>Detection and removal of such probes should be a routine step in Affymetrix data preprocessing. We prepared a user friendly R package, compatible with Bioconductor, that allows the filtering and improving of data from Affymetrix microarrays experiments.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>In microarray gene expression analysis, there is an assumption that a probe has the same set of targets in compared groups and therefore differences in probe signal intensity are caused by different levels of gene expression. This assumption does not hold when experimental groups with different genetic makeup are compared, as the target region of a specific probe may contain SNPs and other sequence differences. Experimental groups may also differ in their set of expressed isoforms or cross-hybridizing targets. The latter issue may arise even between genetically identical samples, such as when comparing different tissues, or samples differing in applied treatment. The binding affinity for such probes will differ between exprimental groups and the difference in signal intensity will be confounded with transcript abundance. We termed probes with such <underline>b</underline>inding <underline>a</underline>ffinity <underline>d</underline>ifferences BAD probes.</p>
+    <p>BAD probes lead to errors in estimates of differential gene expression [<xref ref-type="bibr" rid="B1">1</xref>], disruption of eQTL mapping [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B3">3</xref>] and errors in resolving cis and trans effects [<xref ref-type="bibr" rid="B4">4</xref>]. We ourselves have shown that BAD probes both introduce spurious gene expression differences and, by disrupting normalization, reduce the power to detect true ones [<xref ref-type="bibr" rid="B5">5</xref>]. On the other hand, BAD probes might be useful as genetic markers distinguishing species or strains (called also single feature polymorphisms, SFPs) [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B7">7</xref>].</p>
+    <p>The number of affected probes depends on the genetic distance between experimental groups. Even with 1% nucleotide differences, as observed between human and chimpanzee or Mus musculus and Mus spretus, SFPs due to SNPs alone will appear in ~22% of 25-nucleotide probes.</p>
+    <p>To overcome this problem, several approaches were employed, including: removal of probes overlapping known polymorphisms [<xref ref-type="bibr" rid="B8">8</xref>-<xref ref-type="bibr" rid="B10">10</xref>], adding group as a factor in probe-level analysis [<xref ref-type="bibr" rid="B1">1</xref>,<xref ref-type="bibr" rid="B11">11</xref>] and methods based on correlating expression values within a probe set [<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B7">7</xref>,<xref ref-type="bibr" rid="B12">12</xref>,<xref ref-type="bibr" rid="B13">13</xref>]. The advantage of the last approach is that information concerning sequences or actual targets (isoform and cross hybridizing targets) need not be known. It also alows one to discover SFPs.</p>
+    <p>Previously, we proposed a method to detect BAD probes on Affymetrix gene expression microarrays based on the expression values themselves, as we described in [<xref ref-type="bibr" rid="B5">5</xref>]. Briefly, the signal for a given probe is proportional to the amount of RNA in the sample and its binding affinity. When one target is measured with several probes (a probe set), as on Affymetrix arrays, the probe signals are correlated for each sample. BAD probes correlation differs between groups, hence comparison of pairwise correlations between those groups allows to identify of BAD probes, as summarized on Figure<xref ref-type="fig" rid="F1">1</xref>.</p>
+    <fig id="F1" position="float">
+      <label>Figure 1 </label>
+      <caption>
+        <p><bold>Principle of the masking method.</bold> Each dot represents a sample— human or chimpanzee. On the axes are fluorescence intensities for the probes from the same probe set. Our method performs a t-test of the slopes to each point (green and blue lines), assuming that the intercept is taken from all points (black line). On the left ( <bold>a</bold>) there is no binding afinity difference between humans and chimpanzees in either probe. On the right ( <bold>b</bold>) one of the probes is BAD.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-13-56-1"/>
+    </fig>
+    <p>We present an R package implementing this method for the detection and removal of BAD probes from the Affymetrix gene expression data. Functions in this package improve upon the version that we made available with the original paper [<xref ref-type="bibr" rid="B5">5</xref>], are compatible with current R Bioconductor framework, and work for both Affymetrix 3’IVT and exon-based arrays. The package with a vignette and example data was submitted to Bioconductor. We re-validated the method with recently available full genome data for mouse strains and compared its performance with competing software. We also employed masking on a human tumour-healthy tissue data set, to test for presence of BAD probes between tissue types and their influence on differential gene expression detection. In such comparisons, the difference in targets between experimental groups and impact of BAD probes has been overlooked to date.</p>
+  </sec>
+  <sec>
+    <title>Implementation</title>
+    <sec>
+      <title>BAD probes detection</title>
+      <p>We implemented the method described in [<xref ref-type="bibr" rid="B5">5</xref>]. Briefly, a signal for the probe j on the array i might be expressed as a sum of baseline response due to nonspecific hybridization (<italic>ν</italic><sub><italic>j</italic></sub>), abundance of target RNA (<italic>Φ</italic><sub><italic>i</italic></sub>) multiplied by binding strength of probe j (<italic>θ</italic><sub><italic>j</italic></sub>) and an error term.</p>
+      <p>If probes <italic>O</italic><sub><italic>i1</italic></sub> and <italic>O</italic><sub><italic>i2</italic></sub> hybridize to the same transcript, the relationship between their fluorescence levels might be expressed as</p>
+      <p>
+        <disp-formula id="bmcM1">
+          <label>(1)</label>
+          <mml:math id="M1" name="1471-2105-13-56-i1" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mi>O</mml:mi>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mi>v</mml:mi>
+                    <mml:mn>2</mml:mn>
+                  </mml:msub>
+                  <mml:msub>
+                    <mml:mi mathvariant="italic">θ</mml:mi>
+                    <mml:mn>2</mml:mn>
+                  </mml:msub>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mi>v</mml:mi>
+                    <mml:mn>1</mml:mn>
+                  </mml:msub>
+                  <mml:msub>
+                    <mml:mi mathvariant="italic">θ</mml:mi>
+                    <mml:mn>2</mml:mn>
+                  </mml:msub>
+                </mml:mrow>
+                <mml:msub>
+                  <mml:mi mathvariant="italic">θ</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:msub>
+              </mml:mfrac>
+              <mml:mo>+</mml:mo>
+              <mml:mfrac>
+                <mml:msub>
+                  <mml:mi mathvariant="italic">θ</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:msub>
+                <mml:msub>
+                  <mml:mi mathvariant="italic">θ</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:msub>
+              </mml:mfrac>
+              <mml:msub>
+                <mml:mi>O</mml:mi>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>+</mml:mo>
+              <mml:mo>∈</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>When samples differ between groups in binding affinities and/or background intensity, this linear relationship still holds within each group, but their slopes differ between groups.</p>
+      <p>We test the null hypothesis that in both groups the binding strength, as well as the background binding level, are the same,</p>
+      <p>1. We estimate the intercept for combined groups</p>
+      <p>
+        <disp-formula id="bmcM2">
+          <label>(2)</label>
+          <mml:math id="M2" name="1471-2105-13-56-i2" overflow="scroll">
+            <mml:mrow>
+              <mml:mi mathvariant="italic">β</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mi>v</mml:mi>
+                    <mml:mn>2</mml:mn>
+                  </mml:msub>
+                  <mml:msub>
+                    <mml:mi mathvariant="italic">θ</mml:mi>
+                    <mml:mn>1</mml:mn>
+                  </mml:msub>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mi>v</mml:mi>
+                    <mml:mn>1</mml:mn>
+                  </mml:msub>
+                  <mml:msub>
+                    <mml:mi mathvariant="italic">θ</mml:mi>
+                    <mml:mn>2</mml:mn>
+                  </mml:msub>
+                </mml:mrow>
+                <mml:msub>
+                  <mml:mi mathvariant="italic">θ</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:msub>
+              </mml:mfrac>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>2. We test with t-test if distribution of <italic>(O</italic><sub><italic>i2</italic></sub><italic> − β)/O</italic><sub><italic>i1</italic></sub> is the same for both groups and record its P-value.</p>
+      <p>
+        <disp-formula id="bmcM3">
+          <label>(3)</label>
+          <mml:math id="M3" name="1471-2105-13-56-i3" overflow="scroll">
+            <mml:mrow>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mi>O</mml:mi>
+                    <mml:mrow>
+                      <mml:mi>i</mml:mi>
+                      <mml:mn>2</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi mathvariant="italic">β</mml:mi>
+                </mml:mrow>
+                <mml:msub>
+                  <mml:mi>O</mml:mi>
+                  <mml:mrow>
+                    <mml:mi>i</mml:mi>
+                    <mml:mn>1</mml:mn>
+                  </mml:mrow>
+                </mml:msub>
+              </mml:mfrac>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:msub>
+                  <mml:mi mathvariant="italic">θ</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:msub>
+                <mml:msub>
+                  <mml:mi mathvariant="italic">θ</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:msub>
+              </mml:mfrac>
+              <mml:mo>+</mml:mo>
+              <mml:mo>∈</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>3. The same test (1-2) is performed for all probe pairs, in both directions. We thus build a <italic>J</italic> ×  <italic>J</italic> matrix of all pairwise tests, less the diagonal.</p>
+      <p>4. For each probe in a probe set we calculate the geometric mean of all <italic>P</italic>-values in the matrix where this probe is involved. We record the probe with the smallest geometric mean of <italic>P</italic>-values (mP-value) and exclude this probe’s comparisons from the matrix.</p>
+      <p>5. The previous step is repeated, until the matrix contains only two probes – they are both assigned geometric mean of their pvalues.</p>
+      <p>Then a cutoff is chosen and all probes with an mP-value below this cutoff are designated as BAD.</p>
+    </sec>
+    <sec>
+      <title>Description of the package</title>
+      <p>The package allows detection of BAD probes in Affymetrix microarrays designed with several probes measuring a target, 3’ IVT gene expression arrays and whole–transcript expression arrays (exon and gene arrays). Standard Bioconductor gene expression data structures are supported, thus the package may be easily be used with other Bioconductor tools.</p>
+      <p>As input for detection of BAD probes the package requires raw expression data in the form of an AffyBatch object and a group assignment of all samples. Detection of BAD probes in expression data works only for probe sets targeting transcripts that are expressed – others, picking background and crosshybridization signal are meaningless. Therefore by default, probe sets are evaluated with mas5calls() function from the package affy and only probe sets which are expressed (“P” call) in at least 90% of samples in each group are retained for BAD probes detection. However, the user may choose to analyze a custom set of probe sets or use average probes values to define probe sets to analyze. The masking achieves sufficient power with at least five samples in each group to compare (groups may differ in size). The resulting list contains a mask - a data frame with quality scores for all analyzed probes.</p>
+      <p>A low quality score means that a probe is likely to be BAD and probes with quality value below a certain cutoff may be removed from expressionSet and downstream analysis. Ranking of probes by quality scores depends on the data set (sample size and number of probes within probe sets) and hence a threshold for excluding probes from downstream analysis is data set specific. The package contains several functions to assist with choice of cutoff score. A stringent (high) cutoff might be used to compare gene expression between groups, whereas a relaxed (low) cutoff may be used to identify candidate SFPs, because then a low rate of false positives is important.</p>
+      <p>When BAD status is known for a subset of probes, a cutoff might be chosen to match desired sensitivity and specificity level, on the basis of this subset analysis. Function overlapExpExtMasks() computes type 1 and type 2 errors and its confidence intervals for different cutoffs and then plots them. Also, the distributions of quality scores for probes defined as BAD and non-BAD might be compared using a Kolmogorov-Smirnov or Wilcoxon test, to estimate if cutoff is too stringent and prevents discrimnation of BAD and non-BAD probes.</p>
+      <p>In the absence of a reference subset of probes, distribution of quality scores might suggest an appropriate cutoff level.</p>
+      <p>It is advisable to inspect some probes that have borderline quality score. The function plotProbe() allows comparison of a probe’s intensities against all other probes from the same probe set.</p>
+      <p>Probes may be removed from the original AffyBatch object with prepareMaskedAffybatch(). It returns a new affyBatch object and an appropriate CDF environment, which are both devoid of BAD probes. At this step the user may decide what is a minimal number of probes left to still keep a probe set in the analysis. For prepareMaskedAffybatch() BAD probes may be identified by a mask object and a cutoff value or as a list of probes to remove.</p>
+      <p>After removal of BAD probes, expression estimates might be obtained in any way preferred by the user, as for every probe set the remaining probes are treated as a redefined probe set. Masking might be coupled also with probe set redefinition by a custom cdf.</p>
+      <p>The package is compatible with 3’ IVT arrays and gene/exon arrays. The resulting affyBatch object may be used downstream as a usual affyBatch object.</p>
+    </sec>
+    <sec>
+      <title>Performance</title>
+      <p>We took the opportunity to use the recent sequencing of 20 inbred mouse strains as a comprehensive source of information about SNPs and indels. We detected BAD probes in a public dataset of striatum expression from C57BL/6NJ and DBA/2 J strains [[<xref ref-type="bibr" rid="B14">14</xref>], GEO Series GSE26024], measured on the MOE430 2.0 array based on C57BL sequences. We estimated false positives (probes detected as BAD with no polymorphism) and false negatives (undetected BAD probes) of expression-based mask by comparison with polymorphisms in probe target regions in a similar way as in [<xref ref-type="bibr" rid="B5">5</xref>].We did the same with SNEP [<xref ref-type="bibr" rid="B15">15</xref>], which is a method to detect BAD probes shown to be superior to several other approaches and not compared with ours before.</p>
+      <p>We also tested for the presence of BAD probes and masking effects in a public dataset comprising 17 healthy tissue and 20 tumour samples from human lung ([<xref ref-type="bibr" rid="B16">16</xref>], data from <ext-link ext-link-type="uri" xlink:href="http://www.broadinstitute.org/mpr/lung/">http://www.broadinstitute.org/mpr/lung/</ext-link>), measured on U95 arrays. The mask was produced with default features and a cutoff of 0.001 (1373 probes masked – 4.5%), determined from the distribution of probes’ quality scores. Probe sets were defined as being differentially expressed if, after gcrma normalization, their Benjamin-Hochberg corrected t-test p-values were smaller than 0.01.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and Discussion</title>
+    <p>The package maskBAD is designed to detect and remove BAD probes and the resulting bias in expression estimates. Previously we demonstrated the high accuracy and detection rate of the method in detecting artificially introduced BAD probes [<xref ref-type="bibr" rid="B5">5</xref>]. We detected 90% of probes with an artificially introduced difference and masked only 1.8% of probes without a difference. We estimated also false positive and false negative rates in actual data from two mouse strains and a human-chimpanzee comparison. However, this approach suffered from incomplete mouse polymorphism data at the time, and unknown polymorphisms between human and chimpanzee individuals used in the expression studies. However, with the full genome information for inbred mouse strains it was possible to estimate it with greater accuracy [Figure<xref ref-type="fig" rid="F2">2</xref>. According to the sequence data, within the 22748 expressed probe sets, 2.4% of probes were affected by either a SNP or an indel. At cutoff 0.032 we detect 76.2% of known SNPs/indels, at the same time masking only 5.5% of probes without any known polymorphism. Still, some of the probes without known polymorphisms might differ in binding affinity because of other differences between experimental groups, for example in additional file 1 we show a probe (quality score = 2.46e − 10) without a known polymorphism between mouse strains and with obvious BAD behavior.</p>
+    <fig id="F2" position="float">
+      <label>Figure 2 </label>
+      <caption>
+        <p><bold>Detection of known polymorphisms by maskBAD.</bold> Performance maskBAD compared with SNEP algorithm for the mouse dataset. X-axis: fraction of probes masked, but without known polymorphism. Y-axis: detected fraction of known SNPs/indels. Masks were build using 4 or 10 individuals from each group.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-13-56-2"/>
+    </fig>
+    <p>We compared the performance of our method with SNEP [<xref ref-type="bibr" rid="B15">15</xref>] using the same dataset. For group sizes 4 and 10 our method is equally good for low cutoffs and superior for high cutoffs [Figure<xref ref-type="fig" rid="F2">2</xref>. When detecting 75.6% of real SNPs/indels, it detects as BAD 8.5% probes without SNP/indel and with type 2 error 5.5% it detects 72.8% of known SNPs/indels.</p>
+    <p>We find also that BAD probes are present in the cancer-healthy tissue comparison and influence DE detection. We analyzed 1913 (15%) probe sets which were expressed in both groups and identified 1373 (4.5%) BAD probes at cutoff 0.001 between carcinoid lung tumors and healthy lung tissue. Such differences between two human tissues mean qualitative differences in targets, such as cross-hybridizing targets or isoforms between tumour and normal tissue. We enquired how masking influences differential expression detection. There were 656 probe sets detected as differentially expressed (DE) both before and after masking, while 94 probe sets were only DE before masking and 38 were only DE after masking.</p>
+    <p>A single BAD probe can cause an extreme difference in calling differential expression. For example, a probe set (38657_s_at), targeting clathrin, before masking showed no difference in expression (p = 0.41). By removing probe 3 (detected as BAD: quality score = 2.5e-5, <xref ref-type="supplementary-material" rid="S2">additional file 2</xref>), the P-value becomes highly significant (p = 0.009). The probe response shows the opposite direction of intensity change for this probe than the others, leading to a biased expression estimate.</p>
+    <p>On the other hand, in probe set 37766_s_at differential expression detected without masking (p = 0.01) is an artifact of only one BAD probe (x = 420 y = 307, quality score = 5.5e-6) in this probe set ( <xref ref-type="supplementary-material" rid="S3">Additional file 3</xref>) and disappears after masking (p = 0.08). This detected difference might be still of interest, as it might indicate differential isoform expression or RNA editing between two tissues, or identical somatic mutations in tumour samples, but it is not a “simple” difference in expression levels.</p>
+    <p>If removal of BAD probes reveals a real biological signal, and does not not just introduce a random change in expression estimates due to a reduction in the number of probes in probe set, than when discarding BAD probes one should see much a bigger difference in DE estimates compared to removing probes randomly. To test this, we ran a simulation 1000 times where we removed the same number of probes, with the same distribution of probes per probe set, as the set of probes we removed as BAD. The number of probe sets detected as DE was much smaller (Figure<xref ref-type="fig" rid="F3">3</xref>).</p>
+    <fig id="F3" position="float">
+      <label>Figure 3 </label>
+      <caption>
+        <p><bold>Probe sets changing DE status after removal of BAD or random probes.</bold> Number of probe sets changing DE status after removal of 1373 probes, randomly chosen (sampled 1000 times) or identified as BAD probes. ( <bold>a</bold>) All probe sets ( <bold>b</bold>) probe sets detected as DE only after masking, ( <bold>c</bold>) probe sets loosing DE status after masking.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-13-56-3"/>
+    </fig>
+    <p>As we have shown previously [<xref ref-type="bibr" rid="B5">5</xref>], excluding BAD probes both removes artifacts and reveals a real biological signal. Previously, it was used in comparisons between genetically different strains or species [<xref ref-type="bibr" rid="B12">12</xref>,<xref ref-type="bibr" rid="B17">17</xref>-<xref ref-type="bibr" rid="B21">21</xref>]. Systematic differences in probes’ targets might also be present between different tissues (as in the previous cancer-healthy tissue comparison) or samples subjected to different treatments. Whereas regions of known differences might be accommodated in array design (by careful design and annotation of separate probe sets targeting known isoforms and exon-level analysis), other differences that are not recognized might lead to errors in detecting DE. To date, their identification and removal is usually not a part of a 3’IVT arrays data analysis pipeline. As they differ in binding affinity between compared groups, but are still in relation to other probes within a probe set, downweighting of outlier probes, as performed in summarization step of preprocessing methods (RMA, GCRMA, affyILM, plier etc.) does not reduce their interference.</p>
+    <p>BAD probes violate the assumption made in methods for estimating gene expression from microarrays, that there is a common binding affinity for a given probe for all samples. Therefore, for DE gene discovery, they should be removed from analysis.</p>
+    <p>As BAD probes are a result of systematic differences between compared groups, they might identify candidate loci for further investigation, for example differing in splicing isoforms between compared groups. When using expression data to classify samples, they might be another factor discriminating samples. However, as they obscure real expression levels, by potentially canceling out expression differences with reciprocal signal or by disrupting the normalization process, they should be removed before estimating expression level differences.</p>
+    <p>Therefore BAD probe detection should be a part of standard differential gene expression analysis. When a goal is to find both quantitative and qualitative differences in expression between samples, the analysis might be done twice, with and without BAD probes. Comparison of results for the same dataset before and after masking, along with the localization of BAD probes, would help to interpret which probe sets apparently detecting DE differ in expression levels and which have rather qualitative target differences.</p>
+    <p>A set of probes identified as BAD for a specific experiment might be removed from analysis of other similar datasets. However, each tissue, developmental stage etc. might differ qualitatively in transcriptome and therefore have a different set of BAD probes, so identification of ones specific for the experiment is better.</p>
+  </sec>
+  <sec sec-type="conclusions">
+    <title>Conclusions</title>
+    <p>We introduce “maskBAD”, the R package to detect and remove probes with different binding affinity in Affymetrix array expression data. The method implemented in maskBAD performs better than other methods in detecting BAD probes. Identification and removal of BAD probes removes spurious gene expression differences and helps to reveal real ones. In clustering analysis of gene expression, identification of BAD probes guides interpretation of discriminating probe sets.</p>
+    <p>The BAD probes are prevalent in comparisons of genetically distinct samples, such as different strains of a species or between species, but systematic qualitative differences in transcriptome might introduce them also when samples differ by treatment, health status or tissue type. All commonly used preprocessing procedures assume constant binding affinity for a probe in all samples and their downweighting of outlier probes does not protect from BAD probes. Therefore masking should be a routine step in data preprocessing. The “maskBAD” package allows identifying, inspection and removing BAD probes in R and Bioconductor environment and make it a part of standard gene expression analysis pipeline.</p>
+  </sec>
+  <sec>
+    <title>Availability and requirements</title>
+    <p>Project name: Masking BAD microarray probes.</p>
+    <p>Project home page: <ext-link ext-link-type="uri" xlink:href="http://bioinf.eva.mpg.de/masking/test/pmwiki.php/Site/MaskingMicroarraysProbesWithBindingAffinityDifferences">http://bioinf.eva.mpg.de/masking/test/pmwiki.php/Site/MaskingMicroarraysProbesWithBindingAffinityDifferences</ext-link> and Bioconductor (<ext-link ext-link-type="uri" xlink:href="http://bioconductor.org/packages/2.10/bioc/html/maskBAD.html">http://bioconductor.org/packages/2.10/bioc/html/maskBAD.html</ext-link>)</p>
+    <p>Operating systems: Linux, OS X, Windows</p>
+    <p>Programming language: R (currently requires R-devel version)</p>
+    <p>Other requirements: packages affy, gcrma</p>
+    <p>License: GNU GPL</p>
+  </sec>
+  <sec>
+    <title>Links</title>
+    <p>Package is available at</p>
+    <p>
+      <ext-link ext-link-type="uri" xlink:href="http://bioconductor.org/packages/2.10/bioc/html/maskBAD.html">http://bioconductor.org/packages/2.10/bioc/html/maskBAD.html</ext-link>
+    </p>
+    <p>
+      <ext-link ext-link-type="uri" xlink:href="http://bioinf.eva.mpg.de/masking/test/pmwiki.php/Site/MaskingMicroarraysProbesWithBindingAffinityDifferences">http://bioinf.eva.mpg.de/masking/test/pmwiki.php/Site/MaskingMicroarraysProbesWithBindingAffinity Differences</ext-link>
+    </p>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>BAD, binding affinity different; DE, differential expression; SFP, single feature polymorphism; SNP, single nucleotide polymorphism.</p>
+  </sec>
+  <sec>
+    <title>Misc</title>
+    <p>Michael Dannemann and Anna Lorenc contributed equally.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors' contribution</title>
+    <p>AL, MD and ML conceived the package. MD developed the package. MD and AL tested the package. AL wrote the manuscript, all authors have contributed to it and have read and accepted the final version.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1 </title>
+        <p><bold>A BAD probe without known polymorphisms in the targets.</bold> Examples of fluorescence intensities for probes from the probe set 1415723_at, without any polymorphisms in target region according to sequence data, for mice from C57BL/6NJ (green) and DBA/ 2 J (blue) strains. A. BAD probe (quality score 2.46e - 10) B. Probe without BAD (quality score 0.876).</p>
+      </caption>
+      <media xlink:href="1471-2105-13-56-S1.pdf" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S2">
+      <caption>
+        <title>Additional file 2 </title>
+        <p><bold>BAD probe introduces spurious DE.</bold> Fluorescence levels of the probe set 37766_s_at for normal lung and tumor lung tissue. Each dot represents a sample. This probe set is detected as DE (alpha = 0.01) with raw data, but is not significant after masking. Intensities and its correlations with some other probes of the probe set are shown for the probe 15, identified as BAD (left) and probe 13, non-BAD (right). In the middle fluorescence levels for consecutive probes.</p>
+      </caption>
+      <media xlink:href="1471-2105-13-56-S2.pdf" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S3">
+      <caption>
+        <title>Additional file 3 </title>
+        <p><bold>BAD probe prevents detection of DE.</bold> Fluorescence levels of the probe set 38657_s_at for normal lung and tumor lung tissue. Each dot represents a sample. This probe set is detected as DE (alpha = 0.01) only after masking. Intensities and its correlations with some other probes of the probe set are shown for the probe 3, identified as BAD (left) and probe 4, non-BAD (right). In the middle fluorescence levels for consecutive probes.</p>
+      </caption>
+      <media xlink:href="1471-2105-13-56-S3.pdf" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>We would like to thank three anonymous reviewers for their help in making this manuscript more transparent. We are grateful to Jarek Bryk, Bernhard Haubold and Jai Denton for comments on the manuscript. AL, MD, ML are funded by Max Planck Society.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hsieh</surname>
+          <given-names>WP</given-names>
+        </name>
+        <name>
+          <surname>Chu</surname>
+          <given-names>TM</given-names>
+        </name>
+        <name>
+          <surname>Wolfinger</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Gibson</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Mixed-model reanalysis of primate data suggests tissue and species biases in oligonucleotide-based gene expression profiles</article-title>
+        <source>Genetics</source>
+        <year>2003</year>
+        <volume>165</volume>
+        <issue>2</issue>
+        <fpage>747</fpage>
+        <lpage>757</lpage>
+        <pub-id pub-id-type="pmid">14573485</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Alberts</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Terpstra</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Breitling</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Nap</surname>
+          <given-names>J-P</given-names>
+        </name>
+        <name>
+          <surname>Jansen</surname>
+          <given-names>RC</given-names>
+        </name>
+        <article-title>Sequence Polymorphisms Cause Many False cis eQTLs</article-title>
+        <source>PLoS One</source>
+        <year>2007</year>
+        <volume>2</volume>
+        <issue>7</issue>
+        <fpage>e622</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0000622</pub-id>
+        <pub-id pub-id-type="pmid">17637838</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Chen</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Page</surname>
+          <given-names>GP</given-names>
+        </name>
+        <name>
+          <surname>Mehta</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Feng</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Cui</surname>
+          <given-names>X</given-names>
+        </name>
+        <article-title>Single nucleotide polymorphisms affect both cis- and trans-eQTLs</article-title>
+        <source>Genomics</source>
+        <year>2009</year>
+        <volume>93</volume>
+        <issue>6</issue>
+        <fpage>501</fpage>
+        <lpage>508</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.ygeno.2009.01.011</pub-id>
+        <pub-id pub-id-type="pmid">19248827</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ciobanu</surname>
+          <given-names>DC</given-names>
+        </name>
+        <name>
+          <surname>Lu</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Mozhui</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Jagalur</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Morris</surname>
+          <given-names>JA</given-names>
+        </name>
+        <name>
+          <surname>Taylor</surname>
+          <given-names>WL</given-names>
+        </name>
+        <name>
+          <surname>Dietz</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Simon</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Williams</surname>
+          <given-names>RW</given-names>
+        </name>
+        <article-title>Detection, validation, and downstream analysis of allelic variation in gene expression</article-title>
+        <source>Genetics</source>
+        <year>2010</year>
+        <volume>184</volume>
+        <issue>1</issue>
+        <fpage>119</fpage>
+        <lpage>128</lpage>
+        <pub-id pub-id-type="doi">10.1534/genetics.109.107474</pub-id>
+        <pub-id pub-id-type="pmid">19884314</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Dannemann</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Lorenc</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Hellmann</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Khaitovich</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Lachmann</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>The effects of probe binding affinity differences on gene expression measurements and how to deal with them</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <issue>21</issue>
+        <fpage>2772</fpage>
+        <lpage>2779</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp492</pub-id>
+        <pub-id pub-id-type="pmid">19689957</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Cui</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Asghar</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Condamine</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Svensson</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>Wanamaker</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Stein</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Roose</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Close</surname>
+          <given-names>TJ</given-names>
+        </name>
+        <article-title>Detecting single-feature polymorphisms using oligonucleotide arrays and robustified projection pursuit</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>20</issue>
+        <fpage>3852</fpage>
+        <lpage>3858</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti640</pub-id>
+        <pub-id pub-id-type="pmid">16118260</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ronald</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Akey</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Whittle</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>EN</given-names>
+        </name>
+        <name>
+          <surname>Yvert</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Kruglyak</surname>
+          <given-names>L</given-names>
+        </name>
+        <article-title>Simultaneous genotyping, gene-expression measurement, and detection of allele-specific expression with oligonucleotide arrays</article-title>
+        <source>Genome Res</source>
+        <year>2005</year>
+        <volume>15</volume>
+        <issue>2</issue>
+        <fpage>284</fpage>
+        <lpage>291</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.2850605</pub-id>
+        <pub-id pub-id-type="pmid">15687292</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kumari</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Verma</surname>
+          <given-names>LK</given-names>
+        </name>
+        <name>
+          <surname>Weller</surname>
+          <given-names>JW</given-names>
+        </name>
+        <article-title>AffyMAPSDetector: a software tool to characterize Affymetrix GeneChip expression arrays with respect to SNPs</article-title>
+        <source>BMC Bioinforma</source>
+        <year>2007</year>
+        <volume>8</volume>
+        <fpage>276</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-8-276</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Duan</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>W</given-names>
+        </name>
+        <name>
+          <surname>Bleibel</surname>
+          <given-names>WK</given-names>
+        </name>
+        <name>
+          <surname>Cox</surname>
+          <given-names>NJ</given-names>
+        </name>
+        <name>
+          <surname>Dolan</surname>
+          <given-names>ME</given-names>
+        </name>
+        <article-title>SNPinProbe_1.0: a database for filtering out probes in the Affymetrix GeneChip human exon 1.0 ST array potentially affected by SNPs</article-title>
+        <source>Bioinformation</source>
+        <year>2008</year>
+        <volume>2</volume>
+        <issue>10</issue>
+        <fpage>469</fpage>
+        <lpage>470</lpage>
+        <pub-id pub-id-type="doi">10.6026/97320630002469</pub-id>
+        <pub-id pub-id-type="pmid">18841244</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Toleno</surname>
+          <given-names>DM</given-names>
+        </name>
+        <name>
+          <surname>Renaud</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Wolfsberg</surname>
+          <given-names>TG</given-names>
+        </name>
+        <name>
+          <surname>Islam</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Wildman</surname>
+          <given-names>DE</given-names>
+        </name>
+        <name>
+          <surname>Siegmund</surname>
+          <given-names>KD</given-names>
+        </name>
+        <name>
+          <surname>Hacia</surname>
+          <given-names>JG</given-names>
+        </name>
+        <article-title>Development and evaluation of new mask protocols for gene expression profiling in humans and chimpanzees</article-title>
+        <source>BMC Bioinforma</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>77</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-10-77</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Alberts</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Terpstra</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Bystrykh</surname>
+          <given-names>LV</given-names>
+        </name>
+        <name>
+          <surname>De Haan</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Jansen</surname>
+          <given-names>RC</given-names>
+        </name>
+        <article-title>A statistical multiprobe model for analyzing cis and trans genes in genetical genomics experiments with short-oligonucleotide arrays</article-title>
+        <source>Genetics</source>
+        <year>2005</year>
+        <volume>171</volume>
+        <issue>3</issue>
+        <fpage>1437</fpage>
+        <lpage>1439</lpage>
+        <pub-id pub-id-type="doi">10.1534/genetics.105.045930</pub-id>
+        <pub-id pub-id-type="pmid">16079228</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Khaitovich</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Muetzel</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>She</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Lachmann</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hellmann</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Dietzsch</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Steigele</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Do</surname>
+          <given-names>HH</given-names>
+        </name>
+        <name>
+          <surname>Weiss</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Enard</surname>
+          <given-names>W</given-names>
+        </name>
+        <etal/>
+        <article-title>Regional patterns of gene expression in human and chimpanzee brains</article-title>
+        <source>Genome Res</source>
+        <year>2004</year>
+        <volume>14</volume>
+        <issue>8</issue>
+        <fpage>1462</fpage>
+        <lpage>1473</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.2538704</pub-id>
+        <pub-id pub-id-type="pmid">15289471</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Wang</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hu</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Leach</surname>
+          <given-names>LJ</given-names>
+        </name>
+        <name>
+          <surname>Potokina</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Druka</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Waugh</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Kearsey</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Luo</surname>
+          <given-names>Z</given-names>
+        </name>
+        <article-title>Robust detection and genotyping of single feature polymorphisms from gene expression data</article-title>
+        <source>PLoS Comput Biol</source>
+        <year>2009</year>
+        <volume>5</volume>
+        <issue>3</issue>
+        <fpage>e1000317</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pcbi.1000317</pub-id>
+        <pub-id pub-id-type="pmid">19282978</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bottomly</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Walter</surname>
+          <given-names>NA</given-names>
+        </name>
+        <name>
+          <surname>Hunter</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Darakjian</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Kawane</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Buck</surname>
+          <given-names>KJ</given-names>
+        </name>
+        <name>
+          <surname>Searles</surname>
+          <given-names>RP</given-names>
+        </name>
+        <name>
+          <surname>Mooney</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>McWeeney</surname>
+          <given-names>SK</given-names>
+        </name>
+        <name>
+          <surname>Hitzemann</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Evaluating gene expression in C57BL/6J and DBA/2J mouse striatum using RNA-Seq and microarrays</article-title>
+        <source>PLoS One</source>
+        <volume>6</volume>
+        <issue>3</issue>
+        <fpage>e17820</fpage>
+        <pub-id pub-id-type="pmid">21455293</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Fujisawa</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Horiuchi</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Harushima</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Takada</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Eguchi</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Mochizuki</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Sakaguchi</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Shiroishi</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Kurata</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>SNEP: Simultaneous detection of nucleotide and expression polymorphisms using Affymetrix GeneChip</article-title>
+        <source>BMC Bioinforma</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>131</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-10-131</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bhattacharjee</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Richards</surname>
+          <given-names>WG</given-names>
+        </name>
+        <name>
+          <surname>Staunton</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Monti</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Vasa</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Ladd</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Beheshti</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Bueno</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Gillette</surname>
+          <given-names>M</given-names>
+        </name>
+        <etal/>
+        <article-title>Classification of human lung carcinomas by mRNA expression profiling reveals distinct adenocarcinoma subclasses</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <issue>24</issue>
+        <fpage>13790</fpage>
+        <lpage>13795</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.191502998</pub-id>
+        <pub-id pub-id-type="pmid">11707567</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kumar</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Qiu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Joshi</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Valliyodan</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Nguyen</surname>
+          <given-names>HT</given-names>
+        </name>
+        <article-title>Single feature polymorphism discovery in rice</article-title>
+        <source>PLoS One</source>
+        <year>2007</year>
+        <volume>2</volume>
+        <issue>3</issue>
+        <fpage>e284</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0000284</pub-id>
+        <pub-id pub-id-type="pmid">17372626</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Walia</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Wilson</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Condamine</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Ismail</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Xu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Cui</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Close</surname>
+          <given-names>TJ</given-names>
+        </name>
+        <article-title>Array-based genotyping and expression analysis of barley cv. Maythorpe and Golden Promise</article-title>
+        <source>BMC Genomics</source>
+        <year>2007</year>
+        <volume>8</volume>
+        <fpage>87</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-8-87</pub-id>
+        <pub-id pub-id-type="pmid">17394671</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bischoff</surname>
+          <given-names>SR</given-names>
+        </name>
+        <name>
+          <surname>Tsai</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Hardison</surname>
+          <given-names>NE</given-names>
+        </name>
+        <name>
+          <surname>York</surname>
+          <given-names>AM</given-names>
+        </name>
+        <name>
+          <surname>Freking</surname>
+          <given-names>BA</given-names>
+        </name>
+        <name>
+          <surname>Nonneman</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Rohrer</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Piedrahita</surname>
+          <given-names>JA</given-names>
+        </name>
+        <article-title>Identification of SNPs and INDELS in swine transcribed sequences using short oligonucleotide microarrays</article-title>
+        <source>BMC Genomics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>252</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-9-252</pub-id>
+        <pub-id pub-id-type="pmid">18510738</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Das</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Bhat</surname>
+          <given-names>PR</given-names>
+        </name>
+        <name>
+          <surname>Sudhakar</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Ehlers</surname>
+          <given-names>JD</given-names>
+        </name>
+        <name>
+          <surname>Wanamaker</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Roberts</surname>
+          <given-names>PA</given-names>
+        </name>
+        <name>
+          <surname>Cui</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Close</surname>
+          <given-names>TJ</given-names>
+        </name>
+        <article-title>Detection and validation of single feature polymorphisms in cowpea (Vigna unguiculata L. Walp) using a soybean genome array</article-title>
+        <source>BMC Genomics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <fpage>107</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-9-107</pub-id>
+        <pub-id pub-id-type="pmid">18307807</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bernardo</surname>
+          <given-names>AN</given-names>
+        </name>
+        <name>
+          <surname>Bradbury</surname>
+          <given-names>PJ</given-names>
+        </name>
+        <name>
+          <surname>Ma</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Hu</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Bowden</surname>
+          <given-names>RL</given-names>
+        </name>
+        <name>
+          <surname>Buckler</surname>
+          <given-names>ES</given-names>
+        </name>
+        <name>
+          <surname>Bai</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Discovery and mapping of single feature polymorphisms in wheat using Affymetrix arrays</article-title>
+        <source>BMC Genomics</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>251</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2164-10-251</pub-id>
+        <pub-id pub-id-type="pmid">19480702</pub-id>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

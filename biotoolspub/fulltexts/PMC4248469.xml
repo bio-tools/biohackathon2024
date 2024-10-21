@@ -1,0 +1,1611 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//Springer-Verlag//DTD A++ V2.4//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName A++V2.4.dtd?>
+<?SourceDTD.Version 2.4?>
+<?ConverterInfo.XSLTName springer2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1465-6906</issn>
+    <issn pub-type="epub">1465-6914</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">4248469</article-id>
+    <article-id pub-id-type="pmid">25398208</article-id>
+    <article-id pub-id-type="publisher-id">509</article-id>
+    <article-id pub-id-type="doi">10.1186/s13059-014-0509-9</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Lighter: fast and memory-efficient sequencing error correction without counting</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Song</surname>
+          <given-names>Li</given-names>
+        </name>
+        <address>
+          <email>lsong10@jhu.edu</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1"/>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Florea</surname>
+          <given-names>Liliana</given-names>
+        </name>
+        <address>
+          <email>florea@jhu.edu</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1"/>
+        <xref ref-type="aff" rid="Aff2"/>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes">
+        <name>
+          <surname>Langmead</surname>
+          <given-names>Ben</given-names>
+        </name>
+        <address>
+          <email>langmea@cs.jhu.edu</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1"/>
+        <xref ref-type="aff" rid="Aff2"/>
+      </contrib>
+      <aff id="Aff1"><label/>Department of Computer Science, Johns Hopkins University, Baltimore, 21218 USA </aff>
+      <aff id="Aff2"><label/>McKusick-Nathans Institute of Genetic Medicine, Johns Hopkins University School of Medicine, Baltimore, 21205 USA </aff>
+    </contrib-group>
+    <pub-date pub-type="epub">
+      <day>15</day>
+      <month>11</month>
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>15</day>
+      <month>11</month>
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <year>2014</year>
+    </pub-date>
+    <volume>15</volume>
+    <issue>11</issue>
+    <elocation-id>509</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>27</day>
+        <month>5</month>
+        <year>2014</year>
+      </date>
+      <date date-type="accepted">
+        <day>29</day>
+        <month>9</month>
+        <year>2014</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© Song et al.; licensee BioMed Central Ltd. 2014</copyright-statement>
+      <license license-type="open-access">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0">http://creativecommons.org/licenses/by/4.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly credited. The Creative Commons Public Domain Dedication
+waiver (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</ext-link>) applies to the data made available in this article, unless otherwise
+stated.</license-p>
+      </license>
+    </permissions>
+    <abstract id="Abs1">
+      <p>Lighter is a fast, memory-efficient tool for correcting sequencing errors. Lighter avoids counting <italic>k</italic>-mers. Instead, it uses a pair of Bloom filters, one holding a sample of the input <italic>k</italic>-mers and the other holding <italic>k</italic>-mers likely to be correct. As long as the sampling fraction is adjusted in inverse proportion to the depth of sequencing, Bloom filter size can be held constant while maintaining near-constant accuracy. Lighter is parallelized, uses no secondary storage, and is both faster and more memory-efficient than competing approaches while achieving comparable accuracy.</p>
+      <sec>
+        <title>Electronic supplementary material</title>
+        <p>The online version of this article (doi:10.1186/s13059-014-0509-9) contains supplementary material, which is available to authorized users.</p>
+      </sec>
+    </abstract>
+    <custom-meta-group>
+      <custom-meta>
+        <meta-name>issue-copyright-statement</meta-name>
+        <meta-value>© The Author(s) 2014</meta-value>
+      </custom-meta>
+    </custom-meta-group>
+  </article-meta>
+</front>
+<body>
+  <sec id="Sec1" sec-type="introduction">
+    <title>Introduction</title>
+    <p>The cost and throughput of DNA sequencing have improved rapidly in the past several years [<xref ref-type="bibr" rid="CR1">1</xref>], with recent advances reducing the cost of sequencing a single human genome at 30-fold coverage to around $1,000 [<xref ref-type="bibr" rid="CR2">2</xref>]. With these advances has come an explosion of new software for analyzing large sequencing datasets. Sequencing error correction is a basic need for many of these tools. Removing errors can also improve the accuracy, speed and memory-efficiency of downstream tools, particularly for <italic>de novo</italic> assemblers based on De Bruijn graphs [<xref ref-type="bibr" rid="CR3">3</xref>,<xref ref-type="bibr" rid="CR4">4</xref>].</p>
+    <p>To be useful in practice, error correction software must make economical use of time and memory even when input datasets are large (many billions of reads) and when the genome under study is also large (billions of nucleotides). Several methods have been proposed, covering a wide tradeoff space between accuracy, speed and memory- and storage-efficiency. SHREC [<xref ref-type="bibr" rid="CR5">5</xref>] and HiTEC [<xref ref-type="bibr" rid="CR6">6</xref>] build a suffix index of the input reads and locate errors by finding instances where a substring is followed by a character less often than expected. Coral [<xref ref-type="bibr" rid="CR7">7</xref>] and ECHO [<xref ref-type="bibr" rid="CR8">8</xref>] find overlaps among reads and use the resulting multiple alignments to detect and correct errors. Reptile [<xref ref-type="bibr" rid="CR9">9</xref>] and Hammer [<xref ref-type="bibr" rid="CR10">10</xref>] detect and correct errors by examining each <italic>k</italic>-mer’s neighborhood in the dataset’s <italic>k</italic>-mer Hamming graph.</p>
+    <p>The most practical and widely used error correction methods descend from the spectral alignment approach introduced in the earliest De Bruijn graph based assemblers [<xref ref-type="bibr" rid="CR3">3</xref>,<xref ref-type="bibr" rid="CR4">4</xref>]. These methods count the number of times each <italic>k</italic>-mer occurs (its <italic>multiplicity</italic>) in the input reads, then apply a threshold such that <italic>k</italic>-mers with multiplicity exceeding the threshold are considered <italic>solid</italic>. These <italic>k</italic>-mers are unlikely to have been altered by sequencing errors. <italic>k</italic>-mers with low multiplicity (<italic>weak</italic><italic>k</italic>-mers) are systematically edited into high-multiplicity <italic>k</italic>-mers using a dynamic-programming solution to the spectral alignment problem [<xref ref-type="bibr" rid="CR3">3</xref>,<xref ref-type="bibr" rid="CR4">4</xref>] or, more often, a fast heuristic approximation. Quake [<xref ref-type="bibr" rid="CR11">11</xref>], one of the most widely used error correction tools, uses a hash-based <italic>k</italic>-mer counter called Jellyfish [<xref ref-type="bibr" rid="CR12">12</xref>] to determine which <italic>k</italic>-mers are correct. CUDA-EC [<xref ref-type="bibr" rid="CR13">13</xref>] was the first to use a Bloom filter as a space-efficient alternative to hash tables for counting <italic>k</italic>-mers and for representing the set of solid <italic>k</italic>-mers. More recent tools, such as Musket [<xref ref-type="bibr" rid="CR14">14</xref>] and BLESS [<xref ref-type="bibr" rid="CR15">15</xref>], use a combination of Bloom filters and hash tables to count <italic>k</italic>-mers or to represent the set of solid <italic>k</italic>-mers.</p>
+    <p><italic>Lighter</italic> (LIGHTweight ERror corrector) is also in the family of spectral alignment methods, but differs from previous approaches in that it avoids counting <italic>k</italic>-mers. Rather than count <italic>k</italic>-mers, Lighter samples <italic>k</italic>-mers randomly, storing the sample in a Bloom filter. Lighter then uses a simple test applied to each position of each read to compile a set of solid <italic>k</italic>-mers, stored in a second Bloom filter. These two Bloom filters are the only sizable data structures used by Lighter.</p>
+    <p>A crucial advantage is that Lighter’s parameters can be set such that memory footprint and accuracy are near constant with respect to depth of sequencing. That is, no matter how deep the coverage, Lighter can allocate the same sized Bloom filters and achieve nearly the same: (a) Bloom filter occupancy, (b) Bloom filter false positive rate and (c) error correction accuracy. Lighter does this without using any disk space or other secondary memory. This is in contrast to BLESS and Quake/Jellyfish, which use secondary memory to store some or all of the <italic>k</italic>-mer counts.</p>
+    <p>Lighter’s accuracy is comparable to competing tools. We show this both in simulation experiments where false positives and false negatives can be measured, and in real-world experiments where read alignment scores and assembly statistics can be measured. Lighter is also very simple and fast, faster than all other tools tried in our experiments. These advantages make Lighter quite practical compared to previous counting-based approaches, all of which require an amount of memory or secondary storage that increases with depth of coverage. Lighter is free open-source software available from [<xref ref-type="bibr" rid="CR16">16</xref>].</p>
+  </sec>
+  <sec id="Sec2" sec-type="methods">
+    <title>Method</title>
+    <p>Lighter’s workflow is illustrated in Figure <xref rid="Fig1" ref-type="fig">1</xref>. Lighter makes three passes over the input reads. The first pass obtains a sample of the <italic>k</italic>-mers present in the input reads, storing the sample in Bloom filter A. The second pass uses Bloom filter A to identify solid <italic>k</italic>-mers, which it stores in Bloom filter B. The third pass uses Bloom filter B and a greedy procedure to correct errors in the input reads.
+<fig id="Fig1"><label>Figure 1</label><caption><p><bold>The framework of Lighter.</bold></p></caption><graphic xlink:href="13059_2014_509_Fig1_HTML" id="MO1"/></fig></p>
+    <sec id="Sec3">
+      <title>Bloom filter</title>
+      <p>A Bloom filter [<xref ref-type="bibr" rid="CR17">17</xref>] is a compact probabilistic data structure representing a set. It consists of an array of <italic>m</italic> bits, each initialized to 0. To add an item <italic>o</italic>, <italic>h</italic> independent hash functions <italic>H</italic><sub>0</sub>(<italic>o</italic>),<italic>H</italic><sub>1</sub>(<italic>o</italic>),…,<italic>H</italic><sub><italic>h</italic>−1</sub>(<italic>o</italic>) are calculated. Each maps <italic>o</italic> to an integer in [ 0,<italic>m</italic>) and the corresponding <italic>h</italic> array bits are set to 1. To test if item <italic>q</italic> is a member, the same hash functions are applied to <italic>q</italic>. <italic>q</italic> is a member if all corresponding bits are set to 1. A false positive occurs when the corresponding bits are set to 1 ‘by coincidence’, that is, because of items besides <italic>q</italic> that were added previously. Assuming the hash functions map items to bit array elements with equal probability, the Bloom filter’s false positive rate is approximately <inline-formula id="IEq1"><alternatives><tex-math id="M1">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							$\left (1-e^{-h\frac {n}{m}}\right)^{h}$
+						\end{document}</tex-math><mml:math id="M2"><mml:msup><mml:mrow><mml:mfenced close=")" open="(" separators=""><mml:mrow><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msup><mml:mrow><mml:mi>e</mml:mi></mml:mrow><mml:mrow><mml:mo>−</mml:mo><mml:mi>h</mml:mi><mml:mfrac><mml:mrow><mml:mi>n</mml:mi></mml:mrow><mml:mrow><mml:mi>m</mml:mi></mml:mrow></mml:mfrac></mml:mrow></mml:msup></mml:mrow></mml:mfenced></mml:mrow><mml:mrow><mml:mi>h</mml:mi></mml:mrow></mml:msup></mml:math><inline-graphic xlink:href="13059_2014_509_Article_IEq1.gif"/></alternatives></inline-formula>, where <italic>n</italic> is the number of distinct items added, which we call the <italic>cardinality</italic>. Given <italic>n</italic>, which is usually determined by the dataset, <italic>m</italic> and <italic>h</italic> can be adjusted to achieve a desired false positive rate. Lower false positive rates can come at a cost, since greater values of <italic>m</italic> require more memory and greater values of <italic>h</italic> require more hash function calculations. Many variations on Bloom filters have been proposed that additionally permit compression of the filter, storage of count data, representation of maps in addition to sets, etc. [<xref ref-type="bibr" rid="CR18">18</xref>]. Bloom filters and variants thereon have been applied in various bioinformatics settings, including assembly [<xref ref-type="bibr" rid="CR19">19</xref>], compression [<xref ref-type="bibr" rid="CR20">20</xref>], <italic>k</italic>-mer counting [<xref ref-type="bibr" rid="CR21">21</xref>] and error correction [<xref ref-type="bibr" rid="CR13">13</xref>].</p>
+      <p>By way of contrast, another way to represent a set is with a hash table. Hash tables do not yield false positives, but Bloom filters are far smaller. Whereas a Bloom filter is an array of bits, a hash table is an array of buckets, each large enough to store a pointer, key or both. If chaining is used, lists associated with buckets incur additional overhead. While the Bloom filter’s small size comes at the expense of false positives, these can be tolerated in many settings including in error correction.</p>
+      <p>Lighter’s efficiency depends on the efficiency of the Bloom filter implementation. Specifically Lighter uses a <italic>pattern-blocked</italic> Bloom filter to decrease overall the number of cache misses and improve efficiency. This comes at the expense of needing a slightly larger filter to achieve a comparable false positive rate to a standard filter, as discussed in Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Supplementary Note 1.</p>
+      <p>In our method, the items to be stored in the Bloom filters are <italic>k</italic>-mers. Because we would like to treat genome strands equivalently for counting purposes, we will always <italic>canonicalize</italic> a <italic>k</italic>-mer before adding it to or using it to query a Bloom filter. A canonicalized <italic>k</italic>-mer is either the <italic>k</italic>-mer itself or its reverse complement, whichever is lexicographically prior.</p>
+    </sec>
+    <sec id="Sec4">
+      <title>Sequencing model</title>
+      <p>We use a simple model to describe the sequencing process and Lighter’s subsampling. The model resembles one suggested previously [<xref ref-type="bibr" rid="CR22">22</xref>]. Let <italic>K</italic> be the total number of <italic>k</italic>-mers obtained by the sequencer. We say a <italic>k</italic>-mer is <italic>incorrect</italic> if its sequence has been altered by one or more sequencing errors. Otherwise it is <italic>correct</italic>. Let <italic>ε</italic> be the fraction of <italic>k</italic>-mers that are incorrect. We assume <italic>ε</italic> does not vary with the depth of sequencing. The sequencer obtains correct <italic>k</italic>-mers by sampling independently and uniformly from <italic>k</italic>-mers in the genome. Let the number of <italic>k</italic>-mers in the genome be <italic>G</italic>, and assume all are distinct. If <italic>κ</italic><sub><italic>c</italic></sub> is a random variable for the multiplicity of a correct <italic>k</italic>-mer in the input, <italic>κ</italic><sub><italic>c</italic></sub> is binomial with success probability 1/<italic>G</italic> and number of trials (1−<italic>ε</italic>)<italic>K</italic>:
+<disp-formula id="Equa"><alternatives><tex-math id="M3">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							 $$\kappa_{c} \sim \text{Binom}((1-\epsilon)K, 1/G). $$ 
+						\end{document}</tex-math><mml:math id="M4"><mml:mrow><mml:msub><mml:mrow><mml:mi>κ</mml:mi></mml:mrow><mml:mrow><mml:mi>c</mml:mi></mml:mrow></mml:msub><mml:mo>∼</mml:mo><mml:mtext>Binom</mml:mtext><mml:mo>(</mml:mo><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>ε</mml:mi><mml:mo>)</mml:mo><mml:mi>K</mml:mi><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo>/</mml:mo><mml:mi>G</mml:mi><mml:mo>)</mml:mo><mml:mi>.</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equa.gif" position="anchor"/></alternatives></disp-formula></p>
+      <p>Since the number of trials is large and the success probability is small, the binomial is well approximated by a Poisson:
+<disp-formula id="Equb"><alternatives><tex-math id="M5">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							 $$\kappa_{c} \sim \text{Pois}(K(1-\epsilon)/G). $$ 
+						\end{document}</tex-math><mml:math id="M6"><mml:mrow><mml:msub><mml:mrow><mml:mi>κ</mml:mi></mml:mrow><mml:mrow><mml:mi>c</mml:mi></mml:mrow></mml:msub><mml:mo>∼</mml:mo><mml:mtext>Pois</mml:mtext><mml:mo>(</mml:mo><mml:mi>K</mml:mi><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>ε</mml:mi><mml:mo>)</mml:mo><mml:mo>/</mml:mo><mml:mi>G</mml:mi><mml:mo>)</mml:mo><mml:mi>.</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equb.gif" position="anchor"/></alternatives></disp-formula></p>
+      <p>A sequenced <italic>k</italic>-mer survives subsampling with probability <italic>α</italic>. If <italic>κ</italic><italic>c</italic>′ is a random variable for the number of times a correct <italic>k</italic>-mer appears in the subsample:
+<disp-formula id="Equc"><alternatives><tex-math id="M7">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+							 $$\kappa'_{c} \sim \text{Binom}((1-\epsilon)K, \alpha/G), $$ 
+						\end{document}</tex-math><mml:math id="M8"><mml:mrow><mml:msubsup><mml:mrow><mml:mi>κ</mml:mi></mml:mrow><mml:mrow><mml:mi>c</mml:mi></mml:mrow><mml:mrow><mml:mo>′</mml:mo></mml:mrow></mml:msubsup><mml:mo>∼</mml:mo><mml:mtext>Binom</mml:mtext><mml:mo>(</mml:mo><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>ε</mml:mi><mml:mo>)</mml:mo><mml:mi>K</mml:mi><mml:mo>,</mml:mo><mml:mi>α</mml:mi><mml:mo>/</mml:mo><mml:mi>G</mml:mi><mml:mo>)</mml:mo><mml:mo>,</mml:mo></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equc.gif" position="anchor"/></alternatives></disp-formula> which is approximately Pois(<italic>α</italic><italic>K</italic>(1−<italic>ε</italic>)/<italic>G</italic>).</p>
+      <p>We model incorrect <italic>k</italic>-mers similarly. The sequencer obtains incorrect <italic>k</italic>-mers by sampling independently and uniformly from <italic>k</italic>-mers ‘close to’ a <italic>k</italic>-mer in the genome. We might define these as the set of all <italic>k</italic>-mers with low but non-zero Hamming distance from some genomic <italic>k</italic>-mer. If <italic>κ</italic><sub><italic>e</italic></sub> is a random variable for the multiplicity of an incorrect <italic>k</italic>-mer, <italic>κ</italic><sub><italic>e</italic></sub> is binomial with success probability 1/<italic>H</italic> and number of trials <italic>ε</italic><italic>K</italic>: <italic>κ</italic><sub><italic>e</italic></sub>∼Binom(<italic>ε</italic><italic>K</italic>,1/<italic>H</italic>), which is approximately Pois(<italic>K</italic><italic>ε</italic>/<italic>H</italic>). It is safe to assume <italic>H</italic>≫<italic>G</italic>. <italic>κ</italic><italic>e</italic>′∼Pois(<italic>α</italic><italic>K</italic><italic>ε</italic>/<italic>H</italic>) is a random variable for the number of times an incorrect <italic>k</italic>-mer appears in the subsample.</p>
+      <p>Others have noted that, given a dataset with deep and uniform coverage, incorrect <italic>k</italic>-mers occur rarely while correct <italic>k</italic>-mers occur many times, proportionally to coverage [<xref ref-type="bibr" rid="CR3">3</xref>,<xref ref-type="bibr" rid="CR4">4</xref>].</p>
+    </sec>
+    <sec id="Sec5">
+      <title>Stages of the method</title>
+      <sec id="Sec6">
+        <title>First pass</title>
+        <p>In the first pass, Lighter examines each <italic>k</italic>-mer of each read. With probability 1−<italic>α</italic>, the <italic>k</italic>-mer is ignored. <italic>k</italic>-mers containing ambiguous nucleotides (e.g. ‘N’) are also ignored. Otherwise, the <italic>k</italic>-mer is canonicalized and added to Bloom filter A.</p>
+        <p>Say a distinct <italic>k</italic>-mer <italic>a</italic> occurs a total of <italic>N</italic><sub><italic>a</italic></sub> times in the dataset. If none of the <italic>N</italic><sub><italic>a</italic></sub> occurrences survive subsampling, the <italic>k</italic>-mer is never added to A and A’s cardinality is reduced by one. Thus, reducing <italic>α</italic> can in turn reduce A’s cardinality. Because correct <italic>k</italic>-mers are more numerous, incorrect <italic>k</italic>-mers tend to be discarded from A before correct <italic>k</italic>-mers as <italic>α</italic> decreases.</p>
+        <p>The subsampling fraction <italic>α</italic> is set by the user. We suggest adjusting <italic>α</italic> in inverse proportion to depth of sequencing, for reasons discussed below. For experiments described here, we set <italic>α</italic>=0.1 when the average coverage is 70-fold. That is, we set <italic>α</italic> to 0.1(70/<italic>C</italic>), where <italic>C</italic> is average coverage.</p>
+      </sec>
+      <sec id="Sec7">
+        <title>Second pass</title>
+        <p>A read position is overlapped by up to <italic>x</italic><italic>k</italic>-mers, 1≤<italic>x</italic>≤<italic>k</italic>, where <italic>x</italic> depends on how close the position is to either end of the read. For a position altered by sequencing error, the overlapping <italic>k</italic>-mers are all incorrect and are unlikely to appear in A. We apply a threshold such that if the number of <italic>k</italic>-mers overlapping the position and appearing in Bloom filter A is less than the threshold, we say the position is <italic>untrusted</italic>. Otherwise we say it is <italic>trusted</italic>. Each instance where the threshold is applied is called a <italic>test case</italic>. When one or more of the <italic>x</italic><italic>k</italic>-mers involved in two test cases differ, we say the test cases are distinct.</p>
+        <p>Let <italic>P</italic><sup>∗</sup>(<italic>α</italic>) be the probability an incorrect <italic>k</italic>-mer appears in A, taking the Bloom filter’s false positive rate into account. If random variable <italic>B</italic><sub><italic>e</italic>,<italic>x</italic></sub> represents the number of <italic>k</italic>-mers appearing in A for an untrusted position overlapped by <italic>x</italic><italic>k</italic>-mers:
+<disp-formula id="Equd"><alternatives><tex-math id="M9">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+								 $$B_{e,x} \sim \text{Binom}(x,P^{*}(\alpha)). $$ 
+							\end{document}</tex-math><mml:math id="M10"><mml:mrow><mml:msub><mml:mrow><mml:mi>B</mml:mi></mml:mrow><mml:mrow><mml:mi>e</mml:mi><mml:mo>,</mml:mo><mml:mi>x</mml:mi></mml:mrow></mml:msub><mml:mo>∼</mml:mo><mml:mtext>Binom</mml:mtext><mml:mo>(</mml:mo><mml:mi>x</mml:mi><mml:mo>,</mml:mo><mml:msup><mml:mrow><mml:mi>P</mml:mi></mml:mrow><mml:mrow><mml:mo>∗</mml:mo></mml:mrow></mml:msup><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo><mml:mo>)</mml:mo><mml:mi>.</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equd.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p>We define thresholds <italic>y</italic><sub><italic>x</italic></sub>, for each <italic>x</italic> in [ 1,<italic>k</italic>]. <italic>y</italic><sub><italic>x</italic></sub> is the minimum integer such that:
+<disp-formula id="Eque"><alternatives><tex-math id="M11">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+								 $$p(B_{e,x}\le y_{x} - 1)\ge 0.995. $$ 
+							\end{document}</tex-math><mml:math id="M12"><mml:mrow><mml:mi>p</mml:mi><mml:mo>(</mml:mo><mml:msub><mml:mrow><mml:mi>B</mml:mi></mml:mrow><mml:mrow><mml:mi>e</mml:mi><mml:mo>,</mml:mo><mml:mi>x</mml:mi></mml:mrow></mml:msub><mml:mo>≤</mml:mo><mml:msub><mml:mrow><mml:mi>y</mml:mi></mml:mrow><mml:mrow><mml:mi>x</mml:mi></mml:mrow></mml:msub><mml:mo>−</mml:mo><mml:mn>1</mml:mn><mml:mo>)</mml:mo><mml:mo>≥</mml:mo><mml:mn>0.995</mml:mn><mml:mi>.</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Eque.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p>Ignoring false positives for now, we model the probability of a sequenced <italic>k</italic>-mer having been added to A as:
+<disp-formula id="Equf"><alternatives><tex-math id="M13">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+								 $$P(\alpha)=1-(1-\alpha)^{f(\alpha)}. $$ 
+							\end{document}</tex-math><mml:math id="M14"><mml:mrow><mml:mi>P</mml:mi><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo><mml:mo>=</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msup><mml:mrow><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mrow><mml:mi>f</mml:mi><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo></mml:mrow></mml:msup><mml:mi>.</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equf.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p>We define:
+<disp-formula id="Equg"><alternatives><tex-math id="M15">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+								 $$f(\alpha)=\text{max}\{2,0.2/\alpha\}. $$ 
+							\end{document}</tex-math><mml:math id="M16"><mml:mrow><mml:mi>f</mml:mi><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo><mml:mo>=</mml:mo><mml:mtext>max</mml:mtext><mml:mo>{</mml:mo><mml:mn>2</mml:mn><mml:mo>,</mml:mo><mml:mn>0.2</mml:mn><mml:mo>/</mml:mo><mml:mi>α</mml:mi><mml:mo>}</mml:mo><mml:mi>.</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equg.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p>That is, we assume the multiplicity of a weak <italic>k</italic>-mer is at most <italic>f</italic>(<italic>α</italic>), which will often be a conservative assumption, especially for small <italic>α</italic>. It is also possible to define <italic>P</italic>(<italic>α</italic>) in terms of random variables <italic>κ</italic><sub><italic>e</italic></sub> and <italic>κ</italic><italic>e</italic>′, but we avoid this here for simplicity.</p>
+        <p>A property of this threshold is that when <italic>α</italic> is small:
+<disp-formula id="Equh"><alternatives><tex-math id="M17">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+								 $$P(\alpha/z)=1-(1-\alpha/z)^{0.2z/\alpha}\approx 1-(1-\alpha)^{0.2/\alpha}=P(\alpha), $$ 
+							\end{document}</tex-math><mml:math id="M18"><mml:mrow><mml:mi>P</mml:mi><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>/</mml:mo><mml:mi>z</mml:mi><mml:mo>)</mml:mo><mml:mo>=</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msup><mml:mrow><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>α</mml:mi><mml:mo>/</mml:mo><mml:mi>z</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mrow><mml:mn>0.2</mml:mn><mml:mi>z</mml:mi><mml:mo>/</mml:mo><mml:mi>α</mml:mi></mml:mrow></mml:msup><mml:mo>≈</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msup><mml:mrow><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mrow><mml:mn>0.2</mml:mn><mml:mo>/</mml:mo><mml:mi>α</mml:mi></mml:mrow></mml:msup><mml:mo>=</mml:mo><mml:mi>P</mml:mi><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo><mml:mo>,</mml:mo></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equh.gif" position="anchor"/></alternatives></disp-formula> where <italic>z</italic> is a constant greater than 1 and we use the fact that:
+<disp-formula id="Equi"><alternatives><tex-math id="M19">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+								 $$(1-\alpha/z)^{z}\approx 1-\alpha. $$ 
+							\end{document}</tex-math><mml:math id="M20"><mml:mrow><mml:msup><mml:mrow><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>α</mml:mi><mml:mo>/</mml:mo><mml:mi>z</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mrow><mml:mi>z</mml:mi></mml:mrow></mml:msup><mml:mo>≈</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>α.</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equi.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p>For <italic>P</italic><sup>∗</sup>(<italic>α</italic>), we additionally take A’s false positive rate into account. If the false positive rate is <italic>β</italic>, then:
+<disp-formula id="Equj"><alternatives><tex-math id="M21">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+								 $$P^{*}(\alpha)=P(\alpha)+\beta-\beta P(\alpha). $$ 
+							\end{document}</tex-math><mml:math id="M22"><mml:mrow><mml:msup><mml:mrow><mml:mi>P</mml:mi></mml:mrow><mml:mrow><mml:mo>∗</mml:mo></mml:mrow></mml:msup><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo><mml:mo>=</mml:mo><mml:mi>P</mml:mi><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo><mml:mo>+</mml:mo><mml:mi>β</mml:mi><mml:mo>−</mml:mo><mml:mi>βP</mml:mi><mml:mo>(</mml:mo><mml:mi>α</mml:mi><mml:mo>)</mml:mo><mml:mi>.</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2014_509_Article_Equj.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p>Once all positions in a read have been marked <italic>trusted</italic> or <italic>untrusted</italic> using the threshold, we find all instances where <italic>k</italic> trusted positions appear consecutively. The <italic>k</italic>-mer made up by those positions is added to Bloom filter B.</p>
+      </sec>
+      <sec id="Sec8">
+        <title>Third pass</title>
+        <p>In the third pass, Lighter applies a simple, greedy error correction procedure like that used in BLESS [<xref ref-type="bibr" rid="CR15">15</xref>]. A read <italic>r</italic> of length |<italic>r</italic>|, contains |<italic>r</italic>|−<italic>k</italic>+1<italic>k</italic>-mers. <italic>k</italic><sub><italic>i</italic></sub> denotes the <italic>k</italic>-mer starting at read position <italic>i</italic>, 1≤<italic>i</italic>≤|<italic>r</italic>|−<italic>k</italic>+1. We first identify the longest stretch of consecutive <italic>k</italic>-mers in the read that appear in Bloom filter B. Let <italic>k</italic><sub><italic>b</italic></sub> and <italic>k</italic><sub><italic>e</italic></sub> be the <italic>k</italic>-mers at the left and right extremes of the stretch. If <italic>e</italic>&lt;|<italic>r</italic>|−<italic>k</italic>+1, we examine successive <italic>k</italic>-mers to the right starting at <italic>k</italic><sub><italic>e</italic></sub>+1. For a <italic>k</italic>-mer <italic>k</italic><sub><italic>i</italic></sub> that does not appear in B, we assume the nucleotide at offset <italic>i</italic>+<italic>k</italic>−1 is incorrect. We consider all possible ways of substituting for the incorrect nucleotide. For each substitution, we count how many consecutive <italic>k</italic>-mers starting with <italic>k</italic><sub><italic>i</italic></sub> appear in Bloom filter B after making the substitution. We pick the substitution that creates the longest stretch of consecutive <italic>k</italic>-mers in B. The procedure is illustrated in Figure <xref rid="Fig2" ref-type="fig">2</xref>.
+<fig id="Fig2"><label>Figure 2</label><caption><p><bold>An example of the greedy error correction procedure.</bold><italic>k</italic>-mer CCGATTC does not appear in Bloom filter B, so we attempt to substitute a different nucleotide for the C shown in red. We select A since it yields the longest stretch of consecutive <italic>k</italic>-mers that appear in Bloom filter B.</p></caption><graphic xlink:href="13059_2014_509_Fig2_HTML" id="MO2"/></fig></p>
+        <p>If more than one candidate substitution is equally good (i.e. results in the same number of consecutive <italic>k</italic>-mers from B), we call position <italic>i</italic>+<italic>k</italic>−1 ambiguous and make no attempt to correct it. The procedure then resumes starting at <italic>k</italic><sub><italic>i</italic>+<italic>k</italic></sub>, or the procedure ends if the read is too short to contain <italic>k</italic>-mer <italic>k</italic><sub><italic>i</italic>+<italic>k</italic></sub>.</p>
+        <p>When errors are located near to the end of a read, the stretches of consecutive <italic>k</italic>-mers used to prioritize substitutions are short. For example, if the error is at the very last position of the read, we must choose a substation on the basis of just one <italic>k</italic>-mer: the rightmost <italic>k</italic>-mer. This very often results in a tie, and no correction. Lighter avoids many of these ties by considering <italic>k</italic>-mers that extend beyond the end of the read, as discussed in Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Supplementary Note 2.</p>
+        <p>For better precision, Lighter also limits the corrections that can be made in any window of size <italic>k</italic> in a read. The default limit is 4, and it is configurable. Corrections at positions with an ‘N’ contribute 0, and corrections at low-quality bases (defined in the <xref rid="Sec10" ref-type="sec">Quality score</xref> section below) contribute 0.5 toward this limit. All other positions contribute 1.</p>
+      </sec>
+    </sec>
+    <sec id="Sec9">
+      <title>Scaling with depth of sequencing</title>
+      <p>Lighter’s accuracy can be made near constant as the depth of sequencing <italic>K</italic> increases and its memory footprint is held constant. This is accomplished by holding <italic>α</italic><italic>K</italic> constant, i.e., by adjusting <italic>α</italic> in inverse proportion to <italic>K</italic>. This is illustrated in Tables <xref rid="Tab1" ref-type="table">1</xref> and <xref rid="Tab2" ref-type="table">2</xref>. We also argue this more formally in Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Supplementary Note 3.
+<table-wrap id="Tab1"><label>Table 1</label><caption><p><bold>Accuracy measures for datasets simulated with Mason with various sequencing depths and error rates</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"><bold>Coverage</bold></th><th align="left"/><th align="left" colspan="2"><bold>35×</bold></th><th align="left" colspan="2"><bold>70×</bold></th><th align="left" colspan="2"><bold>140×</bold></th></tr><tr><th align="left"><bold>Error rate</bold></th><th align="left"/><th align="left"><bold>1</bold><bold><italic>%</italic></bold></th><th align="left"><bold>3</bold><bold><italic>%</italic></bold></th><th align="left"><bold>1</bold><bold><italic>%</italic></bold></th><th align="left"><bold>3</bold><bold><italic>%</italic></bold></th><th align="left"><bold>1</bold><bold><italic>%</italic></bold></th><th align="left"><bold>3</bold><bold><italic>%</italic></bold></th></tr><tr><th align="left"><bold><italic>α</italic></bold><bold> for Lighter</bold></th><th align="left"/><th align="left"><bold>0.2</bold></th><th align="left"><bold>0.2</bold></th><th align="left"><bold>0.1</bold></th><th align="left"><bold>0.1</bold></th><th align="left"><bold>0.05</bold></th><th align="left"><bold>0.05</bold></th></tr></thead><tbody><tr><td align="center"/><td align="center">Quake</td><td align="center">89.68</td><td align="center">48.77</td><td align="center">89.64</td><td align="center">48.82</td><td align="center">89.59</td><td align="center">48.78</td></tr><tr><td align="center"/><td align="center">SOAPec</td><td align="center">57.71</td><td align="center">38.00</td><td align="center">57.57</td><td align="center">37.71</td><td align="center">57.09</td><td align="center">36.76</td></tr><tr><td align="center">Recall</td><td align="center">Musket</td><td align="center">93.75</td><td align="center">92.62</td><td align="center">93.73</td><td align="center">92.64</td><td align="center">93.73</td><td align="center">92.63</td></tr><tr><td align="center"/><td align="center">Bless</td><td align="center">99.81</td><td align="center">99.33</td><td align="center">99.82</td><td align="center">99.58</td><td align="center">99.82</td><td align="center">99.58</td></tr><tr><td align="center"/><td align="center">Lighter</td><td align="center">99.87</td><td align="center">98.53</td><td align="center">99.84</td><td align="center">98.72</td><td align="center">99.86</td><td align="center">98.78</td></tr><tr><td align="center"/><td align="center">Quake</td><td align="center">99.99</td><td align="center">99.99</td><td align="center">99.99</td><td align="center">99.99</td><td align="center">99.99</td><td align="center">99.99</td></tr><tr><td align="center"/><td align="center">SOAPec</td><td align="center">99.99</td><td align="center">100.00</td><td align="center">99.99</td><td align="center">99.99</td><td align="center">99.99</td><td align="center">99.99</td></tr><tr><td align="center">Precision</td><td align="center">Musket</td><td align="center">99.99</td><td align="center">99.93</td><td align="center">99.99</td><td align="center">99.93</td><td align="center">99.99</td><td align="center">99.93</td></tr><tr><td align="center"/><td align="center">Bless</td><td align="center">99.73</td><td align="center">98.86</td><td align="center">99.73</td><td align="center">99.35</td><td align="center">99.72</td><td align="center">99.36</td></tr><tr><td align="center"/><td align="center">Lighter</td><td align="center">99.98</td><td align="center">99.96</td><td align="center">99.98</td><td align="center">99.96</td><td align="center">99.98</td><td align="center">99.96</td></tr><tr><td align="center"/><td align="center">Quake</td><td align="center">94.55</td><td align="center">65.56</td><td align="center">94.54</td><td align="center">65.61</td><td align="center">94.51</td><td align="center">65.57</td></tr><tr><td align="center"/><td align="center">SOAPec</td><td align="center">73.18</td><td align="center">55.07</td><td align="center">73.07</td><td align="center">54.77</td><td align="center">72.68</td><td align="center">53.75</td></tr><tr><td align="center"><italic>F</italic> score</td><td align="center">Musket</td><td align="center">96.77</td><td align="center">96.14</td><td align="center">96.76</td><td align="center">96.15</td><td align="center">96.76</td><td align="center">96.15</td></tr><tr><td align="center"/><td align="center">Bless</td><td align="center">99.77</td><td align="center">99.09</td><td align="center">99.77</td><td align="center">99.47</td><td align="center">99.77</td><td align="center">99.47</td></tr><tr><td align="center"/><td align="center">Lighter</td><td align="center">99.93</td><td align="center">99.24</td><td align="center">99.91</td><td align="center">99.33</td><td align="center">99.92</td><td align="center">99.36</td></tr><tr><td align="center"/><td align="center">Quake</td><td align="center">89.67</td><td align="center">48.76</td><td align="center">89.64</td><td align="center">48.82</td><td align="center">89.59</td><td align="center">48.78</td></tr><tr><td align="center"/><td align="center">SOAPec</td><td align="center">57.70</td><td align="center">38.00</td><td align="center">57.57</td><td align="center">37.71</td><td align="center">57.09</td><td align="center">36.75</td></tr><tr><td align="center">Gain</td><td align="center">Musket</td><td align="center">93.74</td><td align="center">92.56</td><td align="center">93.72</td><td align="center">92.58</td><td align="center">93.72</td><td align="center">92.57</td></tr><tr><td align="center"/><td align="center">Bless</td><td align="center">99.54</td><td align="center">98.19</td><td align="center">99.54</td><td align="center">98.93</td><td align="center">99.54</td><td align="center">98.94</td></tr><tr><td align="center"/><td align="center">Lighter</td><td align="center">99.85</td><td align="center">98.49</td><td align="center">99.81</td><td align="center">98.68</td><td align="center">99.84</td><td align="center">98.73</td></tr><tr><td align="center"/><td align="center">Quake</td><td align="center">17</td><td align="center">17</td><td align="center">17</td><td align="center">17</td><td align="center">17</td><td align="center">17</td></tr><tr><td align="center"/><td align="center">SOAPec</td><td align="center">17</td><td align="center">17</td><td align="center">17</td><td align="center">17</td><td align="center">17</td><td align="center">17</td></tr><tr><td align="center"><italic>k</italic></td><td align="center">Musket</td><td align="center">23</td><td align="center">19</td><td align="center">23</td><td align="center">19</td><td align="center">23</td><td align="center">19</td></tr><tr><td align="center"/><td align="center">Bless</td><td align="center">31</td><td align="center">23</td><td align="center">31</td><td align="center">23</td><td align="center">31</td><td align="center">23</td></tr><tr><td align="center"/><td align="center">Lighter</td><td align="center">23</td><td align="center">19</td><td align="center">23</td><td align="center">19</td><td align="center">23</td><td align="center">19</td></tr></tbody></table><table-wrap-foot><p>Rows labeled <italic>k</italic> show the <italic>k</italic>-mer sizes selected for each tool and dataset.</p></table-wrap-foot></table-wrap><table-wrap id="Tab2"><label>Table 2</label><caption><p><bold>Occupancy (fraction of bits set) for Bloom filters A and B for various coverages</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"><bold>Coverage</bold></th><th align="left"><bold><italic>α</italic></bold></th><th align="left"><bold>Bloom A (%)</bold></th><th align="left"><bold>Bloom B (%)</bold></th></tr></thead><tbody><tr><td align="center">20×</td><td align="center">0.35</td><td align="center">53.082</td><td align="center">34.037</td></tr><tr><td align="center">35×</td><td align="center">0.2</td><td align="center">53.085</td><td align="center">34.398</td></tr><tr><td align="center">70×</td><td align="center">0.1</td><td align="center">53.082</td><td align="center">34.429</td></tr><tr><td align="center">140×</td><td align="center">0.05</td><td align="center">53.094</td><td align="center">34.411</td></tr><tr><td align="center">280×</td><td align="center">0.025</td><td align="center">53.088</td><td align="center">34.419</td></tr></tbody></table></table-wrap></p>
+    </sec>
+    <sec id="Sec10">
+      <title>Quality score</title>
+      <p>A low base quality value at a certain position can force Lighter to treat that position as untrusted even if the overlapping <italic>k</italic>-mers indicate it is trusted. First, Lighter scans the first 1 million reads in the input, recording the quality value at the last position in each read. Lighter then chooses the fifth-percentile quality value; that is, the value such that 5% of the values are less than or equal to it, say <italic>t</italic><sub>1</sub>. Using the same idea, we get another fifth-percentile quality value, say <italic>t</italic><sub>2</sub>, for the first base for the first 1 million reads. When Lighter is deciding whether a position is trusted, if its quality score is less than or equal to min{<italic>t</italic><sub>1</sub>,<italic>t</italic><sub>2</sub>−1}, then it is called untrusted regardless of how many of the overlapping <italic>k</italic>-mers appear in Bloom filter A.</p>
+    </sec>
+    <sec id="Sec11">
+      <title>Parallelization</title>
+      <p>As shown in Figure <xref rid="Fig1" ref-type="fig">1</xref>, Lighter works in three passes: (1) populating Bloom filter A with a <italic>k</italic>-mer subsample, (2) applying the per-position test and populating Bloom filter B with likely correct <italic>k</italic>-mers and (3) error correction. For pass 1, because <italic>α</italic> is usually small, most time is spent scanning the input reads. Consequently, we found little benefit in parallelizing pass 1. Pass 2 is parallelized by using concurrent threads to handle subsets of input reads. Because Bloom filter A is only being queried (not added to), we need not synchronize accesses to A. Accesses to B are synchronized so that additions of <italic>k</italic>-mers to B by different threads do not interfere. Since it is typical for the same correct <italic>k</italic>-mer to be added repeatedly to B, we can save synchronization effort by first checking whether the <italic>k</italic>-mer is already present and adding it (synchronously) only if necessary. Pass 3 is parallelized by using concurrent threads to handle subsets of the reads; since Bloom filter B is only being queried, we need not synchronize accesses.</p>
+    </sec>
+  </sec>
+  <sec id="Sec12">
+    <title>Evaluation</title>
+    <p>Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Supplementary Note 4 describes the computer all experiments were conducted on. Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Supplementary Note 5 describes the exact command lines used.</p>
+    <sec id="Sec13">
+      <title>Simulated dataset</title>
+      <sec id="Sec14">
+        <title>Accuracy on simulated data</title>
+        <p>We compared the performance of Lighter v1.0.2 with Quake v0.3 [<xref ref-type="bibr" rid="CR11">11</xref>], Musket v1.1 [<xref ref-type="bibr" rid="CR14">14</xref>], BLESS v0p17 [<xref ref-type="bibr" rid="CR15">15</xref>] and SOAPec v2.0.1 [<xref ref-type="bibr" rid="CR23">23</xref>]. We simulated a collection of reads from the reference genome for the K12 strain of <italic>Escherichia coli</italic> (NC_000913.2) using Mason v0.1.2 [<xref ref-type="bibr" rid="CR24">24</xref>]. We simulated six distinct datasets with 101-bp single-end reads, varying average coverage (35×, 75× and 140×) and average error rate (1<italic>%</italic> and 3<italic>%</italic>). For a given error rate <italic>e</italic> we specify Mason parameters -qmb<italic>e</italic>/2-qme 3<italic>e</italic>, so that the average error rate is <italic>e</italic> but errors are more common toward the 3<sup>′</sup> end, as in real datasets.</p>
+        <p>We then ran all four tools on all six datasets, with results presented in Table <xref rid="Tab1" ref-type="table">1</xref>. BLESS was run with the -notrim option to make the results more comparable. In these comparisons, a true positive (TP) is an instance where an error is successfully corrected, i.e. with the correct base substituted. A false positive (FP) is an instance where a spurious substitution is made at an error-free position. A false negative (FN) is an instance where we either fail to detect an error or an incorrect base is substituted. As done in previous studies [<xref ref-type="bibr" rid="CR14">14</xref>], we report the following summaries:
+<disp-formula id="Equk"><alternatives><tex-math id="M23">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}
+								 $$\begin{array}{*{20}l} \text{recall} &amp;= \!\text{TP} / (\text{TP} + \text{NP}), \\ \text{precision} &amp;= \text{TP} / (\text{TP} + \text{FP}), \\ F\text{ score} &amp;=\! 2 \times \text{recall} \times \text{precision} / (\text{recall} + \text{precision})\!\!\!\!\! \quad \text{and} \\ \text{gain} &amp;=\! (\text{TP} - \text{FP}) / (\text{TP} + \text{FN}). \end{array} $$ 
+							\end{document}</tex-math><mml:math id="M24"><mml:mtable class="align" columnalign="left"><mml:mtr><mml:mtd class="align-1"><mml:mtext>recall</mml:mtext></mml:mtd><mml:mtd class="align-2"><mml:mo>=</mml:mo><mml:mspace width="0.3em"/><mml:mtext>TP</mml:mtext><mml:mo>/</mml:mo><mml:mo>(</mml:mo><mml:mtext>TP</mml:mtext><mml:mo>+</mml:mo><mml:mtext>NP</mml:mtext><mml:mo>)</mml:mo><mml:mo>,</mml:mo><mml:mspace width="2em"/></mml:mtd><mml:mtd><mml:mspace width="2em"/></mml:mtd></mml:mtr><mml:mtr><mml:mtd class="align-1"><mml:mtext>precision</mml:mtext></mml:mtd><mml:mtd class="align-2"><mml:mo>=</mml:mo><mml:mtext>TP</mml:mtext><mml:mo>/</mml:mo><mml:mo>(</mml:mo><mml:mtext>TP</mml:mtext><mml:mo>+</mml:mo><mml:mtext>FP</mml:mtext><mml:mo>)</mml:mo><mml:mo>,</mml:mo><mml:mspace width="2em"/></mml:mtd><mml:mtd><mml:mspace width="2em"/></mml:mtd></mml:mtr><mml:mtr><mml:mtd class="align-1"><mml:mi>F</mml:mi><mml:mtext>score</mml:mtext></mml:mtd><mml:mtd class="align-2"><mml:mo>=</mml:mo><mml:mspace width="0.3em"/><mml:mn>2</mml:mn><mml:mo>×</mml:mo><mml:mtext>recall</mml:mtext><mml:mo>×</mml:mo><mml:mtext>precision</mml:mtext><mml:mo>/</mml:mo><mml:mo>(</mml:mo><mml:mtext>recall</mml:mtext><mml:mo>+</mml:mo><mml:mtext>precision</mml:mtext><mml:mo>)</mml:mo><mml:mspace width="0.3em"/><mml:mspace width="0.3em"/><mml:mspace width="0.3em"/><mml:mspace width="0.3em"/><mml:mspace width="0.3em"/><mml:mspace width="1em"/><mml:mtext>and</mml:mtext><mml:mspace width="2em"/></mml:mtd><mml:mtd><mml:mspace width="2em"/></mml:mtd></mml:mtr><mml:mtr><mml:mtd class="align-1"><mml:mtext>gain</mml:mtext></mml:mtd><mml:mtd class="align-2"><mml:mo>=</mml:mo><mml:mspace width="0.3em"/><mml:mo>(</mml:mo><mml:mtext>TP</mml:mtext><mml:mo>−</mml:mo><mml:mtext>FP</mml:mtext><mml:mo>)</mml:mo><mml:mo>/</mml:mo><mml:mo>(</mml:mo><mml:mtext>TP</mml:mtext><mml:mo>+</mml:mo><mml:mtext>FN</mml:mtext><mml:mo>)</mml:mo><mml:mi>.</mml:mi><mml:mspace width="2em"/></mml:mtd><mml:mtd><mml:mspace width="2em"/></mml:mtd></mml:mtr></mml:mtable></mml:math><graphic xlink:href="13059_2014_509_Article_Equk.gif" position="anchor"/></alternatives></disp-formula></p>
+        <p>Since these tools are sensitive to the choice of <italic>k</italic>-mer size, we tried several values for this parameter (17, 19, 23, 27 and 31) and picked the value yielding the greatest gain in the accuracy evaluation. The <italic>k</italic>-mer sizes chosen are shown in the bottom rows of Table <xref rid="Tab1" ref-type="table">1</xref>. Note that SOAPec’s maximum <italic>k</italic>-mer size is 27. We found that Quake crashed for <italic>k</italic>-mer sizes 23 and up.</p>
+        <p>Unlike the other tools, Quake both trims the untrusted tails of the reads and discards reads it cannot correct. BLESS also trims some reads (even in -notrim mode), but only a small fraction (0.1%) of them, which has only a slight effect on results. For these simulation experiments, we measure precision and recall with respect to all the nucleotides (even the trimmed ones) in all the reads (even those discarded). This tends to lead to higher precision but lower recall for Quake relative to the other tools.</p>
+        <p>Apart from Quake, SOAPec, Musket and Lighter achieve the highest precision. Lighter achieves the highest recall, <italic>F</italic> score and gain in the experiments with 1% error, and is comparable to BLESS when the error rate is 3%.</p>
+        <p>To see how quality value information affects performance, we repeated these experiments with quality values omitted (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S1). Quake and BLESS accept only FASTQ input files (which include quality values), and so were not included in the experiment. Lighter achieves superior recall, gain and <italic>F</italic> score.</p>
+        <p>To see how the choice of read simulator affects performance, we repeated these experiments using the Art [<xref ref-type="bibr" rid="CR25">25</xref>] simulator to generate the reads instead of Mason (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S2). All tools perform quite similarly in this experiment, except SOAPec, which has poor recall compared to the others. There is less difference between tools than in the Mason experiment, likely because Art simulates a relatively low (approximately 0.25%) error rate. Lighter and Musket perform best overall.</p>
+        <p>For the Mason-simulated 1% error dataset, we found that Lighter’s gain was maximized by setting the <italic>k</italic>-mer size to 23. We therefore fix the <italic>k</italic>-mer size to 23 for subsequent experiments, except where otherwise noted.</p>
+      </sec>
+      <sec id="Sec15">
+        <title>Caenorhabditis elegans simulation</title>
+        <p>We performed a similar accuracy test as in the previous section, but using data simulated from the larger <italic>C. elegans</italic> genome, WBcel235 (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S3). We used Mason to simulate a dataset of 101-bp single-end reads with a 1% error rate totaling 35× coverage. We again tried several values for the <italic>k</italic>-mer size parameter (19, 23, 27 and 31) and picked the value yielding the greatest gain in the accuracy evaluation. As for the <italic>E. coli</italic> experiment, Lighter had the greatest recall, <italic>F</italic> score and gain.</p>
+      </sec>
+      <sec id="Sec16">
+        <title>Scaling with depth of simulated sequencing</title>
+        <p>We also used Mason to generate a series of datasets with 1% error, like those used in Table <xref rid="Tab1" ref-type="table">1</xref>, but for 20×, 35×, 70×, 140× and 280× average coverage. We ran Lighter on each and measured final occupancies (fraction of bits set) for Bloom filters A and B. If our assumptions and scaling arguments are accurate, we expect the final occupancies of the Bloom filters to remain approximately constant for relatively high levels of coverage. As seen in Table <xref rid="Tab2" ref-type="table">2</xref>, this is indeed the case.</p>
+      </sec>
+      <sec id="Sec17">
+        <title>Cardinality of Bloom filter B</title>
+        <p>We also measured the number of correct <italic>k</italic>-mers added to table B. We used the Mason dataset with 70× coverage and 1<italic>%</italic> error rate. The <italic>E. coli</italic> genome has 4,564,614 distinct <italic>k</italic>-mers, and 4,564,569 (99.999%) of them are in table B.</p>
+      </sec>
+      <sec id="Sec18">
+        <title>Effect of ploidy on Bloom filter B</title>
+        <p>We conducted an experiment like that in the previous section but with Mason configured to simulate reads from a diploid version of the <italic>E. coli</italic> genome. Specifically, we introduced heterozygous SNPs at 0.1<italic>%</italic> of the positions in the reference genome. Mason then sampled equal numbers of reads from both genomes, making a dataset with 70× average coverage in total. Of the 214,567 simulated <italic>k</italic>-mers that overlapped a position with a heterozygous SNP, table B held 214,545 (99.990%) of them at the end of the run. Thus, Lighter retained in table B almost the same fraction of the <italic>k</italic>-mers overlapping heterozygous positions (99.990%) as of the <italic>k</italic>-mers overall (99.999%).</p>
+        <p>Musket and BLESS both infer a threshold for the multiplicity of solid <italic>k</italic>-mers. In this experiment, Musket inferred a threshold of 10 and BLESS inferred a threshold of 9. All three tools use a <italic>k</italic>-mer size of 23. By counting the multiplicity of the <italic>k</italic>-mers overlapping heterozygous positions, we conclude that Musket would classify 214,458 (99.949%) as solid and BLESS would classify 214,557 (99.995%) as solid. So in the diploid case, it seems Lighter’s ability to identify correct <italic>k</italic>-mers overlapping heterozygous SNPs is comparable to that of error correctors that are based on counting.</p>
+        <p>Diploidy is one example of a phenomenon that tends to drive the count distribution for some correct <italic>k</italic>-mers (those overlapping heterozygous variants) closer to the count distribution for incorrect <italic>k</italic>-mers. In the <xref rid="Sec26" ref-type="sec">Discussion</xref> section we elaborate on other such phenomena, such as copy number, sequencing bias and non-uniform coverage.</p>
+      </sec>
+      <sec id="Sec19">
+        <title>Effect of varying <italic>α</italic></title>
+        <p>In a series of experiments, we measured how different settings for the subsampling fraction <italic>α</italic> affected Lighter’s accuracy as well as the occupancies of Bloom filters A and B. We still use the datasets simulated by Mason with 35×, 70× and 140× coverage.</p>
+        <p>As shown in Figures <xref rid="Fig3" ref-type="fig">3</xref> and <xref rid="Fig4" ref-type="fig">4</xref>, only a fraction of the correct <italic>k</italic>-mers are added to A when <italic>α</italic> is very small, causing many correct read positions to fail the threshold test. Lighter attempts to ‘correct’ these error-free positions, decreasing accuracy. This also has the effect of reducing the number of consecutive stretches of <italic>k</italic> trusted positions in the reads, leading to a smaller fraction of correct <italic>k</italic>-mers added to B, and ultimately to lower accuracy. When <italic>α</italic> grows too large, the <italic>y</italic><sub><italic>x</italic></sub> thresholds grow to be greater than <italic>k</italic>, causing all positions to fail the threshold test, as seen in the right-hand side of Figure <xref rid="Fig4" ref-type="fig">4</xref>. This also leads to a dramatic drop in accuracy as seen in Figure <xref rid="Fig3" ref-type="fig">3</xref>. Between the two extremes, we find a fairly broad range of values for <italic>α</italic> (from about 0.15 to 0.3) that yield high accuracy when the error rate is 1<italic>%</italic> or 3<italic>%</italic>. The range is wider when the error rate is lower.
+<fig id="Fig3"><label>Figure 3</label><caption><p><bold>The effect of</bold><bold><italic>α</italic></bold><bold> on the accuracy using the simulated 35× dataset.</bold></p></caption><graphic xlink:href="13059_2014_509_Fig3_HTML" id="MO3"/></fig><fig id="Fig4"><label>Figure 4</label><caption><p><bold>The effect of</bold><bold><italic>α</italic></bold><bold> on occupancy of Bloom filters A and B.</bold> The effect of <italic>α</italic> on occupancy of Bloom filters A and B using simulated 35×, 70× and 140× datasets. The error rate is 1<italic>%</italic>.</p></caption><graphic xlink:href="13059_2014_509_Fig4_HTML" id="MO4"/></fig></p>
+      </sec>
+      <sec id="Sec20">
+        <title>Effect of varying <italic>k</italic></title>
+        <p>A key parameter of Lighter is the <italic>k</italic>-mer length <italic>k</italic>. Smaller <italic>k</italic> yields a higher probability that a <italic>k</italic>-mer affected by a sequencing error also appears elsewhere in the genome. For larger <italic>k</italic>, the fraction of <italic>k</italic>-mers that are correct decreases, which could lead to fewer correct <italic>k</italic>-mers in Bloom filter A. We measured how different settings for <italic>k</italic> affect accuracy using the simulated data with 35× coverage and both 1<italic>%</italic> and 3<italic>%</italic> error rates. Results are shown in Figure <xref rid="Fig5" ref-type="fig">5</xref>. Accuracy is high for <italic>k</italic>-mer lengths ranging from about 18 to 30 when the error rate is 1<italic>%</italic>. But the recall drops gradually when the error rate is 3<italic>%</italic>.
+<fig id="Fig5"><label>Figure 5</label><caption><p><bold>The effect of</bold><bold><italic>k</italic></bold><bold>-mer length</bold><bold><italic>k</italic></bold><bold> on accuracy.</bold></p></caption><graphic xlink:href="13059_2014_509_Fig5_HTML" id="MO5"/></fig></p>
+      </sec>
+    </sec>
+    <sec id="Sec21">
+      <title>Real datasets</title>
+      <sec id="Sec22">
+        <title>Escherichia coli</title>
+        <p>Next we benchmarked the same error correction tools using a real sequencing dataset, [EMBL-SRA ERR022075]. This is a deep DNA sequencing dataset of the the K-12 strain of the <italic>E. coli</italic> genome. To obtain a level of coverage more reflective of other projects, we randomly subsampled the reads in the dataset to obtain roughly 75× coverage (approximately 3.5 million reads) of the <italic>E. coli</italic> K-12 reference genome. The reads are 100 × 102 bp paired-end reads. Because BLESS cannot handle paired-end reads where the ends have different lengths, we truncated the last two bases from the 102-bp end before running our experiments. We again ran BLESS with the -notrim option.</p>
+        <p>These data are not simulated, so we cannot measure accuracy directly. But we can measure it indirectly, as other studies have [<xref ref-type="bibr" rid="CR15">15</xref>], by measuring read alignment statistics before and after error correction. We use Bowtie2 [<xref ref-type="bibr" rid="CR26">26</xref>] v2.2.2 with default parameters to align the original reads and the corrected reads to the <italic>E. coli</italic> K-12 reference genome. For each error corrector, we tested different <italic>k</italic>-mer sizes (17, 19, 23, 27 and 31) and chose the size that yielded the greatest total number of matching aligned nucleotides. For Quake and BLESS, we use only the reads (and partial reads) that remained after trimming and discarding for this evaluation. Results are shown in Table <xref rid="Tab3" ref-type="table">3</xref>. Lighter yields the greatest improvement in fraction of reads aligned, whereas Quake and BLESS yield the greatest improvement in fraction of aligned bases that match the reference, with Lighter very close behind. As before, Quake is hard to compare to the other tools because it trims and discards many reads.
+<table-wrap id="Tab3"><label>Table 3</label><caption><p><bold>Alignment statistics for the 75×</bold><bold><italic>Escherichia coli</italic></bold><bold> dataset</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left"/><th align="left" colspan="2"><bold>Read level</bold></th><th align="left" colspan="2"><bold>Base level</bold></th></tr><tr><th align="left"/><th align="left"><bold><italic>k</italic></bold></th><th align="left"><bold>Mapped reads</bold></th><th align="left"><bold>Increase (%)</bold></th><th align="left"><bold>Matches/aligned base (%)</bold></th><th align="left"><bold>Increase (%)</bold></th></tr></thead><tbody><tr><td align="center">Original</td><td align="center">–</td><td align="center">3,464,137</td><td align="center">–</td><td align="center">99.038</td><td align="center">–</td></tr><tr><td align="center">Quake</td><td align="center">19</td><td align="center">3,373,498</td><td align="center">−2.62</td><td align="center">99.659</td><td align="center">0.63</td></tr><tr><td align="center">SOAPec</td><td align="center">17</td><td align="center">3,465,819</td><td align="center">0.05</td><td align="center">99.130</td><td align="center">0.09</td></tr><tr><td align="center">Musket</td><td align="center">17</td><td align="center">3,467,875</td><td align="center">0.11</td><td align="center">99.601</td><td align="center">0.57</td></tr><tr><td align="center">BLESS</td><td align="center">19</td><td align="center">3,468,677</td><td align="center">0.13</td><td align="center">99.666</td><td align="center">0.63</td></tr><tr><td align="center">Lighter</td><td align="center">19</td><td align="center">3,478,658</td><td align="center">0.42</td><td align="center">99.639</td><td align="center">0.61</td></tr></tbody></table><table-wrap-foot><p><italic>k</italic> column shows <italic>k</italic>-mer size selected for each tool. First ‘Increase’ column shows percentage increase in reads aligned. Second ‘Increase’ column shows percentage increase in the fraction of aligned bases that match the reference genome. The original row is before error correction and the other rows are after error correction.</p></table-wrap-foot></table-wrap></p>
+        <p>We repeated this experiment using a less sensitive setting for Bowtie 2 (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S4) and using BWA-MEM [<xref ref-type="bibr" rid="CR27">27</xref>] v0.7.9a-r786 to align the reads instead of Bowtie 2 (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S5) and found that the error correction tools performed similarly relative to each other.</p>
+        <p>To assess accuracy further, we assembled the reads before and after error correction and measured relevant assembly statistics using Quast [<xref ref-type="bibr" rid="CR28">28</xref>]. The corrected reads are those reported in Table <xref rid="Tab3" ref-type="table">3</xref>. We used Velvet 1.2.10 [<xref ref-type="bibr" rid="CR29">29</xref>] for assembly. Velvet is a De Bruijn graph-based assembler designed for second-generation sequencing reads. A key parameter of Velvet is the De Bruijn graph’s <italic>k</italic>-mer length. For each tool we tested different <italic>k</italic>-mer sizes for Velvet (43, 47, 49, 51, 53, 55, 57, 63 and 67) and chose the one that yielded the greatest NG50. We set the <italic>k</italic>-mer sizes of the error correctors to match those selected in the alignment experiment of Table <xref rid="Tab3" ref-type="table">3</xref>. As before, we used only the reads (and partial reads) that remained after trimming and discarding for Quake and BLESS. For each assembly, we then evaluated the assembly’s quality using Quast, which was configured to discard contigs shorter than 100 bp before calculating statistics. Results are shown in Table <xref rid="Tab4" ref-type="table">4</xref>.
+<table-wrap id="Tab4"><label>Table 4</label><caption><p><bold><italic>De novo</italic></bold><bold> assembly statistics for the</bold><bold><italic>Escherichia coli</italic></bold><bold> dataset</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left"><bold>N50</bold></th><th align="left"><bold>NG50</bold></th><th align="left"><bold>Edits/100 kbp</bold></th><th align="left"><bold>Misassemblies</bold></th><th align="left"><bold>Coverage (%)</bold></th></tr></thead><tbody><tr><td align="center">Original</td><td align="center">94,879</td><td align="center">94,879</td><td align="center">3.41</td><td align="center">0</td><td align="center">97.496</td></tr><tr><td align="center">Quake</td><td align="center">89,470</td><td align="center">88,209</td><td align="center">11.62</td><td align="center">4</td><td align="center">97.515</td></tr><tr><td align="center">SOAPec</td><td align="center">98,111</td><td align="center">94,879</td><td align="center">3.49</td><td align="center">1</td><td align="center">97.473</td></tr><tr><td align="center">Musket</td><td align="center">86,421</td><td align="center">86,421</td><td align="center">6.45</td><td align="center">0</td><td align="center">97.53</td></tr><tr><td align="center">BLESS</td><td align="center">85,486</td><td align="center">85,486</td><td align="center">3.58</td><td align="center">1</td><td align="center">97.302</td></tr><tr><td align="center">Lighter</td><td align="center">105,460</td><td align="center">105,460</td><td align="center">3.71</td><td align="center">1</td><td align="center">97.477</td></tr></tbody></table></table-wrap></p>
+        <p>N50 is the length such that the total length of the contigs no shorter than the N50 cover at least half the assembled genome. NG50 is similar, but with the requirement that contigs cover half the reference genome rather than half the assembled genome. Edits per 100 kbp is the number of mismatches or indels per 100 kbp when aligning the contigs to the reference genome. A misassembly is an instance where two adjacent stretches of bases in the assembly align either to two very distant or to two highly overlapping stretches of the reference genome. The Quast study defines these metrics in more detail [<xref ref-type="bibr" rid="CR28">28</xref>].</p>
+        <p>Assemblies produced from reads corrected with the four programs are very similar according to these measures, with Quake and Lighter yielding the longest contigs and the greatest genome coverage. Surprisingly, the post-correction assemblies have more differences at nucleotide level compared to the pre-correction assemblies, perhaps due to spurious corrections.</p>
+      </sec>
+      <sec id="Sec23">
+        <title>GAGE human chromosome 14</title>
+        <p>We also evaluated Lighter’s effect on alignment and assembly using a dataset from the GAGE project [<xref ref-type="bibr" rid="CR30">30</xref>]. The dataset consists of real 101 × 101 bp paired-end reads covering human chromosome 14 to 35× average coverage (approximately 36.5 million reads). For each error corrector, we tested different <italic>k</italic>-mer sizes (19, 23, 27 and 31) and chose the size that yielded the greatest total number of matching aligned nucleotides. For the assembly experiment, we set the <italic>k</italic>-mer size for each error corrector to match that selected in the alignment experiment. Also for each assembly experiment, we tested different <italic>k</italic>-mer sizes for Velvet (47, 53, 57, 63 and 67) and chose the one that yielded the greatest NG50.</p>
+        <p>The effect of error correction on Bowtie 2 alignment statistics are shown in Table <xref rid="Tab5" ref-type="table">5</xref>. We used Bowtie 2 with default parameters to align the reads to an index of the human chromosome 14 sequence of the hg19 build of the human genome. As before, Lighter yields the greatest improvement in fraction of reads aligned, whereas Quake and BLESS yield the greatest improvement in fraction of aligned bases that match the reference, with Lighter very close behind.
+<table-wrap id="Tab5"><label>Table 5</label><caption><p><bold>Alignment statistics for the GAGE chromosome 14 dataset</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left"/><th align="left" colspan="2"><bold>Read level</bold></th><th align="left" colspan="2"><bold>Base level</bold></th></tr><tr><th align="left"/><th align="left"><bold><italic>k</italic></bold></th><th align="left"><bold>Mapped reads</bold></th><th align="left"><bold>Increase (%)</bold></th><th align="left"><bold>Matches/aligned base (%)</bold></th><th align="left"><bold>Increase (%)</bold></th></tr></thead><tbody><tr><td align="center">Original</td><td align="center">–</td><td align="center">35,993,147</td><td align="center">–</td><td align="center">98.507</td><td align="center">–</td></tr><tr><td align="center">Quake</td><td align="center">19</td><td align="center">32,547,091</td><td align="center">−9.57</td><td align="center">99.845</td><td align="center">1.36</td></tr><tr><td align="center">SOAPec</td><td align="center">19</td><td align="center">36,116,405</td><td align="center">0.34</td><td align="center">98.768</td><td align="center">0.26</td></tr><tr><td align="center">Musket</td><td align="center">19</td><td align="center">36,316,699</td><td align="center">0.90</td><td align="center">99.109</td><td align="center">0.61</td></tr><tr><td align="center">BLESS</td><td align="center">27</td><td align="center">36,301,816</td><td align="center">0.86</td><td align="center">99.411</td><td align="center">0.92</td></tr><tr><td align="center">Lighter</td><td align="center">19</td><td align="center">36,320,688</td><td align="center">0.91</td><td align="center">99.235</td><td align="center">0.74</td></tr></tbody></table></table-wrap></p>
+        <p>We repeated this experiment using BWA-MEM as the aligner instead of Bowtie 2 (Additional file <xref rid="MOESM1" ref-type="media">1</xref>: Table S6) and found that the tools performed similarly.</p>
+        <p>We also tested the effect of error correction on <italic>de novo</italic> assembly of this dataset using Velvet for assembly and Quast to evaluate the quality of the assembly. For each tool we tested different <italic>k</italic>-mer sizes (19, 23, 27 and 31) and chose the one that yielded the greatest NG50. Results are shown in Table <xref rid="Tab6" ref-type="table">6</xref>. Overall, Lighter’s accuracy on real data is comparable to other error correction tools, with Lighter and BLESS achieving the greatest N50, NG50 and coverage.
+<table-wrap id="Tab6"><label>Table 6</label><caption><p><bold><italic>De novo</italic></bold><bold> assembly statistics for the GAGE chromosome 14 dataset</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left"><bold>N50</bold></th><th align="left"><bold>NG50</bold></th><th align="left"><bold>Edits/100 kbp</bold></th><th align="left"><bold>Misassemblies</bold></th><th align="left"><bold>Coverage (%)</bold></th></tr></thead><tbody><tr><td align="center">Original</td><td align="center">5,290</td><td align="center">3,861</td><td align="center">139.46</td><td align="center">1263</td><td align="center">78.778</td></tr><tr><td align="center">Quake</td><td align="center">4,829</td><td align="center">3,520</td><td align="center">141.59</td><td align="center">1201</td><td align="center">78.358</td></tr><tr><td align="center">SOAPec</td><td align="center">5,653</td><td align="center">4,143</td><td align="center">127.8</td><td align="center">623</td><td align="center">79.087</td></tr><tr><td align="center">Musket</td><td align="center">5,587</td><td align="center">4,105</td><td align="center">131.17</td><td align="center">559</td><td align="center">79.175</td></tr><tr><td align="center">BLESS</td><td align="center">5,898</td><td align="center">4,345</td><td align="center">128.4</td><td align="center">581</td><td align="center">79.279</td></tr><tr><td align="center">Lighter</td><td align="center">5,827</td><td align="center">4,280</td><td align="center">127.69</td><td align="center">618</td><td align="center">79.287</td></tr></tbody></table></table-wrap></p>
+      </sec>
+      <sec id="Sec24">
+        <title>Caenorhabditis elegans</title>
+        <p>Using the same procedure as in the previous section, we measured the effect of error correction on another large real dataset using the reads from accession [NCBI-SRA SRR065390]. Results are shown in Tables <xref rid="Tab7" ref-type="table">7</xref> and <xref rid="Tab8" ref-type="table">8</xref>. This run contains real 100 × 100 bp paired-end reads covering the <italic>C. elegans</italic> genome (WBcel235) to 66× average coverage (approximately 67.6 million reads). <italic>k</italic>-mer sizes for the error correctors and for Velvet were selected in the same way as for the chromosome 14 experiment. The alignment comparison shows BLESS achieving the greatest increase in fraction of reads aligned, and BLESS and Quake achieving the greatest fraction of aligned bases that match the reference, probably due to their trimming policy. Lighter does the best of the non-trimming tools in the alignment comparison. In the assembly comparison, Lighter and SOAPec achieve the greatest N50, NG50 and coverage.
+<table-wrap id="Tab7"><label>Table 7</label><caption><p><bold>Alignment statistics for the</bold><bold><italic>Caenorhabditis elegans</italic></bold><bold> dataset</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left"/><th align="left" colspan="2"><bold>Read level</bold></th><th align="left" colspan="2"><bold>Base level</bold></th></tr><tr><th align="left"/><th align="left"><bold><italic>k</italic></bold></th><th align="left"><bold>Mapped reads</bold></th><th align="left"><bold>Increase (%)</bold></th><th align="left"><bold>Matches/aligned base (%)</bold></th><th align="left"><bold>Increase (%)</bold></th></tr></thead><tbody><tr><td align="center">Original</td><td align="center">–</td><td align="center">63,017,855</td><td align="center">–</td><td align="center">99.048</td><td align="center">–</td></tr><tr><td align="center">Quake</td><td align="center">19</td><td align="center">60,469,150</td><td align="center">−4.04</td><td align="center">99.834</td><td align="center">0.79</td></tr><tr><td align="center">SOAPec</td><td align="center">19</td><td align="center">63,032,768</td><td align="center">0.02</td><td align="center">99.185</td><td align="center">0.14</td></tr><tr><td align="center">Musket</td><td align="center">23</td><td align="center">63,060,601</td><td align="center">0.07</td><td align="center">99.420</td><td align="center">0.38</td></tr><tr><td align="center">BLESS</td><td align="center">31</td><td align="center">64,150,807</td><td align="center">1.80</td><td align="center">99.744</td><td align="center">0.70</td></tr><tr><td align="center">Lighter</td><td align="center">23</td><td align="center">63,081,655</td><td align="center">0.10</td><td align="center">99.469</td><td align="center">0.43</td></tr></tbody></table></table-wrap><table-wrap id="Tab8"><label>Table 8</label><caption><p><bold><italic>De novo</italic></bold><bold> assembly statistics for the</bold><bold><italic>Caenorhabditis elegans</italic></bold><bold> dataset</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left"><bold>N50</bold></th><th align="left"><bold>NG50</bold></th><th align="left"><bold>Edits/100 kbp</bold></th><th align="left"><bold>Misassemblies</bold></th><th align="left"><bold>Coverage (%)</bold></th></tr></thead><tbody><tr><td align="center">Original</td><td align="center">17,330</td><td align="center">17,317</td><td align="center">27.66</td><td align="center">441</td><td align="center">94.873</td></tr><tr><td align="center">Quake</td><td align="center">13,887</td><td align="center">13,668</td><td align="center">27.19</td><td align="center">559</td><td align="center">94.320</td></tr><tr><td align="center">SOAPec</td><td align="center">19,369</td><td align="center">19,457</td><td align="center">25.71</td><td align="center">449</td><td align="center">95.308</td></tr><tr><td align="center">Musket</td><td align="center">18,761</td><td align="center">18,917</td><td align="center">28.02</td><td align="center">438</td><td align="center">95.288</td></tr><tr><td align="center">BLESS</td><td align="center">17,673</td><td align="center">17,693</td><td align="center">29.24</td><td align="center">524</td><td align="center">94.968</td></tr><tr><td align="center">Lighter</td><td align="center">19,222</td><td align="center">19,333</td><td align="center">26.9</td><td align="center">434</td><td align="center">95.332</td></tr></tbody></table></table-wrap></p>
+      </sec>
+    </sec>
+    <sec id="Sec25">
+      <title>Speed, space usage and scalability</title>
+      <p>We compared Lighter’s peak memory usage, disk usage and running time with those of Quake, Musket and BLESS. These experiments were run on a computer running Red Hat Linux 4.1.2-52 with 48 2.1-GHz AMD Opteron processors and 512 GB memory. The input datasets are the same simulated <italic>E. coli</italic> datasets with 1<italic>%</italic> error rate discussed previously, plus the GAGE human chromosome 14 dataset and <italic>C. elegans</italic> dataset.</p>
+      <p>The space usage is shown in Table <xref rid="Tab9" ref-type="table">9</xref>. BLESS and Lighter achieve constant memory footprint across sequencing depths. While Musket uses less memory than Quake, it uses more than either BLESS or Lighter. BLESS achieves constant memory footprint across sequencing depths, but consumes more disk space for datasets with deeper sequencing. Note that BLESS can be configured to trade off between peak memory footprint and the number of temporary files it creates. Lighter’s algorithm uses no disk space. Lighter’s only sizable data structures are the two Bloom filters, which reside in memory.
+<table-wrap id="Tab9"><label>Table 9</label><caption><p><bold>Memory usage (peak resident memory) and disk usage of error correction tools</bold></p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left" colspan="2"><bold>35×</bold></th><th align="left" colspan="2"><bold>70×</bold></th><th align="left" colspan="2"><bold>140×</bold></th><th align="left" colspan="2"><bold>chr14</bold></th><th align="left" colspan="2"><bold><italic>Caenorhabditis elegans</italic></bold></th></tr><tr><th align="left"/><th align="left"><bold>Mem</bold></th><th align="left"><bold>Disk</bold></th><th align="left"><bold>Mem</bold></th><th align="left"><bold>Disk</bold></th><th align="left"><bold>Mem</bold></th><th align="left"><bold>Disk</bold></th><th align="left"><bold>Mem</bold></th><th align="left"><bold>Disk</bold></th><th align="left"><bold>Mem</bold></th><th align="left"><bold>Disk</bold></th></tr></thead><tbody><tr><td align="center">Quake</td><td align="center">2.8 GB</td><td align="center">3.3 GB</td><td align="center">7.1 GB</td><td align="center">6.0 GB</td><td align="center">14 GB</td><td align="center">12 GB</td><td align="center">48 GB</td><td align="center">57 GB</td><td align="center">86 GB</td><td align="center">99 GB</td></tr><tr><td align="center">Musket</td><td align="center">119 MB</td><td align="center">0</td><td align="center">165 MB</td><td align="center">0</td><td align="center">225 MB</td><td align="center">0</td><td align="center">1.4 GB</td><td align="center">0</td><td align="center">2.5 GB</td><td align="center">0</td></tr><tr><td align="center">BLESS</td><td align="center">11 MB</td><td align="center">918 MB</td><td align="center">11 MB</td><td align="center">1.8 GB</td><td align="center">13 MB</td><td align="center">3.5 GB</td><td align="center">138 MB</td><td align="center">15 GB</td><td align="center">175 MB</td><td align="center">36 GB</td></tr><tr><td align="center">Lighter</td><td align="center">35 MB</td><td align="center">0</td><td align="center">35 MB</td><td align="center">0</td><td align="center">35 MB</td><td align="center">0</td><td align="center">514 MB</td><td align="center">0</td><td align="center">514 MB</td><td align="center">0</td></tr></tbody></table><table-wrap-foot><p>chr14, chromosome 14; mem, memory.</p></table-wrap-foot></table-wrap></p>
+      <p>To assess scalability, we also compared running times for Quake, Musket and Lighter using different numbers of threads. For these experiments we used the simulated <italic>E. coli</italic> dataset with 70× coverage and 1<italic>%</italic> error. Results are shown in Figure <xref rid="Fig6" ref-type="fig">6</xref>. Note that Musket requires at least two threads due to its master–slave design. BLESS can only be run with one thread and its running time is 1,812 s, which is slower than Quake.
+<fig id="Fig6"><label>Figure 6</label><caption><p><bold>Running times.</bold> The running times for Quake, Musket and Lighter on 70× simulated dataset with increasing number of threads.</p></caption><graphic xlink:href="13059_2014_509_Fig6_HTML" id="MO6"/></fig></p>
+    </sec>
+  </sec>
+  <sec id="Sec26" sec-type="discussion">
+    <title>Discussion</title>
+    <p>At Lighter’s core is a method for obtaining a set of correct <italic>k</italic>-mers from a large collection of sequencing reads. Unlike previous methods, Lighter does this without counting <italic>k</italic>-mers. By setting its parameters appropriately, its memory usage and accuracy can be held almost constant with respect to depth of sequencing. It is also quite fast and memory-efficient, and requires no temporary disk space.</p>
+    <p>Though we demonstrate Lighter in the context of sequencing error correction, Lighter’s counting-free approach could be applied in other situations where a collection of solid <italic>k</italic>-mers is desired. For example, one tool for scaling metagenome sequence assembly uses a Bloom filter populated with solid <italic>k</italic>-mers as a memory-efficient, probabilistic representation of a De Bruijn graph [<xref ref-type="bibr" rid="CR19">19</xref>]. Other tools use counting Bloom filters [<xref ref-type="bibr" rid="CR31">31</xref>,<xref ref-type="bibr" rid="CR32">32</xref>] or the related CountMin sketch [<xref ref-type="bibr" rid="CR33">33</xref>] to represent De Bruijn graphs for compression [<xref ref-type="bibr" rid="CR20">20</xref>] or digital normalization and related tasks [<xref ref-type="bibr" rid="CR34">34</xref>]. We expect ideas from Lighter could be useful in reducing the memory footprint of these and other tools.</p>
+    <p>An important question is how Lighter’s performance can be improved for datasets where coverage is significantly non-uniform, and where solid <italic>k</italic>-mers can therefore have widely varying abundance. In practice, datasets have non-uniform coverage because of ploidy, repeats and sequencing bias. Also, assays such as exome and RNA sequencing intentionally sample non-uniformly from the genome. Even in standard whole-genome DNA sequencing of a diploid individual, <italic>k</italic>-mers overlapping heterozygous variants will be about half as abundant as <italic>k</italic>-mers overlapping only homozygous variants. Lighter’s ability to classify the heterozygous <italic>k</italic>-mers deteriorates as a result, as shown in the section <xref rid="Sec18" ref-type="sec">Effect of ploidy on Bloom filter B</xref> above. Hammer [<xref ref-type="bibr" rid="CR10">10</xref>] relaxes the uniformity-of-coverage assumption and favors corrections that increase the multiplicity of a <italic>k</italic>-mer, without using a threshold to separate solid from non-solid <italic>k</italic>-mers. A question for future work is whether something similar can be accomplished in Lighter’s non-counting regime, or whether some counting (e.g. with a counting Bloom filter [<xref ref-type="bibr" rid="CR31">31</xref>,<xref ref-type="bibr" rid="CR32">32</xref>] or CountMin sketch [<xref ref-type="bibr" rid="CR33">33</xref>]) is necessary.</p>
+    <p>A related issue is systematically biased sequencing errors, i.e. errors that correlate with the sequence context. One study demonstrates this bias in data from the Illumina GA II sequencer [<xref ref-type="bibr" rid="CR35">35</xref>]. This bias boosts the multiplicity of some incorrect <italic>k</italic>-mers, causing problems for error correction tools. For Lighter, increased multiplicity of incorrect <italic>k</italic>-mers causes them to appear more often (and spuriously) in Bloom filters A and/or B, ultimately decreasing accuracy. It has also been shown that these errors tend to have low base quality and tend to occur only on one strand or the other [<xref ref-type="bibr" rid="CR35">35</xref>]. Lighter’s policy of using a fifth-percentile threshold to classify low-quality positions as untrusted will help in some cases. However, because Lighter canonicalizes <italic>k</italic>-mers (as do many other error correctors), it loses information about whether an error tends to occur on one strand or the other.</p>
+    <p>Lighter has three parameters the user must specify: the <italic>k</italic>-mer length <italic>k</italic>, the genome length <italic>G</italic> and the subsampling fraction <italic>α</italic>. While the performance of Lighter is not overly sensitive to these parameters (see Figures <xref rid="Fig3" ref-type="fig">3</xref> and <xref rid="Fig5" ref-type="fig">5</xref>), it is not desirable to leave these settings to the user. In the future, we plan to extend Lighter to estimate <italic>G</italic>, along with appropriate values for <italic>k</italic> and <italic>α</italic>, from the input reads. This could be accomplished with methods proposed in the KmerGenie [<xref ref-type="bibr" rid="CR36">36</xref>] and KmerStream [<xref ref-type="bibr" rid="CR22">22</xref>] studies.</p>
+    <p>Lighter is free open-source software released under the GNU GPL license, and has been compiled and tested on Linux, Mac OS X and Windows computers. The software and its source are available from [<xref ref-type="bibr" rid="CR16">16</xref>].</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Additional file</title>
+    <sec id="Sec27">
+      <supplementary-material content-type="local-data" id="MOESM1">
+        <media xlink:href="13059_2014_509_MOESM1_ESM.pdf">
+          <label>Additional file 1</label>
+          <caption>
+            <p>
+              <bold>Supplementary material for ‘Lighter: fast and memory-efficient error correction without counting’.</bold>
+            </p>
+          </caption>
+        </media>
+      </supplementary-material>
+    </sec>
+  </sec>
+</body>
+<back>
+  <glossary>
+    <title>Abbreviations</title>
+    <def-list>
+      <def-list>
+        <def-item>
+          <term>bp</term>
+          <def>
+            <p>base pair</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>FN</term>
+          <def>
+            <p>false negative</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>FP</term>
+          <def>
+            <p>false positive</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>kbp</term>
+          <def>
+            <p>kilobase pair</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>SNP</term>
+          <def>
+            <p>single nucleotide polymorphism</p>
+          </def>
+        </def-item>
+        <def-item>
+          <term>TP</term>
+          <def>
+            <p>true positive</p>
+          </def>
+        </def-item>
+      </def-list>
+    </def-list>
+  </glossary>
+  <fn-group>
+    <fn>
+      <p>
+        <bold>Competing interests</bold>
+      </p>
+      <p>The authors declare that they have no competing interests.</p>
+    </fn>
+    <fn>
+      <p>
+        <bold>Authors’ contributions</bold>
+      </p>
+      <p>LS and BL designed and analyzed the method. LS implemented the software. LS, LF and BL evaluated the software and wrote the manuscript. All authors read and approved the final manuscript.</p>
+    </fn>
+  </fn-group>
+  <ack>
+    <title>Acknowledgements</title>
+    <p>The authors thank Jeff Leek for helpful discussions. National Science Foundation grant ABI-1159078 was awarded to LF. National Science Foundation grant IIS-1349906 and Sloan Research Fellowship were awarded to BL.</p>
+  </ack>
+  <ref-list id="Bib1">
+    <title>References</title>
+    <ref id="CR1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Glenn</surname>
+            <given-names>TC</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Field guide to next-generation DNA sequencers</bold>
+        </article-title>
+        <source>Mol Ecol Resour</source>
+        <year>2011</year>
+        <volume>11</volume>
+        <fpage>759</fpage>
+        <lpage>769</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.1755-0998.2011.03024.x</pub-id>
+        <?supplied-pmid 21592312?>
+        <pub-id pub-id-type="pmid">21592312</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR2">
+      <label>2</label>
+      <mixed-citation publication-type="other">Hayden EC: <bold>Is the $1,000 genome for real?</bold><italic>Nature News</italic>2014. [http://www.nature.com/news/is-the-1-000-genome-for-real-1.14530]</mixed-citation>
+    </ref>
+    <ref id="CR3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pevzner</surname>
+            <given-names>PA</given-names>
+          </name>
+          <name>
+            <surname>Tang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Waterman</surname>
+            <given-names>MS</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>An Eulerian path approach to DNA fragment assembly</bold>
+        </article-title>
+        <source>Proc Nat Acad Sci</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <fpage>9748</fpage>
+        <lpage>9753</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.171285098</pub-id>
+        <?supplied-pmid 11504945?>
+        <pub-id pub-id-type="pmid">11504945</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chaisson</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Pevzner</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Tang</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Fragment assembly with short reads</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <fpage>2067</fpage>
+        <lpage>2074</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bth205</pub-id>
+        <?supplied-pmid 15059830?>
+        <pub-id pub-id-type="pmid">15059830</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schröder</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Schröder</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Puglisi</surname>
+            <given-names>SJ</given-names>
+          </name>
+          <name>
+            <surname>Sinha</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Schmidt</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>SHREC: a short-read error correction method</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <fpage>2157</fpage>
+        <lpage>2163</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btp379</pub-id>
+        <?supplied-pmid 19542152?>
+        <pub-id pub-id-type="pmid">19542152</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ilie</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Fazayeli</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Ilie</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>HiTEC: accurate error correction in high-throughput sequencing data</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <fpage>295</fpage>
+        <lpage>302</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq653</pub-id>
+        <?supplied-pmid 21115437?>
+        <pub-id pub-id-type="pmid">21115437</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Salmela</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Schröder</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Correcting errors in short reads by multiple alignments</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <fpage>1455</fpage>
+        <lpage>1461</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr170</pub-id>
+        <?supplied-pmid 21471014?>
+        <pub-id pub-id-type="pmid">21471014</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR8">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kao</surname>
+            <given-names>W-C</given-names>
+          </name>
+          <name>
+            <surname>Chan</surname>
+            <given-names>AH</given-names>
+          </name>
+          <name>
+            <surname>Song</surname>
+            <given-names>YS</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>ECHO: a reference-free short-read error correction algorithm</bold>
+        </article-title>
+        <source>Genome Res</source>
+        <year>2011</year>
+        <volume>21</volume>
+        <fpage>1181</fpage>
+        <lpage>1192</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.111351.110</pub-id>
+        <?supplied-pmid 21482625?>
+        <pub-id pub-id-type="pmid">21482625</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Dorman</surname>
+            <given-names>KS</given-names>
+          </name>
+          <name>
+            <surname>Aluru</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Reptile: representative tiling for short read error correction</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <fpage>2526</fpage>
+        <lpage>2533</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq468</pub-id>
+        <?supplied-pmid 20834037?>
+        <pub-id pub-id-type="pmid">20834037</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Medvedev</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Scott</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Kakaradov</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Pevzner</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Error correction of high-throughput sequencing datasets with non-uniform coverage</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <fpage>137</fpage>
+        <lpage>141</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr208</pub-id>
+        <pub-id pub-id-type="pmid">21098431</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kelley</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Schatz</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>SL</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Quake: quality-aware detection and correction of sequencing errors</bold>
+        </article-title>
+        <source>Genome Biol</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <fpage>116</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2010-11-11-r116</pub-id>
+        <pub-id pub-id-type="pmid">20423531</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR12">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Marçais</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Kingsford</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>A fast, lock-free approach for efficient parallel counting of occurrences of</bold>
+          <bold>
+            <italic>k</italic>
+          </bold>
+          <bold>-mers</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <fpage>764</fpage>
+        <lpage>770</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr011</pub-id>
+        <?supplied-pmid 21217122?>
+        <pub-id pub-id-type="pmid">21217122</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Shi</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Schmidt</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Müller-Wittig</surname>
+            <given-names>W</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>A parallel algorithm for error correction in high-throughput short-read data on CUDA-enabled graphics hardware</bold>
+        </article-title>
+        <source>J Comput Biol</source>
+        <year>2010</year>
+        <volume>17</volume>
+        <fpage>603</fpage>
+        <lpage>615</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.2009.0062</pub-id>
+        <?supplied-pmid 20426693?>
+        <pub-id pub-id-type="pmid">20426693</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR14">
+      <label>14</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Liu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Schröder</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Schmidt</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Musket: a multistage</bold>
+          <bold>
+            <italic>k</italic>
+          </bold>
+          <bold>-mer spectrum-based error corrector for Illumina sequence data</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2013</year>
+        <volume>29</volume>
+        <fpage>308</fpage>
+        <lpage>315</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bts690</pub-id>
+        <?supplied-pmid 23202746?>
+        <pub-id pub-id-type="pmid">23202746</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Heo</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>X-L</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Ma</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Hwu</surname>
+            <given-names>W-M</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Bless: Bloom-filter-based error correction solution for high-throughput sequencing reads</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <fpage>1354</fpage>
+        <lpage>1362</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu030</pub-id>
+        <?supplied-pmid 24451628?>
+        <pub-id pub-id-type="pmid">24451628</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR16">
+      <label>16</label>
+      <mixed-citation publication-type="other"><bold>Lighter software</bold>. [<ext-link ext-link-type="uri" xlink:href="https://github.com/mourisl/Lighter/">https://github.com/mourisl/Lighter/</ext-link>]</mixed-citation>
+    </ref>
+    <ref id="CR17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bloom</surname>
+            <given-names>BH</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Space/time trade-offs in hash coding with allowable errors</bold>
+        </article-title>
+        <source>Commun ACM</source>
+        <year>1970</year>
+        <volume>13</volume>
+        <fpage>422</fpage>
+        <lpage>426</lpage>
+        <pub-id pub-id-type="doi">10.1145/362686.362692</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR18">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Tarkoma</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Rothenberg</surname>
+            <given-names>CE</given-names>
+          </name>
+          <name>
+            <surname>Lagerspetz</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Theory and practice of Bloom filters for distributed systems</bold>
+        </article-title>
+        <source>Commun Surv Tutor IEEE</source>
+        <year>2012</year>
+        <volume>14</volume>
+        <fpage>131</fpage>
+        <lpage>155</lpage>
+        <pub-id pub-id-type="doi">10.1109/SURV.2011.031611.00024</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR19">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pell</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Hintze</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Canino-Koning</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Howe</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Tiedje</surname>
+            <given-names>JM</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>CT</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Scaling metagenome sequence assembly with probabilistic De Bruijn graphs</bold>
+        </article-title>
+        <source>Proc Nat Acad Sci</source>
+        <year>2012</year>
+        <volume>109</volume>
+        <fpage>13272</fpage>
+        <lpage>13277</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.1121464109</pub-id>
+        <?supplied-pmid 22847406?>
+        <pub-id pub-id-type="pmid">22847406</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR20">
+      <label>20</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jones</surname>
+            <given-names>DC</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+          <name>
+            <surname>Peng</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Katze</surname>
+            <given-names>MG</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Compression of next-generation sequencing reads aided by highly efficient</bold>
+          <bold>
+            <italic>de novo</italic>
+          </bold>
+          <bold>, assembly</bold>
+        </article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2012</year>
+        <volume>40</volume>
+        <fpage>171</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gks754</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR21">
+      <label>21</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Melsted</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Pritchard</surname>
+            <given-names>JK</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Efficient counting of</bold>
+          <bold>
+            <italic>k</italic>
+          </bold>
+          <bold>-mers in DNA sequences using a Bloom filter</bold>
+        </article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <fpage>333</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-12-333</pub-id>
+        <?supplied-pmid 21831268?>
+        <pub-id pub-id-type="pmid">21831268</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR22">
+      <label>22</label>
+      <mixed-citation publication-type="other">Melsted P, Halldórsson BV: <bold>KmerStream: streaming algorithms for</bold><bold><italic>k</italic></bold><bold>-mer abundance estimation</bold>. <italic>bioRxiv;</italic>2014.</mixed-citation>
+    </ref>
+    <ref id="CR23">
+      <label>23</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Luo</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Xie</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Huang</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Yuan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>He</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Pan</surname>
+            <given-names>Q</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Tang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Shi</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Yu</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Lu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Han</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Cheung</surname>
+            <given-names>DW</given-names>
+          </name>
+          <name>
+            <surname>Yiu</surname>
+            <given-names>S-M</given-names>
+          </name>
+          <name>
+            <surname>Peng</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Xiaoqian</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Liao</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Yang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Lam</surname>
+            <given-names>T-W</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Soapdenovo2: an empirically improved memory-efficient short-read</bold>
+          <bold>
+            <italic>de novo</italic>
+          </bold>
+          <bold> assembler</bold>
+        </article-title>
+        <source>Gigascience</source>
+        <year>2012</year>
+        <volume>1</volume>
+        <fpage>18</fpage>
+        <pub-id pub-id-type="doi">10.1186/2047-217X-1-18</pub-id>
+        <?supplied-pmid 23587118?>
+        <pub-id pub-id-type="pmid">23587118</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR24">
+      <label>24</label>
+      <mixed-citation publication-type="other">Holtgrewe M: <bold>Mason–a read simulator for second generation sequencing data</bold>. <italic>TR-B-10-06, Institut für Mathematik und Informatik, Freie Universität Berlin;</italic>2010.</mixed-citation>
+    </ref>
+    <ref id="CR25">
+      <label>25</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Huang</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Myers</surname>
+            <given-names>JR</given-names>
+          </name>
+          <name>
+            <surname>Marth</surname>
+            <given-names>GT</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Art: a next-generation sequencing read simulator</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2012</year>
+        <volume>28</volume>
+        <fpage>593</fpage>
+        <lpage>594</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr708</pub-id>
+        <?supplied-pmid 22199392?>
+        <pub-id pub-id-type="pmid">22199392</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR26">
+      <label>26</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Langmead</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>SL</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Fast gapped-read alignment with Bowtie 2</bold>
+        </article-title>
+        <source>Nat Methods</source>
+        <year>2012</year>
+        <volume>9</volume>
+        <fpage>357</fpage>
+        <lpage>359</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1923</pub-id>
+        <?supplied-pmid 22388286?>
+        <pub-id pub-id-type="pmid">22388286</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR27">
+      <label>27</label>
+      <mixed-citation publication-type="other">Li H: <bold>Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM</bold>. arXiv preprint arXiv:1303.3997; 2013.</mixed-citation>
+    </ref>
+    <ref id="CR28">
+      <label>28</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gurevich</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Saveliev</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Vyahhi</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Tesler</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Quast: quality assessment tool for genome assemblies</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2013</year>
+        <volume>29</volume>
+        <fpage>1072</fpage>
+        <lpage>1075</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btt086</pub-id>
+        <?supplied-pmid 23422339?>
+        <pub-id pub-id-type="pmid">23422339</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR29">
+      <label>29</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zerbino</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Birney</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Velvet: algorithms for</bold>
+          <bold>
+            <italic>de novo</italic>
+          </bold>
+          <bold> short read assembly using De Bruijn graphs</bold>
+        </article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <fpage>821</fpage>
+        <lpage>829</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.074492.107</pub-id>
+        <?supplied-pmid 18349386?>
+        <pub-id pub-id-type="pmid">18349386</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR30">
+      <label>30</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Salzberg</surname>
+            <given-names>SL</given-names>
+          </name>
+          <name>
+            <surname>Phillippy</surname>
+            <given-names>AM</given-names>
+          </name>
+          <name>
+            <surname>Zimin</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Puiu</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Magoc</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Koren</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Treangen</surname>
+            <given-names>TJ</given-names>
+          </name>
+          <name>
+            <surname>Schatz</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Delcher</surname>
+            <given-names>AL</given-names>
+          </name>
+          <name>
+            <surname>Roberts</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Marcais</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Pop</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Yorke</surname>
+            <given-names>JA</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Gage: A critical evaluation of genome assemblies and assembly algorithms</bold>
+        </article-title>
+        <source>Genome Res</source>
+        <year>2012</year>
+        <volume>22</volume>
+        <fpage>557</fpage>
+        <lpage>567</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.131383.111</pub-id>
+        <?supplied-pmid 22147368?>
+        <pub-id pub-id-type="pmid">22147368</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR31">
+      <label>31</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fan</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Cao</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Almeida</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Broder</surname>
+            <given-names>AZ</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Summary cache: a scalable wide-area web cache sharing protocol</bold>
+        </article-title>
+        <source>IEEE/ACM Trans Netw (TON)</source>
+        <year>2000</year>
+        <volume>8</volume>
+        <fpage>281</fpage>
+        <lpage>293</lpage>
+        <pub-id pub-id-type="doi">10.1109/90.851975</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR32">
+      <label>32</label>
+      <mixed-citation publication-type="other">Bonomi F, Mitzenmacher M, Panigrahy R, Singh S, Varghese G: <italic>An improved construction for counting Bloom filters</italic>, Berlin: Springer; 2006.</mixed-citation>
+    </ref>
+    <ref id="CR33">
+      <label>33</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cormode</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Muthukrishnan</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>An improved data stream summary: the count-min sketch and its applications</bold>
+        </article-title>
+        <source>J Algorithms</source>
+        <year>2005</year>
+        <volume>55</volume>
+        <fpage>58</fpage>
+        <lpage>75</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.jalgor.2003.12.001</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR34">
+      <label>34</label>
+      <mixed-citation publication-type="other">Zhang Q, Pell J, Canino-Koning R, Howe AC, Brown CT: <bold>These are not the</bold><bold><italic>k</italic></bold><bold>-mers you are looking for: efficient online</bold><bold><italic>k</italic></bold><bold>-mer counting using a probabilistic data structure</bold>. arXiv preprint arXiv:1309.2975; 2013.</mixed-citation>
+    </ref>
+    <ref id="CR35">
+      <label>35</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Nakamura</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Oshima</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Morimoto</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Ikeda</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Yoshikawa</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Shiwa</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Ishikawa</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Linak</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Hirai</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Takahashi</surname>
+            <given-names>H</given-names>
+          </name>
+          <collab>Altaf-Ul-Amin Md</collab>
+          <name>
+            <surname>Ogasawara</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Kanaya</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Sequence-specific error profile of Illumina sequencers</bold>
+        </article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2011</year>
+        <volume>39</volume>
+        <fpage>e90</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gkr344</pub-id>
+        <?supplied-pmid 21576222?>
+        <pub-id pub-id-type="pmid">21576222</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR36">
+      <label>36</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chikhi</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Medvedev</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>
+          <bold>Informed and automated</bold>
+          <bold>
+            <italic>k</italic>
+          </bold>
+          <bold>-mer size selection for genome assembly</bold>
+        </article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <fpage>31</fpage>
+        <lpage>37</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btt310</pub-id>
+        <?supplied-pmid 23732276?>
+        <pub-id pub-id-type="pmid">23732276</pub-id>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>

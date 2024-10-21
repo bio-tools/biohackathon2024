@@ -1,0 +1,2683 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//NLM//DTD JATS (Z39.96) Journal Publishing DTD v1.1 20151215//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName JATS-journalpublishing1.dtd?>
+<?SourceDTD.Version 1.1?>
+<?ConverterInfo.XSLTName jp2nlmx2.xsl?>
+<?ConverterInfo.Version 1?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Transl Clin Pharmacol</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Transl Clin Pharmacol</journal-id>
+    <journal-id journal-id-type="publisher-id">TCP</journal-id>
+    <journal-title-group>
+      <journal-title>Translational and Clinical Pharmacology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">2289-0882</issn>
+    <issn pub-type="epub">2383-5427</issn>
+    <publisher>
+      <publisher-name>Korean Society for Clinical Pharmacology and Therapeutics</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">6989246</article-id>
+    <article-id pub-id-type="doi">10.12793/tcp.2019.27.2.73</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Original Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>PKconverter: R package to convert the pharmacokinetic parameters</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Cho</surname>
+          <given-names>Hyeseon</given-names>
+        </name>
+        <xref ref-type="aff" rid="A1"/>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes">
+        <name>
+          <surname>Lee</surname>
+          <given-names>Eun-Kyung</given-names>
+        </name>
+        <xref ref-type="aff" rid="A1"/>
+      </contrib>
+    </contrib-group>
+    <aff id="A1">Department of Statistics, Ewha Womans University, Seoul 03760, <country>Korea</country>.</aff>
+    <author-notes>
+      <corresp>Correspondence: E. K. Lee; Tel: +82-2-3277-6857, Fax: +82-2-3277-3607, <email>lee.eunk@ewha.ac.kr</email></corresp>
+    </author-notes>
+    <pub-date pub-type="ppub">
+      <month>6</month>
+      <year>2019</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>28</day>
+      <month>6</month>
+      <year>2019</year>
+    </pub-date>
+    <volume>27</volume>
+    <issue>2</issue>
+    <fpage>73</fpage>
+    <lpage>79</lpage>
+    <history>
+      <date date-type="received">
+        <day>25</day>
+        <month>2</month>
+        <year>2019</year>
+      </date>
+      <date date-type="rev-recd">
+        <day>19</day>
+        <month>3</month>
+        <year>2019</year>
+      </date>
+      <date date-type="accepted">
+        <day>02</day>
+        <month>4</month>
+        <year>2019</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2019 Translational and Clinical Pharmacology</copyright-statement>
+      <copyright-year>2019</copyright-year>
+      <copyright-holder>Translational and Clinical Pharmacology</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by-nc/3.0/">
+        <license-p>It is identical to the Creative Commons Attribution Non-Commercial License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by-nc/3.0/">http://creativecommons.org/licenses/by-nc/3.0/</ext-link>).</license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p>Population pharmacokinetic analysis and modeling procedures typically require estimates of both population and individual pharmacokinetic parameters. However, only some of these parameters are contained in models and only parameters in the model can be estimated. In this paper, we introduce a new R package, PKconverter, to calculate pharmacokinetic parameters using the relationships among them. After fitting the model, other parameters can be calculated from the functional relationship among the parameters. PKconverter provides the functions to calculate whole parameters along with a Shiny application for converting the parameters. With this package, it is also possible to calculate the standard errors of the other parameters that are not in the model and estimate individual parameters simultaneously.</p>
+    </abstract>
+    <kwd-group>
+      <kwd>Pharmacokinetic model</kwd>
+      <kwd>Pharmacokinetic parameter</kwd>
+      <kwd>Population analysis</kwd>
+      <kwd>R</kwd>
+      <kwd>Shiny</kwd>
+    </kwd-group>
+    <funding-group>
+      <award-group>
+        <funding-source>
+          <institution-wrap>
+            <institution>National Research Foundation of Korea</institution>
+            <institution-id institution-id-type="CrossRef">https://doi.org/10.13039/501100003725</institution-id>
+          </institution-wrap>
+        </funding-source>
+        <award-id>2015R1D1A1A01056790</award-id>
+      </award-group>
+    </funding-group>
+  </article-meta>
+</front>
+<body>
+  <sec sec-type="intro">
+    <title>Introduction</title>
+    <p>Pharmacokinetics (PK) is the study of drug absorption, distribution, metabolism, and excretion. PK models explain how drug concentration changes as a drug moves through the different compartments of the body. An understanding of basic PK parameters is essential for PK modeling and analysis. All parameters are considered, but only some are used by models. Those not used can be calculated from the parameters in the model using the functional relationships among the PK parameters.</p>
+    <p>After fitting the PK model, the estimated parameters can be converted to other parameters using their functional relations. Most modelers use the “Convert.xls” file provided by Shafer (1999) at <ext-link ext-link-type="uri" xlink:href="http://www.nonmemcourse.com">www.nonmemcourse.com</ext-link> to convert pharmacokinetic parameters in one-, two-, or three-compartment models. The Microsoft Excel file consists of five different calculation sheets, each of which has different input and output parameters. A user can choose the sheet according to the known input parameters and the number of compartments in the model and then input estimated parameters. The other parameters are returned by the spreadsheet.</p>
+    <p>Several difficulties are associated with this tool. First, Microsoft Excel is commercial software. Second, while the converted parameters are in the spreadsheet and the numbers can be checked, it is not easy to use these numbers for further analysis without typing them into another file. Third, even though it provides converted parameters in a spreadsheet for a given population parameter, it is sometimes necessary to know individual PK parameters. With this Excel file, we can convert only one set of parameters for one individual at a time. To convert a set of parameters for all individuals, the estimated parameters for one individual must be entered, the results checked, and the procedure repeated for each individual. Fourth, this Excel file does not provide the approximate standard error of converted parameters.</p>
+    <p>To address these limitations, we developed a new R package, PKconverter. This package provides the user with the converted parameters and the approximated standard error of the converted parameters using the delta method. It also converts individual parameters with the standard errors simultaneously and can save the entire result as a single file. With the Shiny [<xref rid="B1" ref-type="bibr">1</xref>] graphical user interface (GUI), a novice R user can easily calculate the converted parameters. PKconverter (<ext-link ext-link-type="uri" xlink:href="https://cran.r-project.org/web/packages/PKconverter/index.html">https://cran.r-project.org/web/packages/PKconverter/index.html</ext-link>) is on R repository CRAN and everyone can download freely and use it. We also put this on the web (<ext-link ext-link-type="uri" xlink:href="https://ek-lee.shinyapps.io/PKconverter/">https://ek-lee.shinyapps.io/PKconverter/</ext-link>) that the user can use on the web without install R or PKconverter packages.</p>
+    <p>Here we first introduce the pharmacokinetic models and parameters, and the relationships among the pharmacokinetic parameters in each compartment model. We then explain the delta method and how to use it to calculate the approximated standard errors of the converted parameters. Finally, we describe how to convert the parameters with the several types of input parameters. We also introduce the Shiny application interface for PKconverter.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <p>PK studies the time course of drug concentration in different body spaces and the relationship between concentration and the time course of drug action.[<xref rid="B2" ref-type="bibr">2</xref><xref rid="B3" ref-type="bibr">3</xref><xref rid="B4" ref-type="bibr">4</xref><xref rid="B5" ref-type="bibr">5</xref><xref rid="B6" ref-type="bibr">6</xref><xref rid="B7" ref-type="bibr">7</xref>] Drug absorption, distribution, metabolism, and elimination are fundamental aspects of pharmacokinetic modeling and analysis. The pharmacokinetic model explains the transfer of a drug from its absorption site to the body and the various steps involved in the distribution and elimination of the drug in the body. It is essential to check and interpret all pharmacokinetic parameters.</p>
+    <p>The volume of distribution (V) defines the apparent space or volume that a drug distributes. Clearance (CL) defines the volume of blood that is completely cleared of drug content per unit time. It describes the capacity of irreversible elimination of a compound from plasma and is a consequence of a combination of perfusion, diffusion, filtration, metabolism, and transport processes of the clearing organ. The elimination rate constant (K) relates to the amount of drug in the body that is eliminated per unit of time. The half-life of the drug (t1/2) is the time required to reduce by half the amount of a drug remaining in the body. A fractional coefficient is defined as a true coefficient multiplied by the volume of distribution. The sum of all fractional coefficients is always 1; for example, for a three-compartment model, F.A + F.B + F.C = 1. The exponents α, β, and γ represent the slopes of the decay in the plot of drug concentration vs. time. The half-lives are calculated by log(2) divided by the corresponding exponents.</p>
+    <p>Although all PK parameters should be considered for analysis, only some of these parameters are used in the model, and the others can be calculated by the functional relations with them. Therefore, after fitting the pharmacokinetic model, the other parameters must be calculated with these estimated parameters, which are not used in the model.</p>
+    <sec>
+      <title>Compartment model</title>
+      <p>In pharmacometrics, the compartmental model is categorized by the number of compartments needed to describe a drug's absorption, distribution, metabolism, and excretion in the body.[<xref rid="B8" ref-type="bibr">8</xref>] There are one-, two-, and three-compartment models. These models are used to predict the time course of drug concentrations in the body. In a one-compartment model, <italic>C</italic><sub>t</sub> is the drug concentration at time t, <italic>C</italic><sub>0</sub> is the initial concentration, and <italic>K</italic><sub>10</sub> is the elimination rate.</p>
+      <p>In the pharmacometrics area, a basic type of model is the compartmental model that is categorized by the number of compartments needed to describe the drug's absorption, distribution, metabolism, and excretion in the body.[<xref rid="B8" ref-type="bibr">8</xref>] There are one-compartmental, two-compartmental, and multi-compartmental models. We usually use up to three-compartmental model. These models are used to predict the time course of drug concentrations in the body. The one-compartmental model is</p>
+      <p>
+        <disp-formula><italic>C<sub>t</sub></italic>=<italic>C</italic><sub>0</sub><italic>e</italic><sup>-<italic>k</italic><sub>10</sub><italic>t</italic></sup><label>(1)</label></disp-formula>
+      </p>
+      <p>
+        <disp-formula>=<italic>Ae<sup>−αt</sup></italic><label>(2)</label></disp-formula>
+      </p>
+      <p>(2) is the general form of the one-compartment model. A is the true coefficient, and α is the exponent. These two parameters have functional relation with various pharmacokinetic parameters V1, CL1, K<sub>10</sub>, t<sub>1/2,α</sub>, etc.</p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m1">
+              <mml:mi>V</mml:mi>
+              <mml:mn>1</mml:mn>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>A</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mi> </mml:mi>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>C</mml:mi>
+              <mml:mi>L</mml:mi>
+              <mml:mn>1</mml:mn>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>A</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mi> </mml:mi>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>K</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>10</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi>α</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e001.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m2">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mi>d</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>s</mml:mi>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mi>V</mml:mi>
+              <mml:mn>1</mml:mn>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>A</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>F</mml:mi>
+              <mml:mo>.</mml:mo>
+              <mml:mi>A</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi>A</mml:mi>
+              <mml:mo>×</mml:mo>
+              <mml:mi>V</mml:mi>
+              <mml:mn>1</mml:mn>
+              <mml:mo>=</mml:mo>
+              <mml:mn>1</mml:mn>
+              <mml:mo>.</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e002.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>For example, a one-compartment intravenous bolus model can be represented in three ways:</p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m3">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>D</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>s</mml:mi>
+                  <mml:mi>e</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mi>e</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>K</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>10</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+              </mml:msup>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e003.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+          <label>(3)</label>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m4">
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>D</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>s</mml:mi>
+                  <mml:mi>e</mml:mi>
+                  <mml:mo>·</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>K</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>10</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>L</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mi>e</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>K</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>10</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+              </mml:msup>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e004.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+          <label>(4)</label>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m5">
+              <mml:mo>=</mml:mo>
+              <mml:mi>  </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>D</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>s</mml:mi>
+                  <mml:mi>e</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mi>e</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mo>−</mml:mo>
+                  <mml:mfrac>
+                    <mml:mrow>
+                      <mml:mi>C</mml:mi>
+                      <mml:mi>L</mml:mi>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mi>V</mml:mi>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                  </mml:mfrac>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+              </mml:msup>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e005.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+          <label>(5)</label>
+        </disp-formula>
+      </p>
+      <p>where CL1 is the clearance, V1 is the volume of distribution, and K<sub>10</sub> is the elimination rate constant. Because the pharmacokinetic parameters V1, CL1, and K<sub>10</sub> have a functional relation of CL1 = V1 · K<sub>10</sub>, the model equation can be represented by various form with only two pharmacokinetic parameters, and the other parameters can be found after fitting one of three equations. <xref ref-type="fig" rid="F1">Figure 1</xref> and <xref ref-type="fig" rid="F2">Figure 2</xref> provide the plots of the functional relationships among the pharmacokinetic parameters.</p>
+      <p>The general form of the two-compartmental model is</p>
+      <p>
+        <disp-formula><italic>Ct</italic> = <italic>Ae<sup>−αt</sup></italic> + <italic>Be<sup>−βt</sup></italic> ,</disp-formula>
+      </p>
+      <p>where A or B is used for C<sub>0</sub> in the one-compartmental model, and α or β are used for the elimination rate. With these four parameter estimates, 12 more parameters can be calculated with the following equations:</p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m6">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>K</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>21</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>A</mml:mi>
+                  <mml:mi>α</mml:mi>
+                  <mml:mo>+</mml:mo>
+                  <mml:mi>B</mml:mi>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>A</mml:mi>
+                  <mml:mo>+</mml:mo>
+                  <mml:mi>B</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>K</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>10</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>K</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>21</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>12</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi>α</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>+</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi>β</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>−</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>21</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>−</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>k</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>21</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e006.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m7">
+              <mml:mi>V</mml:mi>
+              <mml:mn>1</mml:mn>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>A</mml:mi>
+                  <mml:mo>+</mml:mo>
+                  <mml:mi>B</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>V</mml:mi>
+              <mml:mn>2</mml:mn>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>K</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>21</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mfenced separators="|">
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                  <mml:mo>+</mml:mo>
+                  <mml:mi>β</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>K</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>21</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>−</mml:mo>
+                  <mml:mfrac>
+                    <mml:mrow>
+                      <mml:mi>α</mml:mi>
+                      <mml:mi>β</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>K</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>21</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                    </mml:mrow>
+                  </mml:mfrac>
+                </mml:mrow>
+              </mml:mfenced>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mi>d</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>s</mml:mi>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mi>V</mml:mi>
+              <mml:mn>1</mml:mn>
+              <mml:mo>+</mml:mo>
+              <mml:mi>V</mml:mi>
+              <mml:mn>2</mml:mn>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e007.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula><italic>CL</italic>1 = <italic>V</italic>1 × <italic>K</italic><sub>10</sub>, <italic>CL</italic>2 = <italic>V</italic>2 × <italic>K</italic><sub>12</sub>,</disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m8">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e008.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula><italic>F.A</italic> = <italic>A</italic> × <italic>V</italic>1, <italic>F.B</italic> = <italic>B</italic> × <italic>V</italic>1.</disp-formula>
+      </p>
+      <p>Similar relations can be defined in the three-compartment model.</p>
+      <p><xref rid="T1" ref-type="table">Table 1</xref> summarized important pharmacokinetic parameters in each compartmental model and <xref rid="T2" ref-type="table">Table 2</xref> summarized input parameters for each compartmental model in each spreadsheet in Shiner's “Convert.xls” file.</p>
+    </sec>
+    <sec>
+      <title>Delta method</title>
+      <p>In pharmacometrics, the maximum likelihood estimation (MLE) of a PK parameter can be found with NONMEM or other software. Most software involved in generating estimates of PK parameters is based on maximum likelihood theory. If θ is the PK parameter and <inline-formula><alternatives><mml:math id="m9"><mml:mover accent="true"><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover></mml:math><inline-graphic xlink:href="tcp-27-73-i003.jpg"/></alternatives></inline-formula> is the MLE of θ, then, by the properties of MLE,[<xref rid="B9" ref-type="bibr">9</xref><xref rid="B10" ref-type="bibr">10</xref>]</p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m10">
+              <mml:msqrt>
+                <mml:mi>n</mml:mi>
+              </mml:msqrt>
+              <mml:mfenced separators="|">
+                <mml:mrow>
+                  <mml:mover accent="true">
+                    <mml:mrow>
+                      <mml:mi>θ</mml:mi>
+                    </mml:mrow>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>θ</mml:mi>
+                </mml:mrow>
+              </mml:mfenced>
+              <mml:mo>~</mml:mo>
+              <mml:mi>N</mml:mi>
+              <mml:mfenced separators="|">
+                <mml:mrow>
+                  <mml:mn>0</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi> </mml:mi>
+                  <mml:mi>V</mml:mi>
+                  <mml:mi>a</mml:mi>
+                  <mml:mi>r</mml:mi>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:mover accent="true">
+                        <mml:mrow>
+                          <mml:mi>θ</mml:mi>
+                        </mml:mrow>
+                        <mml:mo>^</mml:mo>
+                      </mml:mover>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+              </mml:mfenced>
+              <mml:mo>.</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e009.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>To calculate the other PK parameters that are the functions of MLEs, let f(θ) be the other PK parameters. The estimate of <italic>f</italic>(θ) is <inline-formula><alternatives><mml:math id="m11"><mml:mover accent="true"><mml:mrow><mml:mi>f</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover><mml:mfenced separators="|"><mml:mrow><mml:mi>θ</mml:mi></mml:mrow></mml:mfenced><mml:mo>−</mml:mo><mml:mi>f</mml:mi><mml:mo>(</mml:mo><mml:mover accent="true"><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover><mml:mo>)</mml:mo></mml:math><inline-graphic xlink:href="tcp-27-73-i004.jpg"/></alternatives></inline-formula> and <inline-formula><alternatives><mml:math id="m12"><mml:mi>V</mml:mi><mml:mi>a</mml:mi><mml:mi>r</mml:mi><mml:mfenced separators="|"><mml:mrow><mml:mi>f</mml:mi><mml:mo>(</mml:mo><mml:mover accent="true"><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover><mml:mo>)</mml:mo></mml:mrow></mml:mfenced><mml:mo>=</mml:mo><mml:msup><mml:mrow><mml:mi>f</mml:mi><mml:mi>′</mml:mi><mml:mo>(</mml:mo><mml:mover accent="true"><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover><mml:mo>)</mml:mo></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msup><mml:mi>V</mml:mi><mml:mi>a</mml:mi><mml:mi>r</mml:mi><mml:mfenced separators="|"><mml:mrow><mml:mover accent="true"><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover></mml:mrow></mml:mfenced></mml:math><inline-graphic xlink:href="tcp-27-73-i005.jpg"/></alternatives></inline-formula>, the delta method.[<xref rid="B11" ref-type="bibr">11</xref>] If the dimension of θ, q, is greater than 1,</p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m13">
+              <mml:mi>V</mml:mi>
+              <mml:mi>a</mml:mi>
+              <mml:mi>r</mml:mi>
+              <mml:mfenced separators="|">
+                <mml:mrow>
+                  <mml:mi>f</mml:mi>
+                  <mml:mo>(</mml:mo>
+                  <mml:mover accent="true">
+                    <mml:mrow>
+                      <mml:mi>θ</mml:mi>
+                    </mml:mrow>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mfenced>
+              <mml:mo>=</mml:mo>
+              <mml:msup>
+                <mml:mrow>
+                  <mml:mi>G</mml:mi>
+                  <mml:mo>(</mml:mo>
+                  <mml:mover accent="true">
+                    <mml:mrow>
+                      <mml:mi>θ</mml:mi>
+                    </mml:mrow>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>T</mml:mi>
+                </mml:mrow>
+              </mml:msup>
+              <mml:mi>V</mml:mi>
+              <mml:mi>a</mml:mi>
+              <mml:mi>r</mml:mi>
+              <mml:mfenced separators="|">
+                <mml:mrow>
+                  <mml:mover accent="true">
+                    <mml:mrow>
+                      <mml:mi>θ</mml:mi>
+                    </mml:mrow>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                </mml:mrow>
+              </mml:mfenced>
+              <mml:mi>G</mml:mi>
+              <mml:mfenced separators="|">
+                <mml:mrow>
+                  <mml:mover accent="true">
+                    <mml:mrow>
+                      <mml:mi>θ</mml:mi>
+                    </mml:mrow>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                </mml:mrow>
+              </mml:mfenced>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e010.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>where <inline-formula><alternatives><mml:math id="m14"><mml:mi>G</mml:mi><mml:mfenced separators="|"><mml:mrow><mml:mover accent="true"><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover></mml:mrow></mml:mfenced><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:mo>∂</mml:mo><mml:mi>f</mml:mi><mml:mo>(</mml:mo><mml:mi>θ</mml:mi><mml:mo>)</mml:mo></mml:mrow><mml:mrow><mml:mo>∂</mml:mo><mml:mi>θ</mml:mi></mml:mrow></mml:mfrac></mml:math><inline-graphic xlink:href="tcp-27-73-i006.jpg"/></alternatives></inline-formula>, q-dimensional vector.</p>
+    </sec>
+    <sec>
+      <title>Population parameter convert</title>
+      <p>We provide five different models with known parameters for three kinds of compartment models. In the following subsection, we summarize the input and output parameters of each model. We then provide functions to calculate PK parameters with the approximated standard errors and supply a Shiny application for each model. <xref rid="T2" ref-type="table">Table 2</xref> lists input parameters and R function names for each model.</p>
+      <p>Model 1 uses the volume of distributions and the clearances as the input parameters. For one-compartmental model, with the known parameters <italic>V</italic>1 and <italic>CL</italic>1, the other parameters can be calculated with the following equations:</p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m15">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mi>d</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>s</mml:mi>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>V</mml:mi>
+              <mml:mn>1</mml:mn>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>A</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>α</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e011.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m16">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>k</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>10</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi>l</mml:mi>
+              <mml:mi>o</mml:mi>
+              <mml:mi>g</mml:mi>
+              <mml:mn>2</mml:mn>
+              <mml:mo>·</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>10</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>F</mml:mi>
+              <mml:mo>.</mml:mo>
+              <mml:mi>A</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi>A</mml:mi>
+              <mml:mo>·</mml:mo>
+              <mml:mi>V</mml:mi>
+              <mml:mn>1</mml:mn>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e012.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>For the two-compartmental model, with the know parameters <italic>V</italic>1, <italic>V</italic>2, <italic>CL</italic>1, and <italic>CL</italic>2, we can calculate the others:</p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m17">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mi>d</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>s</mml:mi>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi>V</mml:mi>
+              <mml:mn>1</mml:mn>
+              <mml:mi> </mml:mi>
+              <mml:mo>+</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi>V</mml:mi>
+              <mml:mn>2</mml:mn>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>10</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>12</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>21</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mi> </mml:mi>
+              <mml:mo>.</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e013.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula><italic>a</italic><sub>0</sub> = <italic>k</italic><sub>10</sub><italic>k</italic><sub>21</sub>, <italic>a</italic><sub>1</sub> = −(<italic>k</italic><sub>10</sub> + <italic>k</italic><sub>12</sub> + <italic>k</italic><sub>21</sub>),</disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m18">
+              <mml:mi>α</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>a</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>+</mml:mo>
+                  <mml:msqrt>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>a</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mn>1</mml:mn>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                      </mml:mrow>
+                    </mml:msup>
+                    <mml:mo>−</mml:mo>
+                    <mml:mn>4</mml:mn>
+                    <mml:msub>
+                      <mml:mrow>
+                        <mml:mi>a</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>0</mml:mn>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:msqrt>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi>β</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mo>−</mml:mo>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>a</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>−</mml:mo>
+                  <mml:msqrt>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>a</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mn>1</mml:mn>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                      </mml:mrow>
+                    </mml:msup>
+                    <mml:mo>−</mml:mo>
+                    <mml:mn>4</mml:mn>
+                    <mml:msub>
+                      <mml:mrow>
+                        <mml:mi>a</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>0</mml:mn>
+                      </mml:mrow>
+                    </mml:msub>
+                  </mml:msqrt>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e014.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m19">
+              <mml:mi>A</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>k</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>21</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>β</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mi> </mml:mi>
+              <mml:mo>×</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi>B</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>k</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>21</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mi> </mml:mi>
+              <mml:mo>×</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:mi mathvariant="normal"> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e015.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>For the three-compartmental model, the following equations can be used:</p>
+      <p>
+        <disp-formula><italic>Vd<sub>ss</sub></italic> = <italic>V</italic>1 + <italic>V</italic>2 + <italic>V</italic>3,</disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m20">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>10</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>12</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>13</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>21</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>31</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>C</mml:mi>
+                  <mml:mi>l</mml:mi>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e016.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m21">
+              <mml:mi>A</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>21</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>−</mml:mo>
+                      <mml:mi>α</mml:mi>
+                    </mml:mrow>
+                  </mml:mfenced>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>31</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>−</mml:mo>
+                      <mml:mi>α</mml:mi>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>(</mml:mo>
+                  <mml:mi>α</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>β</mml:mi>
+                  <mml:mo>)</mml:mo>
+                  <mml:mo>(</mml:mo>
+                  <mml:mi>α</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>γ</mml:mi>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>B</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>21</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>−</mml:mo>
+                      <mml:mi>β</mml:mi>
+                    </mml:mrow>
+                  </mml:mfenced>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>31</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>−</mml:mo>
+                      <mml:mi>β</mml:mi>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>(</mml:mo>
+                  <mml:mi>β</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>α</mml:mi>
+                  <mml:mo>)</mml:mo>
+                  <mml:mo>(</mml:mo>
+                  <mml:mi>β</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>γ</mml:mi>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>C</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>21</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>−</mml:mo>
+                      <mml:mi>γ</mml:mi>
+                    </mml:mrow>
+                  </mml:mfenced>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>k</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>31</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                      <mml:mo>−</mml:mo>
+                      <mml:mi>γ</mml:mi>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>V</mml:mi>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>(</mml:mo>
+                  <mml:mi>γ</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>α</mml:mi>
+                  <mml:mo>)</mml:mo>
+                  <mml:mo>(</mml:mo>
+                  <mml:mi>γ</mml:mi>
+                  <mml:mo>−</mml:mo>
+                  <mml:mi>β</mml:mi>
+                  <mml:mo>)</mml:mo>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e017.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m22">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>/</mml:mo>
+                  <mml:mn>2</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>γ</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>l</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>g</mml:mi>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>γ</mml:mi>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>.</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e018.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>where α,β,γ are determined by size order of root<sub>1</sub>, root<sub>2</sub>, root<sub>3</sub> from the largest to smallest.</p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m23">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>r</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mo>−</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>r</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mrow>
+                <mml:mrow>
+                  <mml:mi mathvariant="normal">cos</mml:mi>
+                </mml:mrow>
+                <mml:mo> </mml:mo>
+                <mml:mrow>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:mi>p</mml:mi>
+                      <mml:mi>h</mml:mi>
+                      <mml:mi>i</mml:mi>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mo>+</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>a</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>r</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:mo>−</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>r</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mrow>
+                <mml:mrow>
+                  <mml:mi mathvariant="normal">cos</mml:mi>
+                </mml:mrow>
+                <mml:mo> </mml:mo>
+                <mml:mrow>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:mi>p</mml:mi>
+                      <mml:mi>h</mml:mi>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>+</mml:mo>
+                      <mml:mfrac>
+                        <mml:mrow>
+                          <mml:mn>2</mml:mn>
+                          <mml:mi>π</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>3</mml:mn>
+                        </mml:mrow>
+                      </mml:mfrac>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mo>+</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>a</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>r</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>o</mml:mi>
+                  <mml:mi>t</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mo>−</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>r</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mrow>
+                <mml:mrow>
+                  <mml:mi mathvariant="normal">cos</mml:mi>
+                </mml:mrow>
+                <mml:mo> </mml:mo>
+                <mml:mrow>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:mi>p</mml:mi>
+                      <mml:mi>h</mml:mi>
+                      <mml:mi>i</mml:mi>
+                      <mml:mo>+</mml:mo>
+                      <mml:mfrac>
+                        <mml:mrow>
+                          <mml:mn>4</mml:mn>
+                          <mml:mi>π</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>3</mml:mn>
+                        </mml:mrow>
+                      </mml:mfrac>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mo>+</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>a</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e019.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula><italic>a</italic><sub>0</sub> = <italic>k</italic><sub>10</sub><italic>k</italic><sub>21</sub><italic>k</italic><sub>31</sub>, <italic>a</italic><sub>1</sub> = <italic>k</italic><sub>10</sub><italic>k</italic><sub>31</sub> + <italic>k</italic><sub>21</sub><italic>k</italic><sub>31</sub> + <italic>k</italic><sub>21</sub><italic>k</italic><sub>13</sub> + <italic>k</italic><sub>10</sub><italic>k</italic><sub>21</sub> + <italic>k</italic><sub>31</sub><italic>k</italic><sub>12</sub>,</disp-formula>
+      </p>
+      <p>
+        <disp-formula><italic>a</italic><sub>2</sub> = <italic>k</italic><sub>10</sub> + <italic>k</italic><sub>12</sub> + <italic>k</italic><sub>13</sub> + <italic>k</italic><sub>21</sub> + <italic>k</italic><sub>31</sub>,</disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m24">
+              <mml:mi>p</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>a</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>−</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msup>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>a</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>2</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:mrow>
+                  </mml:msup>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>q</mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                  <mml:msup>
+                    <mml:mrow>
+                      <mml:msub>
+                        <mml:mrow>
+                          <mml:mi>a</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>2</mml:mn>
+                        </mml:mrow>
+                      </mml:msub>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>3</mml:mn>
+                    </mml:mrow>
+                  </mml:msup>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>27</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>−</mml:mo>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>a</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                  <mml:msub>
+                    <mml:mrow>
+                      <mml:mi>a</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:mrow>
+                  </mml:msub>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>3</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+              <mml:mo>+</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>a</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>0</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e020.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>
+        <disp-formula>
+          <alternatives>
+            <mml:math id="m25">
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>r</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:msqrt>
+                <mml:mo>−</mml:mo>
+                <mml:mfrac>
+                  <mml:mrow>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mi>p</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>3</mml:mn>
+                      </mml:mrow>
+                    </mml:msup>
+                  </mml:mrow>
+                  <mml:mrow>
+                    <mml:mn>27</mml:mn>
+                  </mml:mrow>
+                </mml:mfrac>
+              </mml:msqrt>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mi>p</mml:mi>
+              <mml:mi>h</mml:mi>
+              <mml:mi>i</mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mrow>
+                <mml:mrow>
+                  <mml:mfrac>
+                    <mml:mrow>
+                      <mml:mn>1</mml:mn>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>3</mml:mn>
+                    </mml:mrow>
+                  </mml:mfrac>
+                  <mml:mi mathvariant="normal">acos</mml:mi>
+                </mml:mrow>
+                <mml:mo> </mml:mo>
+                <mml:mrow>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:mo>−</mml:mo>
+                      <mml:mfrac>
+                        <mml:mrow>
+                          <mml:mi>q</mml:mi>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>2</mml:mn>
+                          <mml:msub>
+                            <mml:mrow>
+                              <mml:mi>r</mml:mi>
+                            </mml:mrow>
+                            <mml:mrow>
+                              <mml:mn>1</mml:mn>
+                            </mml:mrow>
+                          </mml:msub>
+                        </mml:mrow>
+                      </mml:mfrac>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mo>,</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mi> </mml:mi>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>r</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>2</mml:mn>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mi> </mml:mi>
+              <mml:mo>=</mml:mo>
+              <mml:mi> </mml:mi>
+              <mml:mn>2</mml:mn>
+              <mml:mo>·</mml:mo>
+              <mml:mrow>
+                <mml:mrow>
+                  <mml:mi mathvariant="normal">exp</mml:mi>
+                </mml:mrow>
+                <mml:mo> </mml:mo>
+                <mml:mrow>
+                  <mml:mfenced separators="|">
+                    <mml:mrow>
+                      <mml:mfrac>
+                        <mml:mrow>
+                          <mml:mrow>
+                            <mml:mrow>
+                              <mml:mi mathvariant="italic">log</mml:mi>
+                            </mml:mrow>
+                            <mml:mo> </mml:mo>
+                            <mml:mrow>
+                              <mml:mfenced separators="|">
+                                <mml:mrow>
+                                  <mml:msub>
+                                    <mml:mrow>
+                                      <mml:mi>r</mml:mi>
+                                    </mml:mrow>
+                                    <mml:mrow>
+                                      <mml:mn>1</mml:mn>
+                                    </mml:mrow>
+                                  </mml:msub>
+                                </mml:mrow>
+                              </mml:mfenced>
+                            </mml:mrow>
+                          </mml:mrow>
+                        </mml:mrow>
+                        <mml:mrow>
+                          <mml:mn>3</mml:mn>
+                        </mml:mrow>
+                      </mml:mfrac>
+                    </mml:mrow>
+                  </mml:mfenced>
+                </mml:mrow>
+              </mml:mrow>
+              <mml:mi> </mml:mi>
+              <mml:mo>.</mml:mo>
+            </mml:math>
+            <graphic xlink:href="tcp-27-73-e021.jpg" position="float" orientation="portrait"/>
+          </alternatives>
+        </disp-formula>
+      </p>
+      <p>Model 2 uses the volume of distribution of 1st compartment and rate constants, model 3 uses the volume of distribution and the clearance of the 1<sup>st</sup> compartment and half-lives, model 4 uses the coefficients and exponents, and model 5 uses the volume of distribution of the 1st compartment, exponents, and some of the rate constants. The detailed formula to calculate the other parameters are in.[<xref rid="B12" ref-type="bibr">12</xref>]</p>
+    </sec>
+  </sec>
+  <sec sec-type="results">
+    <title>Results</title>
+    <p>For each model and each compartment, we provide an R function. The function names for each model in each compartment are supplied in <xref rid="T2" ref-type="table">Table 2</xref>. For one-compartmental model with Model 1, OneComp_Volume_Clearance function is used as follows:</p>
+    <p>
+      <graphic xlink:href="tcp-27-73-g005.jpg" position="float" orientation="portrait"/>
+    </p>
+    <p>For the two-compartment model with Model 1,</p>
+    <p>
+      <graphic xlink:href="tcp-27-73-g006.jpg" position="float" orientation="portrait"/>
+    </p>
+    <sec>
+      <title>Web Interface</title>
+      <p>We provide a Shiny application[<xref rid="B1" ref-type="bibr">1</xref>] to accompany the R package. <xref ref-type="fig" rid="F3">Figure 3</xref> shows the main GUI of a Shiny application for a pharmacokinetic parameter converter with a Model 1 tab. There are five tabs in this application, and each model consists of one model. The user can choose a one, two, or three-compartment model from the “MODEL TYPE” radio button. After entering the values of the volume of distributions and clearances, the gray-shaded output area is automatically changed as it calculates the other parameters. PKconverter then calculates the standard errors of each parameter using the delta method. In the “Covariance” tab, the covariance between the volume of distribution and the clearance can be entered and considered in the calculation of the standard errors of the other parameters.</p>
+    </sec>
+    <sec>
+      <title>Individual parameter converter</title>
+      <p><xref ref-type="fig" rid="F4">Figure 4</xref> is the GUI for converting individual parameters simultaneously. After selecting the compartment model and data type, users can upload an individual pharmacokinetic parameter file. After matching the name of input PK parameters with the user's input file, the other parameters are automatically calculated and presented. The user can save these results as a file.</p>
+    </sec>
+  </sec>
+  <sec sec-type="discussion">
+    <title>Discussion</title>
+    <p>In this paper, we introduce a new R package, PKconverter, to calculate pharmacokinetic parameters using the relationships among them. After fitting the model, other parameters can be calculated from the functional relationship among the parameters. PKconverter provides the functions to calculate whole parameters along with a Shiny application for converting the parameters. With this package, it is also possible to calculate the standard errors of the other parameters that are not in the model and estimate individual parameters simultaneously. It can be convenient not only for calculating population parameters but also for calculating individual parameters. To check the reliability of the calculations in this package, we compare the result of the converted parameters with the pmxTools package. The pmxTools package provides the functions to convert the parameters. However, these functions do not provide the standard errors of converted pharmacokinetic parameters. To confirm the reliability of the calculation of the converted parameters, we use Theoph data and nlme functions in the nlme package. The results are provided as <xref ref-type="supplementary-material" rid="S1">supplementary materials</xref>.</p>
+    <p>This package can read an input file with individual parameters and convert them simultaneously. All results in the Shiny application can be saved as an output file. With this saved file, we can easily use the calculated parameters for further analysis. PKconverter (<ext-link ext-link-type="uri" xlink:href="https://cran.r-project.org/web/packages/PKconverter/index.html">https://cran.r-project.org/web/packages/PKconverter/index.html</ext-link>) is on R repository CRAN and everyone can download freely and use it. Shiny app is also on the web (<ext-link ext-link-type="uri" xlink:href="https://ek-lee.shinyapps.io/PKconverter/">https://ek-lee.shinyapps.io/PKconverter/</ext-link>) that the user can use on the web without install R or PKconverter packages. We hope that this package can help pharmacometricians analyze and understand the compartmental models.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <title>Acknowledgments</title>
+    <p>This research was supported by Basic Science Research Program through the National Research Foundation of Korea (NRF) funded by the Ministry of Education (2015R1D1A1A01056790).</p>
+  </ack>
+  <fn-group>
+    <fn fn-type="other">
+      <p><bold>Reviewer:</bold> This article reviewed by peer experts who are not TCP editors.</p>
+    </fn>
+    <fn fn-type="COI-statement">
+      <p><bold>Conflict of interest:</bold> - Authors: Nothing to declare</p>
+      <p>- Reviewers: Nothing to declare</p>
+      <p>- Editors: Nothing to declare</p>
+    </fn>
+  </fn-group>
+  <ref-list>
+    <ref id="B1">
+      <label>1</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chang</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Cheng</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Allaire</surname>
+            <given-names>JJ</given-names>
+          </name>
+          <name>
+            <surname>Xie</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>McPherson</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <source>Shiny: web application framework for R. R package version 0.11</source>
+        <year>2015</year>
+      </element-citation>
+    </ref>
+    <ref id="B2">
+      <label>2</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>DiPiro</surname>
+            <given-names>JT</given-names>
+          </name>
+        </person-group>
+        <source>Concepts in clinical pharmacokinetics</source>
+        <publisher-name>ASHP</publisher-name>
+        <year>2010</year>
+      </element-citation>
+    </ref>
+    <ref id="B3">
+      <label>3</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rowland</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Tozer</surname>
+            <given-names>TN</given-names>
+          </name>
+          <name>
+            <surname>Derendorf</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Hochhaus</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <source>Clinical pharmacokinetics and pharmacodynamics: concepts and applications</source>
+        <publisher-loc>Philadelphia, PA</publisher-loc>
+        <publisher-name>Wolters Kluwer Health/Lippincott William &amp; Wilkins</publisher-name>
+        <year>2011</year>
+      </element-citation>
+    </ref>
+    <ref id="B4">
+      <label>4</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gabrielsson</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Weiner</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <source>Pharmacokinetic and pharmacodynamic data analysis: concepts and applications, volume 2</source>
+        <publisher-name>CRC Press</publisher-name>
+        <year>2001</year>
+      </element-citation>
+    </ref>
+    <ref id="B5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Benet</surname>
+            <given-names>LZ</given-names>
+          </name>
+          <name>
+            <surname>Zia-Amirhosseini</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Basic principles of pharmacokinetics</article-title>
+        <source>Toxicol Pathol</source>
+        <year>1995</year>
+        <volume>23</volume>
+        <fpage>115</fpage>
+        <lpage>123</lpage>
+        <pub-id pub-id-type="doi">10.1177/019262339502300203</pub-id>
+        <pub-id pub-id-type="pmid">7569664</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mould</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Upton</surname>
+            <given-names>RN</given-names>
+          </name>
+        </person-group>
+        <article-title>Basic concepts in population modeling, simulation, and model-based drug development</article-title>
+        <source>CPT Pharmacometrics Syst Pharmacol</source>
+        <year>2012</year>
+        <volume>1</volume>
+        <fpage>1</fpage>
+        <lpage>14</lpage>
+        <pub-id pub-id-type="doi">10.1038/psp.2012.4</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Mould</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Upton</surname>
+            <given-names>RN</given-names>
+          </name>
+        </person-group>
+        <article-title>Basic concepts in population modeling, simulation, and model-based drug development—part 2: introduction to pharmacokinetic modeling methods</article-title>
+        <source>CPT Pharmacometrics Syst Pharmacol</source>
+        <year>2013</year>
+        <volume>2</volume>
+        <fpage>1</fpage>
+        <lpage>14</lpage>
+        <pub-id pub-id-type="doi">10.1038/psp.2013.14</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="B8">
+      <label>8</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Shargel</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Andrew</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Wu-Pong</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <source>Applied biopharmaceutics &amp; pharmacokinetics</source>
+        <publisher-name>Appleton &amp; Lange Stamford</publisher-name>
+        <year>1999</year>
+      </element-citation>
+    </ref>
+    <ref id="B9">
+      <label>9</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lehmann</surname>
+            <given-names>EL</given-names>
+          </name>
+        </person-group>
+        <source>Elements of large-sample theory</source>
+        <publisher-name>Springer Science &amp; Business Media</publisher-name>
+        <year>2004</year>
+      </element-citation>
+    </ref>
+    <ref id="B10">
+      <label>10</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Taboga</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <source>Lectures on probability theory and mathematical statistics</source>
+        <publisher-name>CreateSpace Independent Publishing Platform</publisher-name>
+        <year>2012</year>
+      </element-citation>
+    </ref>
+    <ref id="B11">
+      <label>11</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Casella</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Berger</surname>
+            <given-names>RL</given-names>
+          </name>
+        </person-group>
+        <source>Statistical inference, volume 2</source>
+        <publisher-loc>Pacific Grove, CA</publisher-loc>
+        <publisher-name>Duxbury</publisher-name>
+        <year>2002</year>
+      </element-citation>
+    </ref>
+    <ref id="B12">
+      <label>12</label>
+      <element-citation publication-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cho</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <source>PKconverter: shiny application to convert the PK parameters</source>
+        <publisher-name>Ewha Womans University</publisher-name>
+        <year>2018</year>
+      </element-citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Supplementary</title>
+      </caption>
+      <media mimetype="application" mime-subtype="pdf" xlink:href="tcp-27-73-s001.pdf" orientation="portrait" id="d35e3422" position="anchor"/>
+    </supplementary-material>
+  </sec>
+</back>
+<floats-group>
+  <fig id="F1" orientation="portrait" position="float">
+    <label>Figure 1</label>
+    <caption>
+      <title>The relationship among PK parameters? V1, Cl1, and k10 in one compartment model.</title>
+    </caption>
+    <graphic xlink:href="tcp-27-73-g001"/>
+  </fig>
+  <fig id="F2" orientation="portrait" position="float">
+    <label>Figure 2</label>
+    <caption>
+      <title>The relationship among PK parameters? V1, Cl1, and t_alpha in one compartment model.</title>
+    </caption>
+    <graphic xlink:href="tcp-27-73-g002"/>
+  </fig>
+  <fig id="F3" orientation="portrait" position="float">
+    <label>Figure 3</label>
+    <caption>
+      <title>Main GUI of Shiny application for Pharmacokinetic Parameter Converter - Model 1.</title>
+    </caption>
+    <graphic xlink:href="tcp-27-73-g003"/>
+  </fig>
+  <fig id="F4" orientation="portrait" position="float">
+    <label>Figure 4</label>
+    <caption>
+      <title>Main GUI of Shiny application for Pharmacokinetic Parameter Converter - Individual parameter converter.</title>
+    </caption>
+    <graphic xlink:href="tcp-27-73-g004"/>
+  </fig>
+  <table-wrap id="T1" orientation="portrait" position="float">
+    <label>Table 1</label>
+    <caption>
+      <title>Important pharmacokinetic parameters in each compartment model</title>
+    </caption>
+    <alternatives>
+      <graphic xlink:href="tcp-27-73-i001"/>
+      <table frame="hsides" rules="rows">
+        <col width="31.74%" span="1"/>
+        <col width="20.48%" span="1"/>
+        <col width="19.11%" span="1"/>
+        <col width="28.67%" span="1"/>
+        <thead>
+          <tr>
+            <th valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(245,131,69)">Type</th>
+            <th valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(245,131,69)">One compartment</th>
+            <th valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(245,131,69)">Two compartment</th>
+            <th valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(245,131,69)">Three compartment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">Volume of distribution</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic>1</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic>1, <italic>V</italic>2</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic>1, <italic>V</italic>2, <italic>V</italic>3</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">Vdss</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">Vd<sub>ss</sub></td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">Vd<sub>ss</sub></td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">Vd<sub>ss</sub></td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">Clearance</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>CL</italic>1</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>CL</italic>1, <italic>CL</italic>2</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>CL</italic>1, <italic>CL</italic>2, <italic>CL</italic>3</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">Rate constant</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)"><italic>K</italic>10</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)"><italic>K</italic>10, <italic>K</italic>12, <italic>K</italic>21</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)"><italic>K</italic>10, <italic>K</italic>12, <italic>K</italic>21, <italic>K</italic>13, <italic>K</italic>31</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">Half-life</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>t</italic>1/2,α</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>t</italic>1/2,α, <italic>t</italic>1/2,β</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>t</italic>1/2,α, <italic>t</italic>1/2,β, <italic>t</italic>1/2,γ</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">True coefficient</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">A</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">A, B</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">A, B, C</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">Fractional coefficient</td>
+            <td valign="top" align="center" rowspan="1" colspan="1">F.A</td>
+            <td valign="top" align="center" rowspan="1" colspan="1">F.A, F.B</td>
+            <td valign="top" align="center" rowspan="1" colspan="1">F.A, F.B, F.B</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,243,235)">Exponent</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,243,235)">α</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,243,235)">α, β</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,243,235)">α, β, γ</td>
+          </tr>
+        </tbody>
+      </table>
+    </alternatives>
+  </table-wrap>
+  <table-wrap id="T2" orientation="portrait" position="float">
+    <label>Table 2</label>
+    <caption>
+      <title>Summary of input parameters and function names in each compartment in each model</title>
+    </caption>
+    <alternatives>
+      <graphic xlink:href="tcp-27-73-i002"/>
+      <table frame="hsides" rules="rows">
+        <col width="10.71%" span="1"/>
+        <col width="14.8%" span="1"/>
+        <col width="31.89%" span="1"/>
+        <col width="42.6%" span="1"/>
+        <thead>
+          <tr>
+            <th valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(245,131,69)">Model</th>
+            <th valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(245,131,69)">Compartment</th>
+            <th valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(245,131,69)">Input</th>
+            <th valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(245,131,69)">Function name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td valign="middle" align="center" rowspan="3" colspan="1">1</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">1</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic>1, <italic>CL</italic>1</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">OneComp_Volume_Clearance</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">2</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic>1, <italic>V</italic>2, <italic>CL</italic>1, <italic>CL</italic>2</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">TwoComp_Volume_Clearance</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">3</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic>1, <italic>V</italic>2, <italic>V</italic>3, <italic>CL</italic>1, <italic>CL</italic>2, <italic>CL</italic>3</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">ThreeComp_Volume_Clearance</td>
+          </tr>
+          <tr>
+            <td valign="middle" align="center" rowspan="3" colspan="1" style="background-color:rgb(255,239,228)">2</td>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">1</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)"><italic>V</italic>1, <italic>K</italic><sub>10</sub></td>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">OneComp_Volume_RateConstant</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">2</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)"><italic>V</italic><sub>1</sub>, <italic>K</italic><sub>10</sub>, <italic>K</italic><sub>12</sub>, <italic>K</italic><sub>21</sub></td>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">TwoComp_Volume_RateConstant</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">3</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)"><italic>V</italic><sub>1</sub>, <italic>K</italic><sub>10</sub>, <italic>K</italic><sub>12</sub>, <italic>K</italic><sub>21</sub>, <italic>K</italic><sub>13</sub>, <italic>K</italic><sub>31</sub></td>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">ThreeComp_Volume_RateConstant</td>
+          </tr>
+          <tr>
+            <td valign="middle" align="center" rowspan="3" colspan="1">3</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">1</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>CL</italic>1, t<sub>1/2,α</sub></td>
+            <td valign="top" align="left" rowspan="1" colspan="1">OneComp_Volume_Clearance_HalfLife</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">2</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic>1, <italic>CL</italic>1, t<sub>1/2,α</sub>, t<sub>1/2,β</sub></td>
+            <td valign="top" align="left" rowspan="1" colspan="1">TwoComp_Volume_Clearance_HalfLife</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">3</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic>1, <italic>CL</italic>1, t<sub>1/2,α</sub>, t<sub>1/2,β</sub>, t<sub>1/2,γ</sub>, Vd<sub>ss</sub></td>
+            <td valign="top" align="left" rowspan="1" colspan="1">ThreeComp_Volume_Clearance_HalfLife</td>
+          </tr>
+          <tr>
+            <td valign="middle" align="center" rowspan="3" colspan="1" style="background-color:rgb(255,239,228)">4</td>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">1</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">A, α</td>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">OneComp_Coefficient_Exponent</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">2</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">A, B, α, β</td>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">TwoComp_Coefficient_Exponent</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">3</td>
+            <td valign="top" align="center" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">A, B, C, α, β, γ</td>
+            <td valign="top" align="left" rowspan="1" colspan="1" style="background-color:rgb(255,239,228)">ThreeComp_Coefficient_Exponent</td>
+          </tr>
+          <tr>
+            <td valign="middle" align="center" rowspan="3" colspan="1">5</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">1</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic><sub>1</sub>, α</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">OneComp_Volume_Exponent</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">2</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic><sub>1</sub>, <italic>K</italic><sub>21</sub>, α, β</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">TwoComp_Volume_Exponent</td>
+          </tr>
+          <tr>
+            <td valign="top" align="left" rowspan="1" colspan="1">3</td>
+            <td valign="top" align="center" rowspan="1" colspan="1"><italic>V</italic><sub>1</sub>, <italic>K</italic><sub>21</sub>, <italic>K</italic><sub>31</sub>, α, β, γ</td>
+            <td valign="top" align="left" rowspan="1" colspan="1">ThreeComp_Volume_Exponent</td>
+          </tr>
+        </tbody>
+      </table>
+    </alternatives>
+  </table-wrap>
+</floats-group>

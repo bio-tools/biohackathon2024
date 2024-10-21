@@ -1,0 +1,2010 @@
+<?all-math-mml yes?>
+<?use-mml?>
+<?properties open_access?>
+<?properties manuscript?>
+<?ManuscriptPrefix new?>
+<?iso-abbr Nat. Genet.?>
+<?submitter-system ukmss?>
+<?submitter-canonical-name Nature Publishing Group?>
+<?submitter-canonical-id NATURE-STRUCTUR?>
+<?submitter-userid 0?>
+<?submitter-authority publisher?>
+<?submitter-login NPG?>
+<?submitter-name Nature Publishing Group?>
+<?domain wtpa?>
+<?origin ukpmcpa?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-journal-id">9216904</journal-id>
+    <journal-id journal-id-type="nlm-ta">Nat Genet</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Nat. Genet.</journal-id>
+    <journal-title-group>
+      <journal-title>Nature genetics</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1061-4036</issn>
+    <issn pub-type="epub">1546-1718</issn>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">6485398</article-id>
+    <article-id pub-id-type="pmid">30510236</article-id>
+    <article-id pub-id-type="doi">10.1038/s41588-018-0279-5</article-id>
+    <article-id pub-id-type="manuscript">ems80177</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>SumHer better estimates the SNP heritability of complex traits from summary statistics</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Speed</surname>
+          <given-names>Doug</given-names>
+        </name>
+        <xref ref-type="aff" rid="A1">1</xref>
+        <xref ref-type="aff" rid="A2">2</xref>
+        <xref ref-type="aff" rid="A3">3</xref>
+        <xref ref-type="corresp" rid="CR1">*</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Balding</surname>
+          <given-names>David J</given-names>
+        </name>
+        <xref ref-type="aff" rid="A3">3</xref>
+        <xref ref-type="aff" rid="A4">4</xref>
+      </contrib>
+    </contrib-group>
+    <aff id="A1"><label>1</label>Aarhus Institute of Advanced Studies (AIAS), Aarhus University, Denmark</aff>
+    <aff id="A2"><label>2</label>Bioinformatics Research Centre, Aarhus University, Denmark</aff>
+    <aff id="A3"><label>3</label>UCL Genetics Institute, University College London, United Kingdom</aff>
+    <aff id="A4"><label>4</label>Melbourne Integrative Genomics, School of BioSciences and School of Mathematics &amp; Statistics, University of Melbourne, Australia</aff>
+    <author-notes>
+      <corresp id="CR1"><label>*</label>Corresponding author: <email>doug@aias.au.dk</email></corresp>
+    </author-notes>
+    <pub-date pub-type="nihms-submitted">
+      <day>18</day>
+      <month>10</month>
+      <year>2018</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>03</day>
+      <month>12</month>
+      <year>2018</year>
+    </pub-date>
+    <pub-date pub-type="ppub">
+      <month>2</month>
+      <year>2019</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>24</day>
+      <month>7</month>
+      <year>2019</year>
+    </pub-date>
+    <volume>51</volume>
+    <issue>2</issue>
+    <fpage>277</fpage>
+    <lpage>284</lpage>
+    <!--elocation-id from pubmed: 10.1038/s41588-018-0279-5-->
+    <permissions>
+      <license>
+        <license-p>Users may view, print, copy, and download text and data-mine the content in such documents, for the purposes of academic research, subject always to the full Conditions of use:<ext-link ext-link-type="uri" xlink:href="http://www.nature.com/authors/editorial_policies/license.html#terms">http://www.nature.com/authors/editorial_policies/license.html#terms</ext-link></license-p>
+      </license>
+    </permissions>
+    <abstract>
+      <p id="P1">We present SumHer, software for estimating confounding bias, SNP heritability, enrichments of heritability and genetic correlations using summary statistics from genome-wide association studies. The key difference between SumHer and the existing software LD Score Regression (LDSC) is that SumHer allows the user to specify the heritability model. We apply SumHer to results from 24 large-scale association studies (average sample size 121,000) using our recommended heritability model. We show that these studies tended to substantially over-correct for confounding, and as a result the number of genome-wide significant loci was under-reported by about a quarter. We also estimate enrichments for 24 categories of SNPs defined by functional annotations. A previous study using LDSC reported that conserved regions were 13-fold enriched, and found a further six categories with above 3-fold enrichment. By contrast, our analysis using SumHer finds that none of the categories have enrichment above 2-fold. SumHer provides an improved understanding of the genetic architecture of complex traits, which enables more efficient analysis of future genetic data.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <p id="P2">LD Score Regression (LDSC) has been frequently applied to summary statistics from genome-wide association studies (GWAS).<xref rid="R1" ref-type="bibr">1</xref>–<xref rid="R4" ref-type="bibr">4</xref> It has four main aims: to estimate the average bias due to confounding, to estimate the “SNP heritability” of a trait (the proportion of phenotypic variance explained by all SNPs), to estimate the heritability enrichments of SNP categories, and to estimate the genetic correlation between a pair of traits. LDSC assumes a specific heritability model in which each SNP in the genome is expected to contribute equally.<xref rid="R1" ref-type="bibr">1</xref> Although this model is widely used in statistical genetics, we recently showed that across a range of human traits, it poorly reflects reality.<xref rid="R5" ref-type="bibr">5</xref> In particular, it fails to appreciate that in regions of high linkage disequilibrium (LD), the average heritability of each SNP tends to be lower due to multiple tagging of causal variation.<xref rid="R6" ref-type="bibr">6</xref> As a result of this model misspecification, LDSC tends to over-estimate confounding bias, under-estimate SNP heritability and produce exaggerated estimates of enrichments.</p>
+  <p id="P3">We propose SumHer, software for estimating SNP heritability from summary statistics that allows the user to specify the heritability model. We apply SumHer to publicly-available GWAS results for 24 disease and quantitative traits, using our recommended heritability model.<xref rid="R5" ref-type="bibr">5</xref>,<xref rid="R6" ref-type="bibr">6</xref> Firstly we show that these GWAS tended to over-correct for confounding; although in total they reported 2060 genome-wide significant loci, were it not for this over-correction they would have discovered approximately 2800. Secondly, we show that for each of the 24 traits, the SumHer estimate of SNP heritability is at least double that from LDSC. Thirdly, we consider functional enrichments. A previous study using LDSC concluded that heritability is highly concentrated in specific functional categories;<xref rid="R2" ref-type="bibr">2</xref> for example, it estimated that across 17 diseases, conserved regions contribute 35% of SNP heritability, indicating that they are 13-fold enriched for causal variation. When we repeat the analysis using SumHer and our 24 traits, the concentration of heritability in functional categories is more modest: for example, while conserved regions remain significantly enriched, we estimate that they contribute only 7.1% (s.d. 0.2) of SNP heritability, representing 2.0-fold (s.d. 0.07) enrichment. We finish by providing an example of how results from SumHer enable more efficient analysis of genetic data. We show how for body mass index, height, HDL &amp; LDL cholesterol and triglyceride, we are able to significantly improve the predictive performance of polygenic risk scores by incorporating our heritability model and estimates of enrichments. We make SumHer freely available within our software package LDAK (<ext-link ext-link-type="uri" xlink:href="http://www.ldak.org">www.ldak.org</ext-link>).<xref rid="R6" ref-type="bibr">6</xref></p>
+  <sec sec-type="results" id="S1">
+    <title>Results</title>
+    <sec id="S2">
+      <title>SumHer</title>
+      <p id="P4">SumHer has the same four aims as LDSC;<xref rid="R1" ref-type="bibr">1</xref>–<xref rid="R3" ref-type="bibr">3</xref> we outline them here, with methodological details provided in <xref ref-type="sec" rid="S16">Online Methods</xref>. Suppose we are provided with summary statistics from a GWAS where each of m SNPs has been tested individually for association with a particular trait. Suppose also that we have access to a well-matched reference panel, from which we can reliably estimate r<sup>2</sup><sub>jl</sub> the squared correlation between SNPs j and l. Let S<sub>1</sub>, S<sub>2</sub>,…,S<sub>m</sub> denote the χ<sup>2</sup>(1) test statistics from single-SNP analysis; the first aim is to estimate the average inflation of these test statistics due to confounding. Let h<sup>2</sup><sub>j</sub> denote the heritability directly contributed by SNP j; the second aim is to estimate h<sup>2</sup><sub>SNP</sub> = ∑<sub>j</sub> h<sup>2</sup><sub>j</sub> the SNP heritability of the trait.<xref rid="R7" ref-type="bibr">7</xref> Let ℂ index a category of SNPs; the third aim is to estimate (∑<sub>j∈ℂ</sub> h<sup>2</sup><sub>j</sub>) / h<sup>2</sup><sub>SNP</sub>, the share<xref rid="R8" ref-type="bibr">8</xref> of h<sup>2</sup><sub>SNP</sub> contributed by SNPs in ℂ (we can then estimate the enrichment of the category by dividing its estimated share by its expected share). Finally, if we are also provided with summary statistics from a second trait, the fourth aim is to estimate the correlation between SNP effect sizes for the two traits.<xref rid="R9" ref-type="bibr">9</xref></p>
+      <p id="P5">In order to achieve these four aims, we require a heritability model, which describes how h<sup>2</sup><sub>j</sub> is expected to vary across the genome. Suppose this heritability model takes the form E[h<sup>2</sup><sub>j</sub>] ∝ q<sub>j</sub>. The main difference between LDSC and SumHer is that SumHer allows for any heritability model (i.e., the user can specify arbitrary q<sub>j</sub>), whereas LDSC assumes all q<sub>j</sub> are the same. We recommend using SumHer with the “LDAK Model”: <disp-formula id="FD1"><label>(1)</label><mml:math display="block" id="M1" overflow="scroll"><mml:mrow><mml:msub><mml:mi>q</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:msup><mml:mrow><mml:mrow><mml:mo>[</mml:mo><mml:mrow><mml:msub><mml:mi>f</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo stretchy="true">(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msub><mml:mi>f</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="true">)</mml:mo></mml:mrow><mml:mo>]</mml:mo></mml:mrow></mml:mrow><mml:mrow><mml:mn>0.75</mml:mn></mml:mrow></mml:msup><mml:msub><mml:mi>w</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>,</mml:mo></mml:mrow></mml:math></disp-formula> where f<sub>j</sub> is the minor allele frequency (MAF) of SNP j and w<sub>j</sub> is a weighting based on local levels of LD.<xref rid="R5" ref-type="bibr">5</xref>,<xref rid="R6" ref-type="bibr">6</xref> In this model, a SNP with high MAF is expected to contribute more heritability than one with low MAF, while a SNP in a region of low LD is expected to contribute more than one in a region of high LD. By contrast, LDSC estimates are obtained by setting q<sub>j</sub> = 1, which corresponds to the assumption that all SNPs are expected to contribute equally.<xref rid="R1" ref-type="bibr">1</xref> We refer to this as the “GCTA Model” as it is a core assumption of the software GCTA.<xref rid="R5" ref-type="bibr">5</xref>,<xref rid="R10" ref-type="bibr">10</xref></p>
+      <p id="P6">A second difference between LDSC and SumHer is how they estimate confounding bias. In a GWAS with no confounding, E[S<sub>j</sub>] ≈ 1 + nv<sup>2</sup><sub>j</sub>, where n is the sample size and v<sup>2</sup><sub>j</sub> = h<sup>2</sup><sub>j</sub> + ∑<sub>l near j</sub> r<sup>2</sup><sub>jl</sub> h<sup>2</sup><sub>l</sub> is the heritability tagged by SNP j (a working definition of “near” is within 1 Mb<sup>1</sup>). Both LDSC and SumHer estimate the deviation of test statistics from their expected values assuming no confounding. LDSC uses the model E[S<sub>j</sub>] ≈ 1 + A + nv<sup>2</sup><sub>j</sub>, where A indicates the average amount test statistics are inflated additively due to confounding (LDSC then reports 1 + A, which it refers to as “the intercept”).<xref rid="R1" ref-type="bibr">1</xref> By contrast, we recommend using the model E[S<sub>j</sub>] ≈ C(1 + nv<sup>2</sup><sub>j</sub>), where C is the average amount test statistics are inflated multiplicatively. While switching between additive and multiplicative models of inflation will not generally impact estimates of confounding bias, enrichment or genetic correlation, it will affect estimates of h<sup>2</sup><sub>SNP</sub> (see <xref ref-type="sec" rid="S16">Online Methods</xref>). We prefer to model inflation as multiplicative because our analyses below indicate that the largest contributor of bias in published GWAS is genomic control, which affects test statistics multiplicatively.<xref rid="R11" ref-type="bibr">11</xref></p>
+      <p id="P7">In total we use six versions of SumHer, which differ according to their assumed heritability and confounding models. LDSC-Zero assumes the GCTA Model and that test statistics are not inflated due to confounding (A = 0, C = 1); this is equivalent to using the LDSC software<sup>1</sup> with the option “--intercept-h2 1”. LDSC assumes the GCTA Model and that confounding inflation is additive (A free to vary, C = 1); this is equivalent to using the LDSC software<sup>1</sup> with default options. SumHer-Zero assumes the LDAK Model and that there is no confounding inflation (A = 0, C = 1); this is our recommended version when estimating h<sup>2</sup><sub>SNP</sub> or enrichments and confident that confounding is negligible. SumHer-GC assumes the LDAK Model and that confounding inflation is multiplicative (A = 0, C free to vary); this is our recommended version when estimating confounding bias or genetic correlation, or when estimating h<sup>2</sup><sub>SNP</sub> or enrichments and it is likely that test statistics are inflated due to population structure or familial relatedness, or were obtained using genomic control or mixed-model association analysis (see below). Hybrid-Zero assumes the heritability model <disp-formula id="FD2"><label>(2)</label><mml:math display="block" id="M2" overflow="scroll"><mml:mrow><mml:mtable columnalign="left"><mml:mtr columnalign="left"><mml:mtd columnalign="left"><mml:mrow><mml:mtable columnalign="left"><mml:mtr columnalign="left"><mml:mtd columnalign="left"><mml:mrow><mml:msub><mml:mi>q</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:mo stretchy="false">(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mi>p</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>×</mml:mo><mml:mn>1</mml:mn><mml:mo>/</mml:mo><mml:mi>m</mml:mi><mml:mo>+</mml:mo><mml:mi>p</mml:mi><mml:mo>×</mml:mo><mml:msup><mml:mrow><mml:mrow><mml:mo>[</mml:mo><mml:mrow><mml:msub><mml:mi>f</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mrow><mml:mo>(</mml:mo><mml:mrow><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msub><mml:mi>f</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow><mml:mo>)</mml:mo></mml:mrow></mml:mrow><mml:mo>]</mml:mo></mml:mrow></mml:mrow><mml:mrow><mml:mn>0.75</mml:mn></mml:mrow></mml:msup><mml:msub><mml:mi>w</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>/</mml:mo><mml:msup><mml:mi>Q</mml:mi><mml:mo>′</mml:mo></mml:msup><mml:mspace width="1em"/><mml:mtext>where</mml:mtext><mml:mspace width="0.5em"/></mml:mrow></mml:mtd></mml:mtr></mml:mtable></mml:mrow></mml:mtd><mml:mtd columnalign="left"><mml:mrow><mml:msup><mml:mi>Q</mml:mi><mml:mo>′</mml:mo></mml:msup><mml:mo>=</mml:mo><mml:mstyle displaystyle="true"><mml:msub><mml:mo>∑</mml:mo><mml:mi>j</mml:mi></mml:msub><mml:mrow><mml:msup><mml:mrow><mml:mrow><mml:mo>[</mml:mo><mml:mrow><mml:msub><mml:mi>f</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msub><mml:mi>f</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mo>]</mml:mo></mml:mrow></mml:mrow><mml:mrow><mml:mn>0.75</mml:mn></mml:mrow></mml:msup><mml:msub><mml:mi>w</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>,</mml:mo></mml:mrow></mml:mstyle></mml:mrow></mml:mtd></mml:mtr></mml:mtable></mml:mrow></mml:math></disp-formula> and that there is no confounding inflation (A = 0, C = 1), while <bold>Hybrid-GC</bold> assumes the same heritability model and that confounding inflation is multiplicative (A = 0, C free to vary). Model (2) is a linear combination of the GCTA and LDAK models, where p indicates the weight assigned to the LDAK model; we use this heritability model to compare the fit of the GCTA and LDAK models on real data (see below).</p>
+      <p id="P8">For all analyses, we consider only common (MAF ≥ 0.01), biallelic, autosomal SNPs. Following previous guidelines,<xref rid="R1" ref-type="bibr">1</xref>,<xref rid="R2" ref-type="bibr">2</xref>,<xref rid="R4" ref-type="bibr">4</xref>,<xref rid="R5" ref-type="bibr">5</xref> we exclude SNPs within the major histocompatibility complex (MHC; Chromosome 6: 25-34 Mb), as well as SNPs which individually explain &gt; 1% of phenotypic variation, and SNPs in LD with these (within 1 cM and r<sup>2</sup><sub>jl</sub> &gt; 0.1). Our reference panel is 404 non-Finnish, European individuals from the 1000 Genomes Project, recorded for 8,598,995 SNPs.<xref rid="R12" ref-type="bibr">12</xref> For our enrichment analyses, we consider the same 24 functional annotations as Finucane <italic>et al</italic>.<sup>2</sup> which include coding, conserved, enhancer and promoter regions (see <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 1</xref> for a full list). When estimating enrichments using LDSC-Zero or LDSC, we use the 53-part model recommended by Finucane <italic>et al.</italic><xref rid="R2" ref-type="bibr">2</xref> (one category for each annotation, one for each of 28 “buffer regions”, plus one containing all SNPs); when using SumHer-Zero or SumHer-GC, we use a 25-part model (one category for each annotation, plus one containing all SNPs).</p>
+    </sec>
+    <sec id="S3">
+      <title>Summary statistics</title>
+      <p id="P9">For our real analyses, we use summary statistics from two sets of GWAS. The “25 raw GWAS” (18 binary traits, 7 quantitative, average sample size 9 700; see <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 2</xref>) are those for which we have access to individual-level data, from either the Wellcome Trust Case Control Consortium<xref rid="R13" ref-type="bibr">13</xref> (WTCCC) or the eMERGE Network,<xref rid="R14" ref-type="bibr">14</xref> and therefore we perform the association analysis ourselves. The “24 summary GWAS” (9 binary traits, 15 quantitative, average sample size 121,000; see <xref rid="T1" ref-type="table">Table 1</xref>), are those for which we use summary statistics from previously-published analyses.<xref rid="R15" ref-type="bibr">15</xref></p>
+      <p id="P10">For each of the 25 raw GWAS, we perform strict quality control (see <xref ref-type="sec" rid="S16">Online Methods</xref>), then use REML to estimate how much of the total phenotypic variance explained by SNPs is inflation due to population structure or familial relatedness.<xref rid="R8" ref-type="bibr">8</xref>,<xref rid="R16" ref-type="bibr">16</xref> We estimate that on average 3.1% (range 0.2% to 7.2%) of the variance explained is inflation (<xref ref-type="supplementary-material" rid="SD1">Supplementary Fig. 1</xref>), indicating that confounding due to population structure or familial relatedness is is modest. For the 24 summary GWAS, we are largely reliant on the quality control decisions of the original authors, which are generally much less strict than ours (<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 3</xref>). For 4 of the GWAS, imputation info scores are available, so we exclude SNPs with score &lt; 0.95; for the remaining 20 GWAS, we instead restrict to the 4,555,718 SNPs present in the eMERGE data, as we observe that these SNPs tend to be well-imputed in Caucasian GWAS (<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 4</xref>).</p>
+    </sec>
+    <sec id="S4">
+      <title>The importance of the heritability model</title>
+      <p id="P11">We begin by analyzing summary statistics from simulated phenotypes. Using the eMERGE data<xref rid="R14" ref-type="bibr">14</xref>,<xref rid="R17" ref-type="bibr">17</xref> (25,875 individuals recorded for 4,555,718 SNPs), we generate 200 phenotypes each with 2,000 causal SNPs, h<sup>2</sup><sub>SNP</sub> = 0.5, no confounding bias, and such that consecutive pairs (Phenotypes 1 &amp; 2, 3 &amp; 4, etc) have genetic correlation 0.5. For Phenotypes 1-100, we sample causal SNP effect sizes according to the GCTA Model, for Phenotypes 101-200, according to the LDAK Model. We perform single-SNP analysis for each phenotype, then analyze the resulting summary statistics using LDSC-Zero, LDSC, SumHer-Zero and SumHer-GC. Selected results are provided in <xref ref-type="fig" rid="F1">Figure 1</xref>, with full results in <xref ref-type="supplementary-material" rid="SD1">Supplementary Figures 2 &amp; 3</xref>.</p>
+      <p id="P12">First we examine results from analyzing each phenotype individually. <xref ref-type="fig" rid="F1">Figure 1a</xref> shows that, as expected, accurate estimates of h<sup>2</sup><sub>SNP</sub> are returned when phenotypes are analyzed assuming the matching heritability model (i.e., when GCTA phenotypes are analyzed using LDSC-Zero or LDSC and LDAK phenotypes are analyzed using SumHer-Zero or SumHer-GC), but that using a different heritability model can result in very poor estimates; SumHer-Zero tends to over-estimate h<sup>2</sup><sub>SNP</sub> by about 20% when applied to GCTA phenotypes, while LDSC-Zero tends to under-estimate h<sup>2</sup><sub>SNP</sub> by about 40% when applied to LDAK phenotypes. As shown in <xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 2a</xref>, LDSC infers that there is only slight confounding when used on GCTA phenotypes (average intercept 1.008, s.d. 0.001), and therefore its estimates of h<sup>2</sup><sub>SNP</sub> closely match those from LDSC-Zero. However, when used on LDAK phenotypes, LDSC wrongly infers that much of the causal signal is in fact confounding (average intercept 1.096, s.d. 0.001), and as a result, its estimates of h<sup>2</sup><sub>SNP</sub> are on average about 60% lower than those from LDSC-Zero and about 75% lower than the true value.</p>
+      <p id="P13"><xref ref-type="fig" rid="F1">Figure 1b</xref> reports the estimated enrichment of SNPs in conserved regions. As causal SNPs were picked at random from across the genome, the true enrichment is one. Again, we see that assuming the correct heritability model produces reliable estimates, but assuming the wrong model can result in misleading conclusions. In particular, we find that when LDSC-Zero or LDSC are used to analyze LDAK phenotypes, they infer that conserved regions are over 2-fold enriched for heritability. We chose to focus on conserved regions as this was the category that, by applying LDSC to real data, Finucane <italic>et al.</italic><xref rid="R2" ref-type="bibr">2</xref> found to be most enriched. These simulations show that a substantial portion of the enrichment observed by Finucane <italic>et al</italic>. could be an artifact of misspecifying the heritability model.</p>
+      <p id="P14"><xref ref-type="fig" rid="F1">Figure 1c</xref> compares results from analyzing consecutive pairs of phenotypes. Whereas LDSC-Zero and SumHer-Zero only produce accurate estimates of genetic correlation when applied to GCTA and LDAK phenotypes, respectively, we find that LDSC and SumHer-GC produce accurate estimates for both sets of phenotypes (<xref ref-type="supplementary-material" rid="SD1">Supplementary Fig. 2f</xref> shows why this is the case). Even so, highest precision is achieved when the correct heritability model is assumed; the s.d. of SumHer-GC estimates is on average about 50% higher than that of LDSC estimates when analyzing GCTA phenotypes, but about 50% lower when analyzing LDAK phenotypes.</p>
+    </sec>
+    <sec id="S5">
+      <title>Determining the most appropriate heritability model</title>
+      <p id="P15">With access to individual-level data, we can compare how well different heritability models fit real data using the likelihood from REML analysis.<xref rid="R5" ref-type="bibr">5</xref> With only summary statistics, we can instead use the likelihood from SumHer. <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 5</xref> shows that across the 25 raw GWAS, the SumHer log likelihood is on average 17 nats higher under the LDAK Model than under the GCTA Model (for comparison, the average difference in REML log likelihood is 19 nats; <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 6</xref>). Across the 24 summary GWAS, the SumHer log likelihood is on average 76 nats higher under the LDAK Model (<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 7</xref>).</p>
+      <p id="P16">Rather than comparing based on likelihoods, an easier-to-visualize approach is to run SumHer using a hybrid heritability model containing both the GCTA and LDAK Models, and allow the data to decide the relative weighting of each. Specifically, we use Hybrid-Zero (or Hybrid-GC if the test statistics are confounded), with the focus on estimating p, the “proportion of LDAK”, in Model (2). <xref ref-type="fig" rid="F2">Figure 2a</xref> demonstrates proof of principle using our simulated phenotypes: we see that Hybrid-Zero correctly estimates p ≈ 0 when applied to the GCTA phenotypes, p ≈ 1 for the LDAK phenotypes, and p ≈ 0.5 for “Hybrid Phenotypes” (created by summing Phenotypes 1 &amp; 101, 2 &amp; 102, etc.). For <xref ref-type="fig" rid="F2">Figure 2b</xref> and <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 5</xref>, we apply Hybrid-Zero to the 25 raw GWAS; the average estimate of p is 1.03 (s.d. 0.02), indicating that the data overwhelmingly support the LDAK Model over the GCTA Model. For <xref ref-type="fig" rid="F2">Figure 2c</xref> and <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 7</xref>, we apply Hybrid-GC to the 24 summary GWAS; the average estimate of p is 0.85 (s.d. 0.01), again strongly supporting the LDAK Model (in the <xref ref-type="sec" rid="S11">Discussion</xref>, we consider why this estimate is lower than that for the 25 raw GWAS).</p>
+    </sec>
+    <sec id="S6">
+      <title>Population structure and relatedness</title>
+      <p id="P17"><xref ref-type="supplementary-material" rid="SD1">Supplementary Tables 2, 8 &amp; 9</xref> reports estimates of confounding bias, SNP heritability, enrichments and genetic correlations for the 25 raw GWAS. As a consequence of our strict quality control, SumHer-GC finds only slight confounding bias; its average estimate of the scaling factor C is 1.005 (s.d. 0.002). We now construct GWAS with substantial confounding. First, for each of the 13 WTCCC GWAS, we introduce population structure by replacing 2000 of the controls (on average 54%) with 2000 individuals from POBI<xref rid="R18" ref-type="bibr">18</xref> (People of the British Isles); this generates population structure because, although both WTCCC and POBI individuals were recruited from the UK, the latter predominately came from isolated, rural regions (<xref ref-type="supplementary-material" rid="SD1">Supplementary Fig. 4</xref>). Second, for each of the 12 eMERGE GWAS, we no longer filter individuals based on relatedness; this leads to the retention of approximately 1650 pairs of relatives (<xref ref-type="supplementary-material" rid="SD1">Supplementary Fig. 5</xref>). <xref ref-type="supplementary-material" rid="SD1">Supplementary Tables 10 &amp; 11</xref> confirm that in both cases, SumHer-GC now detects significant confounding; its average estimates of C are 1.022 (s.d. 0.003) and 1.020 (s.d. 0.003), respectively.</p>
+    </sec>
+    <sec id="S7">
+      <title>Genomic control and mixed-model association analysis</title>
+      <p id="P18">Although its use is declining, it remains that the majority of published GWAS have performed genomic control (divided test statistics by the GIF) at least once in their analyses.<xref rid="R11" ref-type="bibr">11</xref> As the GIF tends to over-estimate confounding bias,<xref rid="R19" ref-type="bibr">19</xref> genomic control will tend to result in deflated test statistics. <xref ref-type="supplementary-material" rid="SD1">Supplementary Figures 6 &amp; 7</xref> show that, if not accounted for, genomic control will result in under-estimation of h<sup>2</sup><sub>SNP</sub> and inaccurate estimates of heritability enrichments, but that reliable estimates can be obtained by allowing for multiplicative inflation of test statistics. SumHer, like LDSC, is designed to be used with results from classical (least-squared) regression. However, with the development of software such as Fast-LMM, GCTA-LOCO and Bolt-LMM<xref rid="R20" ref-type="bibr">20</xref>–<xref rid="R22" ref-type="bibr">22</xref> it is now common for GWAS to instead use mixed-model association analysis.<xref rid="R23" ref-type="bibr">23</xref>,<xref rid="R24" ref-type="bibr">24</xref>
+<xref ref-type="supplementary-material" rid="SD1">Supplementary Figures 6, 8 &amp; 9</xref> show that when estimating h<sup>2</sup><sub>SNP</sub> and enrichments, the impact of mixed-model analysis is similar to, albeit less severe than, that of genomic control. However, as with genomic control, reliable estimates can be obtained by allowing for multiplicative inflation of test statistics.</p>
+    </sec>
+    <sec id="S8">
+      <title>Estimates of confounding bias and SNP heritability</title>
+      <p id="P19"><xref rid="T1" ref-type="table">Table 1</xref> reports estimates of confounding bias for each of the 24 summary GWAS. LDSC estimates the average intercept to be 1.042 (s.d. 0.002), indicating that the test statistics tend to be inflated. By contrast, SumHer-GC estimates the average scaling factor to be 0.929 (s.d. 0.003), indicating that the test statistics tend to be deflated. The widespread deflation observed by SumHer-GC is consistent with the fact that at least 15 of the 24 summary GWAS performed genomic control (<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 3</xref>); in particular, we note that the four GWAS estimated to have lowest C (0.55 for body mass index, 0.68 for HDL cholesterol, 0.73 for LDL cholesterol and 0.70 for triglyceride levels), are all meta-analyses that used genomic control both before and after combining results across cohorts.<xref rid="R25" ref-type="bibr">25</xref>,<xref rid="R26" ref-type="bibr">26</xref>
+<xref rid="T1" ref-type="table">Table 1</xref> also reports the number of independent loci with P &lt; 5×10-8. Without adjustment, there are on average 86 loci per trait. If we adjust based on the results of LDSC (i.e., for each trait divide test statistics by the LDSC estimate of confounding bias), the average reduces to 62, whereas if we adjust based on the results of SumHer-GC, it increases to 118. For these counts, we defined two significant SNPs as dependent if they are within 1 cM and have r<sup>2</sup><sub>jl</sub> &gt; 0.1, but we find that results are very similar if instead we increase the window size to 3 cM or use r<sup>2</sup><sub>jl</sub> &gt; 0.2 (<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 12</xref>).</p>
+      <p id="P20"><xref rid="T1" ref-type="table">Table 1</xref> shows that across the 24 traits, estimates of h<sup>2</sup><sub>SNP</sub> from SumHer-GC are on average 2.7 (s.d. 0.05) times higher than those from LDSC. As shown in <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 13</xref>, this difference is primarily due to changing the heritability model, rather than changing the confounding model; for example, were we to switch from the GCTA to LDAK Model but to continue using an additive model for confounding inflation, estimates would still be on average 2.3 (s.d. 0.04) times higher.</p>
+    </sec>
+    <sec id="S9">
+      <title>Estimates of functional enrichments and genetic correlations</title>
+      <p id="P21"><xref ref-type="fig" rid="F3">Figure 3a</xref> and <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 14</xref> report estimates of enrichments for the 24 functional categories, averaged across the 24 traits. We see striking differences between the estimates from LDSC and SumHer-GC. For example, LDSC estimates of enrichments range from -1.1 to 9.4, whereas SumHer-GC estimates range from 0.78 to 2.0. The estimated enrichment of a category is its estimated share of h<sup>2</sup><sub>SNP</sub> divided by its expected share under the assumed heritability model.<xref rid="R27" ref-type="bibr">27</xref>
+<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 14</xref> shows that changing from the GCTA to LDAK model has a small impact on the expected share of each category (the denominator), but typically has a large impact on the estimated share (the numerator). <xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 10</xref> and <xref ref-type="supplementary-material" rid="SD1">Supplementary Tables 15 &amp; 16</xref> show that the large differences between LDSC and SumHer-GC estimates of enrichments remain if we calculate the former using the LDSC software<xref rid="R1" ref-type="bibr">1</xref> (in this setting, LDSC is often referred to as stratified LDSC or S-LDSC) rather than using our implementation of LDSC in SumHer, and likewise if we vary the SNP sets (the authors of LDSC recommend that the reference panel contains as many SNPs as possible, but that only HapMap3 SNPs<xref rid="R28" ref-type="bibr">28</xref> with MAF ≥ 0.05 are used when performing the regression<xref rid="R1" ref-type="bibr">1</xref>,<xref rid="R2" ref-type="bibr">2</xref>), or if we use the 75-part model proposed by Gazal et al.<xref rid="R29" ref-type="bibr">29</xref>
+</p>
+      <p id="P22">Based on the results from SumHer-GC, we conclude that conserved regions<xref rid="R30" ref-type="bibr">30</xref>,<xref rid="R31" ref-type="bibr">31</xref> and transcription start sites<xref rid="R32" ref-type="bibr">32</xref> are most enriched for heritability; they are estimated to contribute 7.1% (s.d. 0.2) and 3.6% (s.d. 0.2) of h<sup>2</sup><sub>SNP</sub>, respectively, 1.95 (s.d. 0.07) and 1.97 (s.d. 0.09) times higher than their expected contributions under the LDAK Model. Repressed region are the only category significantly depleted; although they are estimated to contribute 35% (s.d. 0.5) of h<sup>2</sup><sub>SNP</sub>, this is only 0.78 (s.d. 0.01) times their expected contribution.</p>
+      <p id="P23"><xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 11</xref> and <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 17</xref> provide estimates of genetic correlation for the 276 pairs of traits. As predicted by our simulation study, there is strong concordance between estimates from LDSC and SumHer-GC, but the SumHer-GC estimates are more precise; for example, across the 38 pairs of traits that both methods find to be significantly correlated (P &lt; 0.05/276), the s.d. of SumHer-GC estimates is on average about 20% lower than that of LDSC estimates.</p>
+    </sec>
+    <sec id="S10">
+      <title>Improving polygenic risk scores</title>
+      <p id="P24"><xref ref-type="fig" rid="F3">Figure 3b</xref> shows that there is strong concordance between the average estimates of enrichments obtained from the 9 binary traits and those from the 15 quantitative traits. This suggests broad similarities between the genetic architectures of different traits, which in turn implies that it should be possible to use information from existing GWAS to improve the efficiency of future analyses. As a demonstration, we consider prediction using polygenic risk scores (PRS). We focus on body mass index, height, HDL &amp; LDL cholesterol and triglyceride levels, as for these five traits we can train prediction models using the 24 summary GWAS, then measure how well these perform using the (independent) eMERGE data.<xref rid="R14" ref-type="bibr">14</xref></p>
+      <p id="P25">To construct a PRS, we need estimates of SNP effect sizes. The most common approach is to use estimates from single-SNP analysis<xref rid="R33" ref-type="bibr">33</xref> (“Classical PRS”). However, in <xref ref-type="sec" rid="S16">Online Methods</xref>, we explain how, given a heritability model, we can obtain a prior distribution for v<sup>2</sup><sub>j</sub>, the heritability tagged by SNP j, then calculate a “Bayesian PRS” using the posterior mean effect sizes. For each trait, we construct four Bayesian PRS corresponding to four heritability models. First we use the GCTA heritability model (q<sub>j</sub> = 1). Next we use the “Enriched GCTA Model”, obtained by scaling the q<sub>j</sub> based on the LDSC estimates of enrichments (e.g., if a category was estimated to have 2-fold enrichment, then the SNPs it contains would have average q<sub>j</sub> = 2). We similarly construct PRS based on the LDAK Model, then the “Enriched LDAK Model”, where the q<sub>j</sub> are scaled according to the SumHer-GC estimates of enrichments.</p>
+      <p id="P26"><xref ref-type="fig" rid="F4">Figure 4a</xref> compares the four prior distributions for v<sup>2</sup><sub>j</sub>. We see that the two priors derived from the GCTA Model are more diffuse than the two from the LDAK Model. As explained in the <xref ref-type="sec" rid="S16">Online Methods</xref>, this is because the GCTA Model predicts that v<sup>2</sup><sub>j</sub> scales with local levels of LD, which vary considerably across the genome, whereas the LDAK Model predicts that v<sup>2</sup><sub>j</sub> scales with local MAFs, which vary less. <xref ref-type="fig" rid="F4">Figure 4b</xref> and <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 18</xref> report the performance of each PRS, measured as correlation between predicted and observed phenotypes for the eMERGE individuals. Averaged across the five traits, the Bayesian PRS constructed from the GCTA Model performs 0.1% (s.d. 1.6) worse than the Classical PRS (i.e., no significant difference). However, the Bayesian PRS constructed from the Enriched GCTA, LDAK and Enriched LDAK Models perform, respectively, 5.2%, 4.7% and 6.1% better (s.d.s all 1.6), each of which is a significant improvement (P &lt; 0.05/4) over the Classical PRS.</p>
+    </sec>
+  </sec>
+  <sec sec-type="discussion" id="S11">
+    <title>Discussion</title>
+    <p id="P27">We have presented SumHer, software for estimating confounding bias, SNP heritability, enrichments of heritability and genetic correlations from GWAS results. While the aims of SumHer are the same as those of LDSC, the key difference is that SumHer allows the user to specify the heritability model. If SumHer is run using the GCTA Model, its estimates will match those from LDSC. However, we instead recommend using the LDAK Model, which we have shown is better supported by real data. We have analyzed GWAS results for tens of traits, showing that the impact of using an improved heritability model is often substantial, and overall provides a very different description of the genetic architecture of complex traits than has to date been obtained from LDSC analyses.</p>
+    <sec id="S12">
+      <title>The heritability model matters</title>
+      <p id="P28">The heritability model describes the prior assumptions regarding how heritability is distributed across the genome. We began by showing that estimates of confounding bias, h<sup>2</sup><sub>SNP</sub> and enrichments are sensitive to the assumed heritability model, and that using an unrealistic heritability model can result in misleading conclusions. Next we evaluated the GCTA and LDAK heritability models on real data. Not only did we demonstrate that the LDAK Model is substantially more realistic than the GCTA Model, but also our prediction analysis showed that the LDAK Model is sufficiently realistic to be useful. Nonetheless, it is important to recognize that the LDAK heritability model is not perfect, and as such SumHer provides tools for testing and comparing different heritability models on large-scale GWAS data.</p>
+    </sec>
+    <sec id="S13">
+      <title>Hybrid heritability models</title>
+      <p id="P29">As well as comparing the GCTA and LDAK Models based on likelihood, we also ran SumHer using a hybrid heritability model where the fractions 1-p and p indicate the proportions of GCTA and LDAK, respectively; across the 25 raw GWAS, the average estimate of p was 1.03 (s.d. 0.02), while across the 24 summary GWAS, the average estimate of p was 0.85 (s.d. 0.01). Although both estimates of p are greater than 0.5, consistent with the LDAK Model being more realistic than the GCTA Model, the latter suggests the hybrid model might improve on the LDAK Model. We recommend using only the LDAK Model for two reasons. Firstly, estimates from the LDAK Model tend to be more precise than those from the hybrid model. This is particularly true when estimating enrichments; for example, <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 19</xref> shows that across the 24 summary GWAS, the s.d. of SumHer-GC estimates is on average about 70% lower than that of Hybrid-GC estimates. Secondly, <xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 12</xref> shows that introducing poorly-genotyped SNPs makes traits appear more GCTA-like, indicating that the hybrid model is more sensitive to genotyping errors. In any case, <xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 13</xref> shows that even if we had instead preferred results from the hybrid model, it would not have affected our overall conclusions.</p>
+    </sec>
+    <sec id="S14">
+      <title>Confounding bias in GWAS</title>
+      <p id="P30">In addition to examining the choice of heritability model, we also considered how to model inflation of test statistics due to confounding. Whereas LDSC uses an additive model for confounding inflation, we prefer a multiplicative model, due to the fact that genomic control (which scales test statistics multiplicatively) has been widely used by published GWAS (we provide further support for our choice in <xref ref-type="supplementary-material" rid="SD1">Supplementary Fig. 14 and Supplementary Table 13</xref>). We recognize that as genomic control becomes less common, it will be necessary to check whether the multiplicative model remains preferable to the additive model.</p>
+    </sec>
+    <sec id="S15">
+      <title>Implications for complex trait genetics</title>
+      <p id="P31">Our work has three main conclusions. <bold>(i)</bold> Large-scale GWAS have tended to over-correct for confounding, which substantially reduced the discovery of genome-wide significant associations. Although SumHer estimates of confounding bias can be used to adjust test statistics from a confounded GWAS (as we did for <xref rid="T1" ref-type="table">Table 1</xref>, in order to estimate the number of genome-wide significant loci missed by the 24 summary GWAS), adjusted test statistics will not be as accurate as those from a GWAS without confounding. Therefore, we would prefer that SumHer is used during the primary analysis; if SumHer finds substantial confounding bias, this indicates that the analysis should be repeated with improved quality control. <bold>(ii)</bold> LDSC tends to substantially under-estimate h<sup>2</sup><sub>SNP</sub>. Accurate estimates of h<sup>2</sup><sub>SNP</sub> are important not only because they improve our understanding of genetic architecture,<xref rid="R16" ref-type="bibr">16</xref> but also because they are now being incorporated in software for analyzing complex traits (e.g., the mixed-model association software Bolt-LMM<xref rid="R22" ref-type="bibr">22</xref> and the prediction software LDPred<xref rid="R34" ref-type="bibr">34</xref>). The efficiency of these analyses can therefore be improved by incorporating SumHer estimates of h<sup>2</sup><sub>SNP</sub>. <bold>(iii)</bold> The most striking differences between LDSC and SumHer are observed when estimating enrichments of heritability in functional regions. Whereas analyses using LDSC have found that heritability is concentrated in specific genomic regions, we have instead shown that heritability is spread more evenly across the genome. Although the realization that complex traits are even more complicated than previously thought is daunting, it is only by properly understanding their complexity that we can develop more efficient tools for analyzing genetic data.</p>
+    </sec>
+  </sec>
+  <sec sec-type="methods" id="S16" specific-use="web-only">
+    <title>Methods</title>
+    <sec id="S17">
+      <title>Estimating SNP heritability</title>
+      <p id="P32">Suppose that we have summary statistics from a GWAS on n individuals and m SNPs; let S<sub>j</sub> denote the χ<sup>2</sup>(1) test statistic from regressing the phenotype on X<sub>j</sub>, the vector of additively-coded genotypes for SNP j, and let n<sub>j</sub> ≤ n denote the number of individuals used in this regression (note that in the main text, for simplicity, we assumed n<sub>j</sub> = n). If S<sub>j</sub> was obtained using classical (i.e., least-squares) linear regression, then<xref rid="R19" ref-type="bibr">19</xref>
+<disp-formula id="FD3"><label>(3)</label><mml:math display="block" id="M3" overflow="scroll"><mml:mrow><mml:mi>E</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:msub><mml:mi>S</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="false">]</mml:mo><mml:mo>≈</mml:mo><mml:mn>1</mml:mn><mml:mo>+</mml:mo><mml:msub><mml:mi>n</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:msubsup><mml:mi>v</mml:mi><mml:mi>j</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mspace width="1em"/><mml:mtext>with</mml:mtext><mml:mspace width="1em"/></mml:mrow><mml:mrow><mml:msubsup><mml:mi>v</mml:mi><mml:mi>j</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mo>=</mml:mo><mml:msubsup><mml:mi>h</mml:mi><mml:mi>j</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mo>+</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>l</mml:mi><mml:mo>≠</mml:mo><mml:mi>j</mml:mi></mml:mrow></mml:munder><mml:mrow><mml:mtext>Cor</mml:mtext><mml:msup><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>X</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mi>X</mml:mi><mml:mi>l</mml:mi></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msup><mml:msubsup><mml:mi>h</mml:mi><mml:mi>l</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mo>,</mml:mo></mml:mrow></mml:mstyle></mml:mrow></mml:math></disp-formula> where v<sup>2</sup><sub>j</sub> is the total amount of heritability tagged by SNP j. In the main text, we referred to h<sup>2</sup><sub>j</sub> as the heritability “directly contributed” by SNP j, to emphasize that while a causal signal can contribute to multiple v<sup>2</sup><sub>j</sub> (i.e., be tagged by multiple SNPs), it can only contribute to one h<sup>2</sup><sub>j</sub>. More formally, the h<sup>2</sup><sub>j</sub> represent a partitioning of h<sup>2</sup><sub>SNP</sub>, the total heritability tagged by the m SNPs genotyped by the GWAS; this definition recognises that an ungenotyped causal variant can contribute to h<sup>2</sup><sub>SNP</sub>, provided it is tagged by one or more genotyped SNPs (in which case its heritability will be shared across the h<sup>2</sup><sub>j</sub> of the tagging SNPs, even though none of these “directly contribute” its heritability). If there is no population structure or familial relatedness, then Cor(X<sub>j</sub>,X<sub>l</sub>)<sup>2</sup> will be negligible for distant SNPs, while for local SNPs an unbiased estimate of Cor(X<sub>j</sub>,X<sub>l</sub>)<sup>2</sup> is<xref rid="R1" ref-type="bibr">1</xref>
+<disp-formula id="FD4"><mml:math display="block" id="M4" overflow="scroll"><mml:mrow><mml:msubsup><mml:mi>r</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>l</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mo>=</mml:mo><mml:mtext>Cor</mml:mtext><mml:msup><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:msup><mml:mi>X</mml:mi><mml:mo>′</mml:mo></mml:msup></mml:mrow><mml:mi>j</mml:mi></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:msup><mml:mi>X</mml:mi><mml:mo>′</mml:mo></mml:msup></mml:mrow><mml:mi>l</mml:mi></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msup><mml:mo>−</mml:mo><mml:mfrac><mml:mrow><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mtext>Cor</mml:mtext><mml:msup><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:msup><mml:mi>X</mml:mi><mml:mo>′</mml:mo></mml:msup></mml:mrow><mml:mi>j</mml:mi></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:msup><mml:mi>X</mml:mi><mml:mo>′</mml:mo></mml:msup></mml:mrow><mml:mi>l</mml:mi></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mn>2</mml:mn></mml:msup></mml:mrow><mml:mrow><mml:msup><mml:mi>n</mml:mi><mml:mo>′</mml:mo></mml:msup><mml:mo>−</mml:mo><mml:mn>2</mml:mn></mml:mrow></mml:mfrac></mml:mrow></mml:math></disp-formula> where X′<sub>j</sub> is the vector of SNP j genotypes for the n′ individuals in a reference panel (for accurate estimates of r<sup>2</sup><sub>jl</sub>, the individuals in the reference panel should have similar ancestry to those used in the GWAS). Therefore, in place of <xref ref-type="disp-formula" rid="FD3">Equation (3)</xref> we use <disp-formula id="FD5"><label>(4)</label><mml:math display="block" id="M5" overflow="scroll"><mml:mrow><mml:mi>E</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:msub><mml:mi>S</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="false">]</mml:mo><mml:mo>≈</mml:mo><mml:mn>1</mml:mn><mml:mo>+</mml:mo><mml:msub><mml:mi>n</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:msubsup><mml:mi>v</mml:mi><mml:mi>j</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mspace width="1em"/><mml:mtext>with</mml:mtext><mml:mspace width="1em"/><mml:msup><mml:mi>v</mml:mi><mml:mn>2</mml:mn></mml:msup><mml:mo>=</mml:mo><mml:msubsup><mml:mi>h</mml:mi><mml:mi>j</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mo>+</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>l</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mi>N</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:munder><mml:mrow><mml:msubsup><mml:mi>r</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>l</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:msubsup><mml:mi>h</mml:mi><mml:mi>l</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mo>,</mml:mo></mml:mrow></mml:mstyle></mml:mrow></mml:math></disp-formula> where the set N<sub>j</sub> indexes those SNPs “near” SNP j (a working definition of near is within 1 cM; <xref ref-type="supplementary-material" rid="SD1">Supplementary Fig. 15</xref>). Finally, given a heritability model of the form E[h<sup>2</sup><sub>j</sub>] ∝ q<sub>j</sub>, we replace h<sup>2</sup><sub>j</sub> by its expected value q<sub>j</sub> h<sup>2</sup><sub>SNP</sub> / Q, where Q = ∑ q<sub>j</sub>, resulting in <disp-formula id="FD6"><label>(5)</label><mml:math display="block" id="M6" overflow="scroll"><mml:mrow><mml:mi>E</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:msub><mml:mi>S</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="false">]</mml:mo><mml:mo>≈</mml:mo><mml:mn>1</mml:mn><mml:mo>+</mml:mo><mml:msub><mml:mi>u</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mi>S</mml:mi><mml:mi>N</mml:mi><mml:mi>P</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mspace width="1em"/><mml:mtext>with</mml:mtext><mml:mspace width="1em"/></mml:mrow><mml:mrow><mml:msub><mml:mi>u</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:msub><mml:mi>n</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>q</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>+</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>l</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mi>N</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:munder><mml:mrow><mml:msub><mml:mi>q</mml:mi><mml:mi>l</mml:mi></mml:msub><mml:msubsup><mml:mi>r</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>l</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mo stretchy="false">)</mml:mo><mml:mo>/</mml:mo><mml:mi>Q</mml:mi><mml:mo>,</mml:mo></mml:mrow></mml:mstyle></mml:mrow></mml:math></disp-formula> which allows us to estimate h<sup>2</sup><sub>SNP</sub> by regressing (S<sub>j</sub> – 1) on u<sub>j</sub>. To account for correlated datapoints and heteroscedasticity we use weighted least-squares regression. Specifically, if D is a diagonal matrix whose non-zero entries are the regression weights, then the estimate of h<sup>2</sup><sub>SNP</sub> would be (u<sup>T</sup>Du)<sup>-1</sup>u<sup>T</sup>D(S - 1), where u and S are vectors containing the m values for u<sub>j</sub> and S<sub>j</sub>, respectively. Following LDSC,<xref rid="R1" ref-type="bibr">1</xref> we use 1 / D<sub>jj</sub> = (∑<sub>l∈Nj</sub> r<sup>2</sup><sub>jl</sub>)(1 + u<sub>j</sub> h<sup>2</sup><sub>SNP</sub>). Since h<sup>2</sup><sub>SNP</sub> is unknown, we proceed iteratively starting at h<sup>2</sup><sub>SNP</sub> = 0, then successively updating D<sub>jj</sub> and h<sup>2</sup><sub>SNP</sub> until convergence. Again following LDSC, we estimate standard errors via block jackknifing (by default we use 200 blocks).<xref rid="R1" ref-type="bibr">1</xref></p>
+    </sec>
+    <sec id="S18">
+      <title>Comparing heritability models</title>
+      <p id="P33">The (weighted) natural log likelihood is <disp-formula id="FD7"><mml:math display="block" id="M7" overflow="scroll"><mml:mrow><mml:mi>L</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>S</mml:mi><mml:mrow><mml:mo stretchy="false">|</mml:mo><mml:mrow><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mi>S</mml:mi><mml:mi>N</mml:mi><mml:mi>P</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mo>,</mml:mo><mml:mi>D</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:mo>−</mml:mo><mml:mi>d</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:mfrac><mml:mo stretchy="false">(</mml:mo><mml:mtext>log</mml:mtext><mml:mo stretchy="false">(</mml:mo><mml:mn>2</mml:mn><mml:mi>π</mml:mi><mml:mi>λ</mml:mi><mml:mo>/</mml:mo><mml:mi>d</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>+</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">)</mml:mo><mml:mspace width="1em"/><mml:mtext>with</mml:mtext><mml:mspace width="1em"/></mml:mrow></mml:mrow></mml:mrow><mml:mrow><mml:mi>d</mml:mi><mml:mo>=</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mi>j</mml:mi></mml:munder><mml:mrow><mml:msub><mml:mi>D</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>j</mml:mi></mml:mrow></mml:msub><mml:mspace width="1em"/><mml:mtext>and</mml:mtext><mml:mspace width="1em"/></mml:mrow></mml:mstyle></mml:mrow><mml:mrow><mml:mi>λ</mml:mi><mml:mo>=</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mi>j</mml:mi></mml:munder><mml:mrow><mml:msub><mml:mi>D</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>j</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>S</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>−</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msub><mml:mi>u</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mi>S</mml:mi><mml:mi>N</mml:mi><mml:mi>P</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:mstyle></mml:mrow><mml:msup><mml:mo stretchy="false">)</mml:mo><mml:mn>2</mml:mn></mml:msup></mml:math></disp-formula> To evaluate L(S | h<sup>2</sup><sub>SNP</sub>, D) requires values for h<sup>2</sup><sub>SNP</sub> and D. While the natural choice is to use the values after the final iteration, in order to compare different heritability models based on L(S | h<sup>2</sup><sub>SNP</sub>, D), we must use the same D for each (else models leading to lower D<sub>jj</sub> would have an unfair advantage). Therefore, SumHer reports <inline-formula><mml:math display="inline" id="M8" overflow="scroll"><mml:mrow><mml:mi>L</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>S</mml:mi><mml:mo>|</mml:mo><mml:mover accent="true"><mml:mrow><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mi>S</mml:mi><mml:mi>N</mml:mi><mml:mi>P</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mo>,</mml:mo><mml:msup><mml:mi>D</mml:mi><mml:mn>0</mml:mn></mml:msup><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mo stretchy="true">^</mml:mo></mml:mover><mml:mo>,</mml:mo></mml:mrow></mml:math></inline-formula> where <inline-formula><mml:math display="inline" id="M9" overflow="scroll"><mml:mrow><mml:mover accent="true"><mml:mrow><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mi>S</mml:mi><mml:mi>N</mml:mi><mml:mi>P</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow><mml:mo stretchy="true">^</mml:mo></mml:mover></mml:mrow></mml:math></inline-formula> is the final estimate of h<sup>2</sup><sub>SNP</sub>, but D<sup>0</sup> is the initial weight matrix (obtained by setting 1 / D<sub>jj</sub> = ∑<sub>l∈Nj</sub> r<sup>2</sup><sub>jl</sub>); <xref ref-type="supplementary-material" rid="SD1">Supplementary Tables 5 &amp; 6</xref> show that for the 25 raw GWAS, comparisons of heritability models based on <inline-formula><mml:math display="inline" id="M10" overflow="scroll"><mml:mrow><mml:mi>L</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>S</mml:mi><mml:mo>|</mml:mo><mml:mover accent="true"><mml:mrow><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mi>S</mml:mi><mml:mi>N</mml:mi><mml:mi>P</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mo>,</mml:mo><mml:msup><mml:mi>D</mml:mi><mml:mn>0</mml:mn></mml:msup><mml:mo stretchy="false">)</mml:mo></mml:mrow><mml:mo stretchy="true">^</mml:mo></mml:mover></mml:mrow></mml:math></inline-formula> align closely with those based on REML likelihood.</p>
+    </sec>
+    <sec id="S19">
+      <title>Estimating confounding bias</title>
+      <p id="P34">When assuming that confounding inflates test statistics multiplicatively, we replace <xref ref-type="disp-formula" rid="FD6">Equation (5)</xref> with E[S<sub>j</sub>] ≈ C(1 + u<sub>j</sub> h<sup>2</sup><sub>SNP</sub>), then estimate C and h<sup>2</sup><sub>SNP</sub> by jointly regressing S<sub>j</sub> on 1 and u<sub>j</sub>. To instead copy LDSC and assume confounding causes additive inflation, we replace <xref ref-type="disp-formula" rid="FD6">Equation (5)</xref> with E[Sj] ≈ 1 + n<sub>j</sub> a + u<sub>j</sub> h<sup>2</sup><sub>SNP</sub>, then estimate a and h<sup>2</sup><sub>SNP</sub> by jointly regressing (S<sub>j</sub> - 1) on n<sub>j</sub> and u<sub>j</sub> (note that in the main text we assumed n<sub>j</sub> = n, allowing us to replace n<sub>j</sub> a by A).</p>
+    </sec>
+    <sec id="S20">
+      <title>Estimating enrichments</title>
+      <p id="P35">Suppose we have K categories; let I<sub>jk</sub> ∈ {0,1} indicate whether SNP j belongs to Category k. We wish to estimate h<sup>2</sup><sub>Cat k</sub> = ∑ <sub>j</sub> I<sub>jk</sub>h<sup>2</sup><sub>j</sub>, the heritability contributed by SNPs in Category k. We now use the heritability model <disp-formula id="FD8"><label>(6)</label><mml:math display="block" id="M11" overflow="scroll"><mml:mrow><mml:mi>E</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:msubsup><mml:mi>h</mml:mi><mml:mi>j</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mo stretchy="false">]</mml:mo><mml:mo>=</mml:mo><mml:msub><mml:mi>q</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mi>k</mml:mi></mml:munder><mml:mrow><mml:msub><mml:mi>I</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mtext mathvariant="italic">part</mml:mtext><mml:mi>k</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:mstyle><mml:mo>/</mml:mo><mml:msub><mml:mi>Q</mml:mi><mml:mi>k</mml:mi></mml:msub><mml:mspace width="1em"/><mml:mtext>with</mml:mtext><mml:mspace width="1em"/><mml:msub><mml:mi>Q</mml:mi><mml:mi>k</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mi>j</mml:mi></mml:munder><mml:mrow><mml:msub><mml:mi>I</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:msub><mml:mi>q</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:mstyle></mml:mrow></mml:math></disp-formula> where q<sub>j</sub> I<sub>jk</sub> h<sup>2</sup><sub>Part k</sub> / Q<sub>k</sub> represents the contribution of Category k to the expected heritability of SNP j, and h<sup>2</sup><sub>SNP</sub> = h<sup>2</sup><sub>Part 1</sub> + … + h<sup>2</sup><sub>Part K</sub>. We consider two scenarios: in Scenario 1, the K categories partition the genome (∑<sub>k</sub> I<sub>jk</sub> = 1); in Scenario 2, the first K-1 categories correspond to annotations, and the Kth is the base category containing all SNPs (I<sub>jK</sub> = 1, Q<sub>K</sub> = m). Using <xref ref-type="disp-formula" rid="FD8">Equation (6)</xref> ensures that when there is no enrichment, E[h<sup>2</sup><sub>j</sub>] = q<sub>j</sub> h<sup>2</sup><sub>SNP</sub> / Q for both scenarios. To appreciate why, consider that for Scenario 1, h<sup>2</sup><sub>Part k</sub> = h<sup>2</sup><sub>Cat k</sub>, so that when no categories are enriched, h<sup>2</sup><sub>Part k</sub> = Q<sub>k</sub> h<sup>2</sup><sub>SNP</sub> / Q; for Scenario 2, h<sup>2</sup><sub>Part 1</sub>, … , h<sup>2</sup><sub>Part K-1</sub> indicate how much each annotation increases the SNP heritability from h<sup>2</sup><sub>Part K</sub>, so that when there is no enrichment, h<sup>2</sup><sub>Part 1</sub> = … = h<sup>2</sup><sub>Part K-1</sub> = 0 and h<sup>2</sup><sub>Part K</sub> = h<sup>2</sup><sub>SNP</sub>. Now when we replace h<sup>2</sup><sub>j</sub> in <xref ref-type="disp-formula" rid="FD5">Equation (4)</xref> by its expected value, we obtain <disp-formula id="FD9"><mml:math display="block" id="M12" overflow="scroll"><mml:mrow><mml:mi>E</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:msub><mml:mi>S</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="false">]</mml:mo><mml:mo>≈</mml:mo><mml:mn>1</mml:mn><mml:mo>+</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mi>k</mml:mi></mml:munder><mml:mrow><mml:msub><mml:mi>u</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:msubsup><mml:mstyle displaystyle="true"><mml:mi>h</mml:mi></mml:mstyle><mml:mrow><mml:mtext mathvariant="italic">part</mml:mtext><mml:mspace width="0.2em"/><mml:mi>k</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:mstyle><mml:mspace width="2em"/><mml:mtext>with</mml:mtext><mml:mspace width="1em"/><mml:msub><mml:mi>u</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:mo>=</mml:mo><mml:msub><mml:mi>n</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>q</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:msub><mml:mi>I</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:mo>+</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>l</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mi>N</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:munder><mml:mrow><mml:msub><mml:mi>q</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:msub><mml:mi>I</mml:mi><mml:mrow><mml:mi>l</mml:mi><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:msubsup><mml:mi>r</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>l</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:mstyle><mml:mo stretchy="false">)</mml:mo><mml:mo>/</mml:mo><mml:msub><mml:mi>Q</mml:mi><mml:mi>k</mml:mi></mml:msub></mml:mrow></mml:math></disp-formula> and therefore we can estimate h<sup>2</sup><sub>Part 1</sub>, …, h<sup>2</sup><sub>Part K</sub> by jointly regressing (S<sub>j</sub> - 1) on u<sub>j1</sub>, …, u<sub>jK</sub>. Given these, our estimate of h<sup>2</sup><sub>Cat k</sub> is ∑<sub>j,k′</sub> (I<sub>jk</sub> q<sub>j</sub> I<sub>jk′</sub> h<sup>2</sup><sub>Part k’</sub> / Q<sub>k’</sub>), which we then divide by Q<sub>k</sub> h<sup>2</sup><sub>SNP</sub> / Q to get an estimate of the enrichment of Category k.</p>
+    </sec>
+    <sec id="S21">
+      <title>Estimating genetic correlation</title>
+      <p id="P36">Suppose we have summary statistics from two GWAS. Instead of χ<sup>2</sup>(1) test statistics, we now use (signed) Z-statistics. Let Z<sub>Aj</sub> and Z<sub>Bj</sub> denote the two Z-statistics for SNP j, computed using n<sub>Aj</sub> and n<sub>Bj</sub> individuals, respectively, of which n<sub>Cj</sub> were common to both GWAS (if the two GWAS were independent, n<sub>Cj</sub> = 0). We assume <disp-formula id="FD10"><mml:math display="block" id="M13" overflow="scroll"><mml:mrow><mml:mi>E</mml:mi><mml:mo stretchy="false">[</mml:mo><mml:msub><mml:mi>Z</mml:mi><mml:mrow><mml:msub><mml:mi>A</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msub><mml:msub><mml:mi>Z</mml:mi><mml:mrow><mml:msub><mml:mi>B</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msub><mml:mo stretchy="false">]</mml:mo><mml:mo>≈</mml:mo><mml:mfrac><mml:mrow><mml:msub><mml:mi>c</mml:mi><mml:mrow><mml:mi>A</mml:mi><mml:mi>B</mml:mi></mml:mrow></mml:msub><mml:msub><mml:mi>n</mml:mi><mml:mrow><mml:msub><mml:mi>S</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msub></mml:mrow><mml:mrow><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mrow><mml:msub><mml:mi>A</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msub><mml:msub><mml:mi>n</mml:mi><mml:mrow><mml:msub><mml:mi>B</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msub></mml:mrow></mml:msqrt></mml:mrow></mml:mfrac><mml:mo>+</mml:mo><mml:msub><mml:mrow><mml:msup><mml:mi>u</mml:mi><mml:mo>′</mml:mo></mml:msup></mml:mrow><mml:mi>j</mml:mi></mml:msub><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mi>A</mml:mi><mml:mi>B</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mspace width="1em"/><mml:mtext>with</mml:mtext><mml:mspace width="1em"/><mml:msub><mml:mrow><mml:msup><mml:mi>u</mml:mi><mml:mo>′</mml:mo></mml:msup></mml:mrow><mml:mi>j</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mrow><mml:msub><mml:mi>A</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msub><mml:msub><mml:mi>n</mml:mi><mml:mrow><mml:msub><mml:mi>B</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msub></mml:mrow></mml:msqrt><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>q</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>+</mml:mo><mml:mstyle displaystyle="true"><mml:munder><mml:mo>∑</mml:mo><mml:mrow><mml:mi>i</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mi>N</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:munder><mml:mrow><mml:msub><mml:mi>q</mml:mi><mml:mi>l</mml:mi></mml:msub><mml:msubsup><mml:mi>r</mml:mi><mml:mrow><mml:mi>j</mml:mi><mml:mi>l</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:mstyle><mml:mo stretchy="false">)</mml:mo><mml:mo>/</mml:mo><mml:mi>Q</mml:mi></mml:mrow></mml:math></disp-formula> where c<sub>AB</sub> is the phenotypic correlation between the two traits and h<sup>2</sup><sub>AB</sub> is their genetic covariance. This equation matches that used by LDSC,<xref rid="R3" ref-type="bibr">3</xref> except that we have replaced r<sup>2</sup><sub>jl</sub> / m by q<sub>j</sub> r<sup>2</sup><sub>jl</sub> / Q. By regressing Z<sub>Aj</sub>Z<sub>Bj</sub> on u′<sub>j</sub>, we obtain an estimate of h<sup>2</sup><sub>AB</sub>, which we then divide by estimates of <inline-formula><mml:math display="inline" id="M14" overflow="scroll"><mml:mrow><mml:msqrt><mml:mrow><mml:msubsup><mml:mi>h</mml:mi><mml:mrow><mml:mi>S</mml:mi><mml:mi>N</mml:mi><mml:mi>P</mml:mi></mml:mrow><mml:mn>2</mml:mn></mml:msubsup></mml:mrow></mml:msqrt></mml:mrow></mml:math></inline-formula> for each trait to get an estimate of their genetic correlation.</p>
+    </sec>
+    <sec id="S22">
+      <title>Impact of changing the confounding model</title>
+      <p id="P37">Note that when per-SNP sample sizes are constant, n<sub>j</sub> = n, so we can write 1 + n<sub>j</sub> a + u<sub>j</sub> h<sup>2</sup><sub>SNP</sub> as C (1+ u<sub>j</sub> h<sup>2</sup><sub>SNP</sub> / C), where C = 1 + n a = 1 + A. Therefore, given the heritability model (which determines the u<sub>j</sub>), the estimate of confounding bias will be the same whether we assume additive inflation of test statistics (and estimate 1+A) or assume multiplicative inflation (and estimate C), but estimates of h<sup>2</sup><sub>SNP</sub> from the additive model will be C times those from the multiplicative model (estimates of enrichments and genetic correlations will be unaffected, as these are ratios of heritabilities so the factor C cancels).</p>
+    </sec>
+    <sec id="S23">
+      <title>Reference panel</title>
+      <p id="P38">Our primary reference panel is 404 non-Finnish, European individuals from the 1000 Genomes Project.<xref rid="R12" ref-type="bibr">12</xref> In <xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 16</xref>, we repeat our analyses of the 24 summary GWAS using instead 8,850 unrelated Caucasian individuals from the Health &amp; Retirement Study. The results are almost identical, indicating that despite its small size, it suffices to construct reference panels from the 1000 Genomes Project data.</p>
+    </sec>
+    <sec id="S24">
+      <title>Regions of extreme LD and large-effect loci</title>
+      <p id="P39">Estimates can be unduly affected by regions of extreme LD and by SNPs with disproportionately large effect size.<xref rid="R1" ref-type="bibr">1</xref>,<xref rid="R4" ref-type="bibr">4</xref>,<xref rid="R5" ref-type="bibr">5</xref> Therefore, for all analyses, we exclude SNPs within the MHC (Chromosome 6: 25-34 Mb), as well as SNPs which individually explain &gt;1% of phenotypic variation (S<sub>j</sub> &gt; n<sub>j</sub> / 99), and SNPs in LD with these (within 1 cM and r<sup>2</sup><sub>jl</sub> &gt; 0.1); the latter resulted in the exclusion of SNPs for 10 of the 25 raw GWAS and for 4 of the 24 summary GWAS (<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 20</xref>). Excluding large-effect loci will result in under-estimation of h<sup>2</sup><sub>SNP</sub>; this has little consequence for our analyses, as we are primarily interested in comparing models, but if preferred can be avoided by re-introducing the large-effect SNPs as fixed effects.<xref rid="R5" ref-type="bibr">5</xref></p>
+    </sec>
+    <sec id="S25">
+      <title>Binary phenotypes</title>
+      <p id="P40">So far, we have implicitly assumed the trait is quantitative. If instead it is binary (i.e., for case-control GWAS), there are two considerations. Firstly, heritability estimates now correspond to the observed scale; SumHer will convert them to the liability scale if provided with the prevalence and case-control ratio.<xref rid="R51" ref-type="bibr">51</xref>,<xref rid="R52" ref-type="bibr">52</xref> Secondly, the p-values may have come from logistic regression instead of linear regression; <xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 17</xref> shows that because linear and logistic p-values closely match for SNPs with small or moderate effect, this has limited impact.</p>
+    </sec>
+    <sec id="S26">
+      <title>Polygenic risk scoring</title>
+      <p id="P41">To predict phenotypes, we construct PRS of the form ∑<sub>j</sub> β<sub>j</sub> X′<sub>j</sub>, where the vector X′<sub>j</sub> contains standardized genotypes for SNP j (obtained by centering X<sub>j</sub>, then scaling to have variance 1). Without loss of generality, we assume phenotypes have also been standardized, in which case the estimate of β<sub>j</sub> from classical linear regression is ρ<sub>j</sub>, the correlation observed between SNP j and the phenotype, and has variance (1 – ρ<sup>2</sup><sub>j</sub>) / n<sub>j</sub>. We can infer ρ<sub>j</sub> from the Wald test Z-statistic <inline-formula><mml:math display="inline" id="M15" overflow="scroll"><mml:mrow><mml:msub><mml:mi>p</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>/</mml:mo><mml:msqrt><mml:mrow><mml:mo stretchy="false">(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msubsup><mml:mi>p</mml:mi><mml:mi>j</mml:mi><mml:mn>2</mml:mn></mml:msubsup><mml:mo stretchy="false">)</mml:mo><mml:mo>/</mml:mo><mml:msub><mml:mi>n</mml:mi><mml:mi>j</mml:mi></mml:msub></mml:mrow></mml:msqrt><mml:mo>.</mml:mo></mml:mrow></mml:math></inline-formula> For the Classical PRS, our estimate of β<sub>j</sub> is ρ<sub>j</sub>. For the Bayesian PRS, we use the prior distribution β<sub>j</sub> ~ ℕ(0, σ<sup>2</sup><sub>j</sub>), where σ<sup>2</sup><sub>j</sub> = (q<sub>j</sub> + ∑<sub>l∈Nj</sub> q<sub>l</sub> r<sup>2</sup><sub>jl</sub>) h<sup>2</sup><sub>SNP</sub> / Q; this choice is motivated by recognizing that for the “true PRS”, β<sup>2</sup><sub>j</sub> = v<sup>2</sup><sub>j</sub>, the heritability tagged by SNP j. We then estimate β<sub>j</sub> by its posterior mean, a shrunken version of the classical estimate. To calculate this, we approximate the likelihood by ℕ(ρ<sub>j</sub>, (1 – ρ<sup>2</sup><sub>j</sub>) / n<sub>j</sub>), then the posterior mean equals ρ<sub>j</sub> σ<sup>2</sup><sub>j</sub> / (σ<sup>2</sup><sub>j</sub> + (1 – ρ<sup>2</sup><sub>j</sub>) / n<sub>j</sub>).<xref rid="R53" ref-type="bibr">53</xref>,<xref rid="R54" ref-type="bibr">54</xref> There are two technical issues. Firstly, to construct each Bayesian PRS requires a value for h<sup>2</sup><sub>SNP</sub>, so we used the corresponding estimates from LDSC-Zero and SumHer-Zero; <xref ref-type="supplementary-material" rid="SD1">Supplementary Table 18</xref> confirms that predictions are approximately the same if we instead use the estimates from LDSC and SumHer-GC, or agnostically set h<sup>2</sup><sub>SNP</sub> = 0.5. Secondly, for the Bayesian PRS, we performed clumping (identified pairs of SNPs within 1 cM with r<sup>2</sup><sub>jl</sub> &gt; 0.5, then discarded the least significant), whereas for the Classical PRS we did not; this was because we found that clumping benefited all Bayesian PRS, but did not benefit the Classical PRS.</p>
+    </sec>
+    <sec id="S27">
+      <title>Choosing a heritability model</title>
+      <p id="P42">Although the heritability model is defined in terms of h<sup>2</sup><sub>j</sub>, as is clear from <xref ref-type="disp-formula" rid="FD5">Equation (4)</xref>, its fit depends only on how well it models v<sup>2</sup><sub>j</sub> = h<sup>2</sup><sub>j</sub> + ∑<sub>l∈Nj</sub> r<sup>2</sup><sub>jl</sub> h<sup>2</sup><sub>l</sub>. Therefore, when specifying q<sub>j</sub>, the focus should be on accurately describing how v<sup>2</sup><sub>j</sub> varies across the genome. LDSC assumes the GCTA Model,<xref rid="R5" ref-type="bibr">5</xref>,<xref rid="R7" ref-type="bibr">7</xref> (q<sub>j</sub> = 1), which implies that v<sup>2</sup><sub>j</sub> correlates with local levels of LD. Despite its widespread use in statistical genetics (e.g., it is implicitly assumed by any regression method where SNPs are standardized and the same penalty function / prior distribution is applied to each), the GCTA Model poorly reflects real data.<xref rid="R5" ref-type="bibr">5</xref> Even for traits where a correlation is observed between v<sup>2</sup><sub>j</sub> and S<sub>j</sub> (those with p &lt; 1 in <xref ref-type="fig" rid="F2">Figures 2b &amp; 2c</xref>), the correlation is substantially weaker than predicted by the GCTA Model (hence p &gt;&gt; 0), and partly a consequence of including lower-certainty SNPs in the GWAS (<xref ref-type="supplementary-material" rid="SD1">Supplementary Fig. 12</xref>). We recommend using the LDAK Model. Originally, this took the form q<sub>j</sub> = w<sub>j</sub>, where the weightings w<sub>j</sub> are calculated based on the assumption that E[v<sup>2</sup><sub>j</sub>] is constant.<xref rid="R6" ref-type="bibr">6</xref> We recently updated it to q<sub>j</sub> = w<sub>j</sub> [f<sub>j</sub>(1 - f<sub>j</sub>)]<sup>0.75</sup> r<sub>j</sub>, reflecting that v<sup>2</sup><sub>j</sub> tends to depend on MAF, f<sub>j</sub>, and genotype certainty, r<sub>j</sub> (we did not use the latter as either r<sub>j</sub> ≈ 1 or was unknown).<xref rid="R5" ref-type="bibr">5</xref> The exponent 0.75 was chosen as this value performed well in a previous analysis of 42 human traits. In <xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 18</xref>, we confirm 0.75 also performs well for both the 25 raw and 24 summary GWAS.</p>
+    </sec>
+    <sec id="S28">
+      <title>Quality control</title>
+      <p id="P43">To prepare the 13 WTCCC GWAS, we used our previously-described protocol.<xref rid="R5" ref-type="bibr">5</xref> In summary, after excluding apparent population outliers, individuals with extreme missingness or heterozygosity and SNPs with MAF &lt; 0.01, call rate &lt; 0.95 or Hardy-Weinberg P &lt; 1 × 10<sup>-6</sup>, we phased using SHAPEIT, then imputed using IMPUTE2 with the 1000 Genomes Project Phase 3 (2014) reference panel.<xref rid="R12" ref-type="bibr">12</xref>,<xref rid="R55" ref-type="bibr">55</xref>,<xref rid="R56" ref-type="bibr">56</xref> When merging case and control datasets, we converted genotype probabilities to hard calls using a threshold of 0.95, then retained only autosomal SNPs that in all cohorts had MAF ≥ 0.01 and info score ≥ 0.99. Finally, we thinned individuals, so no pair remained with allelic correlation<xref rid="R57" ref-type="bibr">57</xref> &gt; 0.05. For the 12 eMERGE GWAS, data were provided post-imputation; this was also performed using SHAPEIT and IMPUTE2, but used the 1000 Genomes Project Phase 2 reference panel.<xref rid="R17" ref-type="bibr">17</xref> We converted genotype probabilities to hard calls using a certainty threshold of 0.95, then retained only biallelic SNPs with MAF ≥ 0.01, call rate ≥ 0.95, info score ≥ 0.95 and whose genomic positions matched those in the 1000 Genomes Project. Finally, we excluded individuals whose genotypes were inconsistent with those of non-Finnish Europeans from the 1000 Genomes Project (<xref ref-type="supplementary-material" rid="SD1">Supplementary Fig. 19</xref>), and those whose ethnicity was reported as “Hispanic or Latino”, then filtered until no pair remained with allelic correlation<xref rid="R57" ref-type="bibr">57</xref> &gt; 0.05 (which left 25,875 individuals). For the 24 summary GWAS, quality control varied by study (see <xref rid="T1" ref-type="table">Table 1</xref> for references), but was in general much less strict than we would have performed had we access to the individual-level data<xref rid="R16" ref-type="bibr">16</xref> (for example, the most common info score thresholds were 0.3 and 0.5). Info scores were only available for Crohn’s Disease, inflammatory bowel disease, schizophrenia and ulcerative colitis; for these traits we restricted to SNPs with score ≥ 0.95, for the remainder, we restricted to SNPs with info score ≥ 0.95 in the eMERGE data (<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 4</xref>).</p>
+    </sec>
+    <sec id="S29">
+      <title>Association analysis</title>
+      <p id="P44">For the 25 raw GWAS, we performed the association analysis using linear regression (regardless of whether the trait was quantitative or binary), including as covariates sex and ten principal components (five derived from the reference panel, five from the 1000 Genomes Project). The 24 summary GWAS varied in whether they used classical or mixed-model regression, and whether they performed a meta or mega analysis (<xref ref-type="supplementary-material" rid="SD1">Supplementary Table 3</xref>).</p>
+    </sec>
+    <sec id="S30">
+      <title>Software</title>
+      <p id="P45">SumHer is implemented in Version 5.0 of the LDAK software. In <xref ref-type="supplementary-material" rid="SD1">Supplementary Figure 20</xref> we confirm that LDSC estimates computed using SumHer match those computed using Version 1.0.0 of the LDSC Software.<xref rid="R1" ref-type="bibr">1</xref>
+</p>
+    </sec>
+    <sec id="S31">
+      <title>Run times</title>
+      <p id="P46">To run SumHer using the LDAK Model requires three steps: the first is to calculate SNP weightings; the second is to compute a “tagfile”, which contains q<sub>j</sub> + ∑<sub>l∈Nj</sub> q<sub>l</sub> r<sup>2</sup><sub>jl</sub> for each SNP; the third is to perform the regression. When using the 404 non-Finnish Europeans from the 1000 Genomes Project, the first step takes a few hours, the second and third take minutes. When running SumHer using the GCTA Model, it is not necessary to calculate the SNP weightings, but then computing the tagfile will generally take a few hours.</p>
+    </sec>
+  </sec>
+  <sec sec-type="supplementary-material" id="SM">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="SD1">
+      <label>Supplementary material</label>
+      <media xlink:href="NIHMS80177-supplement-Supplementary_material.pdf" mimetype="application" mime-subtype="pdf" orientation="portrait" xlink:type="simple" id="d36e3244" position="anchor"/>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack id="S32">
+    <title>Acknowledgments</title>
+    <p>We thank A Price, H Finucane, P O’Reilly and M Speed for helpful discussions. Access to Wellcome Trust Case Control Consortium data was authorized as work related to the project “Genome-wide association study of susceptibility and clinical phenotypes in epilepsy”, access to eMERGE Network data was granted under dbGaP Project 14422, “Comprehensive testing of SNP-based prediction models”, while access to the Health and Retirement Study was granted under dbGaP Project 15139, “Developing summary-statistic tools for analysing genetic association study data”. D.S. is funded by the UK Medical Research Council under grant MR/L012561/1, by the European Unions Horizon 2020 Research and Innovation Programme under the Marie Skłodowska-Curie grant agreement number 754513, by Aarhus University Research Foundation (AUFF) and the Independent Research Fund Denmark under Project 7025-00094B. The eMERGE Network was initiated and funded by NHGRI through the following grants: U01HG006828 (Cincinnati Childrens Hospital Medical Center/Boston Childrens Hospital); U01HG006830 (Childrens Hospital of Philadelphia); U01HG006389 (Essentia Institute of Rural Health, Marshfield Clinic Research Foundation and Pennsylvania State University); U01HG006382 (Geisinger Clinic); U01HG006375 (Group Health Cooperative); U01HG006379 (Mayo Clinic); U01HG006380 (Icahn School of Medicine at Mount Sinai); U01HG006388 (Northwestern University); U01HG006378 (Vanderbilt University Medical Center); and U01HG006385 (Vanderbilt University Medical Center serving as the Coordinating Center). The Health and Retirement Study genetic data is sponsored by the National Institute on Aging (grant numbers U01AG009740, RC2AG036495, and RC4AG039029) and was conducted by the University of Michigan. Analyses were performed with the use of the UCL Computer Science Cluster and the help of the CS Technical Support Group, as well as the use of the UCL Legion High-Performance Computing Facility (Legion@UCL) and associated support services.</p>
+  </ack>
+  <fn-group>
+    <fn id="FN1">
+      <p id="P47">
+        <bold>Data availability</bold>
+      </p>
+      <p id="P48">The simulations and 25 raw GWAS used data from the Wellcome Trust and eMERGE Network. These were applied for and downloaded from, respectively, the European Genome-phenome Archive (accession codes: EGAD00000000001, EGAD00000000002, EGAD00000000003, EGAD00000000004, EGAD00000000005, EGAD00000000006, EGAD00000000007, EGAD00000000008, EGAD00000000009, EGAD00000000021, EGAD00000000022, EGAD00000000023, EGAD00000000024, EGAD00000000025, EGAD00000000057, EGAD00010000124, EGAD00010000264, EGAD00010000506, EGAD00010000634, EGAS00001000672 ) and from dbGaP (accession codes: phs000888.v1.p1.c1, phs000888.v1.p1.c3, phs000888.v1.p1.c4, phs000888.v1.p1.c5). To investigate the impact of the reference panel, we used data from the Health and Retirement Study, also available from dbGaP (accession code: phs000428.v2.p2). Results for each of the 24 summary GWAS are available to download from the websites of the corresponding studies (see <xref rid="T1" ref-type="table">Table 1</xref> for references).</p>
+    </fn>
+    <fn id="FN2">
+      <p id="P49">
+        <bold>Accession Codes</bold>
+      </p>
+      <p id="P50">Wellcome Trust Case Control Consortium data: EGAD00000000001, EGAD00000000002, EGAD00000000003, EGAD00000000004, EGAD00000000005, EGAD00000000006, EGAD00000000007, EGAD00000000008, EGAD00000000009, EGAD00000000021, EGAD00000000022, EGAD00000000023, EGAD00000000024, EGAD00000000025, EGAD00000000057, EGAD00010000124, EGAD00010000264, EGAD00010000506, EGAD00010000634, EGAS00001000672. eMERGE Network data: phs000888.v1.p1.c1, phs000888.v1.p1.c3, phs000888.v1.p1.c4, phs000888.v1.p1.c5. Health and Retirement Study data: phs000428.v2.p2.</p>
+    </fn>
+    <fn id="FN3">
+      <p id="P51">
+        <bold>Code availability</bold>
+      </p>
+      <p id="P52">Step-by-step code for using SumHer to estimate SNP heritability, confounding bias, heritability enrichments and genetic correlations from summary statistics are provided in the <xref ref-type="supplementary-material" rid="SD1">Supplementary Note</xref>.</p>
+    </fn>
+    <fn id="FN4">
+      <p id="P53">
+        <bold>URLs</bold>
+      </p>
+      <p id="P54">LDAK, <ext-link ext-link-type="uri" xlink:href="http://www.ldak.org">http://www.ldak.org</ext-link>; LDSC, <ext-link ext-link-type="uri" xlink:href="http://www.github.com/bulik/ldsc">http://www.github.com/bulik/ldsc</ext-link>; 24 functional annotations, <ext-link ext-link-type="uri" xlink:href="https://data.broadinstitute.org/alkesgroup/LDSCORE/baseline_bedfiles.tgz">https://data.broadinstitute.org/alkesgroup/LDSCORE/baseline_bedfiles.tgz</ext-link>.</p>
+    </fn>
+    <fn fn-type="con" id="FN5">
+      <p id="P55">
+        <bold>Author contributions</bold>
+      </p>
+      <p id="P56">D.S. performed the analysis, D.S. and D.J.B. wrote the manuscript.</p>
+    </fn>
+    <fn fn-type="COI-statement" id="FN6">
+      <p id="P57">
+        <bold>Competing interests</bold>
+      </p>
+      <p id="P58">The authors declare no competing financial interests.</p>
+    </fn>
+  </fn-group>
+  <ref-list>
+    <ref id="R1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bulik-Sullivan</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>LD Score Regression Distinguishes Confounding from Polygenicity in Genome-Wide Association Studies</article-title>
+        <source>Nat Genet</source>
+        <year>2014</year>
+        <volume>47</volume>
+        <fpage>291</fpage>
+        <lpage>295</lpage>
+      </element-citation>
+    </ref>
+    <ref id="R2">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Finucane</surname>
+            <given-names>H</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Partitioning heritability by functional annotation using genome-wide association summary statistics</article-title>
+        <source>Nat Genet</source>
+        <year>2015</year>
+        <volume>47</volume>
+        <fpage>1228</fpage>
+        <lpage>1235</lpage>
+        <pub-id pub-id-type="pmid">26414678</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bulik-Sullivan</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>An atlas of genetic correlations across human diseases and traits</article-title>
+        <source>Nat Genet</source>
+        <year>2015</year>
+        <volume>47</volume>
+        <fpage>1236</fpage>
+        <lpage>1241</lpage>
+        <pub-id pub-id-type="pmid">26414676</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zheng</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>LD Hub: a centralized database and web interface to perform LD score regression that maximizes the potential of summary level GWAS data for SNP heritability and genetic correlation analysis</article-title>
+        <source>Bioinformatics</source>
+        <year>2016</year>
+        <volume>33</volume>
+        <fpage>272</fpage>
+        <lpage>279</lpage>
+        <pub-id pub-id-type="pmid">27663502</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Speed</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Cai</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Johnson</surname>
+            <given-names>MR</given-names>
+          </name>
+          <name>
+            <surname>Nejentsev</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Balding</surname>
+            <given-names>DJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Reevaluation of SNP heritability in complex human traits</article-title>
+        <source>Nat Genet</source>
+        <year>2017</year>
+        <volume>49</volume>
+        <fpage>986</fpage>
+        <lpage>992</lpage>
+        <pub-id pub-id-type="pmid">28530675</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Speed</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Hemani</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Johnson</surname>
+            <given-names>MR</given-names>
+          </name>
+          <name>
+            <surname>Balding</surname>
+            <given-names>DJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Improved heritability estimation from genome-wide SNPs</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2012</year>
+        <volume>91</volume>
+        <fpage>1011</fpage>
+        <lpage>21</lpage>
+        <pub-id pub-id-type="pmid">23217325</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Common SNPs explain a large proportion of the heritability for human height</article-title>
+        <source>Nat Genet</source>
+        <year>2010</year>
+        <volume>42</volume>
+        <fpage>565</fpage>
+        <lpage>569</lpage>
+        <pub-id pub-id-type="pmid">20562875</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R8">
+      <label>8</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genomic partitioning of genetic variation for complex traits using common SNPs</article-title>
+        <source>Nat Genet</source>
+        <year>2011</year>
+        <volume>43</volume>
+        <fpage>519</fpage>
+        <lpage>525</lpage>
+        <pub-id pub-id-type="pmid">21552263</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lee</surname>
+            <given-names>SH</given-names>
+          </name>
+          <name>
+            <surname>Yang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Goddard</surname>
+            <given-names>ME</given-names>
+          </name>
+          <name>
+            <surname>Visscher</surname>
+            <given-names>PM</given-names>
+          </name>
+          <name>
+            <surname>Wray</surname>
+            <given-names>NR</given-names>
+          </name>
+        </person-group>
+        <article-title>Estimation of pleiotropy between complex diseases using single-nucleotide polymorphism-derived genomic relationships and restricted maximum likelihood</article-title>
+        <source>Bioinformatics</source>
+        <year>2012</year>
+        <volume>28</volume>
+        <fpage>2540</fpage>
+        <lpage>2</lpage>
+        <pub-id pub-id-type="pmid">22843982</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>SH</given-names>
+          </name>
+          <name>
+            <surname>Goddard</surname>
+            <given-names>ME</given-names>
+          </name>
+          <name>
+            <surname>Visscher</surname>
+            <given-names>PM</given-names>
+          </name>
+        </person-group>
+        <article-title>GCTA: A tool for genome-wide complex trait analysis</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2011</year>
+        <volume>88</volume>
+        <fpage>76</fpage>
+        <lpage>82</lpage>
+        <pub-id pub-id-type="pmid">21167468</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Devlin</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Roeder</surname>
+            <given-names>K</given-names>
+          </name>
+        </person-group>
+        <article-title>Genomic control for association studies</article-title>
+        <source>Biometrics</source>
+        <year>1999</year>
+        <volume>55</volume>
+        <fpage>997</fpage>
+        <lpage>1004</lpage>
+        <pub-id pub-id-type="pmid">11315092</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R12">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <collab>The 1000 Genomes Project Consortium</collab>
+        <article-title>A map of human genome variation from population-scale sequencing</article-title>
+        <source>Nature</source>
+        <year>2010</year>
+        <volume>467</volume>
+        <fpage>1061</fpage>
+        <lpage>1073</lpage>
+        <pub-id pub-id-type="pmid">20981092</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <collab>The Wellcome Trust Case Control Consortium</collab>
+        <article-title>Genome-wide association study of 14,000 cases of seven common diseases and 3,000 shared controls</article-title>
+        <source>Nature</source>
+        <year>2007</year>
+        <volume>447</volume>
+        <fpage>661</fpage>
+        <lpage>678</lpage>
+        <pub-id pub-id-type="pmid">17554300</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R14">
+      <label>14</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gottesman</surname>
+            <given-names>O</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The Electronic Medical Records and Genomics (eMERGE) Network: past, present, and future</article-title>
+        <source>Genet Med</source>
+        <year>2013</year>
+        <volume>15</volume>
+        <fpage>761</fpage>
+        <pub-id pub-id-type="pmid">23743551</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pasaniuc</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Price</surname>
+            <given-names>AL</given-names>
+          </name>
+        </person-group>
+        <article-title>Dissecting the genetics of complex traits using summary association statistics</article-title>
+        <source>Nat Rev Genet</source>
+        <year>2017</year>
+        <volume>18</volume>
+        <fpage>117</fpage>
+        <lpage>127</lpage>
+        <pub-id pub-id-type="pmid">27840428</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R16">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Speed</surname>
+            <given-names>D</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Describing the genetic architecture of epilepsy through heritability analysis</article-title>
+        <source>Brain</source>
+        <year>2014</year>
+        <volume>137</volume>
+        <fpage>2680</fpage>
+        <lpage>2689</lpage>
+        <pub-id pub-id-type="pmid">25063994</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Verma</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Imputation and quality control steps for combining multiple genome-wide datasets</article-title>
+        <source>Front Genet</source>
+        <year>2015</year>
+        <volume>5</volume>
+        <fpage>370</fpage>
+      </element-citation>
+    </ref>
+    <ref id="R18">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Leslie</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The fine-scale genetic structure of the British population</article-title>
+        <source>Nature</source>
+        <year>2015</year>
+        <volume>519</volume>
+        <fpage>309</fpage>
+        <lpage>314</lpage>
+        <pub-id pub-id-type="pmid">25788095</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R19">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genomic inflation factors under polygenic inheritance</article-title>
+        <source>Eur J Hum Genet</source>
+        <year>2011</year>
+        <volume>19</volume>
+        <fpage>807</fpage>
+        <lpage>812</lpage>
+        <pub-id pub-id-type="pmid">21407268</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R20">
+      <label>20</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lippert</surname>
+            <given-names>C</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>FaST linear mixed models for genome-wide association studies</article-title>
+        <source>Nat Methods</source>
+        <year>2011</year>
+        <volume>8</volume>
+        <fpage>833</fpage>
+        <lpage>835</lpage>
+        <pub-id pub-id-type="pmid">21892150</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R21">
+      <label>21</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Zaitlen</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Goddard</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Visscher</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Price</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Advantages and pitfalls in the application of mixed-model association methods</article-title>
+        <source>Nat Genet</source>
+        <year>2014</year>
+        <volume>46</volume>
+        <fpage>100</fpage>
+        <lpage>106</lpage>
+        <pub-id pub-id-type="pmid">24473328</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R22">
+      <label>22</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Loh</surname>
+            <given-names>P</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Efficient Bayesian mixed-model analysis increases association power in large cohorts</article-title>
+        <source>Nat Genet</source>
+        <year>2015</year>
+        <volume>47</volume>
+        <fpage>284</fpage>
+        <lpage>290</lpage>
+        <pub-id pub-id-type="pmid">25642633</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R23">
+      <label>23</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yu</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A unified mixed-model method for association mapping that accounts for multiple levels of relatedness</article-title>
+        <source>Nat Genet</source>
+        <year>2006</year>
+        <volume>38</volume>
+        <fpage>203</fpage>
+        <lpage>208</lpage>
+        <pub-id pub-id-type="pmid">16380716</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R24">
+      <label>24</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sawcer</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genetic risk and a primary role for cell-mediated immune mechanisms in multiple sclerosis</article-title>
+        <source>Nature</source>
+        <year>2011</year>
+        <volume>476</volume>
+        <fpage>214</fpage>
+        <lpage>219</lpage>
+        <pub-id pub-id-type="pmid">21833088</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R25">
+      <label>25</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Locke</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genetic studies of body mass index yield new insights for obesity biology</article-title>
+        <source>Nature</source>
+        <year>2015</year>
+        <volume>518</volume>
+        <fpage>197</fpage>
+        <lpage>206</lpage>
+        <pub-id pub-id-type="pmid">25673413</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R26">
+      <label>26</label>
+      <element-citation publication-type="journal">
+        <collab>Global Lipids Genetics Consortium</collab>
+        <article-title>Discovery and refinement of loci associated with lipid levels</article-title>
+        <source>Nat Genet</source>
+        <year>2013</year>
+        <volume>45</volume>
+        <fpage>1274</fpage>
+        <lpage>1283</lpage>
+        <pub-id pub-id-type="pmid">24097068</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R27">
+      <label>27</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Finucane</surname>
+            <given-names>H</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Partitioning heritability by functional annotation using genome-wide association summary statistics</article-title>
+        <source>Nat Genet</source>
+        <year>2015</year>
+        <volume>47</volume>
+        <fpage>1228</fpage>
+        <lpage>1235</lpage>
+        <pub-id pub-id-type="pmid">26414678</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R28">
+      <label>28</label>
+      <element-citation publication-type="journal">
+        <collab>The International HapMap 3 Consortium</collab>
+        <article-title>Integrating common and rare genetic variation in diverse human populations</article-title>
+        <source>Nature</source>
+        <year>2010</year>
+        <volume>467</volume>
+        <fpage>52</fpage>
+        <lpage>58</lpage>
+        <pub-id pub-id-type="pmid">20811451</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R29">
+      <label>29</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gazal</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Linkage disequilibrium–dependent architecture of human complex traits shows action of negative selection</article-title>
+        <source>Nat Genet</source>
+        <year>2017</year>
+        <volume>49</volume>
+        <fpage>1421</fpage>
+        <lpage>1427</lpage>
+        <pub-id pub-id-type="pmid">28892061</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R30">
+      <label>30</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lindblad-Toh</surname>
+            <given-names>K</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A high-resolution map of human evolutionary constraint using 29 mammals</article-title>
+        <source>Nature</source>
+        <year>2011</year>
+        <volume>478</volume>
+        <fpage>476</fpage>
+        <lpage>482</lpage>
+        <pub-id pub-id-type="pmid">21993624</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R31">
+      <label>31</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ward</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Kellis</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Evidence of abundant purifying selection in humans for recently acquired regulatory functions</article-title>
+        <source>Science (80-. )</source>
+        <year>2012</year>
+        <volume>337</volume>
+        <fpage>1675</fpage>
+        <lpage>1678</lpage>
+      </element-citation>
+    </ref>
+    <ref id="R32">
+      <label>32</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hoffman</surname>
+            <given-names>M</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Integrative annotation of chromatin elements from ENCODE data</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2013</year>
+        <volume>41</volume>
+        <fpage>827</fpage>
+        <lpage>841</lpage>
+        <pub-id pub-id-type="pmid">23221638</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R33">
+      <label>33</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Euesden</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Lewis</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>O’Reilly</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>PRSice: polygenic risk score software</article-title>
+        <source>Bioinformatics</source>
+        <year>2015</year>
+        <volume>31</volume>
+        <fpage>1466</fpage>
+        <lpage>1468</lpage>
+        <pub-id pub-id-type="pmid">25550326</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R34">
+      <label>34</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Vilhjálmsson</surname>
+            <given-names>B</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Modeling Linkage Disequilibrium Increases Accuracy of Polygenic Risk Scores</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2015</year>
+        <volume>97</volume>
+        <fpage>576</fpage>
+        <lpage>592</lpage>
+        <pub-id pub-id-type="pmid">26430803</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R35">
+      <label>35</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Scott</surname>
+            <given-names>R</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>An Expanded Genome-Wide Association Study of Type 2 Diabetes in Europeans</article-title>
+        <source>Diabetes</source>
+        <year>2017</year>
+        <volume>66</volume>
+        <fpage>2888</fpage>
+        <lpage>2902</lpage>
+        <pub-id pub-id-type="pmid">28566273</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R36">
+      <label>36</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Liu</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Association analyses identify 38 susceptibility loci for inflammatory bowel disease and highlight shared genetic risk across populations</article-title>
+        <source>Nat Genet</source>
+        <year>2015</year>
+        <volume>47</volume>
+        <fpage>979</fpage>
+        <lpage>986</lpage>
+        <pub-id pub-id-type="pmid">26192919</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R37">
+      <label>37</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zheng</surname>
+            <given-names>H</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Whole-genome sequencing identifies EN1 as a determinant of bone density and fracture</article-title>
+        <source>Nature</source>
+        <year>2015</year>
+        <volume>526</volume>
+        <fpage>112</fpage>
+        <lpage>117</lpage>
+        <pub-id pub-id-type="pmid">26367794</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R38">
+      <label>38</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Okbay</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genetic variants associated with subjective well-being, depressive symptoms, and neuroticism identified through genome-wide analyses</article-title>
+        <source>Nat Genet</source>
+        <year>2016</year>
+        <volume>48</volume>
+        <fpage>626</fpage>
+        <lpage>633</lpage>
+      </element-citation>
+    </ref>
+    <ref id="R39">
+      <label>39</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Manning</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>A genome-wide approach accounting for body mass index identifies genetic variants influencing fasting glycemic traits and insulin resistance</article-title>
+        <source>Nat Genet</source>
+        <year>2012</year>
+        <volume>44</volume>
+        <fpage>659</fpage>
+        <lpage>669</lpage>
+        <pub-id pub-id-type="pmid">22581228</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R40">
+      <label>40</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Soranzo</surname>
+            <given-names>N</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Common variants at 10 genomic loci influence hemoglobin A<sub>1</sub>(C) levels via glycemic and nonglycemic pathway</article-title>
+        <source>Diabetes</source>
+        <year>2010</year>
+        <volume>59</volume>
+        <fpage>3229</fpage>
+        <lpage>3239</lpage>
+        <pub-id pub-id-type="pmid">20858683</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R41">
+      <label>41</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wood</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Defining the role of common variation in the genomic and biological architecture of adult human height</article-title>
+        <source>Nat Genet</source>
+        <year>2014</year>
+        <volume>46</volume>
+        <fpage>1173</fpage>
+        <lpage>1186</lpage>
+        <pub-id pub-id-type="pmid">25282103</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R42">
+      <label>42</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Perry</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Parent-of-origin-specific allelic associations among 106 genomic loci for age at menarche</article-title>
+        <source>Nature</source>
+        <year>2014</year>
+        <volume>514</volume>
+        <fpage>92</fpage>
+        <lpage>97</lpage>
+        <pub-id pub-id-type="pmid">25231870</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R43">
+      <label>43</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Day</surname>
+            <given-names>F</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Large-scale genomic analyses link reproductive aging to hypothalamic signaling, breast cancer susceptibility and BRCA1-mediated DNA repair</article-title>
+        <source>Nat Genet</source>
+        <year>2015</year>
+        <volume>47</volume>
+        <fpage>1294</fpage>
+        <lpage>1303</lpage>
+        <pub-id pub-id-type="pmid">26414677</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R44">
+      <label>44</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Shungin</surname>
+            <given-names>D</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>New genetic loci link adipose and insulin biology to body fat distribution</article-title>
+        <source>Nat Genet</source>
+        <year>2015</year>
+        <volume>518</volume>
+        <fpage>187</fpage>
+        <lpage>196</lpage>
+      </element-citation>
+    </ref>
+    <ref id="R45">
+      <label>45</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Okbay</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genome-wide association study identifies 74 loci associated with educational attainment</article-title>
+        <source>Nature</source>
+        <year>2016</year>
+        <volume>533</volume>
+        <fpage>539</fpage>
+        <lpage>542</lpage>
+        <pub-id pub-id-type="pmid">27225129</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R46">
+      <label>46</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lambert</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Meta-analysis of 74,046 individuals identifies 11 new susceptibility loci for Alzheimer’s disease</article-title>
+        <source>Nat Genet</source>
+        <year>2013</year>
+        <volume>45</volume>
+        <fpage>1452</fpage>
+        <lpage>1458</lpage>
+        <pub-id pub-id-type="pmid">24162737</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R47">
+      <label>47</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Schunkert</surname>
+            <given-names>H</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Large-scale association analysis identifies 13 new susceptibility loci for coronary artery disease</article-title>
+        <source>Nat Genet</source>
+        <year>2011</year>
+        <volume>43</volume>
+        <fpage>333</fpage>
+        <lpage>338</lpage>
+        <pub-id pub-id-type="pmid">21378990</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R48">
+      <label>48</label>
+      <element-citation publication-type="journal">
+        <collab>The Tobacco and Genetics Consortium</collab>
+        <article-title>Genome-wide meta-analyses identify multiple loci associated with smoking behavior</article-title>
+        <source>Nat Genet</source>
+        <year>2010</year>
+        <volume>42</volume>
+        <fpage>441</fpage>
+        <lpage>447</lpage>
+        <pub-id pub-id-type="pmid">20418890</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R49">
+      <label>49</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Okada</surname>
+            <given-names>Y</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Genetics of rheumatoid arthritis contributes to biology and drug discovery</article-title>
+        <source>Nature</source>
+        <year>2014</year>
+        <volume>506</volume>
+        <fpage>376</fpage>
+        <lpage>381</lpage>
+        <pub-id pub-id-type="pmid">24390342</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R50">
+      <label>50</label>
+      <element-citation publication-type="journal">
+        <collab>Schizophrenia Working Group of the Psychiatric Genomics Consortium</collab>
+        <article-title>Biological insights from 108 schizophrenia-associated genetic loci</article-title>
+        <source>Nature</source>
+        <year>2014</year>
+        <volume>511</volume>
+        <fpage>421</fpage>
+        <lpage>427</lpage>
+        <pub-id pub-id-type="pmid">25056061</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R51">
+      <label>51</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dempster</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Lerner</surname>
+            <given-names>I</given-names>
+          </name>
+        </person-group>
+        <article-title>Heritability of threshold characters</article-title>
+        <source>Genetics</source>
+        <year>1950</year>
+        <volume>35</volume>
+        <fpage>212</fpage>
+        <lpage>236</lpage>
+        <pub-id pub-id-type="pmid">17247344</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R52">
+      <label>52</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lee</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Wray</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Goddard</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Visscher</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Estimating missing heritability for disease from genome-wide association studies</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2011</year>
+        <volume>88</volume>
+        <fpage>294</fpage>
+        <lpage>305</lpage>
+        <pub-id pub-id-type="pmid">21376301</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R53">
+      <label>53</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Wakefield</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Bayes factors for genome-wide association studies: comparison with p-values</article-title>
+        <source>Genet Epidemiol</source>
+        <year>2009</year>
+        <volume>33</volume>
+        <fpage>79</fpage>
+        <lpage>86</lpage>
+        <pub-id pub-id-type="pmid">18642345</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R54">
+      <label>54</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pickrell</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Joint Analysis of Functional Genomic Data and Genome-wide Association Studies of 18 Human Traits</article-title>
+        <source>Am J Hum Genet</source>
+        <year>2014</year>
+        <volume>94</volume>
+        <fpage>559</fpage>
+        <lpage>573</lpage>
+        <pub-id pub-id-type="pmid">24702953</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R55">
+      <label>55</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Delaneau</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Zagury</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Marchini</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Improved whole-chromosome phasing for disease and population genetic studies</article-title>
+        <source>Nat Methods</source>
+        <year>2013</year>
+        <volume>10</volume>
+        <fpage>5</fpage>
+        <lpage>6</lpage>
+        <pub-id pub-id-type="pmid">23269371</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R56">
+      <label>56</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Howie</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Marchini</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Stephens</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Genotype imputation with thousands of genomes</article-title>
+        <source>G3</source>
+        <year>2011</year>
+        <volume>1</volume>
+        <fpage>457</fpage>
+        <lpage>470</lpage>
+        <pub-id pub-id-type="pmid">22384356</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="R57">
+      <label>57</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Astle</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Balding</surname>
+            <given-names>DJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Population structure and cryptic relatedness in genetic association studies</article-title>
+        <source>Stat Sci</source>
+        <year>2009</year>
+        <volume>24</volume>
+        <fpage>451</fpage>
+        <lpage>471</lpage>
+      </element-citation>
+    </ref>
+  </ref-list>
+</back>
+<floats-group>
+  <boxed-text id="BX1" position="float" orientation="portrait">
+    <caption>
+      <title>Reporting summary</title>
+    </caption>
+    <p>Further information on research design is available in the Life Sciences Reporting Summary linked to this article.</p>
+  </boxed-text>
+  <fig id="F1" orientation="portrait" position="float">
+    <label>Figure 1</label>
+    <caption>
+      <title>Importance of the heritability model.</title>
+      <p>We generated 100 phenotypes assuming the GCTA heritability model, 100 assuming the LDAK heritability model, then analyzed each using LDSC-Zero, LDSC, SumHer-Zero and SumHer-GC (see main text for details of the heritability models and methods). <bold>a</bold>, Average estimates of h<sup>2</sup><sub>SNP</sub> (true h<sup>2</sup><sub>SNP</sub> is 0.5). <bold>b</bold>, Average estimates of the enrichment of heritability in conserved regions (true enrichment is 1). <bold>c</bold>, Average estimates of genetic correlation between pairs of phenotypes (true correlation is 0.5). In all plots, vertical line segments mark 95% confidence intervals for the average estimates.</p>
+    </caption>
+    <graphic xlink:href="emss-80177-f001"/>
+  </fig>
+  <fig id="F2" orientation="portrait" position="float">
+    <label>Figure 2</label>
+    <caption>
+      <title>Comparing the GCTA and LDAK heritability models.</title>
+      <p>These analyses use Hybrid-Zero and Hybrid-GC, versions of SumHer that assign weights 1-p and p to the GCTA and LDAK heritability models, respectively. <bold>a</bold>, Average estimates of p from Hybrid-Zero for GCTA phenotypes (true p = 0), LDAK phenotypes (true p = 1) and hybrid phenotypes (true p = 0.5). <bold>b</bold>, Estimates of p from Hybrid-Zero for the 25 raw GWAS. Colors distinguish between the 13 WTCCC, 5 binary eMERGE and 7 quantitative eMERGE traits (black denotes the 25-trait average). A precise estimate of p was not possible for shingles (Segment 17), due to the trait having very low h<sup>2</sup><sub>SNP</sub>. <bold>c</bold>, Estimates of p from Hybrid-GC for the 24 summary GWAS. Colors distinguish between the 9 binary and 15 quantitative traits (black denotes the 24-trait average). In all plots, vertical line segments mark 95% confidence intervals.</p>
+    </caption>
+    <graphic xlink:href="emss-80177-f002"/>
+  </fig>
+  <fig id="F3" orientation="portrait" position="float">
+    <label>Figure 3</label>
+    <caption>
+      <title>Functional enrichments across the 24 summary GWAS.</title>
+      <p><bold>a</bold>, Average estimates of enrichments for the 24 functional categories from LDSC (red bars) and from SumHer-GC (blue bars). <bold>b</bold>, Average estimates of enrichments from SumHer-GC, based either on the 9 binary or on the 15 quantitative traits. In both plots, horizontal and vertical line segments mark 95% confidence intervals.</p>
+    </caption>
+    <graphic xlink:href="emss-80177-f003"/>
+  </fig>
+  <fig id="F4" orientation="portrait" position="float">
+    <label>Figure 4</label>
+    <caption>
+      <title>Prediction of five quantitative traits.</title>
+      <p>For each trait, we use data from the 24 summary GWAS to construct Bayesian polygenic risk scores (PRS) corresponding to four heritability models: GCTA, Enriched GCTA, LDAK and Enriched LDAK (see main text for details of each model). <bold>a</bold>, The distribution of E[v<sup>2</sup><sub>j</sub>], the expected heritability tagged by SNP j, corresponding to each heritability model. <bold>b</bold>, Prediction accuracy, measured as correlation between observed and predicted phenotypes in the (independent) eMERGE data, for the Classical PRS (effect sizes are frequentist estimates from single-SNP analysis) and for each of the four Bayesian PRS (effect sizes are posterior means). Vertical line segments mark 95% confidence intervals.</p>
+    </caption>
+    <graphic xlink:href="emss-80177-f004"/>
+  </fig>
+  <table-wrap id="T1" position="float" orientation="portrait">
+    <label>Table 1</label>
+    <caption>
+      <p>Estimates of h<sup>2</sup><sub>SNP</sub> and confounding bias for the 24 summary GWAS. Columns 2 &amp; 3 report the average sample size and the genomic inflation factor (calculated using the published test statistics). Columns 4-11 report estimates of h<sup>2</sup><sub>SNP</sub> and confounding from both LDSC and SumHer-GC (LDSC measures confounding via the intercept, 1 + A, while SumHer-GC uses the scaling factor, C). For binary traits, estimates of h<sup>2</sup><sub>SNP</sub> have been converted to the liability scale, assuming the stated prevalence. Columns 12-15 report the number of significant loci based on the published test statistics, then after correction via genomic control, LDSC and SumHer-GC (dividing test statistics by the GIF, 1 + A and C, respectively).</p>
+    </caption>
+    <table frame="box" rules="all">
+      <thead>
+        <tr>
+          <th align="center" rowspan="1" colspan="1"/>
+          <th align="center" rowspan="1" colspan="1"/>
+          <th align="center" rowspan="1" colspan="1"/>
+          <th align="center" colspan="4" rowspan="1">LDSC</th>
+          <th align="center" colspan="4" rowspan="1">SumHer-GC</th>
+          <th align="center" colspan="4" rowspan="1">No. of significant loci after dividing test statistics by</th>
+        </tr>
+        <tr>
+          <th align="center" rowspan="1" colspan="1">Trait (disease prevalence, %)</th>
+          <th align="center" rowspan="1" colspan="1">n</th>
+          <th align="center" rowspan="1" colspan="1">GIF</th>
+          <th align="center" rowspan="1" colspan="1">h<sup>2</sup><sub>SNP</sub></th>
+          <th align="center" rowspan="1" colspan="1">s.d.</th>
+          <th align="center" rowspan="1" colspan="1">1+A</th>
+          <th align="center" rowspan="1" colspan="1">s.d.</th>
+          <th align="center" rowspan="1" colspan="1">h<sup>2</sup><sub>SNP</sub></th>
+          <th align="center" rowspan="1" colspan="1">s.d.</th>
+          <th align="center" rowspan="1" colspan="1">C</th>
+          <th align="center" rowspan="1" colspan="1">s.d.</th>
+          <th align="center" rowspan="1" colspan="1">1</th>
+          <th align="center" rowspan="1" colspan="1">GIF</th>
+          <th align="center" rowspan="1" colspan="1">1+A</th>
+          <th align="center" rowspan="1" colspan="1">C</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Alzheimer's Disease<xref rid="R46" ref-type="bibr">46</xref> (7.5)</td>
+          <td align="center" rowspan="1" colspan="1">54000</td>
+          <td align="center" rowspan="1" colspan="1">1.09</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.07</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.12</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">1.03</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">21</td>
+          <td align="center" rowspan="1" colspan="1">19</td>
+          <td align="center" rowspan="1" colspan="1">19</td>
+          <td align="center" rowspan="1" colspan="1">21</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Coronary Artery<xref rid="R47" ref-type="bibr">47</xref> (6)</td>
+          <td align="center" rowspan="1" colspan="1">79000</td>
+          <td align="center" rowspan="1" colspan="1">1.10</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.06</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.15</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.99</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">10</td>
+          <td align="center" rowspan="1" colspan="1">6</td>
+          <td align="center" rowspan="1" colspan="1">7</td>
+          <td align="center" rowspan="1" colspan="1">10</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Crohn's Disease<xref rid="R36" ref-type="bibr">36</xref> (0.5)</td>
+          <td align="center" rowspan="1" colspan="1">21000</td>
+          <td align="center" rowspan="1" colspan="1">1.14</td>
+          <td align="center" rowspan="1" colspan="1">0.15</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">1.08</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.47</td>
+          <td align="center" rowspan="1" colspan="1">0.06</td>
+          <td align="center" rowspan="1" colspan="1">0.97</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">64</td>
+          <td align="center" rowspan="1" colspan="1">52</td>
+          <td align="center" rowspan="1" colspan="1">58</td>
+          <td align="center" rowspan="1" colspan="1">64</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Ever Smoked?<xref rid="R48" ref-type="bibr">48</xref> (56)</td>
+          <td align="center" rowspan="1" colspan="1">74000</td>
+          <td align="center" rowspan="1" colspan="1">1.11</td>
+          <td align="center" rowspan="1" colspan="1">0.08</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.02</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.19</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.96</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Inflammatory Bowel<xref rid="R36" ref-type="bibr">36</xref> (0.7)</td>
+          <td align="center" rowspan="1" colspan="1">35000</td>
+          <td align="center" rowspan="1" colspan="1">1.17</td>
+          <td align="center" rowspan="1" colspan="1">0.09</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">1.13</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.33</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">0.98</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">78</td>
+          <td align="center" rowspan="1" colspan="1">59</td>
+          <td align="center" rowspan="1" colspan="1">65</td>
+          <td align="center" rowspan="1" colspan="1">80</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Rheumatoid Arhritis<xref rid="R49" ref-type="bibr">49</xref> (0.5)</td>
+          <td align="center" rowspan="1" colspan="1">58000</td>
+          <td align="center" rowspan="1" colspan="1">1.05</td>
+          <td align="center" rowspan="1" colspan="1">0.05</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.00</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.17</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">0.90</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">109</td>
+          <td align="center" rowspan="1" colspan="1">104</td>
+          <td align="center" rowspan="1" colspan="1">109</td>
+          <td align="center" rowspan="1" colspan="1">123</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Schizophrenia<xref rid="R50" ref-type="bibr">50</xref> (1)</td>
+          <td align="center" rowspan="1" colspan="1">82000</td>
+          <td align="center" rowspan="1" colspan="1">1.57</td>
+          <td align="center" rowspan="1" colspan="1">0.19</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.16</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.42</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.91</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">105</td>
+          <td align="center" rowspan="1" colspan="1">23</td>
+          <td align="center" rowspan="1" colspan="1">63</td>
+          <td align="center" rowspan="1" colspan="1">140</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Type 2 Diabetes<xref rid="R35" ref-type="bibr">35</xref> (8)</td>
+          <td align="center" rowspan="1" colspan="1">157000</td>
+          <td align="center" rowspan="1" colspan="1">1.17</td>
+          <td align="center" rowspan="1" colspan="1">0.08</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.07</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.23</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.95</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">38</td>
+          <td align="center" rowspan="1" colspan="1">25</td>
+          <td align="center" rowspan="1" colspan="1">32</td>
+          <td align="center" rowspan="1" colspan="1">42</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Ulcerative Colitis<xref rid="R36" ref-type="bibr">36</xref> (0.2)</td>
+          <td align="center" rowspan="1" colspan="1">27000</td>
+          <td align="center" rowspan="1" colspan="1">1.12</td>
+          <td align="center" rowspan="1" colspan="1">0.06</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.10</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.27</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">0.99</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">38</td>
+          <td align="center" rowspan="1" colspan="1">31</td>
+          <td align="center" rowspan="1" colspan="1">31</td>
+          <td align="center" rowspan="1" colspan="1">38</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Bone Mineral Density<xref rid="R37" ref-type="bibr">37</xref></td>
+          <td align="center" rowspan="1" colspan="1">33000</td>
+          <td align="center" rowspan="1" colspan="1">1.11</td>
+          <td align="center" rowspan="1" colspan="1">0.10</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">1.07</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.28</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">1.00</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">19</td>
+          <td align="center" rowspan="1" colspan="1">18</td>
+          <td align="center" rowspan="1" colspan="1">18</td>
+          <td align="center" rowspan="1" colspan="1">19</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Body Mass Index<xref rid="R25" ref-type="bibr">25</xref></td>
+          <td align="center" rowspan="1" colspan="1">230000</td>
+          <td align="center" rowspan="1" colspan="1">1.13</td>
+          <td align="center" rowspan="1" colspan="1">0.09</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.80</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.33</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">0.55</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">69</td>
+          <td align="center" rowspan="1" colspan="1">52</td>
+          <td align="center" rowspan="1" colspan="1">135</td>
+          <td align="center" rowspan="1" colspan="1">336</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Depressive Symptoms<xref rid="R38" ref-type="bibr">38</xref></td>
+          <td align="center" rowspan="1" colspan="1">161000</td>
+          <td align="center" rowspan="1" colspan="1">1.12</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.00</td>
+          <td align="center" rowspan="1" colspan="1">1.03</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.07</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.96</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">1</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Fasting Glucose<xref rid="R39" ref-type="bibr">39</xref></td>
+          <td align="center" rowspan="1" colspan="1">58000</td>
+          <td align="center" rowspan="1" colspan="1">1.08</td>
+          <td align="center" rowspan="1" colspan="1">0.05</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.04</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.14</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">0.99</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">22</td>
+          <td align="center" rowspan="1" colspan="1">20</td>
+          <td align="center" rowspan="1" colspan="1">20</td>
+          <td align="center" rowspan="1" colspan="1">23</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Glycated Hemoglobin<xref rid="R40" ref-type="bibr">40</xref></td>
+          <td align="center" rowspan="1" colspan="1">46000</td>
+          <td align="center" rowspan="1" colspan="1">1.04</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.03</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.10</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.99</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">10</td>
+          <td align="center" rowspan="1" colspan="1">10</td>
+          <td align="center" rowspan="1" colspan="1">10</td>
+          <td align="center" rowspan="1" colspan="1">10</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">HDL Cholesterol<xref rid="R26" ref-type="bibr">26</xref></td>
+          <td align="center" rowspan="1" colspan="1">96000</td>
+          <td align="center" rowspan="1" colspan="1">1.03</td>
+          <td align="center" rowspan="1" colspan="1">0.07</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">1.04</td>
+          <td align="center" rowspan="1" colspan="1">0.07</td>
+          <td align="center" rowspan="1" colspan="1">0.50</td>
+          <td align="center" rowspan="1" colspan="1">0.09</td>
+          <td align="center" rowspan="1" colspan="1">0.68</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">130</td>
+          <td align="center" rowspan="1" colspan="1">122</td>
+          <td align="center" rowspan="1" colspan="1">121</td>
+          <td align="center" rowspan="1" colspan="1">216</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Height<xref rid="R41" ref-type="bibr">41</xref></td>
+          <td align="center" rowspan="1" colspan="1">246000</td>
+          <td align="center" rowspan="1" colspan="1">2.09</td>
+          <td align="center" rowspan="1" colspan="1">0.20</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">1.69</td>
+          <td align="center" rowspan="1" colspan="1">0.06</td>
+          <td align="center" rowspan="1" colspan="1">0.46</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">0.98</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">720</td>
+          <td align="center" rowspan="1" colspan="1">196</td>
+          <td align="center" rowspan="1" colspan="1">288</td>
+          <td align="center" rowspan="1" colspan="1">754</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">LDL Cholesterol<xref rid="R26" ref-type="bibr">26</xref></td>
+          <td align="center" rowspan="1" colspan="1">91000</td>
+          <td align="center" rowspan="1" colspan="1">1.03</td>
+          <td align="center" rowspan="1" colspan="1">0.08</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">1.00</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">0.43</td>
+          <td align="center" rowspan="1" colspan="1">0.10</td>
+          <td align="center" rowspan="1" colspan="1">0.73</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">101</td>
+          <td align="center" rowspan="1" colspan="1">96</td>
+          <td align="center" rowspan="1" colspan="1">101</td>
+          <td align="center" rowspan="1" colspan="1">155</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Menarche Age<xref rid="R42" ref-type="bibr">42</xref></td>
+          <td align="center" rowspan="1" colspan="1">253000</td>
+          <td align="center" rowspan="1" colspan="1">1.66</td>
+          <td align="center" rowspan="1" colspan="1">0.15</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.21</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.32</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.89</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">289</td>
+          <td align="center" rowspan="1" colspan="1">111</td>
+          <td align="center" rowspan="1" colspan="1">190</td>
+          <td align="center" rowspan="1" colspan="1">354</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Menopause Age<xref rid="R43" ref-type="bibr">43</xref></td>
+          <td align="center" rowspan="1" colspan="1">69000</td>
+          <td align="center" rowspan="1" colspan="1">1.10</td>
+          <td align="center" rowspan="1" colspan="1">0.06</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.06</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.25</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">0.92</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">49</td>
+          <td align="center" rowspan="1" colspan="1">39</td>
+          <td align="center" rowspan="1" colspan="1">39</td>
+          <td align="center" rowspan="1" colspan="1">55</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Neuroticism<xref rid="R38" ref-type="bibr">38</xref></td>
+          <td align="center" rowspan="1" colspan="1">171000</td>
+          <td align="center" rowspan="1" colspan="1">1.26</td>
+          <td align="center" rowspan="1" colspan="1">0.06</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">1.06</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.17</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.90</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">10</td>
+          <td align="center" rowspan="1" colspan="1">4</td>
+          <td align="center" rowspan="1" colspan="1">7</td>
+          <td align="center" rowspan="1" colspan="1">18</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Subjective Well-Being<xref rid="R38" ref-type="bibr">38</xref></td>
+          <td align="center" rowspan="1" colspan="1">298000</td>
+          <td align="center" rowspan="1" colspan="1">1.16</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.00</td>
+          <td align="center" rowspan="1" colspan="1">1.03</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">0.00</td>
+          <td align="center" rowspan="1" colspan="1">0.97</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+          <td align="center" rowspan="1" colspan="1">0</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Triglyceride<xref rid="R26" ref-type="bibr">26</xref></td>
+          <td align="center" rowspan="1" colspan="1">92000</td>
+          <td align="center" rowspan="1" colspan="1">1.02</td>
+          <td align="center" rowspan="1" colspan="1">0.14</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">0.92</td>
+          <td align="center" rowspan="1" colspan="1">0.03</td>
+          <td align="center" rowspan="1" colspan="1">0.45</td>
+          <td align="center" rowspan="1" colspan="1">0.11</td>
+          <td align="center" rowspan="1" colspan="1">0.70</td>
+          <td align="center" rowspan="1" colspan="1">0.04</td>
+          <td align="center" rowspan="1" colspan="1">82</td>
+          <td align="center" rowspan="1" colspan="1">82</td>
+          <td align="center" rowspan="1" colspan="1">91</td>
+          <td align="center" rowspan="1" colspan="1">152</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Waist-Hip Ratio<xref rid="R44" ref-type="bibr">44</xref></td>
+          <td align="center" rowspan="1" colspan="1">142000</td>
+          <td align="center" rowspan="1" colspan="1">1.05</td>
+          <td align="center" rowspan="1" colspan="1">0.06</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.92</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.20</td>
+          <td align="center" rowspan="1" colspan="1">0.02</td>
+          <td align="center" rowspan="1" colspan="1">0.76</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">26</td>
+          <td align="center" rowspan="1" colspan="1">23</td>
+          <td align="center" rowspan="1" colspan="1">33</td>
+          <td align="center" rowspan="1" colspan="1">66</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">Years Education<xref rid="R45" ref-type="bibr">45</xref></td>
+          <td align="center" rowspan="1" colspan="1">329000</td>
+          <td align="center" rowspan="1" colspan="1">1.54</td>
+          <td align="center" rowspan="1" colspan="1">0.07</td>
+          <td align="center" rowspan="1" colspan="1">0.00</td>
+          <td align="center" rowspan="1" colspan="1">1.11</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.20</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">0.83</td>
+          <td align="center" rowspan="1" colspan="1">0.01</td>
+          <td align="center" rowspan="1" colspan="1">70</td>
+          <td align="center" rowspan="1" colspan="1">13</td>
+          <td align="center" rowspan="1" colspan="1">46</td>
+          <td align="center" rowspan="1" colspan="1">148</td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>Average</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>121000</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>1.21</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>0.04</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>0.00</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>1.04</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>0.00</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>0.12</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>0.00</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>0.93</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>0.00</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>86</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>46</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>62</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>118</bold>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>Total</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1"/>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>2060</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>1105</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>1483</bold>
+          </td>
+          <td align="center" rowspan="1" colspan="1">
+            <bold>2825</bold>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </table-wrap>
+</floats-group>

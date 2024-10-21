@@ -1,0 +1,629 @@
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title>BMC Bioinformatics</journal-title>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">459212</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-5-86</article-id>
+    <article-id pub-id-type="pmid">15230973</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-5-86</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>mlstdbNet – distributed multi-locus sequence typing (MLST) databases</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib id="A1" corresp="yes" contrib-type="author">
+        <name>
+          <surname>Jolley</surname>
+          <given-names>Keith A</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>keith.jolley@medawar.ox.ac.uk</email>
+      </contrib>
+      <contrib id="A2" contrib-type="author">
+        <name>
+          <surname>Chan</surname>
+          <given-names>Man-Suen</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>man-suen.chan@paediatrics.ox.ac.uk</email>
+      </contrib>
+      <contrib id="A3" contrib-type="author">
+        <name>
+          <surname>Maiden</surname>
+          <given-names>Martin CJ</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>martin.maiden@zoo.ox.ac.uk</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>The Peter Medawar Building for Pathogen Research and Department of Zoology, University of Oxford, South Parks Road, Oxford, OX1 3SY, UK</aff>
+    <aff id="I2"><label>2</label>Department of Paediatrics, Institute for Molecular Medicine, University of Oxford, John Radcliffe Hospital, Oxford, OX3 9DS, UK</aff>
+    <pub-date pub-type="collection">
+      <year>2004</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>1</day>
+      <month>7</month>
+      <year>2004</year>
+    </pub-date>
+    <volume>5</volume>
+    <fpage>86</fpage>
+    <lpage>86</lpage>
+    <ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/1471-2105/5/86"/>
+    <history>
+      <date date-type="received">
+        <day>26</day>
+        <month>5</month>
+        <year>2004</year>
+      </date>
+      <date date-type="accepted">
+        <day>1</day>
+        <month>7</month>
+        <year>2004</year>
+      </date>
+    </history>
+    <copyright-statement>Copyright © 2004 Jolley et al; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are permitted in all media for any purpose, provided this notice is preserved along with the article's original URL.</copyright-statement>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Multi-locus sequence typing (MLST) is a method of typing that facilitates the discrimination of microbial isolates by comparing the sequences of housekeeping gene fragments. The mlstdbNet software enables the implementation of distributed web-accessible MLST databases that can be linked widely over the Internet.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>The software enables multiple isolate databases to query a single profiles database that contains allelic profile and sequence definitions. This separation enables isolate databases to be established by individual laboratories, each customised to the needs of the particular project and with appropriate access restrictions, while maintaining the benefits of a single definitive source of profile and sequence information. Databases are described by an XML file that is parsed by a Perl CGI script. The software offers a large number of ways to query the databases and to further break down and export the results generated. Additional features can be enabled by installing third-party (freely available) tools.</p>
+      </sec>
+      <sec>
+        <title>Conclusion</title>
+        <p>Development of a distributed structure for MLST databases offers scalability and flexibility, allowing participating centres to maintain ownership of their own data, without introducing duplication and data integrity issues.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Multi-Locus Sequence Typing (MLST) is a method for characterising microbial isolates by means of sequencing internal fragments of housekeeping genes [<xref ref-type="bibr" rid="B1">1</xref>]. It was designed primarily for global epidemiology and surveillance [<xref ref-type="bibr" rid="B2">2</xref>] and has the advantages that data are highly reproducible and can be shared over the Internet without the need for exchanging live cultures. Fragments of approximately 500 bp length of usually between six and eight loci are sequenced, with each unique fragment sequence assigned an allele marker. Each allelic combination, or profile, is then assigned a sequence type (ST) number.</p>
+    <p>Following the introduction of MLST, database software was developed [<xref ref-type="bibr" rid="B3">3</xref>] that worked well for the small datasets initially produced. This was used to run the MLST websites that act as central repositories for sequence and profile definitions, as well as providing information on submitted isolates. It became apparent, however, that the original monolithic design had problems of scalability and data redundancy, while also requiring all isolate data to be submitted to a central database – which is often inappropriate in the public health setting. To overcome these issues, a new distributed database structure was required that enabled alleles and profiles to be defined centrally while allowing individual laboratories to host and control their own isolate databases. Here we describe mlstdbNet, a package that implements a network of web-accessible MLST databases that can be linked widely over the Internet. The central profiles database can be queried directly or via network protocols by client databases or other software.</p>
+  </sec>
+  <sec>
+    <title>Implementation</title>
+    <p>The premise behind the design of mlstdbNet was that isolate-specific information should be separated from allelic profiles and nucleotide sequences that may be shared by multiple isolates. By storing the profile and sequence data in its own database, any number of isolate databases can be constructed, each of which can interact with this profiles database but whose structure is not constrained by it. Consequently isolate databases can be set up for individual projects or populations of bacteria, or by individual organisations, with access controls set and fields included appropriately, while maintaining the benefits of having a single definitive source for sequence type and allele definitions.</p>
+    <p>The mlstdbNet package uses parts of an early implementation of MLST database software [<xref ref-type="bibr" rid="B3">3</xref>] and runs on Linux systems using the PostgreSQL database and Apache web server. The core software is written in Perl as a single, mod_perl compatible, CGI web script and requires, at a minimum, the CGI, DBI and XML::Parser::PerlSAX (part of libxml-perl) Perl modules. The functionality of the software can be enhanced by installing other modules and third party packages, such as EMBOSS [<xref ref-type="bibr" rid="B4">4</xref>] and Bioperl [<xref ref-type="bibr" rid="B5">5</xref>], which are used for sequence alignments, generating allele files in multiple formats and interacting with the PubMed database. Editing a single configuration file can enable the functionality offered by these external programs, but they are not required for the basic operation. Databases are specified in XML files that can be generated using 'dbConfig' [<xref ref-type="bibr" rid="B6">6</xref>]. The dbConfig program is written in Java (J2RE version 1.4 or later required) and offers an easy to use graphical interface to aid database design. As well as generating the database description XML file that is parsed by the web scripts, dbConfig also generates a SQL file that can be used to create the database. In addition, dbConfig will also create the configuration files for WDBI, an interface that allows the database to be curated over the web (written by Jeff Rowe, available from the mlstdbNet website [<xref ref-type="bibr" rid="B7">7</xref>]).</p>
+    <p>Remote connections from isolate to profile databases can be configured simply by adding the profile database host and port number to the XML description file, and configuring the profiles host to allow such connections. The software also allows the databases to be run on a separate machine from the web server, for improved speed and scalability. The HTML produced by the script uses cascading style sheets (CSS) to enable the look-and-feel to be modified easily and to minimise the size of the generated pages for fast response times (see figures <xref ref-type="fig" rid="F1">1</xref>, <xref ref-type="fig" rid="F2">2</xref>, <xref ref-type="fig" rid="F3">3</xref>, <xref ref-type="fig" rid="F4">4</xref> for screenshots).</p>
+    <p>In addition to the script that dynamically generates the web pages, two other scripts can be run on a nightly basis. The first of these enables searching by reference by checking any database on the system for reference fields, and if it finds that a PubMed id entered in that field has not been seen before, it will download the citation from PubMed and store it in a local database. This local reference database is then used to create a searchable list of cited papers that can be selected to display information on isolates described in the paper. The other script generates an HTML page of summary statistics for the whole database.</p>
+  </sec>
+  <sec>
+    <title>Results and Discussion</title>
+    <sec>
+      <title>Distributed databases using this software</title>
+      <p>Examples of public isolate databases using mlstdbNet are the 'PubMLST' databases for <italic>Neisseria </italic>[<xref ref-type="bibr" rid="B1">1</xref>], <italic>Campylobacter </italic>[<xref ref-type="bibr" rid="B8">8</xref>], <italic>Helicobacter pylori </italic>and <italic>Bacillus cereus </italic>found on the PubMLST website [<xref ref-type="bibr" rid="B9">9</xref>]. These databases encourage submissions and describe the reported diversity of the organisms, but do not necessarily represent their natural populations. At least twelve other, mostly private, project- or organisation-specific isolate databases for these organisms have been established recently, all of which are clients of the central profile databases.</p>
+      <p>Queries to mlstdbNet isolate databases can also pull in data from other compatible sources, such as antigen databases (e.g. the <italic>Neisseria </italic>PorA variable region database [<xref ref-type="bibr" rid="B10">10</xref>]) and PubMed (Figure <xref ref-type="fig" rid="F5">5</xref>). Editing a single line in the XML configuration for the database can make connections to these external sources available. By including a PubMed id in a reference field of the database, the software can return information for isolates grouped by the publication they are described in, following a query by cited reference or author.</p>
+    </sec>
+    <sec>
+      <title>Novel features</title>
+      <p>Apart from the distributed structure, other novel features include the graphical breakdown of datasets, including displays of allele frequency and polymorphic sites. Following a search, datasets can be exported by E-mail with a choice of included fields and sequences from isolates can be concatenated for use in external packages. An important choice available is the ability to set up an isolate database to store either ST or allelic profile information. The latter choice enables the database to be used with partial profiles so that data can be entered as soon as sequencing results are obtained, with ST and clonal complex information retrieved once the profile has been completed. Isolate information can be retrieved by exact or partial matches to any field including those stored in the profiles database. Further, the profiles database can be queried in many ways, including batch methods for profiles and sequences.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>This software represents a number of important enhancements over previous systems for storing and searching MLST data. Aside from the benefits to scalability offered by the distributed structure, it enables organisations to maintain ownership and control of their own data while still benefiting from centralised assignments of allele sequences and profiles, ensuring data integrity and consistency. In many cases, data confidentiality is required for research or legislative reasons. The central profiles database can be readily mirrored to other sites as it contains no confidential data.</p>
+  </sec>
+  <sec>
+    <title>Availability and requirements</title>
+    <p>Project name: mlstdbNet</p>
+    <p>Project home page: <ext-link ext-link-type="uri" xlink:href="http://pubmlst.org/software/database/mlstdbnet/"/></p>
+    <p>Operating system: Linux</p>
+    <p>Programming language: Perl</p>
+    <p>Other requirements: Apache; PostgreSQL; CGI, DBI and XML::Parser::perlSAX Perl modules</p>
+    <p>License: GNU GPL</p>
+    <p>Any restrictions to use by non-academics: none</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>KAJ carried out the main programming work. MSC developed the first generation MLST database software, parts of which have been used in this implementation. MM conceived the software development and participated in its design.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional File 1</title>
+        <p>Distribution archive of software (version 1.1.5). This file contains the software.</p>
+      </caption>
+      <media xlink:href="1471-2105-5-86-S1.gz" mimetype="application" mime-subtype="x-zip-compressed">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <ack>
+    <sec>
+      <title>Acknowledgements</title>
+      <p>The European Union (QLK2-CT-2001-01436) and the Wellcome Trust funded development.</p>
+    </sec>
+  </ack>
+  <ref-list>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Maiden</surname>
+            <given-names>MCJ</given-names>
+          </name>
+          <name>
+            <surname>Bygraves</surname>
+            <given-names>JA</given-names>
+          </name>
+          <name>
+            <surname>Feil</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Morelli</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Russell</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Urwin</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Q</given-names>
+          </name>
+          <name>
+            <surname>Zhou</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Zurth</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Caugant</surname>
+            <given-names>DA</given-names>
+          </name>
+          <name>
+            <surname>Feavers</surname>
+            <given-names>IM</given-names>
+          </name>
+          <name>
+            <surname>Achtman</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Spratt</surname>
+            <given-names>BG</given-names>
+          </name>
+        </person-group>
+        <article-title>Multilocus sequence typing: a portable approach to the identification of clones within populations of pathogenic microorganisms</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>1998</year>
+        <volume>95</volume>
+        <fpage>3140</fpage>
+        <lpage>3145</lpage>
+        <pub-id pub-id-type="pmid">9501229</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.95.6.3140</pub-id>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Urwin</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Maiden</surname>
+            <given-names>MC</given-names>
+          </name>
+        </person-group>
+        <article-title>Multi-locus sequence typing: a tool for global epidemiology</article-title>
+        <source>Trends Microbiol</source>
+        <year>2003</year>
+        <volume>11</volume>
+        <fpage>479</fpage>
+        <lpage>487</lpage>
+        <pub-id pub-id-type="pmid">14557031</pub-id>
+        <pub-id pub-id-type="doi">10.1016/j.tim.2003.08.006</pub-id>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chan</surname>
+            <given-names>MS</given-names>
+          </name>
+          <name>
+            <surname>Maiden</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Spratt</surname>
+            <given-names>BG</given-names>
+          </name>
+        </person-group>
+        <article-title>Database-driven multi locus sequence typing (MLST) of bacterial pathogens</article-title>
+        <source>Bioinformatics</source>
+        <year>2001</year>
+        <volume>17</volume>
+        <fpage>1077</fpage>
+        <lpage>1083</lpage>
+        <pub-id pub-id-type="pmid">11724739</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/17.11.1077</pub-id>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rice</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Longden</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Bleasby</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>EMBOSS: the European Molecular Biology Open Software Suite</article-title>
+        <source>Trends Genet</source>
+        <year>2000</year>
+        <volume>16</volume>
+        <fpage>276</fpage>
+        <lpage>277</lpage>
+        <pub-id pub-id-type="pmid">10827456</pub-id>
+        <pub-id pub-id-type="doi">10.1016/S0168-9525(00)02024-2</pub-id>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Stajich</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Block</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Boulez</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Brenner</surname>
+            <given-names>SE</given-names>
+          </name>
+          <name>
+            <surname>Chervitz</surname>
+            <given-names>SA</given-names>
+          </name>
+          <name>
+            <surname>Dagdigian</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Fuellen</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Gilbert</surname>
+            <given-names>JG</given-names>
+          </name>
+          <name>
+            <surname>Korf</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Lapp</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Lehvaslaiho</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Matsalla</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Mungall</surname>
+            <given-names>CJ</given-names>
+          </name>
+          <name>
+            <surname>Osborne</surname>
+            <given-names>BI</given-names>
+          </name>
+          <name>
+            <surname>Pocock</surname>
+            <given-names>MR</given-names>
+          </name>
+          <name>
+            <surname>Schattner</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Senger</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Stein</surname>
+            <given-names>LD</given-names>
+          </name>
+          <name>
+            <surname>Stupka</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Wilkinson</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Birney</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>The Bioperl toolkit: Perl modules for the life sciences</article-title>
+        <source>Genome Res</source>
+        <year>2002</year>
+        <volume>12</volume>
+        <fpage>1611</fpage>
+        <lpage>1618</lpage>
+        <pub-id pub-id-type="pmid">12368254</pub-id>
+        <pub-id pub-id-type="doi">10.1101/gr.361602</pub-id>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="other">
+        <article-title>dbConfig Home Page</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://pubmlst.org/software/database/dbconfig/"/>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="other">
+        <article-title>mlstdbNet Home Page</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://pubmlst.org/software/database/mlstdbnet/"/>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dingle</surname>
+            <given-names>KE</given-names>
+          </name>
+          <name>
+            <surname>Colles</surname>
+            <given-names>FM</given-names>
+          </name>
+          <name>
+            <surname>Wareing</surname>
+            <given-names>DRA</given-names>
+          </name>
+          <name>
+            <surname>Ure</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Fox</surname>
+            <given-names>AJ</given-names>
+          </name>
+          <name>
+            <surname>Bolton</surname>
+            <given-names>FJ</given-names>
+          </name>
+          <name>
+            <surname>Bootsma</surname>
+            <given-names>HJ</given-names>
+          </name>
+          <name>
+            <surname>Willems</surname>
+            <given-names>RJL</given-names>
+          </name>
+          <name>
+            <surname>Urwin</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Maiden</surname>
+            <given-names>MCJ</given-names>
+          </name>
+        </person-group>
+        <article-title>Multilocus sequence typing system for Campylobacter jejuni</article-title>
+        <source>J Clin Microbiol</source>
+        <year>2001</year>
+        <volume>39</volume>
+        <fpage>14</fpage>
+        <lpage>23</lpage>
+        <pub-id pub-id-type="pmid">11136741</pub-id>
+        <pub-id pub-id-type="doi">10.1128/JCM.39.1.14-23.2001</pub-id>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jolley</surname>
+            <given-names>KA</given-names>
+          </name>
+        </person-group>
+        <article-title>PubMLST website - Publicly-accessible MLST databases and software.</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://pubmlst.org"/>
+      </citation>
+    </ref>
+    <ref id="B10">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Russell</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Jolley</surname>
+            <given-names>KA</given-names>
+          </name>
+          <name>
+            <surname>Feavers</surname>
+            <given-names>IM</given-names>
+          </name>
+          <name>
+            <surname>Maiden</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Suker</surname>
+            <given-names>JS</given-names>
+          </name>
+        </person-group>
+        <article-title>PorA variable regions of Neisseria meningitidis</article-title>
+        <source>Emerg Infect Dis</source>
+        <year>2004</year>
+        <volume>10</volume>
+        <fpage>674</fpage>
+        <lpage>678</lpage>
+        <pub-id pub-id-type="pmid">15200858</pub-id>
+      </citation>
+    </ref>
+    <ref id="B11">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jolley</surname>
+            <given-names>KA</given-names>
+          </name>
+          <name>
+            <surname>Kalmusova</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Feil</surname>
+            <given-names>EJ</given-names>
+          </name>
+          <name>
+            <surname>Gupta</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Musilek</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Kriz</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Maiden</surname>
+            <given-names>MC</given-names>
+          </name>
+        </person-group>
+        <article-title>Carried Meningococci in the Czech Republic: a Diverse Recombining Population</article-title>
+        <source>J Clin Microbiol</source>
+        <year>2002</year>
+        <volume>40</volume>
+        <fpage>3549</fpage>
+        <lpage>3550</lpage>
+        <pub-id pub-id-type="doi">10.1128/JCM.40.9.3549-3550.2002</pub-id>
+      </citation>
+    </ref>
+    <ref id="B12">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Jolley</surname>
+            <given-names>KA</given-names>
+          </name>
+          <name>
+            <surname>Kalmusova</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Feil</surname>
+            <given-names>EJ</given-names>
+          </name>
+          <name>
+            <surname>Gupta</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Musilek</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Kriz</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Maiden</surname>
+            <given-names>MC</given-names>
+          </name>
+        </person-group>
+        <article-title>Carried meningococci in the Czech Republic: a diverse recombining population</article-title>
+        <source>J Clin Microbiol</source>
+        <year>2000</year>
+        <volume>38</volume>
+        <fpage>4492</fpage>
+        <lpage>4498</lpage>
+        <pub-id pub-id-type="pmid">11101585</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig position="float" id="F1">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Screenshot: Isolate query. </bold>Isolate databases can be queried by searching against any field or combination of fields.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-86-1"/>
+    </fig>
+    <fig position="float" id="F2">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Screenshot: Isolate search by cited publication. </bold>A list of publications cited within isolate records can be displayed and a narrower search performed by searching for individual authors. All isolates described in a particular paper can be displayed by selecting the 'Display' button from this list.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-86-2"/>
+    </fig>
+    <fig position="float" id="F3">
+      <label>Figure 3</label>
+      <caption>
+        <p><bold>Screenshot: Allele query. </bold>Allele comparison will identify known alleles or determine the nearest allele with the nucleotide differences shown. An alignment of the query sequence to the nearest allele will be offered if EMBOSS is installed.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-86-3"/>
+    </fig>
+    <fig position="float" id="F4">
+      <label>Figure 4</label>
+      <caption>
+        <p><bold>Screenshot: Advanced breakdown. </bold>Following a database query, the displayed dataset can be analysed further, including breaking down one field against another and displaying frequencies of unique combinations of selected fields.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-86-4"/>
+    </fig>
+    <fig position="float" id="F5">
+      <label>Figure 5</label>
+      <caption>
+        <p><bold>The distributed structure of the <italic>Neisseria </italic>MLST and related databases. </bold>The profiles database contains all the allele sequences and allelic profiles (sequence types) and can be queried via network connections or directly through the web. The PubMLST isolate database encourages general submissions and represents the known diversity of strains. The MLST 107 and Czech 1993 isolate databases are also available through the <italic>Neisseria </italic>MLST website and contain reference [1] and project [11, 12] sets of isolate data (see site for further details). These isolate databases also retrieve information from non-MLST databases including those for PorA and FetA antigen typing and PubMed. Other private isolate databases (not shown) also make use of the profiles database.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-86-5"/>
+    </fig>
+  </sec>
+</back>

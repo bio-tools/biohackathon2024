@@ -1,0 +1,1557 @@
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title>BMC Bioinformatics</journal-title>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">539274</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-5-177</article-id>
+    <article-id pub-id-type="pmid">15541170</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-5-177</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Calibration and assessment of channel-specific biases in microarray data with extended dynamical range</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib id="A1" corresp="yes" contrib-type="author">
+        <name>
+          <surname>Bengtsson</surname>
+          <given-names>Henrik</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>hb@maths.lth.se</email>
+      </contrib>
+      <contrib id="A2" contrib-type="author">
+        <name>
+          <surname>Jönsson</surname>
+          <given-names>Göran</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>goran.jonsson@onk.lu.se</email>
+      </contrib>
+      <contrib id="A3" contrib-type="author">
+        <name>
+          <surname>Vallon-Christersson</surname>
+          <given-names>Johan</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>johan.vallon-christersson@onk.lu.se</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Mathematical Statistics, Centre for Mathematical Sciences, Lund University, Box 118, SE-221 00 Lund, Sweden</aff>
+    <aff id="I2"><label>2</label>Department of Oncology, Lund University, Barngatan 2, SE-221 85 Lund, Sweden</aff>
+    <pub-date pub-type="collection">
+      <year>2004</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>12</day>
+      <month>11</month>
+      <year>2004</year>
+    </pub-date>
+    <volume>5</volume>
+    <fpage>177</fpage>
+    <lpage>177</lpage>
+    <ext-link ext-link-type="uri" xlink:href="http://www.biomedcentral.com/1471-2105/5/177"/>
+    <history>
+      <date date-type="received">
+        <day>21</day>
+        <month>6</month>
+        <year>2004</year>
+      </date>
+      <date date-type="accepted">
+        <day>12</day>
+        <month>11</month>
+        <year>2004</year>
+      </date>
+    </history>
+    <copyright-statement>Copyright © 2004 Bengtsson et al; licensee BioMed Central Ltd.</copyright-statement>
+    <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+      <p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0"/>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</p>
+    </license>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Non-linearities in observed log-ratios of gene expressions, also known as intensity dependent log-ratios, can often be accounted for by global biases in the two channels being compared. Any step in a microarray process may introduce such offsets and in this article we study the biases introduced by the microarray scanner and the image analysis software.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>By scanning the same spotted oligonucleotide microarray at different photomultiplier tube (PMT) gains, we have identified a channel-specific bias present in two-channel microarray data. For the scanners analyzed it was in the range of 15–25 (out of 65,535). The observed bias was very stable between subsequent scans of the same array although the PMT gain was greatly adjusted. This indicates that the bias does not originate from a step preceding the scanner detector parts. The bias varies slightly between arrays. When comparing estimates based on data from the same array, but from different scanners, we have found that different scanners introduce different amounts of bias. So do various image analysis methods. We propose a scanning protocol and a constrained affine model that allows us to identify and estimate the bias in each channel. Backward transformation removes the bias and brings the channels to the same scale. The result is that systematic effects such as intensity dependent log-ratios are removed, but also that signal densities become much more similar. The average scan, which has a larger dynamical range and greater signal-to-noise ratio than individual scans, can then be obtained.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>The study shows that microarray scanners may introduce a significant bias in each channel. Such biases have to be calibrated for, otherwise systematic effects such as intensity dependent log-ratios will be observed. The proposed scanning protocol and calibration method is simple to use and is useful for evaluating scanner biases or for obtaining calibrated measurements with extended dynamical range and better precision. The cross-platform R package aroma, which implements all described methods, is available for free from <ext-link ext-link-type="uri" xlink:href="http://www.maths.lth.se/bioinformatics/"/>.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>The microarray technology provides a way of simultaneously measuring transcript abundances of 10<sup>3 </sup>– 10<sup>5 </sup>genes from one or more cell or tissue samples. A microarray, also known as a gene chip, has well defined regions that each consists of immobilized sequences of DNA, which each is unique to a specific gene. These regions are referred to as <italic>probes </italic>[<xref ref-type="bibr" rid="B1">1</xref>]. When fluorophore labeled cDNA, referred to as <italic>targets</italic>, obtained by reverse transcription of mRNA extracted from the samples of interest is let to hybridize to the probes for a few hours, each region on the microarray will specifically bind a certain amount of hybridized DNA unique to the corresponding gene. Depending on if a two-channel or single-channel microarray platform is used, either several and differentially labeled targets are hybridized to the same array, or different targets are each hybridized to separate arrays using identical labels. Next, the array is scanned at different wavelengths to excite the fluorescent molecules using a light source, for instance a laser. Shortly after the fluorophores have been excited they emit photons, which are registered and quantified in each position by the scanner, which results in a high-resolution digitized image for each channel. Using image analysis methods, the pixels that belong to the regions that contain the probes are identified and averaged, and an estimate of the transcript abundance for each gene is obtained.</p>
+    <p>Since these estimates are obtained from a complex measurement process of several steps, it is likely that the observed signals contain not only measurement noise, but also systematic variations of different kinds [<xref ref-type="bibr" rid="B2">2</xref>].</p>
+    <p>In this report, we show the existence of a channel-specific bias introduced by the scanner and most likely its detector parts. Our results indicate that the image analysis may also contribute with a small bias. The effects channel-specific biases have on the downstream microarray analysis are many [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B3">3</xref>]. We suggest a scan protocol and a model that will allow us to estimate the biases and calibrate the observed signals accordingly. The result will be that the intensity dependent effects are removed, but also that the effective dynamical range of the scanner is increased several times.</p>
+  </sec>
+  <sec>
+    <title>Model</title>
+    <sec>
+      <title>General model</title>
+      <p>Consider a microarray experiment involving genes <italic>i </italic>= 1 ,..., <italic>I </italic>from RNA extracts <italic>c </italic>= 1 ,..., <italic>C</italic>. In single-channel microarrays each array measures the gene expression levels in one RNA extract, whereas in two-color microarrays each array measures two RNA extracts, one in each channel. We will refer to each set of signals from each RNA extract as <italic>channels</italic>. Let <italic>μ</italic><sub><italic>c</italic>,<italic>i </italic></sub>be the true gene expression (transcription) level of gene <italic>i </italic>in channel <italic>c</italic>. Ideally, statistical analysis can then be done on these quantities. For instance, by comparing the relative abundances in two channels, that is <italic>r</italic><sub><italic>i </italic></sub>= <italic>μ</italic><sub>1,<italic>i</italic></sub>/<italic>μ</italic><sub>2,<italic>i </italic></sub>for all genes <italic>i</italic>, it is possible to identify genes that are significantly differentially expressed (<italic>r</italic><sub><italic>i </italic></sub>≠ 1). However, in reality we do not observe the true expression levels, but only the quantified spot intensities <italic>y</italic><sub><italic>c</italic>,<italic>i</italic></sub>. The general relation between the observed and the true expression levels can be written as</p>
+      <p><italic>y</italic><sub><italic>c</italic>,<italic>i </italic></sub>= <italic>f</italic><sub><italic>c</italic></sub>(<italic>μ</italic><sub><italic>c,i</italic></sub>) + <italic>ε</italic><sub><italic>c,i</italic></sub>,     (1)</p>
+      <p>where <italic>f</italic><sub><italic>c</italic></sub>(·) is an unknown channel-specific function, which we refer to as the <italic>measurement function</italic>, that includes all steps in the microarray process. Moreover, we assume independent intensity dependent error terms <italic>ε</italic><sub><italic>c</italic>,<italic>i </italic></sub>such that <italic>E</italic>[<italic>ε</italic><sub><italic>c</italic>,<italic>i</italic></sub>] = 0. Because we want to do inference based on <italic>μ</italic><sub><italic>c</italic>,<italic>i</italic></sub>, it must be possible to find the inverse of <italic>f</italic><sub><italic>c</italic></sub>(·), which (at least in theory) is possible if it is strictly increasing.</p>
+      <p>To be able to find the form of <italic>f</italic><sub><italic>c</italic></sub>(·), high quality calibration data from several stages along the microarray process is required. Here we will consider a simpler case. Split the overall measurement function into two parts. The first part <italic>x</italic><sub><italic>c</italic>,<italic>i </italic></sub>= <italic>g</italic><sub><italic>c</italic></sub>(<italic>μ</italic><sub><italic>c</italic>,<italic>i</italic></sub>) models, in channel <italic>c</italic>, the amount of light from spot <italic>i </italic>that enters the photomultiplier tube (PMT) [<xref ref-type="bibr" rid="B4">4</xref>] as a function of the transcription level of clone <italic>i</italic>. The second part, which is studied in this report, is <italic>y</italic><sub><italic>c</italic>,<italic>i </italic></sub>= <italic>h</italic><sub><italic>c</italic></sub>(<italic>x</italic><sub><italic>c</italic>,<italic>i</italic></sub>) and models the observed signal as a function of the amount of photons in channel <italic>c </italic>and spot <italic>i </italic>that enters the PMT. That is, it captures the characteristics of the scanner's light detector, but also of the image analysis methods. We want to emphasize that the light from one spot does not necessarily originate solely from the fluorescent molecules that are attached to the hybridized target DNA. Light from other sources such as cross-hybridized target, intrinsic fluorescence from spot buffer, and scatter light may also contribute with photons of similar wavelengths.</p>
+      <p>Next we will show that <italic>h</italic><sub><italic>c</italic></sub>(·) is almost perfectly affine. This measurement function also depends on the scanner settings, especially the scanner sensitivity, which is indicated below with the super index (<italic>k</italic>). In other words,</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i1.gif"/>
+      </p>
+      <p>where for each fix scanner setting <italic>k</italic>, <inline-graphic xlink:href="1471-2105-5-177-i2.gif"/> and <inline-graphic xlink:href="1471-2105-5-177-i3.gif"/> are channel-specific bias and scale parameters, respectively. Assume that <italic>x</italic><sub><italic>c</italic>,<italic>i </italic></sub>is <italic>fix </italic>for all PMT voltages.</p>
+      <p>Note that the above relationship is not necessarily linear. Here we refer to linear in the strict sense where <italic>a</italic><sub><italic>c </italic></sub>= 0 so that the output is proportional to the input. Lack of linearity has important implications on downstream analysis. For instance, when spotted as well as in-situ synthesized microarrays are used it is common to do statistical analysis on the log-ratios <italic>M</italic><sub><italic>i </italic></sub>= log<sub>2</sub>(<italic>y</italic><sub><italic>R</italic>,<italic>i</italic></sub>/<italic>y</italic><sub><italic>G</italic>,<italic>i</italic></sub>) and the log-intensities <inline-graphic xlink:href="1471-2105-5-177-i4.gif"/> for all genes <italic>i </italic>[<xref ref-type="bibr" rid="B5">5</xref>], where we for convenience have denoted the two channels to be compared by <italic>R </italic>and <italic>G </italic>although such comparisons are not limited to within-array measurements. One of the rationales for this bijective transform is that under ideal conditions the main measure of interest, the fold change, is contained in one variable only. However, a channel specific bias introduced by <italic>f</italic><sub><italic>c</italic></sub>(·) will introduce a so called intensity dependent bias in the observed log-ratios. Commonly observed intensity dependent effects in the log-ratios [<xref ref-type="bibr" rid="B6">6</xref>] can partly be explained by the fact that the logarithm is taken on affinely transformed signals [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B7">7</xref>].</p>
+    </sec>
+    <sec>
+      <title>Constrained model</title>
+      <p>The model in equation (2) is not identifiable. We address this problem as follows. Consider the case where the same array has been scanned at <italic>K </italic>different PMT settings. Let <inline-graphic xlink:href="1471-2105-5-177-i5.gif"/> be the vector of the <italic>K </italic>quantified signals for gene <italic>i </italic>and channel <italic>c</italic>. In the noise-free case it follows from (2) that <inline-graphic xlink:href="1471-2105-5-177-i6.gif"/> lies on the line <italic>L</italic>(<bold>a</bold><sub><italic>c</italic></sub>, <bold>b</bold><sub><italic>c</italic></sub>) in <inline-graphic xlink:href="1471-2105-5-177-i51.gif"/><sup><italic>K</italic></sup>, which has direction <inline-graphic xlink:href="1471-2105-5-177-i7.gif"/> and goes through the point <inline-graphic xlink:href="1471-2105-5-177-i8.gif"/>. The 2<italic>K </italic>parameters of <bold>a</bold><sub><italic>c </italic></sub>and <bold>b</bold><sub><italic>c </italic></sub>are not identifiable, since <italic>L </italic>has only 2<italic>K </italic>- 2 degrees of freedom. In fact, any transformation <bold>b</bold><sub><italic>c </italic></sub>← <italic>k</italic>·<bold>b</bold><sub><italic>c </italic></sub>and <bold>a</bold><sub><italic>c </italic></sub>← <bold>a</bold><sub><italic>c </italic></sub>+ <italic>l</italic>·<bold>b</bold><sub><italic>c</italic></sub>, where <italic>k </italic>and <italic>l </italic>are scalars, will leave <italic>L </italic>intact. In this paper, we make <bold>a</bold><sub><italic>c </italic></sub>and <bold>b</bold><sub><italic>c </italic></sub>identifiable by choosing <italic>k </italic>and <italic>l </italic>so that <inline-graphic xlink:href="1471-2105-5-177-i9.gif"/> = 1 and <bold>a</bold><sub><italic>c </italic></sub>is the point on <italic>L </italic>closest to the (diagonal) line <italic>L</italic>' = {<italic>e</italic><sub><italic>c</italic></sub>(1,..., 1); <italic>e<sub>c</sub></italic>∈ <inline-graphic xlink:href="1471-2105-5-177-i51.gif"/>}. The choice of <bold>a</bold><sub><italic>c </italic></sub>can be motivated by looking at observed data. By inspection, we observe that the bias <inline-graphic xlink:href="1471-2105-5-177-i2.gif"/> in Model (2) is not varying much when the PMT gain is changed. To demonstrate this, <inline-graphic xlink:href="1471-2105-5-177-i10.gif"/> have been plotted for each of the six possible PMT pairs in Figure <xref ref-type="fig" rid="F1">1</xref>. First, the close fit of the lines to data is evidence that the scanner is linear in its dynamical range. Second, all lines go through approximately the same point, lets call it (<italic>e</italic><sub><italic>c</italic></sub>, <italic>e</italic><sub><italic>c</italic></sub>), suggesting that there is a common PMT-independent bias <italic>e</italic><sub><italic>c</italic></sub>. More precisely, we split the bias term into two parts, one dependent and one independent on the PMT gain according to</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i13.gif"/>
+      </p>
+      <p>and define <inline-graphic xlink:href="1471-2105-5-177-i14.gif"/> ∈ <inline-graphic xlink:href="1471-2105-5-177-i51.gif"/><sup><italic>K</italic></sup>. For this split, data indicates that ||<bold>d</bold><sub><italic>c</italic></sub>|| ≈ 0, where ||·|| is the norm in, say, <italic>L</italic><sub>2 </sub>(Euclidean distance). Let <bold>d </bold>= <bold>y </bold>- <italic>e</italic>(1,..., 1) where <bold>y </bold>∈ <italic>L </italic>and <italic>e </italic>∈ <inline-graphic xlink:href="1471-2105-5-177-i51.gif"/>. The constraint that <bold>a</bold><sub><italic>c </italic></sub>is the point of <italic>L </italic>closest to <italic>L</italic>' can then be formulated as</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i15.gif"/>
+      </p>
+      <p>where the minimization is with respect to <bold>y </bold>and <italic>e</italic>. Equivalently, this means that <bold>d</bold><sub><italic>c </italic></sub>is orthogonal to <bold>b</bold><sub><italic>c </italic></sub>and (1,..., 1). The above can be interpreted geometrically as follows. By definition, <bold>a</bold><sub><italic>c </italic></sub>is a point on the line <italic>L</italic>(<bold>a</bold><sub><italic>c</italic></sub>, <bold>b</bold><sub><italic>c</italic></sub>). Similarly, <bold>e</bold><sub><italic>c </italic></sub>= <italic>e</italic><sub><italic>c</italic></sub>(1,..., 1) is a point on the diagonal line that goes through (0,..., 0) and (1,..., 1) in <inline-graphic xlink:href="1471-2105-5-177-i51.gif"/><sup><italic>K</italic></sup>, i.e. <italic>L</italic>'. Minimizing <bold>d</bold><sub><italic>c </italic></sub>according to (4) is the same as finding the shortest distance between the line <italic>L </italic>and the diagonal line, which is also the distance between the two points <bold>a</bold><sub><italic>c </italic></sub>and <bold>e</bold><sub><italic>c</italic></sub>. From this geometrical interpretation it is also clear that in order for the parameters to be uniquely identifiable the line <italic>L must not </italic>be parallel to the diagonal line, that is, <inline-graphic xlink:href="1471-2105-5-177-i3.gif"/> must be different from <inline-graphic xlink:href="1471-2105-5-177-i9.gif"/> for some <italic>k</italic>.</p>
+      <p>A robust estimate of <italic>L </italic>was proposed in [<xref ref-type="bibr" rid="B2">2</xref>], using iteratively re-weighted principal component analysis (IWPCA). This estimate of <italic>L</italic>, together with the above parametrization of <bold>a</bold><sub><italic>c </italic></sub>and <bold>b</bold><sub><italic>c</italic></sub>, give us estimates <inline-graphic xlink:href="1471-2105-5-177-i16.gif"/> and <inline-graphic xlink:href="1471-2105-5-177-i17.gif"/> of all 2<italic>K </italic>- 2 parameters of <bold>a</bold><sub><italic>c </italic></sub>and <bold>b</bold><sub><italic>c</italic></sub>, as well as an estimate <inline-graphic xlink:href="1471-2105-5-177-i18.gif"/> of <italic>e</italic><sub><italic>c</italic></sub>.</p>
+      <p>Let us illustrate the parametrization and estimation procedure for <italic>K </italic>= 2. Since two (non-parallel) lines will always intersect, constraint (4) degenerates to the assumption that <bold>d</bold><sub><italic>c </italic></sub>= <bold>0 </bold>or, equivalently, that <inline-graphic xlink:href="1471-2105-5-177-i19.gif"/> = <italic>e</italic><sub><italic>c </italic></sub>In the noise-free case the line <italic>L </italic>is described by</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i20.gif"/>
+      </p>
+      <p>where <inline-graphic xlink:href="1471-2105-5-177-i21.gif"/> and <inline-graphic xlink:href="1471-2105-5-177-i22.gif"/>. By setting <inline-graphic xlink:href="1471-2105-5-177-i23.gif"/> in (5) and applying the constraint <inline-graphic xlink:href="1471-2105-5-177-i24.gif"/>, we get that <bold>a</bold><sub><italic>c </italic></sub>= (<italic>e</italic><sub><italic>c</italic></sub>, <italic>e</italic><sub><italic>c</italic></sub>) and <bold>b</bold><sub><italic>c </italic></sub>= (1, <italic>β</italic><sub><italic>c</italic></sub>) where <italic>e</italic><sub><italic>c </italic></sub>= <italic>α</italic><sub><italic>c</italic></sub>/(1 - <italic>β</italic><sub><italic>c</italic></sub>). To further illustrate the stability of the PMT independency, the parameters (<italic>e</italic><sub><italic>c</italic></sub>, <italic>β</italic><sub><italic>c</italic></sub>) have been estimated for each of the six PMT pairs <italic>independently </italic>based on data from array A scanned by the Axon scanner and quantified by GenePix. The various estimates for both channels are listed in Table <xref ref-type="table" rid="T1">1</xref>. The average estimate of the bias across all PMT pairs in the red channel was <inline-graphic xlink:href="1471-2105-5-177-i25.gif"/> = 18.0 (with standard deviation 1.12). For the green channel the average bias estimate was <inline-graphic xlink:href="1471-2105-5-177-i26.gif"/> = 20.3 (with standard deviation 0.80). The small standard deviations confirm that <bold>d</bold><sub><italic>c </italic></sub>is indeed small.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <p>This analysis was done with eight arrays (A-H) that were scanned on two different scanners at four different PMT settings. Two different image analysis applications were used. See Methods for details.</p>
+    <sec>
+      <title>Parameter estimates</title>
+      <p>For every combination of array, scanner and signal quantification method (image analysis or raw pixel intensities), we estimated the parameters <bold>a</bold><sub><italic>c </italic></sub>(including <italic>e</italic><sub><italic>c </italic></sub>and <bold>d</bold><sub><italic>c</italic></sub>), and <bold>b</bold><sub><italic>c </italic></sub>in Model (2)-(4) for both channels (see Methods). To get a better understanding of the properties of the estimates, we used a non-parametric bootstrap approach to obtain not only bias corrected estimates, but also their standard deviations. Data was resampled over gene index in a way such that the same bootstrap data sets were used whenever pairwise comparison was done, e.g. when comparing bias estimates in red and green channels. For GenePix and Spot quantified signals a bootstrap sample of size 100 was used.</p>
+      <p>For the estimates based on the raw pixel intensities a different approach was taken. Because the number of pixels for one scan is about 10<sup>7 </sup>(per channel) and we had four scans, our computer system limited us to estimate the model based on a subset of 10<sup>6 </sup>pixel intensities. This was done for 100 random subsets and the mean and standard deviation of the parameter estimates were calculated, much like the bootstrap method above. The mean and the standard deviation of <inline-graphic xlink:href="1471-2105-5-177-i18.gif"/> and <inline-graphic xlink:href="1471-2105-5-177-i31.gif"/> for all possible setups are listed in Tables <xref ref-type="table" rid="T2">2</xref> &amp;<xref ref-type="table" rid="T3">3</xref>. The mean and standard deviation of <inline-graphic xlink:href="1471-2105-5-177-i18.gif"/> over all arrays are shown in Table <xref ref-type="table" rid="T4">4</xref>.</p>
+      <sec>
+        <title>Comparison of arrays</title>
+        <p>The bias estimates for all bootstrap replicates in Tables <xref ref-type="table" rid="T2">2</xref> &amp;<xref ref-type="table" rid="T3">3</xref> have been depicted as box plots in Figure <xref ref-type="fig" rid="F2">2</xref>. Considered that the signals are in [0, 65535], the bias estimates are very stable between different arrays. The biases span 9.8 units (0.15‰) in the red channel and 7.8 units (0.12‰) in the green channel.</p>
+      </sec>
+      <sec>
+        <title>Comparison of scanners</title>
+        <p>For the two scanners, we found that the estimated bias based on signals obtained by the Agilent scanner are consequently higher than the estimates from the Axon scanner. The box plots of their differences in the common bias <italic>e</italic><sub><italic>c </italic></sub>(for each bootstrap sample) between the Agilent and the Axon scanner in Figure <xref ref-type="fig" rid="F3">3</xref> confirm this divergence. See also Table <xref ref-type="table" rid="T4">4</xref>. This significant difference could be an effect of scan order, that is, all arrays were first scanned on the Agilent scanner and then on the Axon scanner. The arrays in hand were part of a much bigger project based solely on Agilent scanned data. To keep a consistent scan protocol and to minimize bleaching, we could not balance the experimental design by letting some arrays be scanned in the reverse order. Instead, to test for scan order trends we scanned one array first on Agilent (H-1), then on Axon (H-1) and then again on Agilent (H-2). No apparent trend was found.</p>
+      </sec>
+      <sec>
+        <title>Comparison of image analysis methods</title>
+        <p>Estimates of the common bias <italic>e</italic><sub><italic>c </italic></sub>based on GenePix quantified signals are consistently greater than the corresponding ones based on Spot signals, cf. Tables <xref ref-type="table" rid="T2">2</xref>,<xref ref-type="table" rid="T3">3</xref>,<xref ref-type="table" rid="T4">4</xref>. The box plots in Figure <xref ref-type="fig" rid="F4">4</xref> show differences in estimates of the common bias (for each bootstrap sample) between GenePix and Spot. The difference may be explained by the fact that the two applications use different spot segmentation algorithms [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B9">9</xref>]. Because the concentration of fluorophores is not homogeneous across a spot, the result is that the distribution of pixel intensities will vary with the segmentation method. This effect can be more profound for spots with strong donut effects. Robust estimates such as the median pixel value will to some extent protect against this variance, but not completely. It has been suggested [<xref ref-type="bibr" rid="B10">10</xref>] that the <italic>median of </italic>(pixel) <italic>ratios </italic>is a better estimate of the ratio of hybridized cDNA than the <italic>ratio of median </italic>(pixels). However, the former requires that the images are perfectly aligned with respect to shift, rotation, shear and so on. Also, it applies exclusively to two sample comparisons. Because of this, we do not believe that pixel-ratio signals are useful in practice.</p>
+      </sec>
+      <sec>
+        <title>Pixel-based estimates</title>
+        <p>To better understand the underlying reasons for the observed channel biases, the proposed affine model was also applied to pixel intensities (instead of spot signals). The estimated biases for the two channels for different arrays using IWPCA based on <italic>pixel values </italic>are shown in Tables <xref ref-type="table" rid="T2">2</xref> &amp;<xref ref-type="table" rid="T3">3</xref>. Except for the green channel in the second scan round of Array H, the pixel-based estimates are consistently higher than the estimates based on GenePix and the Spot foreground signals. As noted above, pixel-based estimates are very sensitive to image distortions. This is especially a concern for the Agilent scanner since it reloads the arrays between subsequent scans. To investigate the effect of image distortion, we did a test where a person with experience in microarray analysis was asked to subjectively rank how badly aligned the four images in the red channel with different PMT gains from the Agilent scanner were for each of the (unlabeled) nine arrays. The person rated the images from Arrays A, B, D, and H-1 to be "extremely" misaligned. The images from Array E were considered to be "quite" misaligned, and the images from Array C to be "slightly" misaligned. For the rest of the arrays the images were considered to be aligned (less than a pixel off). This is perfectly in line with the discrepancies in Table <xref ref-type="table" rid="T2">2</xref>, which confirms our hypothesis. Another disadvantages with pixel-based methods is that they are extremely memory and time consuming. For instance, estimation with 10<sup>6 </sup>pixels is approximately 50 times slower than with 55,488 signals.</p>
+      </sec>
+      <sec>
+        <title>Comparison of channels</title>
+        <p>As Figure <xref ref-type="fig" rid="F5">5</xref> shows, the common bias <italic>e</italic><sub><italic>c </italic></sub>is greater in the green channel than in the red channel, especially for GenePix quantified signals, when estimated based on data from the Axon scanner. For the Agilent scanner this trend is less clear although the Spot quantified signals seem to give higher bias in the green channel than in the red channel. Furthermore, the biases in the red and the green channels are stable between arrays, which give further evidence to our hypothesis that the bias originates from the scanner (and/or the image analysis methods).</p>
+      </sec>
+      <sec>
+        <title>Deviation in bias estimates between PMT gains</title>
+        <p>In Figure <xref ref-type="fig" rid="F6">6</xref> the distribution of the "bias residuals" <inline-graphic xlink:href="1471-2105-5-177-i34.gif"/> are depicted for different scans <italic>k </italic>and channels <italic>c</italic>, for each separate array, but also for all arrays together, and for both scanners and both image analysis methods. Most apparent is that the estimates based on signals from the Axon scanner and especially those quantified by the Spot software are greater than for the others, cf. Tables <xref ref-type="table" rid="T2">2</xref> &amp;<xref ref-type="table" rid="T3">3</xref>. The reason for this difference is not clear to us. For some arrays the estimates from the red and the green channels are strongly correlated, but it is not clear to us when this occurs. Although not in general, for some combinations of scanner and image analysis method, there is a trend in the PMT order (or possibly scan order). Again, we do not know why. To summarize, we have by means of exploratory data analysis (not shown) tried to understand what sometimes looks like patterns in the <inline-graphic xlink:href="1471-2105-5-177-i34.gif"/> :s, but we found no apparent relationships. However, systematic effects indicate that <inline-graphic xlink:href="1471-2105-5-177-i34.gif"/> may be modeled further.</p>
+      </sec>
+    </sec>
+    <sec>
+      <title>Calibration</title>
+      <p>When data was calibrated according to the backward transformation in (8)-(10) estimates (up to a scale factor) of all <italic>x</italic><sub><italic>c</italic>,<italic>i</italic></sub>:s were obtained. Since we do not know the true values we can not verify the estimates directly. However, partly we can do it indirectly by looking for remaining systematic effects in the log-ratios, but also by comparing the empirical densities of the calibrated scans. For a detailed study on systematic effects introduced by affine transformations, see [<xref ref-type="bibr" rid="B2">2</xref>]. For instance, the amount of intensity-dependent curvature in the log-ratios is related to the bias and the relative scale factor via the product <inline-graphic xlink:href="1471-2105-5-177-i35.gif"/> assuming ||<bold>d</bold><sub><italic>c</italic></sub>|| = 0. To demonstrate this relationship, we have for different PMT pairs compared the within-channel log-ratios and log-intensities</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i36.gif"/>
+      </p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i37.gif"/>
+      </p>
+      <p>respectively, with the corresponding ones for the backward transformed data, which we denote by <inline-graphic xlink:href="1471-2105-5-177-i38.gif"/> and <inline-graphic xlink:href="1471-2105-5-177-i39.gif"/>. The log-ratios versus the log-intensities for the <italic>raw signals </italic>of all six PMT pairs are shown in the left scatter plot in Figure <xref ref-type="fig" rid="F7">7</xref>. The corresponding plot for the <italic>backward transformed signals </italic>is shown to the very right. For each of the six data clouds, the curvature, but also the overall bias, in the log-ratios is removed. To further underline the effect that a channel-specific <italic>bias </italic>has, we have calculated the log-ratios for the <italic>bias-subtracted </italic>signals (no rescaling), which makes Model (2) <italic>linear</italic>. As seen in the middle scatter plot, the curvature introduced by the bias and the logarithm is removed. The overall bias in the log-ratios which remains is <inline-graphic xlink:href="1471-2105-5-177-i40.gif"/> and is removed when the signals are rescaled. It is not correct to shift only the log-ratios towards zero, because then the log-intensities will be incorrect.</p>
+      <p>The various <italic>M </italic>versus <italic>A </italic>plots become very similar and so do the four empirical density functions of the signals as seen in Figure <xref ref-type="fig" rid="F8">8</xref>. The small bumps at high intensities are due to the saturated signals, cf. Figure <xref ref-type="fig" rid="F7">7</xref>.</p>
+      <sec>
+        <title>Extended dynamical range</title>
+        <p>For the Agilent scanner the effective scale parameters <inline-graphic xlink:href="1471-2105-5-177-i3.gif"/>/<inline-graphic xlink:href="1471-2105-5-177-i9.gif"/> were estimated to be in the order of approximately 1 : 3.5. For the Axon scanner they were in the order of approximately 1 : 40, cf. Table <xref ref-type="table" rid="T1">1</xref>. Thus, the calibration method extends the effective dynamical range, with preserving linearity, by a factor of 3.5 for signals from the Agilent scanner and a factor of 40 for signals from the Axon scanner.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <sec>
+      <title>Sources of the bias</title>
+      <p>Because bias introduced before the PMT would be amplified differently at different gains, we suspect that the observed bias is due to the scanner and most likely its detector parts such as the analogue-to-digital converter (ADC) after the PMT, but possibly also due to the image analysis method. The observed differences between the channels can be explained by the fact that there is one PMT and one ADC per channel, which may have slightly different properties. Although there are differences in bias between the two scanners, they are still of the same order, which we find remarkable. Another lab with a GenePix scanner reported biases also around 15–20 (personal communication). A possible reason for this is that the scanners consist of similar parts.</p>
+    </sec>
+    <sec>
+      <title>Other estimates</title>
+      <p>To rule out the obvious situation where <italic>all </italic>pixel intensities are biased we compared the above estimates with the <italic>minimum pixel intensities</italic>. For example, for Array A (scanned on Axon and analyzed with GenePix Pro), the <italic>minimum pixel intensities </italic>in the red channel were 9, 0, 8, and 9 for PMT 500, 600, 700 and 800 volts, respectively. In the green channel the minimum pixel intensity is 0 for all scans. It is not useful to use the <italic>minimum spot signals</italic>, <inline-graphic xlink:href="1471-2105-5-177-i42.gif"/>, either. For example, for the above scan the average minimum signal across all scans in the red channel is 19.8 (median 19.5, std. dev. 0.96), but in the green channel it is 34.8 (median 28.0, std. dev. 19.6), cf. Table <xref ref-type="table" rid="T3">3</xref>.</p>
+    </sec>
+    <sec>
+      <title>On background subtraction</title>
+      <p>If the scanner is the main source for the observed bias, then the background estimates should be affected by this bias as well and subtracting the background from the foreground estimates will therefore not only correct for physical background noise from the array itself, but also for the scanner bias. The <italic>strong </italic>intensity dependent effects of the log-ratios that are due to the bias, are much less apparent if we apply background subtraction (not shown), giving more evidence to our hypothesis that the observed systematic effects originate from the scanner. Thus doing background correction might correct for the bias, but it will also introduce more noise at any given intensity. Also, for the data set in hand <italic>background subtraction </italic>results in 4050 (7.3%), 6237 (11%), 7015 (13%) and 7349 (13%) negative values (in either channel), respectively, whereas <italic>bias subtraction </italic>results in no negative values. If we assume that the noise is additive such that the background is added to the foreground signals, then for probes with few or no fluorescent molecules the true foreground signal should be close or identical to the true background signal. As both are <italic>estimates</italic>, approximately half of the foreground signals for non-signal spots are less or equal to the corresponding background signals. Thus, about half of such spots results in negative signals. However, the different numbers of negative signals for different PMT voltages suggest that this can not be the full explanation. One reason could be that the background estimates are likely to be biased [<xref ref-type="bibr" rid="B9">9</xref>]. An error model that incorporates different noise sources, but also different scan parameters, might give some answers to this problem. Some models in this context have already been suggested [<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B7">7</xref>,<xref ref-type="bibr" rid="B11">11</xref>], as well as models based on empirical Bayesian methods [<xref ref-type="bibr" rid="B12">12</xref>]. Another way to put it is that the background estimate is local and based on individual spots/pixels whereas the bias estimate is global, that is, there is one estimate for the whole array (although local estimation of bias is possible). Therefore, the background subtracted intensity estimates are noisier, resulting in more negative estimates for low intensity spots.</p>
+      <p>The problem of non-positive estimates, but also high variance close to zero, are limitations of the logarithmic transform and alternatives such as the generalized logarithmic transform etc. have been suggested [<xref ref-type="bibr" rid="B7">7</xref>,<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>].</p>
+    </sec>
+    <sec>
+      <title>Photo bleaching</title>
+      <p>We estimated the red dye (Cy5™) to bleach about 2% and the green dye (Cy3™) about 1% in a typical microarray experiment (not shown). Because the amount of bleaching is relatively small, but also because it is a very complex phenomenon, we decided to not try to incorporate it in the above model. Some of the systematic variation seen in the bias estimates for the different PMT settings may be due to bleaching.</p>
+    </sec>
+    <sec>
+      <title>Signal density normalization</title>
+      <p>As the results show, the empirical distributions of signals match each other remarkably well after calibration. It is interesting to compare this method with the quantile normalization methods proposed by [<xref ref-type="bibr" rid="B15">15</xref>-<xref ref-type="bibr" rid="B17">17</xref>]. The latter is based on the "statistical" assumption that the signals in all channels (scans) <italic>should be equal </italic>whereas the former is based on a "physical" assumption that the signals <italic>should be linear </italic>in the dynamical range. For a further discussion on this see [<xref ref-type="bibr" rid="B2">2</xref>].</p>
+    </sec>
+    <sec>
+      <title>Incremental robust estimates</title>
+      <p>It turned out to be infeasible to estimate the model parameters based on all <italic>pixel intensities</italic>, which limited us to use only on a 10% subset of data. As argued above, pixel-based estimates are not reliable and therefore not of interest. However, for spot-based estimates the same limitations may apply as larger data sets are made available. We wish to overcome such memory constraints. For this reason, we investigate the possibility to use (approximative) incremental re-weighted PCA methods [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B19">19</xref>].</p>
+    </sec>
+    <sec>
+      <title>Related work</title>
+      <p>Another method that combines multiple scans is the <italic>masliner </italic>(Microarray Spot LINEar Regression) algorithm [<xref ref-type="bibr" rid="B20">20</xref>]. It works by combining one low-PMT scan and one high-PMT scan into a new virtual scan. If a signal in the high-PMT scan is within a specified linear range its value is used, otherwise the corresponding signal from the low-intensity range is used after being transformed affinely to fit the high-PMT scan. To combine three or more scans, the new virtual scan can be combined with another PMT scan and so on. The result is that the effective dynamical range is extended. However, there are several unnecessary drawbacks. First, although several observations of the same spot concentration exist, which all may be within the dynamical range of the scanner, only one observation is used. Statistically, the average (calibrated) scan would be a more precise estimate. Second, since the scans are combined pairwise the estimate of the affine relationship between the scans is less robust. Third, although a sensitivity discussion is carried out in the supplementary materials, masliner fits the affine models in a non-robust fashion (in <italic>L</italic><sub>2</sub>). Also, classical linear regression is used, which assumes no error in the explanatory variable. Since masliner makes the signals from different PMT settings <italic>proportional to each other </italic>it will indeed remove for instance curvature in within-channel <italic>M </italic>versus <italic>A </italic>scatter plots. However, masliner does not model the possibility of a PMT-independent bias and will therefore not correct for it. We believe this is the reason why the authors observe a "curvilinear effect" [[<xref ref-type="bibr" rid="B20">20</xref>], supplementary material]. For these reasons, we believe that the robust multiscan calibration method presented in this paper is superior to the masliner algorithm and should be used instead.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>By scanning the same microarray at various PMT settings we have shown that there exists a bias in the measurement of the concentration of fluorescent molecules in the spots on the microarray. Our analysis indicates that this bias is mainly due to the scanner, but also due to the image analysis methods. By using a constrained affine model for the relationship between the obtained fluorescent intensities and fluorophore concentrations in the spots, we have been able to estimate the aforementioned bias. With estimates of the bias and scale parameters in each channel back transformation gave estimates of the amount (up to a scale factor) of photons from each spot that enters the PMT. Although not all photons originate solely from fluorophores in the target DNA, this is still a far better estimate of the amount of hybridized target DNA in each spot than the corresponding signal quantified by the scanner and the image analysis.</p>
+    <p>Before calibration, our data show a strong intensity dependent effect in the log-ratios, whereas after calibration there is no apparent intensity dependent trend. Furthermore, the distributions of signals from subsequent PMT scans are almost identical after calibration. In addition, the signal-to-noise ratio is increased with multiple scans. Finally, scanning at both low and high PMT settings extends the dynamical range of data, which gives higher resolution at low intensities without having to pay the price of saturated signals.</p>
+    <p>The proposed method can be applied to other microarray technologies such as single-channel oligonucleotide arrays or nylon arrays, and possibly to other gene expression technologies such as quantitative real-time polymerase chain reaction (QRT-PCR).</p>
+    <p>To conclude, we suggest that hybridized microarrays are scanned at two (preferably more) PMT gain levels to identify channel dependent bias terms. Knowing the exact PMT settings is not important, but the larger the differences are, the more precise the estimates will be. We recommend that the scans are done in <italic>decreasing </italic>PMT-gain order (although we did not do so here). Given estimates, data can then be calibrated easily. For practical reasons it might, however, be sufficient to estimate bias terms for a specific scanner once and then use estimates for calibration of subsequent microarrays. The small inter-array variation observed for channel specific bias in our data suggests that this would be possible. On the other hand, without multiple scans, afore mentioned increase in signal-to-noise and dynamical range will be lost. Also, not investigated within the scope of this study, bias terms for a specific scanner might change over time. For these reasons, we suggest that microarrays are scanned multiple times.</p>
+    <p>For two-channel microarrays, after calibrating each channel separately, a similar strategy can be applied once more to bring differently labeled channels to the same scale as suggested in [<xref ref-type="bibr" rid="B2">2</xref>]. This would rely on the assumption that the amounts of hybridized DNA in all channels are approximately equal for the majority of the spots, which in turn is based on the commonly used assumption that most genes are non-differentially expressed. This also applies to normalization between arrays.</p>
+    <p>All necessary methods are made available in a free R package named aroma [<xref ref-type="bibr" rid="B21">21</xref>]. A typical usage is calibrateMultiscan(rg) where rg is the object containing the red and green signals. In addition, we are currently implementing the methods as a plug-in module for the BASE system [<xref ref-type="bibr" rid="B22">22</xref>].</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>Arrays and hybridization</title>
+      <p>The analysis was based on eight different hybridizations of spotted oligonucleotide microarrays (A-H). Arrays A and B were hybridized in October 2003. Arrays C-G were hybridized the following day and Array H was hybridized seven weeks later. All arrays contain the same human oligonucleotide set (QIA GEN) and all have an identical layout of 12-by-4 print-tip groups each containing 34-by-34 (1156) spots. In total there are 55488 spots on each array. The average (GenePix) spot area is 45–50 pixels and the average center-to-center distance between the spots is approximately 12–13 pixels (120–130 <italic>μm</italic>). Arrays were produced by the SWEGENE DNA Microarray Resource Centre, Department of Oncology at Lund University using a MicroGrid II 600R arrayer fitted with MicroSpot 10 K pins (BioRobotics). All arrays except Array H were spotted in the same print batch on UltraGAPS™ coated slides (Corning Incorporated) during August 2003. Array H was spotted in October the same year. Printing was performed in a temperature (18–20°C) and humidity (44–49% RH) controlled area. After printing was completed, arrays were left in a desiccator to dry for 48 hours, rehydrated for 1 second over steaming water, snap dried on a hot plate (98°C), UV-cross-linked (800 mJ/cm<sup>2</sup>) and subsequently hybridized with various test and reference RNA samples. Samples were labeled, purified and hybridized using Pronto!™ Plus System 6 (Corning Incorporated) according to manufacturer's instructions.</p>
+    </sec>
+    <sec>
+      <title>Scanning</title>
+      <p>Each array was scanned at four different PMT settings on two different types of scanners. First the arrays were scanned on an Agilent G2505A DNA microarray scanner (Agilent Technologies) at PMT gains 100%, 30%, 50%, and 80% (in that order). The so called <italic>dark offset </italic>intentionally added to all signals by the Agilent scanner [[<xref ref-type="bibr" rid="B23">23</xref>], p. 18] has been uninstalled. Arrays were then re-scanned on an Axon GenePix 4000 A scanner (Axon Instruments) at PMT gains 600, 700, 800, and 500 volts (in that order), except for Array A, which was scanned at 700, 800, 500 and 600 volts, and Array H, which was scanned at 600, 400, 500 and 700 volts. Thus, the images obtained by the Axon scanner were bleached more than the preceding ones obtained by the Agilent scanner. For both scanners the power of the 532 nm and the 635 nm lasers was set to 100% and the scan resolution to 10 <italic>μm</italic>/pixel. Moreover, a one-pass (both channels scanned simultaneously) and one-sample-per-pixel ("lines to average" equals one) procedure was used. The Agilent scanner has a special loading mechanism for microarrays, which allows automatic scanning of subsequent arrays without human intervention. However, due to limitations in the software or the scanner, each batch of arrays can only be scanned at a single PMT gain. To scan at more PMT gains with the Agilent scanner, it was therefore necessary to eject and reload the arrays between different settings, which means that the alignment between the scanned images may not be perfect. Contrary, for the Axon scanner the arrays were put in the scanner one by one, then scanned at all PMT settings without being moved.</p>
+    </sec>
+    <sec>
+      <title>Image analysis – spot segmentation and registration</title>
+      <p>To quantify the foreground and the background signals, the scanned images (65536 gray scales and approximately 2000-by-5600 pixels) were analyzed using both the Axon GenePix Pro v4.1.1 software (Axon Instruments) and the Spot v2 software [<xref ref-type="bibr" rid="B8">8</xref>,<xref ref-type="bibr" rid="B24">24</xref>]. We first analyzed each image with GenePix. For each of them, the grid and spot positions were manually set and then the alignment was optimized by GenePix. These positions were then re-entered and re-optimized by Spot with visual inspection to verify the correctness. Moreover, for each individual scan the image analysis software was let to find the optimal spot segmentation. Thus, what is defined as a foreground pixel may vary with PMT setting although the images are from the same array. We decided on this schema for various reasons. The first reason was that the Agilent arrays are loaded and unloaded between subsequent scans and therefore require a separate spot segmentation. To be able to compare the results from the Axon and the Agilent scanner we choose the same procedure for the images scanned on the Axon scanner, even though, the optimized segmentation for the strongest image could have been reused. We further believe that this allows us compare Spot and GenePix more fairly.</p>
+      <p>For both Spot and GenePix the median spot pixel intensity was used as foreground signal. Background estimates were not considered in this analysis. No spot signals were discarded.</p>
+    </sec>
+    <sec>
+      <title>Calibration</title>
+      <p>Given estimates of <inline-graphic xlink:href="1471-2105-5-177-i2.gif"/> and <inline-graphic xlink:href="1471-2105-5-177-i3.gif"/> data can be calibrated using backward transformation. Let</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i43.gif"/>
+      </p>
+      <p>be the backward transformed observed signal and the rescaled error terms, respectively. The affine Model (2) can then be rewritten as</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i44.gif"/>
+      </p>
+      <p>Moreover, let</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i45.gif"/>
+      </p>
+      <p>be the average backward transformed signal for gene <italic>i </italic>in channel <italic>c</italic>. Now, if <inline-graphic xlink:href="1471-2105-5-177-i46.gif"/>, then</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i47.gif"/>
+      </p>
+      <p>when all <inline-graphic xlink:href="1471-2105-5-177-i2.gif"/> and <inline-graphic xlink:href="1471-2105-5-177-i3.gif"/> are known. Thus, if (8) is applied with estimates of <inline-graphic xlink:href="1471-2105-5-177-i2.gif"/> and <inline-graphic xlink:href="1471-2105-5-177-i3.gif"/> that are consistent as <italic>I </italic>→ ∞, and the error terms have zero mean, the mean of the backward transformed signals will converge to <italic>x</italic><sub><italic>c</italic>,<italic>i </italic></sub>as <italic>I </italic>grows. Even though <inline-graphic xlink:href="1471-2105-5-177-i48.gif"/> is not observable, we can estimate it consistently by increasing the number of scans <italic>K</italic>. Inspection of the residuals of calibrated signals (not shown) indicates that the variance of the calibrated noise is independent of PMT setting, that is <inline-graphic xlink:href="1471-2105-5-177-i49.gif"/>. Assuming independent noise terms, the variance of the sample mean decrease with <italic>K </italic>as</p>
+      <p>
+        <inline-graphic xlink:href="1471-2105-5-177-i50.gif"/>
+      </p>
+      <p>In summary, we obtain consistent estimates (up to a multiplicative constant) of all <italic>x</italic><sub><italic>c</italic>,<italic>i </italic></sub>with increasing <italic>I </italic>and <italic>K</italic>.</p>
+      <p>Finally, signals that are saturated by the scanner have to be excluded before calculating the average. If the quantified signal for a spot happens to be saturated in all scans, then that spot is marked as saturated, which still may be informative when compared to other non-saturated signals.</p>
+    </sec>
+    <sec>
+      <title>Data analysis</title>
+      <p>All further analysis was carried out using R [<xref ref-type="bibr" rid="B25">25</xref>,<xref ref-type="bibr" rid="B26">26</xref>] and the aroma package (f.k.a. com.braju.sma) [<xref ref-type="bibr" rid="B21">21</xref>]. All methods used can be found in the latter.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>GJ and JVC carried out the practical microarray laboratory work and the scanning of hybridized arrays. Image analysis using GenePix software was carried out by JVC whereas HB carried out image analysis using Spot software. HB performed all the statistical analysis and conceived the constrained affine model used to identify and estimate channel-specific bias in microarray data. All authors participated in the design of the study and approved the final manuscript.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <sec>
+      <title>Acknowledgments</title>
+      <p>We thank Professor Ola Hössjer at Mathematical Statistics at Stockholm University and Halfdan Grage at The Centre for Mathematical Sciences, Lund University for their valuable feedback on the methods and the manuscript. We also thank Professor Åke Borg at Department of Oncology, Lund University for providing microarray data and Assistant Professor Markus Ringnér at Department of Theoretical Physics Lund University for proof reading the manuscript. This work was supported by grants from the Swedish Foundation for International Cooperation in Research and Higher Education (STINT), Fulbright Commission, Foundation Blanceflor Boncompagni-Ludovisi née Bildt, Royal Swedish Academy of Sciences, Royal Physiographic Society in Lund, Swedish Cancer Society, Ingabritt and Arne Lundberg's Research Foundation, and American Cancer Society. Microarrays were produced by the SWEGENE DNA Microarray Resource Center at Lund University, supported by the Knut and Alice Wallenberg foundation through the SWEGENE consortium.</p>
+    </sec>
+  </ack>
+  <ref-list>
+    <ref id="B1">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Duggan</surname>
+            <given-names>DJ</given-names>
+          </name>
+          <name>
+            <surname>Bittner</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Meltzer</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Trent</surname>
+            <given-names>JM</given-names>
+          </name>
+        </person-group>
+        <article-title>Expression profiling using cDNA microarrays</article-title>
+        <source>Nature Genetics</source>
+        <year>1999</year>
+        <volume>21</volume>
+        <fpage>10</fpage>
+        <lpage>14</lpage>
+        <pub-id pub-id-type="pmid">9915494</pub-id>
+        <pub-id pub-id-type="doi">10.1038/4434</pub-id>
+      </citation>
+    </ref>
+    <ref id="B2">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bengtsson</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Hössjer</surname>
+            <given-names>O</given-names>
+          </name>
+        </person-group>
+        <article-title>Methodological study of affine transformations of gene expression data with proposed normalization method.</article-title>
+        <source>Preprints in Mathematical Sciences 2003:38, Mathematical Statistics, Centre for Mathematical Sciences, Lund University, Sweden</source>
+        <year>2003</year>
+        <comment/>
+      </citation>
+    </ref>
+    <ref id="B3">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Cui</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Kerr</surname>
+            <given-names>MK</given-names>
+          </name>
+          <name>
+            <surname>Churchill</surname>
+            <given-names>GA</given-names>
+          </name>
+        </person-group>
+        <article-title>Data Transformations for cDNA Microarray Data</article-title>
+        <source>Tech rep, The Jackson Laboratory, USA</source>
+        <year>2002</year>
+      </citation>
+    </ref>
+    <ref id="B4">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <collab>Burle Industries Inc</collab>
+        </person-group>
+        <article-title>Photomultiplier Handbook</article-title>
+        <source>Lancaster, PA, U S A</source>
+        <year>1980</year>
+      </citation>
+    </ref>
+    <ref id="B5">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dudoit</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Yang</surname>
+            <given-names>YH</given-names>
+          </name>
+          <name>
+            <surname>Callow</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>TP</given-names>
+          </name>
+        </person-group>
+        <article-title>Statistical methods for identifying differentially expressed genes in replicated cDNA microarray experiments</article-title>
+        <source>Technical Report 578, Department of Statistics, University of California at Berkeley</source>
+        <year>2000</year>
+      </citation>
+    </ref>
+    <ref id="B6">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>YH</given-names>
+          </name>
+          <name>
+            <surname>Dudoit</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Luu</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>TP</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Bittner ML, Chen Y, Dorsel AN, Dougherty ER, San Jose</surname>
+          </name>
+        </person-group>
+        <article-title>Normalization for cDNA microarray data</article-title>
+        <source>In Proceedings of SPiE, Volume 4266 of Microarrays: Optical Technologies and Informatics</source>
+        <year>2001</year>
+        <publisher-name>California: The International Society for Optical Engineering</publisher-name>
+        <fpage>141</fpage>
+        <lpage>152</lpage>
+      </citation>
+    </ref>
+    <ref id="B7">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Huber</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>von Heydebreck</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Sültmann</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Poustka</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Vingron</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <article-title>Variance stabilization applied to microarray data calibration and to the quantification of differential expression</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>S96</fpage>
+        <lpage>104</lpage>
+        <pub-id pub-id-type="pmid">12169536</pub-id>
+      </citation>
+    </ref>
+    <ref id="B8">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>YH</given-names>
+          </name>
+          <name>
+            <surname>Buckley</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Dudoit</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>Comparison of methods for image analysis on cDNA microarray data</article-title>
+        <source>Technical Report 584, Department of Statistics, University of California at Berkeley</source>
+        <year>2000</year>
+      </citation>
+    </ref>
+    <ref id="B9">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bengtsson</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Microarray Image Analysis: Background Estimation using Region and Filtering Techniques</article-title>
+        <source>Master's Theses in Mathematical Sciences, Mathematical Statistics, Centre for Mathematical Sciences, Lund Institute of Technology, Sweden</source>
+        <year>2003</year>
+      </citation>
+    </ref>
+    <ref id="B10">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Brody</surname>
+            <given-names>JP</given-names>
+          </name>
+          <name>
+            <surname>Williams</surname>
+            <given-names>BA</given-names>
+          </name>
+          <name>
+            <surname>Wold</surname>
+            <given-names>BJ</given-names>
+          </name>
+          <name>
+            <surname>Quake</surname>
+            <given-names>SR</given-names>
+          </name>
+        </person-group>
+        <article-title>Significance and statistical errors in the analysis of DNA microarray data</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>2002</year>
+        <volume>99</volume>
+        <fpage>12975</fpage>
+        <lpage>12978</lpage>
+        <pub-id pub-id-type="pmid">12235357</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.162468199</pub-id>
+      </citation>
+    </ref>
+    <ref id="B11">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rocke</surname>
+            <given-names>DM</given-names>
+          </name>
+          <name>
+            <surname>Durbin</surname>
+            <given-names>B</given-names>
+          </name>
+        </person-group>
+        <article-title>A Model for Measurement Error for Gene Expression Arrays</article-title>
+        <source>Journal of Computational Biology</source>
+        <year>2001</year>
+        <volume>8</volume>
+        <fpage>557</fpage>
+        <lpage>569</lpage>
+        <pub-id pub-id-type="pmid">11747612</pub-id>
+        <pub-id pub-id-type="doi">10.1089/106652701753307485</pub-id>
+      </citation>
+    </ref>
+    <ref id="B12">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kooperberg</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Fazzio</surname>
+            <given-names>TG</given-names>
+          </name>
+          <name>
+            <surname>Delrow</surname>
+            <given-names>JJ</given-names>
+          </name>
+          <name>
+            <surname>Tsukiyama</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>Improved background correction for spotted DNA microarrays</article-title>
+        <source>Journal of Computational Biology</source>
+        <year>2002</year>
+        <volume>9</volume>
+        <fpage>55</fpage>
+        <lpage>66</lpage>
+        <pub-id pub-id-type="pmid">11911795</pub-id>
+        <pub-id pub-id-type="doi">10.1089/10665270252833190</pub-id>
+      </citation>
+    </ref>
+    <ref id="B13">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Hawkins</surname>
+            <given-names>DM</given-names>
+          </name>
+        </person-group>
+        <article-title>Diagnostics for conformity of paired quantitative measurements</article-title>
+        <source>Statistics in Medicine</source>
+        <year>2002</year>
+        <volume>21</volume>
+        <fpage>1913</fpage>
+        <lpage>1935</lpage>
+        <pub-id pub-id-type="pmid">12111897</pub-id>
+        <pub-id pub-id-type="doi">10.1002/sim.1013</pub-id>
+      </citation>
+    </ref>
+    <ref id="B14">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Durbin</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Hardin</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Hawkins</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Rocke</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>A variance-stabilizing transformation for gene-expression microarray data</article-title>
+        <source>Bioinformatics</source>
+        <year>2002</year>
+        <volume>18</volume>
+        <fpage>S105</fpage>
+        <lpage>S110</lpage>
+        <pub-id pub-id-type="pmid">12169537</pub-id>
+      </citation>
+    </ref>
+    <ref id="B15">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bolstad</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Irizarry</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Åstrand</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>T</given-names>
+          </name>
+        </person-group>
+        <article-title>A comparison of normalization methods for high density oligonucleotide array data based on variance and bias</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <fpage>185</fpage>
+        <lpage>93</lpage>
+        <pub-id pub-id-type="pmid">12538238</pub-id>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/19.2.185</pub-id>
+      </citation>
+    </ref>
+    <ref id="B16">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>YH</given-names>
+          </name>
+          <name>
+            <surname>Thorne</surname>
+            <given-names>NP</given-names>
+          </name>
+        </person-group>
+        <person-group person-group-type="editor">
+          <name>
+            <surname>Goldstein DR</surname>
+          </name>
+        </person-group>
+        <article-title>Normalization for Two-color cDNA Microarray Data</article-title>
+        <source>In Science and Statistics: A Festschrift for Terry Speed, Volume 40 of Monograph Series</source>
+        <year>2003</year>
+        <publisher-name>IMS Lecture Notes</publisher-name>
+        <fpage>403</fpage>
+        <lpage>418</lpage>
+      </citation>
+    </ref>
+    <ref id="B17">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Thorne</surname>
+            <given-names>NP</given-names>
+          </name>
+        </person-group>
+        <article-title>Single-channel normalisation and analysis of two-colour cDNA microarray data</article-title>
+        <source>PhD thesis, Department of Medical Biology and Department of Mathematics and Statistics, The Walter and Eliza Hall Institute of Medical Research</source>
+        <year>2004</year>
+      </citation>
+    </ref>
+    <ref id="B18">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Skocaj</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Leonardis</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>Weighted and robust incremental method for subspace learning</article-title>
+        <source>In ICCV03</source>
+        <year>2003</year>
+        <fpage>1494</fpage>
+        <lpage>1501</lpage>
+      </citation>
+    </ref>
+    <ref id="B19">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Xu</surname>
+            <given-names>LQ</given-names>
+          </name>
+          <name>
+            <surname>Morphett</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Jacobs</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>An Integrated Algorithm of Incremental and Robust PCA</article-title>
+        <source>In IEEE International Conference on Image Processing (ICIP2003)</source>
+        <year>2003</year>
+      </citation>
+    </ref>
+    <ref id="B20">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dudley</surname>
+            <given-names>AM</given-names>
+          </name>
+          <name>
+            <surname>Aach</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Steffen</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Church</surname>
+            <given-names>GM</given-names>
+          </name>
+        </person-group>
+        <article-title>Measuring absolute expression with microarrays with a calibrated reference sample and an extended signal intensity range</article-title>
+        <source>Proc Natl Acad Sci U S A</source>
+        <year>2002</year>
+        <volume>99</volume>
+        <fpage>7554</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="pmid">12032321</pub-id>
+        <pub-id pub-id-type="doi">10.1073/pnas.112683499</pub-id>
+      </citation>
+    </ref>
+    <ref id="B21">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bengtsson</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>aroma – An R Object-oriented Microarray Analysis environment</article-title>
+        <source>Preprint in Mathematical Sciences 2004:18, Mathematical Statistics, Centre for Mathematical Sciences, Lund University, Sweden</source>
+        <year>2004</year>
+        <ext-link ext-link-type="uri" xlink:href="http://www.maths.lth.se/help/R/aroma/"/>
+      </citation>
+    </ref>
+    <ref id="B22">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Saal</surname>
+            <given-names>LH</given-names>
+          </name>
+          <name>
+            <surname>Troein</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Vallon-Christersson</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Gruvberger</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Borg</surname>
+            <given-names>Å</given-names>
+          </name>
+          <name>
+            <surname>Peterson</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>BioArray Software Environment (BASE): a platform for comprehensive management and analysis of microarray data</article-title>
+        <source>Genome Biol</source>
+        <year>2002</year>
+        <volume>3</volume>
+        <fpage>SOFTWARE0003</fpage>
+        <pub-id pub-id-type="pmid">12186655</pub-id>
+        <pub-id pub-id-type="doi">10.1186/gb-2002-3-8-software0003</pub-id>
+      </citation>
+    </ref>
+    <ref id="B23">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <collab>Agilent Technologies, Inc.</collab>
+        </person-group>
+        <article-title>Agilent G2565AA and Agilent G2565BA Microarray Scanner System – User Manual</article-title>
+        <source>third, Palo Alto, CA</source>
+        <year>2002</year>
+        <comment>[G2566-90007]</comment>
+      </citation>
+    </ref>
+    <ref id="B24">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <collab>CSIRO Australia</collab>
+        </person-group>
+        <article-title>Spot user's manual</article-title>
+        <source>CSIRO Mathematical and Information Sciences, Image Analysis Group</source>
+        <year>2003</year>
+        <ext-link ext-link-type="uri" xlink:href="http://spot.cmis.csiro.au/spot/"/>
+      </citation>
+    </ref>
+    <ref id="B25">
+      <citation citation-type="other">
+        <person-group person-group-type="author">
+          <collab>R Development Core Team</collab>
+        </person-group>
+        <article-title>R: A language and environment for statistical computing</article-title>
+        <source>R Foundation for Statistical Computing, Vienna, Austria</source>
+        <year>2003</year>
+        <ext-link ext-link-type="uri" xlink:href="http://www.R-project.org"/>
+      </citation>
+    </ref>
+    <ref id="B26">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ihaka</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Gentleman</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>R: A Language for Data Analysis and Graphics</article-title>
+        <source>Journal of Computational and Graphical Statistics</source>
+        <year>1996</year>
+        <volume>5</volume>
+        <fpage>299</fpage>
+        <lpage>314</lpage>
+      </citation>
+    </ref>
+  </ref-list>
+  <sec sec-type="display-objects">
+    <title>Figures and Tables</title>
+    <fig position="float" id="F1">
+      <label>Figure 1</label>
+      <caption>
+        <p><bold>Affine relationship between quantified fluorescent intensities and concentration of fluorophores. </bold>Scanning the arrays at different PMT gains indicates that there is an affine relationship between quantified fluorescent intensities and concentration of fluorophores. Left: Observed signals in the green channel for PMT pairs (800, 500), (700, 500), (800, 600), (600, 500), (700, 600), and (800, 700) are shown in green, red, cyan, black, blue and magenta, respectively. An affine model is estimated for each pair and displayed as a line. Data points at the very top are saturated and ignored. Right: A zoom-in of the same data. For <italic>each </italic>pair the estimated <inline-graphic xlink:href="1471-2105-5-177-i11.gif"/>, which corresponds to the true origin, has been highlighted with a circle. All lines seem to intersect at the same point on the <inline-graphic xlink:href="1471-2105-5-177-i12.gif"/> line. Shown are signals from the green channel on Array A quantified by GenePix from Axon scanner images.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-177-1"/>
+    </fig>
+    <fig position="float" id="F2">
+      <label>Figure 2</label>
+      <caption>
+        <p><bold>Bias estimated for each array and channel on both scanners </bold>Estimated biases <italic>e</italic><sub><italic>c </italic></sub>for each array and for all arrays together from the Agilent scanner (left column) and the Axon scanner (right column). The top four graphs are for the red channel and the bottom four are for the green channel. For each channel the top two are estimates based on signals quantified by GenePix and the bottom two on signals quantified by Spot. See also Table 2 &amp; 3.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-177-2"/>
+    </fig>
+    <fig position="float" id="F3">
+      <label>Figure 3</label>
+      <caption>
+        <p><bold>Comparison of bias estimates between scanners. </bold>Differences in the common biases <italic>e</italic><sub><italic>c </italic></sub>between the Agilent and the Axon scanners for each separate array and for all arrays together. The bias is significantly larger for Agilent, regardless of channel (top and bottom) and image analysis method (left and right).</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-177-3"/>
+    </fig>
+    <fig position="float" id="F4">
+      <label>Figure 4</label>
+      <caption>
+        <p><bold>Comparison of bias estimates between image analysis methods. </bold>Differences in the common biases <italic>e</italic><sub><italic>c </italic></sub>between the GenePix and the Spot image analysis method for each separate array and for all arrays together. The bias is significantly larger for GenePix, regardless of channel (top and bottom) and scanner (left and right).</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-177-4"/>
+    </fig>
+    <fig position="float" id="F5">
+      <label>Figure 5</label>
+      <caption>
+        <p><bold>Comparison of bias estimates between channels. </bold>Differences in the common biases <italic>e</italic><sub><italic>c </italic></sub>between the red and the green channel for each separate array and for all arrays together. At the top is data from the Agilent scanner and at the bottom from the Axon scanner. Data in the left column by GenePix and Data in the right column was quantified by Spot. For data from the Axon scanner the common bias is greater in the green channel than the red channel, especially for GenePix quantified signals. For the Agilent scanner this trend is less clear although the Spot quantified signals clearly seem to have a higher bias in the green than the red channel.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-177-5"/>
+    </fig>
+    <fig position="float" id="F6">
+      <label>Figure 6</label>
+      <caption>
+        <p><bold>Bias residual estimates for all arrays. </bold>Estimated bias residuals <inline-graphic xlink:href="1471-2105-5-177-i34.gif"/> for each array and for all arrays together from the Agilent scanner (left column) and the Axon scanner (right column). For each array the distribution of the four of <inline-graphic xlink:href="1471-2105-5-177-i34.gif"/> are shown in increasing <italic>PMT order</italic>. The top four graphs are for the red channel and the bottom four are for the green channel. For each channel the top two are estimates based on signals quantified by GenePix and the bottom two on signals quantified by Spot.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-177-6"/>
+    </fig>
+    <fig position="float" id="F7">
+      <label>Figure 7</label>
+      <caption>
+        <p><bold>Log-ratio and log-intensity plots of raw, translated, and calibrate signals. </bold>The affine transformation gives curvature in the <italic>M </italic>versus <italic>A </italic>plots, which is corrected for by the affine normalization method. The three scatter plots show the within-channel log-ratio versus the log-intensity for each of the six PMT pairs based on the same data as in Figure 1. Left: Observed signal for different PMT pairs. For <italic>each </italic>pair the estimated <inline-graphic xlink:href="1471-2105-5-177-i41.gif"/> has been marked with a circle, cf. Figure 1. Mid: Bias corrected signals. Right: Bias and scale calibrated signals. The range of the <italic>M </italic>axis is twice the range of the <italic>A </italic>axis so that (6)-(7) appear as a rotation in the plots.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-177-7"/>
+    </fig>
+    <fig position="float" id="F8">
+      <label>Figure 8</label>
+      <caption>
+        <p><bold>Densities of the logarithm of the raw, translated, and calibrate signals. </bold>The affine normalization method makes the signal densities much more similar. Left: Density plots of the logarithm of the raw signals for each of the fours scans. Mid: Bias corrected signals. Right: Bias and scale calibrated signals. Data and colors are the same as in Figure 1.</p>
+      </caption>
+      <graphic xlink:href="1471-2105-5-177-8"/>
+    </fig>
+    <table-wrap position="float" id="T1">
+      <label>Table 1</label>
+      <caption>
+        <p>Pairwise parameter estimates. Red and green channel estimates of the bias and the slope for each PMT voltage pair together with the mean and the standard deviation of all estimates. The small standard deviation is evidence that the bias to a large extent is independent of the PMT settings. Data shown originates from Array A scanned on Axon and analyzed with GenePix.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td align="center">PMT pair</td>
+            <td align="right">
+              <graphic xlink:href="1471-2105-5-177-i27.gif"/>
+            </td>
+            <td align="right">
+              <graphic xlink:href="1471-2105-5-177-i28.gif"/>
+            </td>
+            <td align="right">
+              <graphic xlink:href="1471-2105-5-177-i29.gif"/>
+            </td>
+            <td align="right">
+              <graphic xlink:href="1471-2105-5-177-i30.gif"/>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">(800, 500)</td>
+            <td align="right">18.9</td>
+            <td align="right">32.4</td>
+            <td align="right">20.7</td>
+            <td align="right">32.5</td>
+          </tr>
+          <tr>
+            <td align="center">(700, 500)</td>
+            <td align="right">19.0</td>
+            <td align="right">13.0</td>
+            <td align="right">20.9</td>
+            <td align="right">12.8</td>
+          </tr>
+          <tr>
+            <td align="center">(800, 600)</td>
+            <td align="right">17.3</td>
+            <td align="right">7.1</td>
+            <td align="right">19.8</td>
+            <td align="right">7.9</td>
+          </tr>
+          <tr>
+            <td align="center">(600, 500)</td>
+            <td align="right">19.0</td>
+            <td align="right">4.5</td>
+            <td align="right">20.8</td>
+            <td align="right">4.1</td>
+          </tr>
+          <tr>
+            <td align="center">(700, 600)</td>
+            <td align="right">17.6</td>
+            <td align="right">2.9</td>
+            <td align="right">20.9</td>
+            <td align="right">3.1</td>
+          </tr>
+          <tr>
+            <td align="center">(800, 700)</td>
+            <td align="right">16.3</td>
+            <td align="right">2.5</td>
+            <td align="right">18.9</td>
+            <td align="right">2.6</td>
+          </tr>
+          <tr>
+            <td align="center">mean</td>
+            <td align="right">18.0 ± 1.12</td>
+            <td/>
+            <td align="right">20.3 ± 0.80</td>
+            <td/>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+    <table-wrap position="float" id="T2">
+      <label>Table 2</label>
+      <caption>
+        <p>Red channel parameters estimates. Bootstrapped parameter estimates for the red channel with standard deviations for each combination of array, image method (or pixel intensities) and scanner.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td align="center">array</td>
+            <td align="right">image</td>
+            <td align="center" colspan="2">Agilent</td>
+            <td align="center" colspan="2">Axon</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="right">method</td>
+            <td align="center">
+              <graphic xlink:href="1471-2105-5-177-i27.gif"/>
+            </td>
+            <td align="center">
+              <graphic xlink:href="1471-2105-5-177-i32.gif"/>
+            </td>
+            <td align="center">
+              <graphic xlink:href="1471-2105-5-177-i27.gif"/>
+            </td>
+            <td align="center">
+              <graphic xlink:href="1471-2105-5-177-i32.gif"/>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">A</td>
+            <td align="right">Spot</td>
+            <td align="center">17.9 ± 0.289</td>
+            <td align="center">1.14 ± 0.148</td>
+            <td align="center">15.8 ± 0.090</td>
+            <td align="center">4.40 ± 0.145</td>
+          </tr>
+          <tr>
+            <td align="center">A</td>
+            <td align="right">GenePix</td>
+            <td align="center">19.8 ± 0.253</td>
+            <td align="center">0.82 ± 0.162</td>
+            <td align="center">18.1 ± 0.058</td>
+            <td align="center">1.27 ± 0.095</td>
+          </tr>
+          <tr>
+            <td align="center">A</td>
+            <td align="right">pixels</td>
+            <td align="center">44.9 ± 0.036</td>
+            <td align="center">22.85 ± 0.043</td>
+            <td align="center">19.0 ± 0.032</td>
+            <td align="center">0.68 ± 0.052</td>
+          </tr>
+          <tr>
+            <td align="center">B</td>
+            <td align="right">Spot</td>
+            <td align="center">19.2 ± 0.255</td>
+            <td align="center">1.05 ± 0.165</td>
+            <td align="center">15.5 ± 0.121</td>
+            <td align="center">4.01 ± 0.255</td>
+          </tr>
+          <tr>
+            <td align="center">B</td>
+            <td align="right">GenePix</td>
+            <td align="center">21.2 ± 0.225</td>
+            <td align="center">1.83 ± 0.203</td>
+            <td align="center">17.3 ± 0.114</td>
+            <td align="center">1.72 ± 0.253</td>
+          </tr>
+          <tr>
+            <td align="center">B</td>
+            <td align="right">pixels</td>
+            <td align="center">42.8 ± 0.049</td>
+            <td align="center">20.71 ± 0.051</td>
+            <td align="center">17.8 ± 0.034</td>
+            <td align="center">2.06 ± 0.079</td>
+          </tr>
+          <tr>
+            <td align="center">C</td>
+            <td align="right">Spot</td>
+            <td align="center">17.6 ± 0.366</td>
+            <td align="center">2.00 ± 0.192</td>
+            <td align="center">16.3 ± 0.076</td>
+            <td align="center">4.83 ± 0.191</td>
+          </tr>
+          <tr>
+            <td align="center">C</td>
+            <td align="right">GenePix</td>
+            <td align="center">19.8 ± 0.284</td>
+            <td align="center">0.94 ± 0.209</td>
+            <td align="center">17.9 ± 0.034</td>
+            <td align="center">2.11 ± 0.135</td>
+          </tr>
+          <tr>
+            <td align="center">C</td>
+            <td align="right">pixels</td>
+            <td align="center">21.0 ± 0.138</td>
+            <td align="center">1.48 ± 0.079</td>
+            <td align="center">18.8 ± 0.022</td>
+            <td align="center">1.24 ± 0.061</td>
+          </tr>
+          <tr>
+            <td align="center">D</td>
+            <td align="right">Spot</td>
+            <td align="center">18.2 ± 0.301</td>
+            <td align="center">1.56 ± 0.103</td>
+            <td align="center">15.3 ± 0.093</td>
+            <td align="center">4.10 ± 0.149</td>
+          </tr>
+          <tr>
+            <td align="center">D</td>
+            <td align="right">GenePix</td>
+            <td align="center">21.1 ± 0.274</td>
+            <td align="center">0.95 ± 0.139</td>
+            <td align="center">17.2 ± 0.049</td>
+            <td align="center">1.74 ± 0.090</td>
+          </tr>
+          <tr>
+            <td align="center">D</td>
+            <td align="right">pixels</td>
+            <td align="center">25.0 ± 0.522</td>
+            <td align="center">4.10 ± 0.358</td>
+            <td align="center">18.3 ± 0.025</td>
+            <td align="center">1.02 ± 0.044</td>
+          </tr>
+          <tr>
+            <td align="center">E</td>
+            <td align="right">Spot</td>
+            <td align="center">18.0 ± 0.428</td>
+            <td align="center">1.15 ± 0.109</td>
+            <td align="center">16.1 ± 0.101</td>
+            <td align="center">3.01 ± 0.131</td>
+          </tr>
+          <tr>
+            <td align="center">E</td>
+            <td align="right">GenePix</td>
+            <td align="center">22.1 ± 0.268</td>
+            <td align="center">1.77 ± 0.223</td>
+            <td align="center">17.7 ± 0.064</td>
+            <td align="center">1.02 ± 0.096</td>
+          </tr>
+          <tr>
+            <td align="center">E</td>
+            <td align="right">pixels</td>
+            <td align="center">24.7 ± 0.144</td>
+            <td align="center">5.51 ± 0.169</td>
+            <td align="center">18.7 ± 0.024</td>
+            <td align="center">0.39 ± 0.025</td>
+          </tr>
+          <tr>
+            <td align="center">F</td>
+            <td align="right">Spot</td>
+            <td align="center">19.9 ± 0.423</td>
+            <td align="center">0.48 ± 0.163</td>
+            <td align="center">16.4 ± 0.087</td>
+            <td align="center">3.76 ± 0.138</td>
+          </tr>
+          <tr>
+            <td align="center">F</td>
+            <td align="right">GenePix</td>
+            <td align="center">23.8 ± 0.316</td>
+            <td align="center">1.47 ± 0.258</td>
+            <td align="center">18.5 ± 0.060</td>
+            <td align="center">1.07 ± 0.106</td>
+          </tr>
+          <tr>
+            <td align="center">F</td>
+            <td align="right">pixels</td>
+            <td align="center">24.2 ± 0.131</td>
+            <td align="center">1.37 ± 0.101</td>
+            <td align="center">19.3 ± 0.026</td>
+            <td align="center">0.43 ± 0.038</td>
+          </tr>
+          <tr>
+            <td align="center">G</td>
+            <td align="right">Spot</td>
+            <td align="center">16.0 ± 0.300</td>
+            <td align="center">2.30 ± 0.166</td>
+            <td align="center">15.5 ± 0.077</td>
+            <td align="center">3.54 ± 0.114</td>
+          </tr>
+          <tr>
+            <td align="center">G</td>
+            <td align="right">GenePix</td>
+            <td align="center">18.3 ± 0.208</td>
+            <td align="center">1.88 ± 0.198</td>
+            <td align="center">17.3 ± 0.070</td>
+            <td align="center">1.57 ± 0.134</td>
+          </tr>
+          <tr>
+            <td align="center">G</td>
+            <td align="right">pixels</td>
+            <td align="center">19.1 ± 0.096</td>
+            <td align="center">1.48 ± 0.080</td>
+            <td align="center">18.3 ± 0.026</td>
+            <td align="center">0.66 ± 0.038</td>
+          </tr>
+          <tr>
+            <td align="center">H-1</td>
+            <td align="right">Spot</td>
+            <td align="center">20.4 ± 0.161</td>
+            <td align="center">2.12 ± 0.073</td>
+            <td align="center">17.9 ± 0.025</td>
+            <td align="center">1.35 ± 0.043</td>
+          </tr>
+          <tr>
+            <td align="center">H-1</td>
+            <td align="right">GenePix</td>
+            <td align="center">22.1 ± 0.124</td>
+            <td align="center">2.41 ± 0.097</td>
+            <td align="center">18.7 ± 0.024</td>
+            <td align="center">0.81 ± 0.041</td>
+          </tr>
+          <tr>
+            <td align="center">H-1</td>
+            <td align="right">pixels</td>
+            <td align="center">44.9 ± 0.513</td>
+            <td align="center">17.68 ± 0.528</td>
+            <td align="center">19.1 ± 0.013</td>
+            <td align="center">0.78 ± 0.027</td>
+          </tr>
+          <tr>
+            <td align="center">H-2</td>
+            <td align="right">Spot</td>
+            <td align="center">20.1 ± 0.141</td>
+            <td align="center">0.33 ± 0.040</td>
+            <td align="center">N/A</td>
+            <td align="center">N/A</td>
+          </tr>
+          <tr>
+            <td align="center">H-2</td>
+            <td align="right">GenePix</td>
+            <td align="center">21.8 ± 0.087</td>
+            <td align="center">0.22 ± 0.084</td>
+            <td align="center">N/A</td>
+            <td align="center">N/A</td>
+          </tr>
+          <tr>
+            <td align="center">H-2</td>
+            <td align="right">pixels</td>
+            <td align="center">21.8 ± 0.047</td>
+            <td align="center">0.26 ± 0.042</td>
+            <td align="center">N/A</td>
+            <td align="center">N/A</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+    <table-wrap position="float" id="T3">
+      <label>Table 3</label>
+      <caption>
+        <p>Green channel parameters estimates. Bootstrapped parameter estimates for the green channel with standard deviations for each combination of array, image method (or pixel intensities) and scanner.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td align="center">array</td>
+            <td align="right">image</td>
+            <td align="center" colspan="2">Agilent</td>
+            <td align="center" colspan="2">Axon</td>
+          </tr>
+          <tr>
+            <td/>
+            <td align="right">method</td>
+            <td align="center">
+              <graphic xlink:href="1471-2105-5-177-i29.gif"/>
+            </td>
+            <td align="center">
+              <graphic xlink:href="1471-2105-5-177-i33.gif"/>
+            </td>
+            <td align="center">
+              <graphic xlink:href="1471-2105-5-177-i29.gif"/>
+            </td>
+            <td align="center">
+              <graphic xlink:href="1471-2105-5-177-i33.gif"/>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">A</td>
+            <td align="right">Spot</td>
+            <td align="center">20.2 ± 0.106</td>
+            <td align="center">0.51 ± 0.058</td>
+            <td align="center">16.6 ± 0.165</td>
+            <td align="center">6.31 ± 0.302</td>
+          </tr>
+          <tr>
+            <td align="center">A</td>
+            <td align="right">GenePix</td>
+            <td align="center">21.8 ± 0.068</td>
+            <td align="center">0.20 ± 0.045</td>
+            <td align="center">20.4 ± 0.123</td>
+            <td align="center">0.88 ± 0.242</td>
+          </tr>
+          <tr>
+            <td align="center">A</td>
+            <td align="right">pixels</td>
+            <td align="center">33.6 ± 0.050</td>
+            <td align="center">10.52 ± 0.048</td>
+            <td align="center">22.8 ± 0.048</td>
+            <td align="center">1.57 ± 0.093</td>
+          </tr>
+          <tr>
+            <td align="center">B</td>
+            <td align="right">Spot</td>
+            <td align="center">19.6 ± 0.094</td>
+            <td align="center">0.90 ± 0.055</td>
+            <td align="center">17.2 ± 0.127</td>
+            <td align="center">2.20 ± 0.231</td>
+          </tr>
+          <tr>
+            <td align="center">B</td>
+            <td align="right">GenePix</td>
+            <td align="center">21.3 ± 0.046</td>
+            <td align="center">0.94 ± 0.086</td>
+            <td align="center">20.1 ± 0.152</td>
+            <td align="center">1.20 ± 0.326</td>
+          </tr>
+          <tr>
+            <td align="center">B</td>
+            <td align="right">pixels</td>
+            <td align="center">35.7 ± 0.153</td>
+            <td align="center">12.85 ± 0.146</td>
+            <td align="center">21.9 ± 0.041</td>
+            <td align="center">2.04 ± 0.087</td>
+          </tr>
+          <tr>
+            <td align="center">C</td>
+            <td align="right">Spot</td>
+            <td align="center">19.8 ± 0.050</td>
+            <td align="center">1.21 ± 0.073</td>
+            <td align="center">17.0 ± 0.127</td>
+            <td align="center">2.75 ± 0.254</td>
+          </tr>
+          <tr>
+            <td align="center">C</td>
+            <td align="right">GenePix</td>
+            <td align="center">20.8 ± 0.039</td>
+            <td align="center">0.99 ± 0.086</td>
+            <td align="center">19.4 ± 0.100</td>
+            <td align="center">1.11 ± 0.218</td>
+          </tr>
+          <tr>
+            <td align="center">C</td>
+            <td align="right">pixels</td>
+            <td align="center">21.3 ± 0.024</td>
+            <td align="center">0.78 ± 0.035</td>
+            <td align="center">22.0 ± 0.040</td>
+            <td align="center">2.39 ± 0.082</td>
+          </tr>
+          <tr>
+            <td align="center">D</td>
+            <td align="right">Spot</td>
+            <td align="center">19.4 ± 0.097</td>
+            <td align="center">1.49 ± 0.073</td>
+            <td align="center">17.0 ± 0.194</td>
+            <td align="center">1.24 ± 0.376</td>
+          </tr>
+          <tr>
+            <td align="center">D</td>
+            <td align="right">GenePix</td>
+            <td align="center">20.9 ± 0.059</td>
+            <td align="center">0.80 ± 0.095</td>
+            <td align="center">20.3 ± 0.126</td>
+            <td align="center">2.31 ± 0.286</td>
+          </tr>
+          <tr>
+            <td align="center">D</td>
+            <td align="right">pixels</td>
+            <td align="center">21.6 ± 0.105</td>
+            <td align="center">0.21 ± 0.124</td>
+            <td align="center">22.1 ± 0.046</td>
+            <td align="center">3.10 ± 0.092</td>
+          </tr>
+          <tr>
+            <td align="center">E</td>
+            <td align="right">Spot</td>
+            <td align="center">18.2 ± 0.121</td>
+            <td align="center">3.29 ± 0.129</td>
+            <td align="center">16.5 ± 0.132</td>
+            <td align="center">2.88 ± 0.240</td>
+          </tr>
+          <tr>
+            <td align="center">E</td>
+            <td align="right">GenePix</td>
+            <td align="center">20.2 ± 0.081</td>
+            <td align="center">1.92 ± 0.128</td>
+            <td align="center">19.2 ± 0.137</td>
+            <td align="center">0.74 ± 0.264</td>
+          </tr>
+          <tr>
+            <td align="center">E</td>
+            <td align="right">pixels</td>
+            <td align="center">21.2 ± 0.017</td>
+            <td align="center">0.13 ± 0.046</td>
+            <td align="center">21.0 ± 0.032</td>
+            <td align="center">0.94 ± 0.058</td>
+          </tr>
+          <tr>
+            <td align="center">F</td>
+            <td align="right">Spot</td>
+            <td align="center">21.4 ± 0.125</td>
+            <td align="center">0.58 ± 0.103</td>
+            <td align="center">16.5 ± 0.181</td>
+            <td align="center">4.79 ± 0.327</td>
+          </tr>
+          <tr>
+            <td align="center">F</td>
+            <td align="right">GenePix</td>
+            <td align="center">23.7 ± 0.084</td>
+            <td align="center">1.32 ± 0.116</td>
+            <td align="center">20.2 ± 0.132</td>
+            <td align="center">0.34 ± 0.199</td>
+          </tr>
+          <tr>
+            <td align="center">F</td>
+            <td align="right">pixels</td>
+            <td align="center">24.1 ± 0.019</td>
+            <td align="center">1.57 ± 0.026</td>
+            <td align="center">22.4 ± 0.039</td>
+            <td align="center">1.87 ± 0.071</td>
+          </tr>
+          <tr>
+            <td align="center">G</td>
+            <td align="right">Spot</td>
+            <td align="center">18.9 ± 0.088</td>
+            <td align="center">1.62 ± 0.088</td>
+            <td align="center">16.9 ± 0.149</td>
+            <td align="center">3.72 ± 0.258</td>
+          </tr>
+          <tr>
+            <td align="center">G</td>
+            <td align="right">GenePix</td>
+            <td align="center">20.4 ± 0.049</td>
+            <td align="center">1.10 ± 0.088</td>
+            <td align="center">20.0 ± 0.164</td>
+            <td align="center">0.84 ± 0.262</td>
+          </tr>
+          <tr>
+            <td align="center">G</td>
+            <td align="right">pixels</td>
+            <td align="center">21.0 ± 0.017</td>
+            <td align="center">0.75 ± 0.024</td>
+            <td align="center">22.2 ± 0.045</td>
+            <td align="center">2.60 ± 0.085</td>
+          </tr>
+          <tr>
+            <td align="center">H-1</td>
+            <td align="right">Spot</td>
+            <td align="center">21.2 ± 0.134</td>
+            <td align="center">3.25 ± 0.080</td>
+            <td align="center">18.5 ± 0.090</td>
+            <td align="center">2.00 ± 0.170</td>
+          </tr>
+          <tr>
+            <td align="center">H-1</td>
+            <td align="right">GenePix</td>
+            <td align="center">22.6 ± 0.100</td>
+            <td align="center">3.47 ± 0.107</td>
+            <td align="center">20.3 ± 0.043</td>
+            <td align="center">0.63 ± 0.100</td>
+          </tr>
+          <tr>
+            <td align="center">H-1</td>
+            <td align="right">pixels</td>
+            <td align="center">42.8 ± 1.417</td>
+            <td align="center">16.68 ± 1.843</td>
+            <td align="center">21.3 ± 0.033</td>
+            <td align="center">1.82 ± 0.070</td>
+          </tr>
+          <tr>
+            <td align="center">H-2</td>
+            <td align="right">Spot</td>
+            <td align="center">19.6 ± 0.229</td>
+            <td align="center">0.16 ± 0.077</td>
+            <td align="center">N/A</td>
+            <td align="center">N/A</td>
+          </tr>
+          <tr>
+            <td align="center">H-2</td>
+            <td align="right">GenePix</td>
+            <td align="center">21.7 ± 0.104</td>
+            <td align="center">0.55 ± 0.076</td>
+            <td align="center">N/A</td>
+            <td align="center">N/A</td>
+          </tr>
+          <tr>
+            <td align="center">H-2</td>
+            <td align="right">pixels</td>
+            <td align="center">21.5 ± 0.086</td>
+            <td align="center">0.29 ± 0.021</td>
+            <td align="center">N/A</td>
+            <td align="center">N/A</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+    <table-wrap position="float" id="T4">
+      <label>Table 4</label>
+      <caption>
+        <p>Mean and standard deviation of bias estimates. Mean and standard deviation of the bias estimates of all arrays and for each signal quantification method. The median and MAD (median absolute deviation) of ditto gives very similar results expect for Agilent's pixel estimates, which become smaller but are still greater than the others.</p>
+      </caption>
+      <table frame="hsides" rules="groups">
+        <thead>
+          <tr>
+            <td align="right">image</td>
+            <td align="center" colspan="2">
+              <graphic xlink:href="1471-2105-5-177-i27.gif"/>
+            </td>
+            <td align="center" colspan="2">
+              <graphic xlink:href="1471-2105-5-177-i29.gif"/>
+            </td>
+          </tr>
+          <tr>
+            <td align="right">method</td>
+            <td align="center">Agilent</td>
+            <td align="center">Axon</td>
+            <td align="center">Agilent</td>
+            <td align="center">Axon</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="right">Spot</td>
+            <td align="center">18.6 ± 1.40</td>
+            <td align="center">16.1 ± 0.792</td>
+            <td align="center">19.8 ± 0.958</td>
+            <td align="center">17.0 ± 0.633</td>
+          </tr>
+          <tr>
+            <td align="right">GenePix</td>
+            <td align="center">21.1 ± 1.55</td>
+            <td align="center">17.8 ± 0.529</td>
+            <td align="center">21.5 ± 1.05</td>
+            <td align="center">20.0 ± 0.433</td>
+          </tr>
+          <tr>
+            <td align="right">pixels</td>
+            <td align="center">29.8 ± 10.4</td>
+            <td align="center">18.7 ± 0.446</td>
+            <td align="center">27.0 ± 7.76</td>
+            <td align="center">22.0 ± 0.537</td>
+          </tr>
+        </tbody>
+      </table>
+    </table-wrap>
+  </sec>
+</back>

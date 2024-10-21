@@ -1,0 +1,2929 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3282787</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-12-455</article-id>
+    <article-id pub-id-type="pmid">22115179</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-12-455</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Research Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>iRefR: an R package to manipulate the iRefIndex consolidated protein interaction database</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Mora</surname>
+          <given-names>Antonio</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>a.m.ortiz@biotek.uio.no</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A2">
+        <name>
+          <surname>Donaldson</surname>
+          <given-names>Ian M</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>ian.donaldson@biotek.uio.no</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department for Molecular Biosciences, University of Oslo, P.O. Box 1041 Blindern, 0316 Oslo, Norway</aff>
+    <aff id="I2"><label>2</label>The Biotechnology Centre of Oslo, University of Oslo, P.O. Box 1125 Blindern, 0317 Oslo, Norway</aff>
+    <pub-date pub-type="collection">
+      <year>2011</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>24</day>
+      <month>11</month>
+      <year>2011</year>
+    </pub-date>
+    <volume>12</volume>
+    <fpage>455</fpage>
+    <lpage>455</lpage>
+    <history>
+      <date date-type="received">
+        <day>22</day>
+        <month>7</month>
+        <year>2011</year>
+      </date>
+      <date date-type="accepted">
+        <day>24</day>
+        <month>11</month>
+        <year>2011</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2011 Mora and Donaldson; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2011</copyright-year>
+      <copyright-holder>Mora and Donaldson; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/12/455"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>The iRefIndex addresses the need to consolidate protein interaction data into a single uniform data resource. iRefR provides the user with access to this data source from an R environment.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>The iRefR package includes tools for selecting specific subsets of interest from the iRefIndex by criteria such as organism, source database, experimental method, protein accessions and publication identifier. Data may be converted between three representations (MITAB, edgeList and graph) for use with other R packages such as igraph, graph and RBGL.</p>
+        <p>The user may choose between different methods for resolving redundancies in interaction data and how n-ary data is represented. In addition, we describe a function to identify binary interaction records that possibly represent protein complexes. We show that the user choice of data selection, redundancy resolution and n-ary data representation all have an impact on graphical analysis.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>The package allows the user to control how these issues are dealt with and communicate them via an R-script written using the iRefR package - this will facilitate communication of methods, reproducibility of network analyses and further modification and comparison of methods by researchers.</p>
+      </sec>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Currently, there are several protein interaction databases that are publicly available. iRefIndex is one effort to consolidate their information into one single repository while grouping redundant information [<xref ref-type="bibr" rid="B1">1</xref>]. This index allows the user to search for a protein and retrieve a non-redundant list of interactors for that protein along with all supporting experimental information. The primary interaction databases included in iRefIndex are BIND [<xref ref-type="bibr" rid="B2">2</xref>,<xref ref-type="bibr" rid="B3">3</xref>], BioGRID [<xref ref-type="bibr" rid="B4">4</xref>], CORUM [<xref ref-type="bibr" rid="B5">5</xref>], DIP [<xref ref-type="bibr" rid="B6">6</xref>], HPRD [<xref ref-type="bibr" rid="B7">7</xref>], IntAct [<xref ref-type="bibr" rid="B8">8</xref>], MINT [<xref ref-type="bibr" rid="B9">9</xref>], MPact [<xref ref-type="bibr" rid="B10">10</xref>], MPPI [<xref ref-type="bibr" rid="B11">11</xref>] and OPHID [<xref ref-type="bibr" rid="B12">12</xref>].</p>
+    <p>In this paper we introduce the iRefR package that allows the user to retrieve and work with the iRefIndex data set in an R environment [<xref ref-type="bibr" rid="B13">13</xref>]. In addition, we use iRefR to examine network properties for several organisms and ask how they are affected by the redundancy detection method and the n-ary data representation method chosen by the user.</p>
+    <p>First, we assemble interactomes based on two definitions of redundancy and assess how network properties change. The iRefIndex process assigns each protein interactor a hash-key that is based on the primary amino acid sequence and taxonomy identifier of the protein [<xref ref-type="bibr" rid="B1">1</xref>]. The key is called a "Redundant Object Group Identifier (ROGID)" and it can be used to group together identical protein interactors regardless of the database-accession system used to describe the protein in the original interaction record. The ROGIDs present in an interaction record are in turn used to create a key for the interaction record (RIGID: Redundant Interaction Group Identifier) that serves to group together all source records that share the same set of interactors [<xref ref-type="bibr" rid="B1">1</xref>].</p>
+    <p>The iRefIndex process also assigns a canonical ROGID (cROGID) to each protein interactor. This key serves to group together related proteins and interaction records that may be products of the same gene but that do not have the same sequence [<xref ref-type="bibr" rid="B14">14</xref>]. All members of a canonical group will have different ROGIDs but will share the same cROGID (the cROGID is identical to the ROGID of <italic>one </italic>of the group members that is chosen to represent the entire group of related proteins). A canonical RIGID (cRIGID) is constructed for each record from the cROGIDs and serves to group together records that describe the same set of proteins (at a canonical level).</p>
+    <p>Normalizing a network to its canonical form will have the effect of collapsing protein nodes and interaction edges that refer to the same gene products; as a result, the size of the network can be reduced and its network properties may be altered.</p>
+    <p>Second, we address the issue of how n-ary data representation alters network properties. N-ary interaction records (or so-called <italic>complex data</italic>) represent experimental evidence involving three or more proteins [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B15">15</xref>]. While binary data clearly supports an interaction between two proteins (A interacts with B), n-ary data only shows that a group of proteins were observed together in some experiment and the actual binary interactions between any given pair are either unknown or unspecified; for example, a list of proteins that are co-purified as members of a complex is an example of n-ary data. A third type of interaction data (polymer data) involve records with only one interactor type - these are records that describe two or more instances of the same molecule interacting with one another (e.g. homodimers). Source interaction records that contain three or more interactors can be identified and retrieved from iRefIndex using the iRefR package. By default, n-ary data is represented in the iRefIndex file using a "bipartite" model. Each member of the n-ary list is represented by a single edge between the list member and a single artificial entity that represents the group of proteins itself. These edges are not binary interactions but a pair wise representation of a list of proteins. This list-view of n-ary data is convenient for non-graphical applications, for example, over-representation analysis by comparison to other lists. Alternatively, these n-ary data may be converted to a "spoke model" representation where a set of edges is constructed between one chosen "hub" protein (in most cases the bait used in the experiment) and each of the other members of the n-ary list. This way, a group of <italic>m </italic>proteins will create <italic>(m-1) </italic>binary edges. A second alternative is a "matrix model" representation where every possible pairwise interaction among the members of the n-ary list is generated; this will create, <italic>m*(m-1)/2 </italic>edges. We compare graphical properties for several interactomes using these two methods to represent n-ary data or by leaving n-ary data out altogether.</p>
+    <p>We describe the iRefR package below. The user may select data according to source database, publication identifier, experimental method, and protein accession. The user may easily separate binary, n-ary and polymer interaction data. Summary statistics and network graphs may be constructed from any data subset using either the sequence-specific or canonical protein identifiers to resolve redundancies. N-ary data may be represented in a graphical format using either the spoke or matrix format. In addition, we describe a function to retrieve binary interaction records that may represent protein complexes (so-called spoke-represented complexes). Finally, iRefR is used together with other R graphical packages to assess the effect of the data consolidation method and n-ary data representation on some common statistical and graphical parameters.</p>
+  </sec>
+  <sec>
+    <title>Results</title>
+    <sec>
+      <title>IRefR API Data Structures</title>
+      <p>The iRefR application programming interface (API) is represented in Figure <xref ref-type="fig" rid="F1">1</xref> as a set of data types that can be consumed and produced by various functions (see Table <xref ref-type="table" rid="T1">1</xref>). The package is available from the Comprehensive R Archive Network <ext-link ext-link-type="uri" xlink:href="http://cran.r-project.org/web/packages/iRefR/index.html">http://cran.r-project.org/web/packages/iRefR/index.html</ext-link>. A tutorial is available as well as code used to generate data and figures for this paper (see Additional files <xref ref-type="supplementary-material" rid="S1">1</xref> and <xref ref-type="supplementary-material" rid="S2">2</xref>). Function descriptions and examples are also available using the R help functionality (e.g., ?function_name).</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Main functions and data types in iRefR</bold>. iRefR uses four different data types (MITAB, complexList, edgeList and graph) and 17 functions to get the database, select a subset, convert between protein identifiers, convert between table formats, show statistics and make graphics. The figure shows 14 of the functions in relation to the main data types. All functions are listed and described in Table 1.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-455-1"/>
+      </fig>
+      <table-wrap id="T1" position="float">
+        <label>Table 1</label>
+        <caption>
+          <p>Functions in the iRefR package.</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">name</th>
+              <th align="left">description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">
+                <italic>get_irefindex</italic>
+              </td>
+              <td align="left">Retrieve an iRefIndex data set by taxon identifier or release number as a data frame in MITAB format.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>*create_id_conversion_table</italic>
+              </td>
+              <td align="left">Use an iRefIndex data set to generate a lookup table that can be used by <italic>convert_protein_ID</italic>.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>*convert_protein_ID</italic>
+              </td>
+              <td align="left">Convert protein identifiers from one of the following formats: iROG ID, icROG ID, gene ID, RefSeq, PDB and UniProt, to any other protein identifier type in the list.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>select_interaction_type</italic>
+              </td>
+              <td align="left">Select a subset of MITAB belonging to a certain interaction type (binary, polymer, complex).</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>select_database</italic>
+              </td>
+              <td align="left">Select (or exclude) a subset of MITAB belonging to one or a group of primary interaction databases.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>select_protein</italic>
+              </td>
+              <td align="left">Select a subset of MITAB for a given protein identifier.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>select_confidence</italic>
+              </td>
+              <td align="left">Select a subset of MITAB given a confidence or bibliometric score type and value (or value range).</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>convert_MITAB_to_edgeList</italic>
+              </td>
+              <td align="left">Convert MITAB data set to edgeList format. Can specify complex representation, directionality, node id type (iROG or icROG) and edge-weight.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>convert_edgeList_to_MITAB</italic>
+              </td>
+              <td align="left">Retrieves subset of a MITAB data set matching an edgeList. User should specify node identifier type (iROG or icROG) used in edge list. Can specify interaction type to retrieve (binary, complex, polymer).</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>convert_MITAB_to_complexList</italic>
+              </td>
+              <td align="left">Convert MITAB data set to complexList format. Can specify node id type (iROG or icROG). Can specify if and how potential spoke-represented complexes should be included.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>convert_complexList_to_MITAB</italic>
+              </td>
+              <td align="left">Retrieves subset of a MITAB data set matching a complexList. User should specify node identifier type (iROG or icROG) used in complex. Can specify whether potential spoke represented complex lines should be returned.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>*merge_complexes_lists</italic>
+              </td>
+              <td align="left">Merge complexLists and remove duplicate complexes.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>convert_edgeList_to_graph</italic>
+              </td>
+              <td align="left">Convert an edgeList table to a Graph object. Can specify if edges have directionality and graph package (graph/igraph) that will use the Graph object.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>convert_graph_to_edgeList</italic>
+              </td>
+              <td align="left">Convert a Graph to an edgeList table.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>summary_protein</italic>
+              </td>
+              <td align="left">Get Summary Information for a given Protein.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>summary_table</italic>
+              </td>
+              <td align="left">Get Summary Information for a MITAB Table.</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>summary_graph</italic>
+              </td>
+              <td align="left">Get Summary Information for a Graph.</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>*Not shown in Figure 1. All other functions and their relation to input and output data types are shown in Figure 1.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>There are three data table types used in the iRefR package: MITAB, complexList and edgeList. Graphs are an additional data type generated from edgeLists.</p>
+      <p>MITAB (molecular interaction tab-delimited) is a widely used format for distributing molecular interaction data as a tab-delimited file. It is based on the Human Proteome Organization Proteomics Standards Initiative Molecular Interactions (HUPO PSI-MI) format [<xref ref-type="bibr" rid="B16">16</xref>]. The use of this format is detailed on the iRefIndex wiki site [<xref ref-type="bibr" rid="B17">17</xref>]. The first 15 columns contain core information about the interaction, such as database accessions pointing to the interacting proteins and the experimental methods used to demonstrate the interaction.</p>
+      <p>The "complexList" data type is a table with two columns; the first column is a group identifier and the second column is a comma-separated list of protein identifiers that are all members of some n-ary interaction record. This representation has less information than the MITAB but simplifies working with groups of proteins, such as complexes; besides that, it has the advantage of allowing the treatment of n-ary data as vectors or lists, being amenable to statistical tests looking for significant overlap with other lists of genes or proteins.</p>
+      <p>Finally, the edgeList data type contains a list of edges (as pairs of protein identifiers) and their weights. N-ary interaction records may be converted to an edgeList using either a spoke, matrix or bipartite model approach. The edgeList format may be converted to a graph format that is consumable by functions in the igraph [<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B19">19</xref>], or the graph [<xref ref-type="bibr" rid="B20">20</xref>] and RBGL [<xref ref-type="bibr" rid="B21">21</xref>] packages for R.</p>
+    </sec>
+    <sec>
+      <title>IRefR API Functions</title>
+      <p>A single function called "get_irefindex" will retrieve the desired version of iRefIndex (7.0 or above) via File Transfer Protocol, either for all organisms or a specified organism and store it in an R data table in MITAB format (see Figure <xref ref-type="fig" rid="F1">1</xref>). The user may then use "select" functions to create a subset of the data based on a protein identifier (or list), the source database, publication identifiers, the interaction type (binary, complex or polymer) or a bibliometric score.</p>
+      <p>Data in MITAB format may be converted to the other data types (and back again) using the "convert" family of functions. The conversion of a MITAB file to a complexList or to an edgeList and a graph allows the user to choose an identifier type (canonical or not - see below) and a method to represent n-ary interaction data (spoke, matrix or bipartite).</p>
+      <p>iRefR uses the iRefIndex identifiers (either ROGIDs or canonical ROGIDs) to name proteins in the complexList, edgeList and graph data-structures. A function called "convert_protein_id" is provided to translate between ROGIDs, cROGIDs and the most commonly used protein identifiers such as RefSeq and UniProt accessions.</p>
+      <p>The iRefR package includes descriptive statistics functions for proteins and interaction data sets (see summary_protein, summary_table and summary_graph). "convert_edge_list_to_graph" allows the user to generate graphs that may be used by either of the two more used graphical packages in R ("igraph" [<xref ref-type="bibr" rid="B18">18</xref>] and "graph" [<xref ref-type="bibr" rid="B20">20</xref>]), for graph-theoretical analysis and manipulation.</p>
+      <p>A great deal of information can be retrieved or generated using iRefR. Such analyses and statistics can be updated every time the "iRefIndex" database is updated. As an example, the following studies were done using iRefR v.0.93 and iRefIndex v.8.0. The iRefR code used to generate the following tables and figures is included as Additional file <xref ref-type="supplementary-material" rid="S2">2</xref>.</p>
+    </sec>
+    <sec>
+      <title>Interspecies Comparisons</title>
+      <p>iRefR can be used to compare the sizes or graph-theoretical properties of seven different model organisms. Figure <xref ref-type="fig" rid="F2">2</xref> shows an overview of the interactome data set sizes for these organisms. <italic>S. cerevisiae </italic>and <italic>H. Sapiens </italic>data constitute the bulk of the dataset, which is consistent with our previous observations [<xref ref-type="bibr" rid="B14">14</xref>,<xref ref-type="bibr" rid="B15">15</xref>].</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Comparing number of interaction records available for seven. model organisms in iRefIndex</bold>. <italic>S.cerevisiae </italic>has the best studied interactome to date (186513 distinct canonical interactions) followed by <italic>H. sapiens </italic>(125898 interactions), <italic>D. melanogaster </italic>(36773 interactions), <italic>M. musculus </italic>(17848), <italic>C.elegans </italic>(11905), <italic>R. norvegicus </italic>(6586) and <italic>E.coli </italic>(5500).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-455-2"/>
+      </fig>
+      <p>These data may be broken down according to the type of interaction (binary, complex or polymer), the number of interactions in both canonical and non-canonical form, the number of interacting proteins in canonical and non-canonical form, and the statistics according to the primary database where the interaction has been taken from.</p>
+      <p>Figure <xref ref-type="fig" rid="F3">3</xref> shows that the interaction databases are mainly formed by binary interactions. However, there are a significant number of n-ary records as well especially for human, mouse, rat and yeast. The human interactome is constituted by 19635 distinct proteins (non-canonical representation, i.e., isoforms counted as different proteins), that can be grouped in 17246 different canonical groups (isoforms included in one group) (Table <xref ref-type="table" rid="T2">2</xref>). These proteins are involved in 119764 interactions (non-canonical representation), that are reduced to 107257 interactions when grouping isoforms into the same canonical groups of proteins (Table <xref ref-type="table" rid="T3">3</xref>). Canonicalization has a less significant effect on the number of interactions for organisms where alternative splicing is absent as indicated by the ratio of canonical to non-canonical protein interactor counts (Table <xref ref-type="table" rid="T2">2</xref>).</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>iRefIndex Records per interaction type</bold>. The figure shows how the ratio of binary:n-ary:polymer interaction records differ according to the organism. The binary:n-ary record ratio is <bold>7:</bold>1 for human, larger for most organisms and smaller for mice, rat and yeast. Polymer interaction records constitute a small fraction in all cases.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-455-3"/>
+      </fig>
+      <table-wrap id="T2" position="float">
+        <label>Table 2</label>
+        <caption>
+          <p>Number of distinct proteins involved in protein-protein interactions in both non-canonical (ROGIDs) and canonical versions (cROGIDs).</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">organism</th>
+              <th align="left">ROGIDs</th>
+              <th align="left">ROGIDs -org</th>
+              <th align="left">cROGIDs</th>
+              <th align="left">cROGIDs -org</th>
+              <th align="left">ratio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">
+                <italic>C.elegans</italic>
+              </td>
+              <td align="left">5942</td>
+              <td align="left">5841</td>
+              <td align="left">5475</td>
+              <td align="left">5374</td>
+              <td align="left">0.92</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>D.melanogaster</italic>
+              </td>
+              <td align="left">11676</td>
+              <td align="left">11105</td>
+              <td align="left">10027</td>
+              <td align="left">9459</td>
+              <td align="left">0.85</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>E.coli</italic>
+              </td>
+              <td align="left">2923</td>
+              <td align="left">2673</td>
+              <td align="left">2923</td>
+              <td align="left">2673</td>
+              <td align="left">1.00</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>H.sapiens</italic>
+              </td>
+              <td align="left">33180</td>
+              <td align="left">19635</td>
+              <td align="left">30690</td>
+              <td align="left">17246</td>
+              <td align="left">0.88</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>M.musculus</italic>
+              </td>
+              <td align="left">14280</td>
+              <td align="left">7245</td>
+              <td align="left">13714</td>
+              <td align="left">6908</td>
+              <td align="left">0.95</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>R.norvegicus</italic>
+              </td>
+              <td align="left">6337</td>
+              <td align="left">2806</td>
+              <td align="left">6176</td>
+              <td align="left">2721</td>
+              <td align="left">0.97</td>
+            </tr>
+            <tr>
+              <td align="left">
+                <italic>S.cerevisiae</italic>
+              </td>
+              <td align="left">13762</td>
+              <td align="left">6332</td>
+              <td align="left">13754</td>
+              <td align="left">6329</td>
+              <td align="left">1.00</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>ROGIDs: number of distinct proteins (sequence plus taxonomy id)</p>
+          <p>ROGIDs -org: number of distinct proteins of the specified organism</p>
+          <p>cROGIDs: number of distinct canonical groups of proteins</p>
+          <p>cROGIDs org: number of distinct canonical groups of proteins of the specified organism</p>
+          <p>ratio: ratio of cROGIDs-org to ROGIDs-org</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <table-wrap id="T3" position="float">
+        <label>Table 3</label>
+        <caption>
+          <p>Number of distinct human interactions in both non-canonical (RIGIDs) and canonical versions (cRIGIDs).</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">dataset</th>
+              <th align="left">RIGIDs</th>
+              <th align="left">cRIGIDs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">Complete Human Dataset</td>
+              <td align="left">138570</td>
+              <td align="left">125898</td>
+            </tr>
+            <tr>
+              <td align="left">Human-Human Interactions</td>
+              <td align="left">119764</td>
+              <td align="left">107257</td>
+            </tr>
+            <tr>
+              <td align="left">Binary Subset</td>
+              <td align="left">132889</td>
+              <td align="left">120425</td>
+            </tr>
+            <tr>
+              <td align="left">Binary Human-Human Subset</td>
+              <td align="left">114091</td>
+              <td align="left">101792</td>
+            </tr>
+            <tr>
+              <td align="left">Complex Subset</td>
+              <td align="left">5232</td>
+              <td align="left">5027</td>
+            </tr>
+            <tr>
+              <td align="left">Complex Human-Human Subset</td>
+              <td align="left">5226</td>
+              <td align="left">5021</td>
+            </tr>
+            <tr>
+              <td align="left">Polymer Subset</td>
+              <td align="left">449</td>
+              <td align="left">446</td>
+            </tr>
+            <tr>
+              <td align="left">Polymer Human-Human Subset</td>
+              <td align="left">447</td>
+              <td align="left">444</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>iRefIndex has 138570 distinct human interactions (125898 after canonicalization), 119764 of which are human-human protein interactions (107257 after canonicalization). The majority of these data are binary records.</p>
+          <p>RIGID: number of distinct interactions (groups of distinct ROGIDs).</p>
+          <p>cRIGID: number of distinct interactions (groups of distinct canonical ROGIDs)</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>We also noted that interaction data sets for some organisms contain many interspecies interactions. For example, the <italic>Homo sapiens </italic>data set in Table <xref ref-type="table" rid="T2">2</xref> has 30690 distinct human proteins when interactions are retrieved that contain at least one human protein; however, there are only 17,246 distinct proteins when records are retrieved where all interactors are from human. These records may represent interactions between a human protein and a pathogenic species or cases where a protein from a second species has been listed as a substitute for a human protein. Analysts should be aware of this possibility and may wish to filter data accordingly.</p>
+    </sec>
+    <sec>
+      <title>Regenerated complexes</title>
+      <p>iRefR includes an option to identify binary interactions that might be n-ary data represented as binary data (see option "include_generated_complexes" in function convert_MITAB_to_complexList). In these cases, a database may have chosen to represent n-ary data as a list of binary interactions using a spoke model representation. The list of binary interactions can be re-represented in a complexList. We term these "regenerated n-ary records". The set of interactions used to create a regenerated n-ary record is detected as a set of binary interactions that all 1) are curated by the same database from the same paper, 2) are supported by the same experimental method that is known to produce n-ary data (e.g. immunoprecipitation of a tagged protein from extract), and 3) share one protein (the hub of the spoke model), which corresponds to the experimental bait when this information is available. A total of 97072 yeast binary records meet these criteria and can be used to create 12046 regenerated n-ary records (Figure <xref ref-type="fig" rid="F4">4a</xref>). In contrast, there are only 6875 distinct canonical yeast n-ary records (three or more interactors in the record). This suggests that many n-ary data may be <italic>disguised </italic>as binary records. The number of protein interactors in yeast n-ary records ranges from 3 to 365 while regenerated n-ary records follow a different distribution (Kolmogorov-Smirnov test, p-value &lt; 2.2e-16) that ranges in size from 3 to 1074 and is much more heavily left-distributed (Figure <xref ref-type="fig" rid="F4">4b</xref>). Many of the smaller regenerated n-ary records may be false - they may be derived from genuine independent binary observations (that just happen to all share one protein and the same method). Our method is unable to distinguish these cases and manual inspection of the original paper is required to confirm that n-ary data from one experiment is present. However, a more conservative selection of binary interactions can be used to regenerate n-ary records. Figure <xref ref-type="fig" rid="F4">4c</xref> shows the distribution of n-ary record sizes that were created using only binary records from BioGrid where MI:0004 (Affinity Chromatography) was listed as the interaction detection method. The same conclusions apply to this distribution (Kolmogorov-Smirnov test, p-value &lt;<underline>2.2e-16</underline>). A number of methods can be used to detect binary interactions that are really representing n-ary data: most recently this has been carefully addressed in [<xref ref-type="bibr" rid="B22">22</xref>]. iRefIndex data and the iRefR package (see function "convert_MITAB_to_complexList") may be used to replicate or modify these methods by allowing the user to choose the experimental methods considered appropriate and allowing the user to either use only records with bait-prey information or groups of interactions sharing a common protein.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Number and size of yeast n-ary records versus regenerated complexes</bold>. <bold>a</bold>. Number of binary records in yeast (red), n-ary records regenerated from binary interaction records that are possibly represented n-ary data (green) and another set of regenerated n-ary records that are more conservative (red). There are 43% more yeast regenerated complexes from binary-represented complexes than yeast reported complexes (n-ary records) in iRefIndex. <bold>b</bold>. Distribution of complex sizes for n-ary records and regenerated complexes. Both distributions are skewed to the left, with the regenerated one being more strongly skewed. <bold>c</bold>. Distribution of complex sizes for n-ary records and a more conservative set of regenerated complexes. Records having more than 60 interactors are not shown in panels b and c.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-455-4"/>
+      </fig>
+      <p>Arguably, it should not be up to analysts to <italic>guess </italic>which binary records are representing n-ary data and databases should adhere to common standards that clearly differentiate the two data types [<xref ref-type="bibr" rid="B22">22</xref>,<xref ref-type="bibr" rid="B23">23</xref>]. However, in the mean time, analysts should be aware of this potential problem. We show later, that the inclusion or exclusion of binary records that may be representing n-ary data can have a significant impact on node-degree distributions and, by proxy, network properties.</p>
+      <p>Figure <xref ref-type="fig" rid="F5">5</xref> and Table <xref ref-type="table" rid="T4">4</xref> show that the majority of regenerated n-ary records were derived from BioGrid while a smaller number were contributed by MINT and IntAct. This is consistent with BioGrid's curation policy to represent all data in a binary format. We are also aware that some high-throughput n-ary results are submitted by authors to IntAct as spoke-represented complexes (e.g. [<xref ref-type="bibr" rid="B24">24</xref>]) even though it is presently the policy of this database to represent n-ary data as lists of proteins and not lists of binary spoke interactions. Other examples are numerous and not limited to IntAct.</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p><bold>Statistics per source database</bold>.<bold>a</bold>. Division of all binary interaction records by source database. The majority of binary interactions come from the BioGrid database. The molecular interaction ontology controlled vocabulary term identifiers are given for each database (e.g. MI:0463 for BioGrid. <bold>b</bold>. Division of all n-ary interaction records (3 or more interactors per record) per source database. IntAct and DIP are the main sources. <bold>c</bold>. Binary interaction records used to create regenerated complexes per source database. The main source is BioGrid, followed by MINT. BioGrid represents all information as binary data (i.e. n-ary data is represented as binary data using a spoke-model).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-455-5"/>
+      </fig>
+      <table-wrap id="T4" position="float">
+        <label>Table 4</label>
+        <caption>
+          <p>Statistics for yeast regenerated complexes by source database.</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">database</th>
+              <th align="left">binary interaction records</th>
+              <th align="left">interaction records in generated complexes</th>
+              <th align="left">generated complexes</th>
+              <th align="left">low-throughput generated complexes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">Biogrid</td>
+              <td align="left">156860</td>
+              <td align="left">35321</td>
+              <td align="left">8971</td>
+              <td align="left">6167</td>
+            </tr>
+            <tr>
+              <td align="left">Mint</td>
+              <td align="left">25358</td>
+              <td align="left">14005</td>
+              <td align="left">2715</td>
+              <td align="left">1142</td>
+            </tr>
+            <tr>
+              <td align="left">DIP</td>
+              <td align="left">24810</td>
+              <td align="left">0</td>
+              <td align="left">0</td>
+              <td align="left">0</td>
+            </tr>
+            <tr>
+              <td align="left">IntAct</td>
+              <td align="left">22351</td>
+              <td align="left">932</td>
+              <td align="left">360</td>
+              <td align="left">267</td>
+            </tr>
+            <tr>
+              <td align="left">MPACT</td>
+              <td align="left">12395</td>
+              <td align="left">0</td>
+              <td align="left">0</td>
+              <td align="left">0</td>
+            </tr>
+            <tr>
+              <td align="left">BIND</td>
+              <td align="left">9887</td>
+              <td align="left">0</td>
+              <td align="left">0</td>
+              <td align="left">0</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>BioGrid contains 156860 yeast binary interaction records of which 35321 were used to create 8971 regenerated complexes (6167 of which were derived from low-throughput interactions). No spoke-represented complexes were detected in DIP, MPACT and BIND using the method described in the main text. The numbers in the last three columns are valid for the default list of experimental methods included in iRefR, which can be modified using the package.</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+    <sec>
+      <title>Selecting High or Low Throughput Data</title>
+      <p>Using iRefR, it is possible to select for a subset of interactions with a given bibliometric score. iRefIndex includes three such scores for each distinct interaction: (np, lpr, and hpr) [<xref ref-type="bibr" rid="B1">1</xref>]. The np score indicates the number of distinct publications (PubMed Identifiers) that support a given distinct interaction. The lpr score (lowest PubMed Identifier re-use) is the lowest number of distinct interactions that any publication (supporting this RIGID) is used to support. For example, a value of 1 indicates that at least one of the publications supporting this interaction has never been used to support any other interaction. This likely indicates that only one interaction was described by that reference and that the present interaction is not derived from high throughput methods. The hpr score (highest PubMed Identifier reuse) indicates the highest number of distinct interactions that any publication (supporting this interaction) is used to support.</p>
+      <p>As an example, two thirds of the regenerated complexes from BioGrid described in Table <xref ref-type="table" rid="T4">4</xref> are derived from binary interactions supported by low throughput experiments. In contrast, the overall breakdown of the yeast interactome data in Figure <xref ref-type="fig" rid="F6">6</xref> shows that the majority of data is derived from high throughput studies. This indicates that the regenerated complexes from BioGrid may represent an important source of information about biological complexes that are derived from low-throughput experiments.</p>
+      <fig id="F6" position="float">
+        <label>Figure 6</label>
+        <caption>
+          <p><bold>High-throughput versus low-throughput yeast interaction data</bold>. From a total number of 382903 yeast binary interaction records in iRefIndex, 26.3% are considered as low-throughput interactions (lpr &lt; 22) versus 73.7% high-throughput records (lpr &gt; 21). The set of yeast low-throughput n-ary data is only 5.4% of all 95263 n-ary interaction records. 62.9% of 12046 regenerated complex records (potential spoke-represented n-ary data) are derived from low-throughput binary interactions records.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-455-6"/>
+      </fig>
+      <p>It is important to note that bibliometric scores alone (such as lpr) cannot be used as confidence scores to assess the reliability of an interaction [<xref ref-type="bibr" rid="B25">25</xref>,<xref ref-type="bibr" rid="B26">26</xref>]. Confidence scores may be generated using a number of methods and the user may wish to supplement their data with one or more of these depending on their requirements. The PSISCORE server acts as a meta-server to provide access to some of these methods and it can return confidence scores for interactions provided in MITAB format [<xref ref-type="bibr" rid="B27">27</xref>]. These scores are not included as part of the iRefIndex release.</p>
+    </sec>
+    <sec>
+      <title>Graphical Representations</title>
+      <p>The iRefR package allows the user to select interactomes and convert them to a format that can be read by three R graphical packages (<italic>igraph</italic>, <italic>graph </italic>and <italic>RBGL </italic>which in turn is dependent on the <italic>graph </italic>package). Figure <xref ref-type="fig" rid="F7">7</xref> presents six different subsets of the <italic>E.coli </italic>interactome, generated by iRefR using the igraph package. Binary and n-ary interactions are shown, both in undirected and directed graphs, the latter ones showing available bait-prey information. Graphical studies can also be performed using iRefR data structures together with these other R packages. For example, Figure <xref ref-type="fig" rid="F8">8</xref> shows cumulative node degree distributions for various subsets of yeast data from iRefIndex.</p>
+      <fig id="F7" position="float">
+        <label>Figure 7</label>
+        <caption>
+          <p><bold>Visual representation of interaction networks</bold>. The figure presents six different subsets of the <italic>E.coli </italic>interactome from IntAct, generated by iRefR using the igraph package for R. <bold>a</bold>. binary data. <bold>b</bold>. n-ary data represented as a spoke model. <bold>c</bold>. n-ary data represented as a matrix model. <bold>d</bold>. binary and spoke-represented n-ary data. <bold>e</bold>. binary interactions with bait-prey information represented as a directed graph. <bold>f</bold>. spoke-represented n-ary data with bait-prey information represented as a directed graph.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-455-7"/>
+      </fig>
+      <fig id="F8" position="float">
+        <label>Figure 8</label>
+        <caption>
+          <p><bold>Cumulative degree distributions for three data sets and their various combinations</bold>. <bold>B</bold>: binary data. Yeast "true" binary interactions (binary interaction data minus data that is potentially n-ary data represented as binary data using a spoke-model: see S). <bold>S</bold>: spoke-represented n-ary data. Binary records that are potentially n-ary data represented as binary data using a spoke-model. <bold>N</bold>: n-ary data. Original interaction records that have three or more interactors. The figure corresponds to data in Table 6, showing potential power-law behaviour by some of these data sets.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-12-455-8"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Interactomes Comparison</title>
+      <p>Several different interactome data sets can be constructed using iRefR and their statistical properties assessed with R. In Table <xref ref-type="table" rid="T5">5</xref>, a comparison was made between graphs for seven organisms in iRefIndex.</p>
+      <table-wrap id="T5" position="float">
+        <label>Table 5</label>
+        <caption>
+          <p>Comparison of network properties for different model organisms.</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">a. C. elegans</th>
+              <th/>
+              <th/>
+              <th/>
+              <th/>
+              <th/>
+              <th/>
+              <th/>
+            </tr>
+            <tr>
+              <th align="left">Dataset</th>
+              <th align="left">n</th>
+              <th align="left">I</th>
+              <th align="left">X</th>
+              <th align="left">C</th>
+              <th align="left">dav</th>
+              <th align="left">dvar</th>
+              <th align="left">dmax</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">All canon spoke</td>
+              <td align="left">
+                <underline>5368</underline>
+              </td>
+              <td align="left">11848</td>
+              <td align="left">11720</td>
+              <td align="left">43</td>
+              <td align="left"><underline>4.45</underline> *</td>
+              <td align="left">159.29</td>
+              <td align="left">514</td>
+            </tr>
+            <tr>
+              <td align="left">All non-canon spoke</td>
+              <td align="left">5835</td>
+              <td align="left">13774</td>
+              <td align="left">13644</td>
+              <td align="left">44</td>
+              <td align="left">4.76</td>
+              <td align="left">171.17</td>
+              <td align="left">514</td>
+            </tr>
+            <tr>
+              <td align="left">All canon matrix</td>
+              <td align="left">5368</td>
+              <td align="left">11848</td>
+              <td align="left">11720</td>
+              <td align="left">43</td>
+              <td align="left">5.42*</td>
+              <td align="left">210.28</td>
+              <td align="left">514</td>
+            </tr>
+            <tr>
+              <td align="left">LT canon spoke</td>
+              <td align="left">
+                <underline>570</underline>
+              </td>
+              <td align="left">544</td>
+              <td align="left">498</td>
+              <td align="left">41</td>
+              <td align="left">
+                <underline>2.59</underline>
+              </td>
+              <td align="left">26.13</td>
+              <td align="left">92</td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>b. D. melanogaster</bold>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>Dataset</bold>
+              </td>
+              <td align="left">
+                <bold>n</bold>
+              </td>
+              <td align="left">
+                <bold>I</bold>
+              </td>
+              <td align="left">
+                <bold>X</bold>
+              </td>
+              <td align="left">
+                <bold>C</bold>
+              </td>
+              <td align="left">
+                <bold>dav</bold>
+              </td>
+              <td align="left">
+                <bold>dvar</bold>
+              </td>
+              <td align="left">
+                <bold>dmax</bold>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">All canon spoke</td>
+              <td align="left">
+                <underline>9454</underline>
+              </td>
+              <td align="left">36576</td>
+              <td align="left">36199</td>
+              <td align="left">178</td>
+              <td align="left">
+                <underline>7.73</underline>
+              </td>
+              <td align="left">160.69</td>
+              <td align="left">220</td>
+            </tr>
+            <tr>
+              <td align="left">All non-canon spoke</td>
+              <td align="left">11099</td>
+              <td align="left">46727</td>
+              <td align="left">46349</td>
+              <td align="left">178</td>
+              <td align="left">8.41</td>
+              <td align="left">191.62</td>
+              <td align="left">260</td>
+            </tr>
+            <tr>
+              <td align="left">All canon matrix</td>
+              <td align="left">9454</td>
+              <td align="left">36576</td>
+              <td align="left">36199</td>
+              <td align="left">178</td>
+              <td align="left">7.91</td>
+              <td align="left">166.84</td>
+              <td align="left">220</td>
+            </tr>
+            <tr>
+              <td align="left">LT canon spoke</td>
+              <td align="left">
+                <underline>1496</underline>
+              </td>
+              <td align="left">3543</td>
+              <td align="left">3371</td>
+              <td align="left">153</td>
+              <td align="left">
+                <underline>4.91</underline>
+              </td>
+              <td align="left">53.90</td>
+              <td align="left">101</td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>c. E. coli</bold>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>Dataset</bold>
+              </td>
+              <td align="left">
+                <bold>n</bold>
+              </td>
+              <td align="left">
+                <bold>I</bold>
+              </td>
+              <td align="left">
+                <bold>X</bold>
+              </td>
+              <td align="left">
+                <bold>C</bold>
+              </td>
+              <td align="left">
+                <bold>dav</bold>
+              </td>
+              <td align="left">
+                <bold>dvar</bold>
+              </td>
+              <td align="left">
+                <bold>dmax</bold>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">All canon spoke</td>
+              <td align="left">919</td>
+              <td align="left">1065</td>
+              <td align="left">924</td>
+              <td align="left">109</td>
+              <td align="left">2.10</td>
+              <td align="left">0.98</td>
+              <td align="left">13</td>
+            </tr>
+            <tr>
+              <td align="left">All non-canon spoke</td>
+              <td align="left">919</td>
+              <td align="left">1065</td>
+              <td align="left">924</td>
+              <td align="left">109</td>
+              <td align="left">2.10</td>
+              <td align="left">0.98</td>
+              <td align="left">13</td>
+            </tr>
+            <tr>
+              <td align="left">All canon matrix</td>
+              <td align="left">919</td>
+              <td align="left">1065</td>
+              <td align="left">924</td>
+              <td align="left">109</td>
+              <td align="left">2.14</td>
+              <td align="left">1.17</td>
+              <td align="left">13</td>
+            </tr>
+            <tr>
+              <td align="left">LT canon spoke</td>
+              <td align="left">786</td>
+              <td align="left">826</td>
+              <td align="left">783</td>
+              <td align="left">17</td>
+              <td align="left">2.08</td>
+              <td align="left">0.83</td>
+              <td align="left">11</td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>d. H. sapiens</bold>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>Dataset</bold>
+              </td>
+              <td align="left">
+                <bold>n</bold>
+              </td>
+              <td align="left">
+                <bold>I</bold>
+              </td>
+              <td align="left">
+                <bold>X</bold>
+              </td>
+              <td align="left">
+                <bold>C</bold>
+              </td>
+              <td align="left">
+                <bold>dav</bold>
+              </td>
+              <td align="left">
+                <bold>dvar</bold>
+              </td>
+              <td align="left">
+                <bold>dmax</bold>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">All canon spoke</td>
+              <td align="left">
+                <underline>16320</underline>
+              </td>
+              <td align="left">107257</td>
+              <td align="left">101792</td>
+              <td align="left">5021</td>
+              <td align="left">
+                <underline>14.26</underline>
+              </td>
+              <td align="left">837.92</td>
+              <td align="left">789</td>
+            </tr>
+            <tr>
+              <td align="left">All non-canon spoke</td>
+              <td align="left">18631</td>
+              <td align="left">119764</td>
+              <td align="left">114091</td>
+              <td align="left">5226</td>
+              <td align="left">13.92</td>
+              <td align="left">816.91</td>
+              <td align="left">789</td>
+            </tr>
+            <tr>
+              <td align="left">All canon matrix</td>
+              <td align="left">16320</td>
+              <td align="left">107257</td>
+              <td align="left">101792</td>
+              <td align="left">5021</td>
+              <td align="left">42.50</td>
+              <td align="left">8637.40</td>
+              <td align="left">1145</td>
+            </tr>
+            <tr>
+              <td align="left">LT canon spoke</td>
+              <td align="left">
+                <underline>10860</underline>
+              </td>
+              <td align="left">44689</td>
+              <td align="left">40655</td>
+              <td align="left">3677</td>
+              <td align="left">
+                <underline>8.84</underline>
+              </td>
+              <td align="left">317.01</td>
+              <td align="left">445</td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>e. M. musculus</bold>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>Dataset</bold>
+              </td>
+              <td align="left">
+                <bold>n</bold>
+              </td>
+              <td align="left">
+                <bold>I</bold>
+              </td>
+              <td align="left">
+                <bold>X</bold>
+              </td>
+              <td align="left">
+                <bold>C</bold>
+              </td>
+              <td align="left">
+                <bold>dav</bold>
+              </td>
+              <td align="left">
+                <bold>dvar</bold>
+              </td>
+              <td align="left">
+                <bold>dmax</bold>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">All canon spoke</td>
+              <td align="left">6280</td>
+              <td align="left">9872</td>
+              <td align="left">8501</td>
+              <td align="left">1268</td>
+              <td align="left">4.13*</td>
+              <td align="left">144.41</td>
+              <td align="left">608</td>
+            </tr>
+            <tr>
+              <td align="left">All non-canon spoke</td>
+              <td align="left">6560</td>
+              <td align="left">10143</td>
+              <td align="left">8741</td>
+              <td align="left">1299</td>
+              <td align="left">4.05</td>
+              <td align="left">139.00</td>
+              <td align="left">608</td>
+            </tr>
+            <tr>
+              <td align="left">All canon matrix</td>
+              <td align="left">6280</td>
+              <td align="left">9872</td>
+              <td align="left">8501</td>
+              <td align="left">1268</td>
+              <td align="left">83.50*</td>
+              <td align="left">39515.35</td>
+              <td align="left">1010</td>
+            </tr>
+            <tr>
+              <td align="left">LT canon spoke</td>
+              <td align="left">4811</td>
+              <td align="left">5732</td>
+              <td align="left">4777</td>
+              <td align="left">865</td>
+              <td align="left">3.36</td>
+              <td align="left">112.71</td>
+              <td align="left">608</td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>f. R. norvegicus</bold>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>Dataset</bold>
+              </td>
+              <td align="left">
+                <bold>n</bold>
+              </td>
+              <td align="left">
+                <bold>I</bold>
+              </td>
+              <td align="left">
+                <bold>X</bold>
+              </td>
+              <td align="left">
+                <bold>C</bold>
+              </td>
+              <td align="left">
+                <bold>dav</bold>
+              </td>
+              <td align="left">
+                <bold>dvar</bold>
+              </td>
+              <td align="left">
+                <bold>dmax</bold>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">All canon spoke</td>
+              <td align="left">2517</td>
+              <td align="left">3212</td>
+              <td align="left">2671</td>
+              <td align="left">477</td>
+              <td align="left">3.50</td>
+              <td align="left">241.61</td>
+              <td align="left">641</td>
+            </tr>
+            <tr>
+              <td align="left">All non-canon spoke</td>
+              <td align="left">2588</td>
+              <td align="left">3304</td>
+              <td align="left">2758</td>
+              <td align="left">481</td>
+              <td align="left">3.49</td>
+              <td align="left">236.32</td>
+              <td align="left">641</td>
+            </tr>
+            <tr>
+              <td align="left">All canon matrix</td>
+              <td align="left">2517</td>
+              <td align="left">3212</td>
+              <td align="left">2671</td>
+              <td align="left">477</td>
+              <td align="left">171.95</td>
+              <td align="left">76175.86</td>
+              <td align="left">858</td>
+            </tr>
+            <tr>
+              <td align="left">LT canon spoke</td>
+              <td align="left">1786</td>
+              <td align="left">2263</td>
+              <td align="left">1811</td>
+              <td align="left">402</td>
+              <td align="left">3.07</td>
+              <td align="left">31.37</td>
+              <td align="left">117</td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>g. S. cerevisiae</bold>
+              </td>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+              <td/>
+            </tr>
+            <tr>
+              <td align="left">
+                <bold>Dataset</bold>
+              </td>
+              <td align="left">
+                <bold>n</bold>
+              </td>
+              <td align="left">
+                <bold>I</bold>
+              </td>
+              <td align="left">
+                <bold>X</bold>
+              </td>
+              <td align="left">
+                <bold>C</bold>
+              </td>
+              <td align="left">
+                <bold>dav</bold>
+              </td>
+              <td align="left">
+                <bold>dvar</bold>
+              </td>
+              <td align="left">
+                <bold>dmax</bold>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="8">
+                <hr/>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">All canon spoke</td>
+              <td align="left">
+                <underline>6296</underline>
+              </td>
+              <td align="left">185384</td>
+              <td align="left">178035</td>
+              <td align="left">6875</td>
+              <td align="left">
+                <underline>65.43</underline>
+              </td>
+              <td align="left">8208.29</td>
+              <td align="left">1322</td>
+            </tr>
+            <tr>
+              <td align="left">All non-canon spoke</td>
+              <td align="left">6299</td>
+              <td align="left">185398</td>
+              <td align="left">178045</td>
+              <td align="left">6879</td>
+              <td align="left">65.40</td>
+              <td align="left">8206.43</td>
+              <td align="left">1322</td>
+            </tr>
+            <tr>
+              <td align="left">All canon matrix</td>
+              <td align="left">6296</td>
+              <td align="left">185384</td>
+              <td align="left">178035</td>
+              <td align="left">6875</td>
+              <td align="left">157.76</td>
+              <td align="left">51736.61</td>
+              <td align="left">2292</td>
+            </tr>
+            <tr>
+              <td align="left">LT canon spoke</td>
+              <td align="left">
+                <underline>4181</underline>
+              </td>
+              <td align="left">21981</td>
+              <td align="left">21279</td>
+              <td align="left">543</td>
+              <td align="left">
+                <underline>10.57</underline>
+              </td>
+              <td align="left">202.12</td>
+              <td align="left">307</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>n: number of proteins</p>
+          <p>I: number of interaction records</p>
+          <p>X: number of binary interaction records</p>
+          <p>C: number of n-ary interaction records</p>
+          <p>dav: average protein degree</p>
+          <p>dvar: degree variance</p>
+          <p>dmax: maximum protein degree,</p>
+          <p>All: both HT and LT data</p>
+          <p>canon: canonical representation of proteins</p>
+          <p>spoke: spoke representation of complexes</p>
+          <p>matrix: matrix representation of complexes</p>
+          <p>Numbers are for the main seven organisms in iRefIndex</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>The two first rows only differ in their canonical representation and show that the number of nodes and interactions are reduced when proteins are considered in their canonical form but only for higher eukaryotes, where alternative splicing is present. However, this has very little effect on average degree, degree variance and maximum observed degree. Therefore, while canonicalization will affect search and retrieval of data, it does not impact greatly on average network properties.</p>
+      <p>In contrast, using the matrix representation for n-ary data can have a dramatic effect on average degree but this varies depending on the amount of n-ary data in the underlying data set; for instance, compare the change in average degree between rows 1 and 3 for <italic>C. elegans </italic>versus <italic>M. Musculus </italic>(* in Table <xref ref-type="table" rid="T5">5</xref>). This highlights the importance of explicitly declaring which representation has been used to represent n-ary data.</p>
+      <p>We assessed properties for a low-throughput subset of the data (fourth row of each table). Here again the effects were organism specific (see underlined values in Table <xref ref-type="table" rid="T5">5</xref>). The number of nodes in the <italic>C. elegans </italic>and <italic>D. melanogaster </italic>networks were reduced by 10-fold and 7-fold respectively if interaction records with an lpr score greater than 21 were removed (fourth row). However, the average degree fell less than two-fold. In contrast, the same low-throughput subset for human decreased the network size by 1.7 fold and the average degree by only 1.6 fold. Changes in network size and average degree were both less than 1.5-fold for mouse and rat. In contrast, the number of nodes in the low-throughput yeast interactome was also decreased in size by 1.5 fold but the average degree was decreased six-fold. These observations demonstrate that the same data filter can have vastly different effects on different interactomes.</p>
+    </sec>
+    <sec>
+      <title>Degree distributions and power-law fitting</title>
+      <p>Table <xref ref-type="table" rid="T6">6</xref> summarizes an experiment with the degree distribution of the yeast network. A set of true <underline>B</underline>inary records (binary interactions after removal of possible spoke-represented n-ary data) has a degree distribution that does not follow the power-law model. We determined fit to a power-law using the algorithm described by Clauset <italic>et al</italic>. [<xref ref-type="bibr" rid="B28">28</xref>] where an exponent alpha is computed for the tail of the distribution where the degree is larger than a certain minimum value (xmin), and p-values less than 0.1 indicate that a power-law cannot be fitted to the data. P-values greater than 0.1 indicate a good fit (with the caveat that a different distribution might offer an even better fit).</p>
+      <table-wrap id="T6" position="float">
+        <label>Table 6</label>
+        <caption>
+          <p>Effect of the inclusion of n-ary and/or regenerated complex data on the network degree distributions.</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">dataset</th>
+              <th align="left">n</th>
+              <th align="left">dmax</th>
+              <th align="left">dmin</th>
+              <th align="left">alpha</th>
+              <th align="left">ntail</th>
+              <th align="left">p_value</th>
+              <th align="left">power-law</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">B</td>
+              <td align="left">6227</td>
+              <td align="left">1121</td>
+              <td align="left">104</td>
+              <td align="left">2.95</td>
+              <td align="left">150</td>
+              <td align="left">0.00</td>
+              <td align="left">no</td>
+            </tr>
+            <tr>
+              <td align="left">S</td>
+              <td align="left">4406</td>
+              <td align="left">1176</td>
+              <td align="left">25</td>
+              <td align="left">2.58</td>
+              <td align="left">850</td>
+              <td align="left">0.00</td>
+              <td align="left">no</td>
+            </tr>
+            <tr>
+              <td align="left">N</td>
+              <td align="left">4164</td>
+              <td align="left">912</td>
+              <td align="left">96</td>
+              <td align="left">3.32</td>
+              <td align="left">189</td>
+              <td align="left">0.32</td>
+              <td align="left">yes</td>
+            </tr>
+            <tr>
+              <td align="left">B + S</td>
+              <td align="left">6281</td>
+              <td align="left">1301</td>
+              <td align="left">287</td>
+              <td align="left">4.39</td>
+              <td align="left">141</td>
+              <td align="left">0.22</td>
+              <td align="left">yes</td>
+            </tr>
+            <tr>
+              <td align="left">B + N</td>
+              <td align="left">6278</td>
+              <td align="left">1180</td>
+              <td align="left">273</td>
+              <td align="left">4.23</td>
+              <td align="left">183</td>
+              <td align="left">0.08</td>
+              <td align="left">no</td>
+            </tr>
+            <tr>
+              <td align="left">S + N</td>
+              <td align="left">4638</td>
+              <td align="left">1192</td>
+              <td align="left">137</td>
+              <td align="left">3.48</td>
+              <td align="left">159</td>
+              <td align="left">0.50</td>
+              <td align="left">yes</td>
+            </tr>
+            <tr>
+              <td align="left">B + S + N</td>
+              <td align="left">6294</td>
+              <td align="left">1322</td>
+              <td align="left">202</td>
+              <td align="left">3.65</td>
+              <td align="left">440</td>
+              <td align="left">0.00</td>
+              <td align="left">no</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>n: number of proteins in network</p>
+          <p>dmax: maximum node degree in network</p>
+          <p>dmin: minimum node degree considered for power-law fitting</p>
+          <p>alpha: fitted power-law exponent</p>
+          <p>ntail: number of nodes in tail of distribution considered for power-law fitting</p>
+          <p>p-value: power-law fitness- &gt; 0.1 guarantees that the data can be fitted to a power-law model, however, better fits may exist for other functions</p>
+          <p>B: binary data</p>
+          <p>S: spoke-represented n-ary data</p>
+          <p>N: n-ary data</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Likewise, the set of potential <underline>S</underline>poke-represented n-ary records did not have support for a power-law distribution while the N-ary data could be fitted to a power law with a scaling coefficient of 3.3 (Table <xref ref-type="table" rid="T6">6</xref>). The corresponding cumulative degree distributions are shown in Figure <xref ref-type="fig" rid="F8">8</xref>. The three data sets have visibly and statistically different node degree distributions.</p>
+      <p>Whether or not a combined data set can be fitted to a power-law is not intuitively obvious from its constituent data sets. For instance, Table <xref ref-type="table" rid="T6">6</xref> shows that the binary and spoke represented datasets together have moderate support for a power-law distribution while adding the n-ary data set removes this correspondence rather than enhancing it. Such combined networks and their inherent network properties are likely to have consequences for the analyses and methods that are so often applied to them in the literature. Just what this consequence is and whether it is significant is beyond the scope of this paper. However, we would submit that the three data sets could be considered different data types and speculate that any inferences drawn from their properties (or synthesized combinations) could just as likely be a consequence of how data are collected and represented as it is of any underlying biological reality.</p>
+      <p>In the very least, these results demonstrate the importance of specifying underlying data sets and data representation methods for n-ary data when calculating global network statistics.</p>
+      <p>A similar experiment in Table <xref ref-type="table" rid="T7">7</xref> shows that the yeast interactome variously does or does not potentially follow a power-law depending on the source database. Division of data by source database is an artificial one that we would not expect to alter network properties. These observations serve as a warning that choice of network simply by database may have unintentional effects.</p>
+      <table-wrap id="T7" position="float">
+        <label>Table 7</label>
+        <caption>
+          <p>Comparison between the degree distribution properties of the yeast interactome by source database.</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left">database</th>
+              <th align="left">n</th>
+              <th align="left">dmax</th>
+              <th align="left">dmin</th>
+              <th align="left">alpha</th>
+              <th align="left">ntail</th>
+              <th align="left">p-value</th>
+              <th align="left">power-law</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left">DIP</td>
+              <td align="left">5189</td>
+              <td align="left">351</td>
+              <td align="left">79</td>
+              <td align="left">3.46</td>
+              <td align="left">177</td>
+              <td align="left">0.04</td>
+              <td align="left">no</td>
+            </tr>
+            <tr>
+              <td align="left">BIND</td>
+              <td align="left">5124</td>
+              <td align="left">316</td>
+              <td align="left">23</td>
+              <td align="left">3.25</td>
+              <td align="left">292</td>
+              <td align="left">0.84</td>
+              <td align="left">yes</td>
+            </tr>
+            <tr>
+              <td align="left">IntAct</td>
+              <td align="left">5893</td>
+              <td align="left">969</td>
+              <td align="left">55</td>
+              <td align="left">3.03</td>
+              <td align="left">439</td>
+              <td align="left">0.26</td>
+              <td align="left">yes</td>
+            </tr>
+            <tr>
+              <td align="left">MINT</td>
+              <td align="left">5523</td>
+              <td align="left">390</td>
+              <td align="left">33</td>
+              <td align="left">3.33</td>
+              <td align="left">310</td>
+              <td align="left">0.92</td>
+              <td align="left">yes</td>
+            </tr>
+            <tr>
+              <td align="left">BioGrid</td>
+              <td align="left">5794</td>
+              <td align="left">1305</td>
+              <td align="left">239</td>
+              <td align="left">4.10</td>
+              <td align="left">194</td>
+              <td align="left">0.01</td>
+              <td align="left">no</td>
+            </tr>
+            <tr>
+              <td align="left">MPACT</td>
+              <td align="left">4953</td>
+              <td align="left">281</td>
+              <td align="left">13</td>
+              <td align="left">2.56</td>
+              <td align="left">711</td>
+              <td align="left">0.01</td>
+              <td align="left">no</td>
+            </tr>
+            <tr>
+              <td align="left">Total</td>
+              <td align="left">6875</td>
+              <td align="left">1327</td>
+              <td align="left">199</td>
+              <td align="left">3.63</td>
+              <td align="left">459</td>
+              <td align="left">0.00</td>
+              <td align="left">no</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>The table shows the degree distribution properties of all seven databases reporting interactions with at least one yeast interactor in the record. The canonical representation is used to normalize protein interactors. N-ary data was represented using a spoke model. Data may include binary records that are representing n-ary data. Results may differ under other conditions.</p>
+          <p>Half of the databases (BIND, IntAct and MINT) suggest a power-law behaviour for the yeast interactome while the other half and the consolidated network cannot be fitted to a power-law.</p>
+          <p>n: number of distinct protein interactors in network</p>
+          <p>dmax: maximum node degree in network</p>
+          <p>dmin: minimum node degree considered for power-law fitting</p>
+          <p>alpha: fitted power-law exponent</p>
+          <p>ntail: number of nodes in tail of distribution considered for power-law fitting</p>
+          <p>p-value: power-law fitness- &gt; 0.1 guarantees that the data can be fitted to a power-law model, however, better fits may exist for other functions</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+  </sec>
+  <sec>
+    <title>Discussion</title>
+    <p>The iRefIndex addresses the need to consolidate protein interaction data into a single uniform data resource [<xref ref-type="bibr" rid="B1">1</xref>]. iRefR provides the user with access to this data source from an R environment.</p>
+    <p>We have demonstrated how data selection, redundancy resolution and n-ary data representation can affect network analysis. The iRefR package allows the user to specify how these issues are dealt with - this will facilitate communication of methods, reproducibility of network analyses and further modification and comparison of methods by researchers. We have emphasized the importance of explaining how an interactome has been constructed and how conclusions about interactome properties depend on this, and we have shown iRefR tools for selecting specific subsets of interest from different organisms, different databases, canonical or non-canonical representation of proteins, spoke or matrix model for n-ary data, subsets having bibliometric scores in a specified range (e.g. lpr), detection of potential binary-represented complexes, and data from specific experimental methods, source databases or publications, among others.</p>
+    <p>The iRefR package also eases many of the operations that are commonly carried out on this type of data. These include interconversion between MITAB, complexList, edgeList and graph formats, which simplify time-consuming data integration and file format manipulation procedures and, at the same time, allow the output to be exported to other applications and R packages.</p>
+    <p>The package includes additional features such as search and retrieval of data along with functions to deal with interconversion between ROGIDs and commonly used database accessions, as well as descriptive statistics. More advanced graphical statistics and operations can be performed using it together with the igraph or graph R packages, as explained in the software documentation.</p>
+    <p>The iRefIndex MITAB file is a major dependency of this package. In time, this dependency could be removed. The PSIMex Consortium [<xref ref-type="bibr" rid="B29">29</xref>] has recently introduced web-services that allow common querying and retrieval of interaction data in MITAB 2.5 format from several different interaction data providers (PSICQUIC web services [<xref ref-type="bibr" rid="B30">30</xref>]). At the time of writing, the MITAB format is in flux: PSICQUIC web services currently support MITAB 2.5 format while iRefIndex employs the latest 2.6 format. A 2.7 format is in the planning stage [<xref ref-type="bibr" rid="B31">31</xref>]. This effort aims to harmonize use of the MITAB format, n-ary data representation and introduce ROGID keys into all MITAB files provided by these services. Once this has been achieved, the iRefR package could be updated to make use of these services in a consistent and reliable manner.</p>
+  </sec>
+  <sec>
+    <title>Conclusions</title>
+    <p>The iRefR package provides functionality to retrieve and work with data from the interaction Reference Index as well as to convert these data to formats useable by other graphical and statistical R-packages. The package addresses issues that are specific to working with this data type. We show that data selection, redundancy resolution and n-ary data representation all have an impact on graphical analysis. The package allows the user to control how these issues are dealt with and communicate them via an R-script written using the iRefR package.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>R code</title>
+      <p>R code used to produce figures and tables in this paper are provided in Additional file <xref ref-type="supplementary-material" rid="S2">2</xref>. Power-law fitting code for R was kindly provided by Laurent Dubroca at <ext-link ext-link-type="uri" xlink:href="http://tuvalu.santafe.edu/~aaronc/powerlaws/plfit.r">http://tuvalu.santafe.edu/~aaronc/powerlaws/plfit.r</ext-link> according to methods described in [<xref ref-type="bibr" rid="B28">28</xref>].</p>
+    </sec>
+    <sec>
+      <title>Version information</title>
+      <p>Analyses were carried out using version 8.0 of the iRefIndex [<xref ref-type="bibr" rid="B17">17</xref>]. The iRefR package version 0.93 is described in this paper and is compatible with version 7.0 and 8.0 of the iRefIndex. iRefR was constructed using version 2.13.1 of R [<xref ref-type="bibr" rid="B13">13</xref>].</p>
+    </sec>
+    <sec>
+      <title>Availability</title>
+      <p>The iRefR package includes documentation for each function as well as a tutorial that guides the user through examples of each. The package is available from the Comprehensive R Archive Network <ext-link ext-link-type="uri" xlink:href="http://cran.r-project.org/web/packages/iRefR/index.html">http://cran.r-project.org/web/packages/iRefR/index.html</ext-link> and from <ext-link ext-link-type="ftp" xlink:href="ftp://ftp.no.embnet.org/irefindex/iRefR">ftp://ftp.no.embnet.org/irefindex/iRefR</ext-link> under a GPL license version 2 or higher <ext-link ext-link-type="uri" xlink:href="http://www.gnu.org/licenses/gpl.html">http://www.gnu.org/licenses/gpl.html</ext-link>. Updates will be announced at <ext-link ext-link-type="uri" xlink:href="http://irefindex.uio.no">http://irefindex.uio.no</ext-link> and its associated mailing list.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors' contributions</title>
+    <p>AM and IMD designed the software. AM coded the R package. AM and IMD performed the analyses in the paper. AM and IMD wrote the paper. All authors read and approved the final manuscript.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>S1_iRefR_tutorial.pdf</bold>. This tutorial guides the user through every function in the iRefR package.</p>
+      </caption>
+      <media xlink:href="1471-2105-12-455-S1.PDF" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+    <supplementary-material content-type="local-data" id="S2">
+      <caption>
+        <title>Additional file 2</title>
+        <p><bold>S2_R_Code_for_paper.txt</bold>. R script showing code to generate data and figures for this paper.</p>
+      </caption>
+      <media xlink:href="1471-2105-12-455-S2.TXT" mimetype="text" mime-subtype="plain">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>The authors want to thank Paul Boddie and Sabry Razick for testing of the package, Sabry Razick for support with the iRefIndex database, and Birgitte Freiesleben de Blasio and Ståle Nygård for helpful discussions. We thank Aaron Clauset for sharing data from the original paper [<xref ref-type="bibr" rid="B28">28</xref>] and Laurent Dubroca for sharing R code for computing alpha values. We also thank Katerina Michalickova of the Research Computing Services group at the University of Oslo for help with setting up simulations.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Razick</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Magklaras</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Donaldson</surname>
+          <given-names>IM</given-names>
+        </name>
+        <article-title>iRefIndex: A consolidated protein interaction database with provenance</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <issue>1</issue>
+        <fpage>405</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-9-405</pub-id>
+        <pub-id pub-id-type="pmid">18823568</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Alfarano</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Andrade</surname>
+          <given-names>CE</given-names>
+        </name>
+        <name>
+          <surname>Anthony</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Bahroos</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Bajec</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Bantoft</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Betel</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Bobechko</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Boutilier</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Burgess</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Buzadzija</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Cavero</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>D'Abreo</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Donaldson</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Dorairajoo</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Dumontier</surname>
+          <given-names>MJ</given-names>
+        </name>
+        <name>
+          <surname>Dumontier</surname>
+          <given-names>MR</given-names>
+        </name>
+        <name>
+          <surname>Earles</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Farrall</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Feldman</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Garderman</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Gong</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Gonzaga</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Grytsan</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Gryz</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Gu</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Haldorsen</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Halupa</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Haw</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hrvojic</surname>
+          <given-names>A</given-names>
+        </name>
+        <etal/>
+        <article-title>The Biomolecular Interaction Network Database and related tools 2005 update</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2005</year>
+        <issue>33 Database</issue>
+        <fpage>D418</fpage>
+        <lpage>424</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bader</surname>
+          <given-names>GD</given-names>
+        </name>
+        <name>
+          <surname>Donaldson</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Wolting</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Ouellette</surname>
+          <given-names>BF</given-names>
+        </name>
+        <name>
+          <surname>Pawson</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Hogue</surname>
+          <given-names>CW</given-names>
+        </name>
+        <article-title>BIND--The Biomolecular Interaction Network Database</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2001</year>
+        <volume>29</volume>
+        <issue>1</issue>
+        <fpage>242</fpage>
+        <lpage>245</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/29.1.242</pub-id>
+        <pub-id pub-id-type="pmid">11125103</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Stark</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Breitkreutz</surname>
+          <given-names>BJ</given-names>
+        </name>
+        <name>
+          <surname>Chatr-Aryamontri</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Boucher</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Oughtred</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Livstone</surname>
+          <given-names>MS</given-names>
+        </name>
+        <name>
+          <surname>Nixon</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Van Auken</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Shi</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Reguly</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Rust</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Winter</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Dolinski</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Tyers</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>The BioGRID Interaction Database: 2011 update</article-title>
+        <source>Nucleic acids research</source>
+        <year>2011</year>
+        <issue>39 Database</issue>
+        <fpage>D698</fpage>
+        <lpage>704</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Ruepp</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Waegele</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Lechner</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Brauner</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Dunger-Kaltenbach</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Fobo</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Frishman</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Montrone</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Mewes</surname>
+          <given-names>HW</given-names>
+        </name>
+        <article-title>CORUM: the comprehensive resource of mammalian protein complexes--2009</article-title>
+        <source>Nucleic acids research</source>
+        <year>2010</year>
+        <issue>38 Database</issue>
+        <fpage>D497</fpage>
+        <lpage>501</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Xenarios</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Salwinski</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Duan</surname>
+          <given-names>XJ</given-names>
+        </name>
+        <name>
+          <surname>Higney</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Kim</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Eisenberg</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>DIP, the Database of Interacting Proteins: a research tool for studying cellular networks of protein interactions</article-title>
+        <source>Nucleic acids research</source>
+        <year>2002</year>
+        <volume>30</volume>
+        <issue>1</issue>
+        <fpage>303</fpage>
+        <lpage>305</lpage>
+        <pub-id pub-id-type="doi">10.1093/nar/30.1.303</pub-id>
+        <pub-id pub-id-type="pmid">11752321</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Keshava Prasad</surname>
+          <given-names>TS</given-names>
+        </name>
+        <name>
+          <surname>Goel</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Kandasamy</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Keerthikumar</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Kumar</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Mathivanan</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Telikicherla</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Raju</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Shafreen</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Venugopal</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Balakrishnan</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Marimuthu</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Banerjee</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Somanathan</surname>
+          <given-names>DS</given-names>
+        </name>
+        <name>
+          <surname>Sebastian</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Rani</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ray</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Harrys Kishore</surname>
+          <given-names>CJ</given-names>
+        </name>
+        <name>
+          <surname>Kanth</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ahmed</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Kashyap</surname>
+          <given-names>MK</given-names>
+        </name>
+        <name>
+          <surname>Mohmood</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Ramachandra</surname>
+          <given-names>YL</given-names>
+        </name>
+        <name>
+          <surname>Krishna</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Rahiman</surname>
+          <given-names>BA</given-names>
+        </name>
+        <name>
+          <surname>Mohan</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ranganathan</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Ramabadran</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Chaerkady</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Pandey</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Human Protein Reference Database--2009 update</article-title>
+        <source>Nucleic acids research</source>
+        <year>2009</year>
+        <issue>37 Database</issue>
+        <fpage>D767</fpage>
+        <lpage>772</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Aranda</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Achuthan</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Alam-Faruque</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Armean</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Bridge</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Derow</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Feuermann</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Ghanbarian</surname>
+          <given-names>AT</given-names>
+        </name>
+        <name>
+          <surname>Kerrien</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Khadake</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Kerssemakers</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Leroy</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Menden</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Michaut</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Montecchi-Palazzi</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Neuhauser</surname>
+          <given-names>SN</given-names>
+        </name>
+        <name>
+          <surname>Orchard</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Perreau</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Roechert</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>van Eijk</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Hermjakob</surname>
+          <given-names>H</given-names>
+        </name>
+        <article-title>The IntAct molecular interaction database in 2010</article-title>
+        <source>Nucleic acids research</source>
+        <year>2010</year>
+        <issue>38 Database</issue>
+        <fpage>D525</fpage>
+        <lpage>531</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Ceol</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Chatr Aryamontri</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Licata</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Peluso</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Briganti</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Perfetto</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Castagnoli</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Cesareni</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>MINT, the molecular interaction database: 2009 update</article-title>
+        <source>Nucleic acids research</source>
+        <year>2010</year>
+        <issue>38 Database</issue>
+        <fpage>D532</fpage>
+        <lpage>539</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Guldener</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Munsterkotter</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Oesterheld</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Pagel</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Ruepp</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Mewes</surname>
+          <given-names>HW</given-names>
+        </name>
+        <name>
+          <surname>Stumpflen</surname>
+          <given-names>V</given-names>
+        </name>
+        <article-title>MPact: the MIPS protein interaction resource on yeast</article-title>
+        <source>Nucleic acids research</source>
+        <year>2006</year>
+        <issue>34 Database</issue>
+        <fpage>D436</fpage>
+        <lpage>441</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pagel</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Kovac</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Oesterheld</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Brauner</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Dunger-Kaltenbach</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Frishman</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Montrone</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Mark</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Stumpflen</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Mewes</surname>
+          <given-names>HW</given-names>
+        </name>
+        <name>
+          <surname>Ruepp</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Frishman</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>The MIPS mammalian protein-protein interaction database</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>6</issue>
+        <fpage>832</fpage>
+        <lpage>834</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti115</pub-id>
+        <pub-id pub-id-type="pmid">15531608</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Brown</surname>
+          <given-names>KR</given-names>
+        </name>
+        <name>
+          <surname>Jurisica</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>Online predicted human interaction database</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>9</issue>
+        <fpage>2076</fpage>
+        <lpage>2082</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti273</pub-id>
+        <pub-id pub-id-type="pmid">15657099</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="other">
+        <article-title>The R project for statistical computing</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.r-project.org">http://www.r-project.org</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Turner</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Razick</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Turinsky</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Vlasblom</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Crowdy</surname>
+          <given-names>EK</given-names>
+        </name>
+        <name>
+          <surname>Cho</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Morrison</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Donaldson</surname>
+          <given-names>IM</given-names>
+        </name>
+        <name>
+          <surname>Wodak</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <article-title>iRefWeb: interactive analysis of consolidated protein interaction data and their supporting evidence</article-title>
+        <source>Database (Oxford)</source>
+        <year>2010</year>
+        <comment>baq023</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Turinsky</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Razick</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Turner</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Donaldson</surname>
+          <given-names>IM</given-names>
+        </name>
+        <name>
+          <surname>Wodak</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <article-title>Literature curation of protein interactions: measuring agreement across major public databases</article-title>
+        <source>Database (Oxford)</source>
+        <year>2010</year>
+        <comment>baq026</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kerrien</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Orchard</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Montecchi-Palazzi</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Aranda</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Quinn</surname>
+          <given-names>AF</given-names>
+        </name>
+        <name>
+          <surname>Vinod</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Bader</surname>
+          <given-names>GD</given-names>
+        </name>
+        <name>
+          <surname>Xenarios</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Wojcik</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Sherman</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Tyers</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Salama</surname>
+          <given-names>JJ</given-names>
+        </name>
+        <name>
+          <surname>Moore</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ceol</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Chatr-Aryamontri</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Oesterheld</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Stumpflen</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Salwinski</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Nerothin</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Cerami</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Cusick</surname>
+          <given-names>ME</given-names>
+        </name>
+        <name>
+          <surname>Vidal</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Gilson</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Armstrong</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Woollard</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Hogue</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Eisenberg</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Cesareni</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Apweiler</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Hermjakob</surname>
+          <given-names>H</given-names>
+        </name>
+        <article-title>Broadening the horizon--level 2.5 of the HUPO-PSI format for molecular interactions</article-title>
+        <source>BMC biology</source>
+        <year>2007</year>
+        <volume>5</volume>
+        <fpage>44</fpage>
+        <pub-id pub-id-type="doi">10.1186/1741-7007-5-44</pub-id>
+        <pub-id pub-id-type="pmid">17925023</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="other">
+        <article-title>MITAB2.6 format for iRefIndex</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://irefindex.uio.no/wiki/README_MITAB2.6_for_iRefIndex_8.0">http://irefindex.uio.no/wiki/README_MITAB2.6_for_iRefIndex_8.0</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="other">
+        <article-title>The igraph library</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://igraph.sourceforge.net">http://igraph.sourceforge.net</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Csardi</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Nepusz</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>The igraph software package for complex network research</article-title>
+        <source>InterJournal</source>
+        <year>2006</year>
+        <comment>Complex Systems</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="other">
+        <article-title>graph: A package to handle graph data structures</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.bioconductor.org/packages/release/bioc/html/graph.html">http://www.bioconductor.org/packages/release/bioc/html/graph.html</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="other">
+        <article-title>RBGL: R BOOST Graphical library</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://cran.r-project.org/web/packages/RBGL/index.html">http://cran.r-project.org/web/packages/RBGL/index.html</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Stojmirovic</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Yu</surname>
+          <given-names>YK</given-names>
+        </name>
+        <article-title>ppiTrim: constructing non-redundant and up-to-date interactomes</article-title>
+        <source>Database: the journal of biological databases and curation</source>
+        <year>2011</year>
+        <volume>2011</volume>
+        <fpage>bar036</fpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Turinsky</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Razick</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Turner</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Donaldson</surname>
+          <given-names>IM</given-names>
+        </name>
+        <name>
+          <surname>Wodak</surname>
+          <given-names>SJ</given-names>
+        </name>
+        <article-title>Interaction databases on the same page</article-title>
+        <source>Nat Biotechnol</source>
+        <volume>29</volume>
+        <issue>5</issue>
+        <fpage>391</fpage>
+        <lpage>393</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ewing</surname>
+          <given-names>RM</given-names>
+        </name>
+        <name>
+          <surname>Chu</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Elisma</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Taylor</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Climie</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>McBroom-Cerajewski</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Robinson</surname>
+          <given-names>MD</given-names>
+        </name>
+        <name>
+          <surname>O'Connor</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Taylor</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Dharsee</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Ho</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Heilbut</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Moore</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ornatsky</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Bukhman</surname>
+          <given-names>YV</given-names>
+        </name>
+        <name>
+          <surname>Ethier</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Sheng</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Vasilescu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Abu-Farha</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Lambert</surname>
+          <given-names>JP</given-names>
+        </name>
+        <name>
+          <surname>Duewel</surname>
+          <given-names>HS</given-names>
+        </name>
+        <name>
+          <surname>Kuehl</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Hogue</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Colwill</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Gladwish</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Muskat</surname>
+          <given-names>B</given-names>
+        </name>
+        <etal/>
+        <article-title>Large-scale mapping of human protein-protein interactions by mass spectrometry</article-title>
+        <source>Molecular systems biology</source>
+        <year>2007</year>
+        <volume>3</volume>
+        <fpage>89</fpage>
+        <pub-id pub-id-type="pmid">17353931</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Finley</surname>
+          <given-names>RL</given-names>
+          <suffix>Jr</suffix>
+        </name>
+        <article-title>Combining multiple positive training sets to generate confidence scores for protein-protein interactions</article-title>
+        <source>Bioinformatics</source>
+        <year>2009</year>
+        <volume>25</volume>
+        <issue>1</issue>
+        <fpage>105</fpage>
+        <lpage>111</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btn597</pub-id>
+        <pub-id pub-id-type="pmid">19010802</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Braun</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Tasan</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Dreze</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Barrios-Rodiles</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Lemmens</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Yu</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Sahalie</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Murray</surname>
+          <given-names>RR</given-names>
+        </name>
+        <name>
+          <surname>Roncari</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>de Smet</surname>
+          <given-names>AS</given-names>
+        </name>
+        <name>
+          <surname>Venkatesan</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Rual</surname>
+          <given-names>JF</given-names>
+        </name>
+        <name>
+          <surname>Vandenhaute</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Cusick</surname>
+          <given-names>ME</given-names>
+        </name>
+        <name>
+          <surname>Pawson</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Hill</surname>
+          <given-names>DE</given-names>
+        </name>
+        <name>
+          <surname>Tavernier</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Wrana</surname>
+          <given-names>JL</given-names>
+        </name>
+        <name>
+          <surname>Roth</surname>
+          <given-names>FP</given-names>
+        </name>
+        <name>
+          <surname>Vidal</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>An experimentally derived confidence score for binary protein-protein interactions</article-title>
+        <source>Nat Methods</source>
+        <year>2009</year>
+        <volume>6</volume>
+        <issue>1</issue>
+        <fpage>91</fpage>
+        <lpage>97</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1281</pub-id>
+        <pub-id pub-id-type="pmid">19060903</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Aranda</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Blankenburg</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Kerrien</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Brinkman</surname>
+          <given-names>FS</given-names>
+        </name>
+        <name>
+          <surname>Ceol</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Chautard</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Dana</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>De Las Rivas</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Dumousseau</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Galeota</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Gaulton</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Goll</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hancock</surname>
+          <given-names>RE</given-names>
+        </name>
+        <name>
+          <surname>Isserlin</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Jimenez</surname>
+          <given-names>RC</given-names>
+        </name>
+        <name>
+          <surname>Kerssemakers</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Khadake</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Lynn</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <name>
+          <surname>Michaut</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>O'Kelly</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Ono</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Orchard</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Prieto</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Razick</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Rigina</surname>
+          <given-names>O</given-names>
+        </name>
+        <name>
+          <surname>Salwinski</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Simonovic</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Velankar</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Winter</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Wu</surname>
+          <given-names>G</given-names>
+        </name>
+        <etal/>
+        <article-title>PSICQUIC and PSISCORE: accessing and scoring molecular interactions</article-title>
+        <source>Nat Methods</source>
+        <volume>8</volume>
+        <issue>7</issue>
+        <fpage>528</fpage>
+        <lpage>529</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Clauset</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Shalizi</surname>
+          <given-names>CR</given-names>
+        </name>
+        <name>
+          <surname>Newman</surname>
+          <given-names>MEJ</given-names>
+        </name>
+        <article-title>Power-law distributions in empirical data</article-title>
+        <source>SIAM Review</source>
+        <year>2009</year>
+        <volume>51</volume>
+        <issue>4</issue>
+        <fpage>661</fpage>
+        <lpage>703</lpage>
+        <pub-id pub-id-type="doi">10.1137/070710111</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="other">
+        <article-title>The PSIMex Consortium</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://www.psimex.org">http://www.psimex.org</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="other">
+        <article-title>PSICQUIC Web Services</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://code.google.com/p/psicquic">http://code.google.com/p/psicquic</ext-link>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="other">
+        <article-title>PSI-MI TAB format</article-title>
+        <ext-link ext-link-type="uri" xlink:href="http://code.google.com/p/psicquic/wiki/MITAB25Format">http://code.google.com/p/psicquic/wiki/MITAB25Format</ext-link>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

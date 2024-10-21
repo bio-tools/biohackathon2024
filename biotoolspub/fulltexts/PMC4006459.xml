@@ -1,0 +1,2961 @@
+<?DTDIdentifier.IdentifierValue http://www.biomedcentral.com/xml/article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Syst Biol</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Syst Biol</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Systems Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1752-0509</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">4006459</article-id>
+    <article-id pub-id-type="publisher-id">1752-0509-8-47</article-id>
+    <article-id pub-id-type="pmid">24742092</article-id>
+    <article-id pub-id-type="doi">10.1186/1752-0509-8-47</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Methodology Article</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Fast Bayesian inference for gene regulatory networks using ScanBMA</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" id="A1">
+        <name>
+          <surname>Young</surname>
+          <given-names>William Chad</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>wmchad@uw.edu</email>
+      </contrib>
+      <contrib contrib-type="author" id="A2">
+        <name>
+          <surname>Raftery</surname>
+          <given-names>Adrian E</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>raftery@uw.edu</email>
+      </contrib>
+      <contrib contrib-type="author" corresp="yes" id="A3">
+        <name>
+          <surname>Yeung</surname>
+          <given-names>Ka Yee</given-names>
+        </name>
+        <xref ref-type="aff" rid="I2">2</xref>
+        <email>kayee@uw.edu</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>Department of Statistics, Univesity of Washington, 98195, Seattle WA, USA</aff>
+    <aff id="I2"><label>2</label>Department of Microbiology, University of Washington, Box 357735, 98195-7735, Seattle WA, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2014</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>17</day>
+      <month>4</month>
+      <year>2014</year>
+    </pub-date>
+    <volume>8</volume>
+    <fpage>47</fpage>
+    <lpage>47</lpage>
+    <history>
+      <date date-type="received">
+        <day>27</day>
+        <month>11</month>
+        <year>2013</year>
+      </date>
+      <date date-type="accepted">
+        <day>4</day>
+        <month>4</month>
+        <year>2014</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright © 2014 Young et al.; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2014</copyright-year>
+      <copyright-holder>Young et al.; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (
+<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited. The Creative Commons Public Domain Dedication waiver (
+<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</ext-link>) applies to the data made available in this article, unless otherwise stated.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1752-0509/8/47"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Genome-wide time-series data provide a rich set of information for discovering gene regulatory relationships. As genome-wide data for mammalian systems are being generated, it is critical to develop network inference methods that can handle tens of thousands of genes efficiently, provide a systematic framework for the integration of multiple data sources, and yield robust, accurate and compact gene-to-gene relationships.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>We developed and applied ScanBMA, a Bayesian inference method that incorporates external information to improve the accuracy of the inferred network. In particular, we developed a new strategy to efficiently search the model space, applied data transformations to reduce the effect of spurious relationships, and adopted the <italic>g</italic>-prior to guide the search for candidate regulators. Our method is highly computationally efficient, thus addressing the scalability issue with network inference. The method is implemented as the ScanBMA function in the networkBMA Bioconductor software package.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>We compared ScanBMA to other popular methods using time series yeast data as well as time-series simulated data from the DREAM competition. We found that ScanBMA produced more compact networks with a greater proportion of true positives than the competing methods. Specifically, ScanBMA generally produced more favorable areas under the Receiver-Operating Characteristic and Precision-Recall curves than other regression-based methods and mutual-information based methods. In addition, ScanBMA is competitive with other network inference methods in terms of running time.</p>
+      </sec>
+    </abstract>
+    <kwd-group>
+      <kwd>Bayesian inference</kwd>
+      <kwd>Bayesian model averaging</kwd>
+      <kwd>Gene regulatory networks</kwd>
+    </kwd-group>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Identifying gene regulatory networks is an important problem in biology. There have recently been many advances in this area in terms of tools for collecting and analyzing large-scale genomics data. Many of these datasets, from microarrays and next generation sequencing, quantify the expression levels of all genes in a given genome. Genome-wide time-series data, in principle, allow reverse engineering of the gene regulatory relationships by studying the temporal patterns of regulators and target genes. However, this can be a difficult problem due to the large number of genes (<italic>i.e.</italic> variables) being measured, which typically far exceeds the number of observations. Also, the number of actual regulators for a particular gene is only a small fraction of the number of possible regulators.</p>
+    <p>A popular method for inferring gene regulatory networks from time series data uses Dynamic Bayesian Networks (DBN)
+[<xref ref-type="bibr" rid="B1">1</xref>-<xref ref-type="bibr" rid="B5">5</xref>]. DBN methods estimate a probabilistic graphical model, given the time-series data. DBN methods work well, but the network size that they can handle in practice is limited because of their computational cost.</p>
+    <p>Ordinary differential equations (ODE) are alternative methods for constructing networks
+[<xref ref-type="bibr" rid="B6">6</xref>,<xref ref-type="bibr" rid="B7">7</xref>]. These methods are deterministic rather than statistical, although ODE methods can be combined with statistical methods. DBN on local networks within a larger ODE model inference method have been used, for example
+[<xref ref-type="bibr" rid="B8">8</xref>].</p>
+    <p>Another class of methods is based on regression models in which parent nodes (regulators) are inferred for each target gene. Vector autoregressive models have been proposed for inferring causal links between genes. Often this takes the form of a model selection problem, and methods such as the Least Absolute Shrinkage and Selection Operator (LASSO)
+[<xref ref-type="bibr" rid="B9">9</xref>,<xref ref-type="bibr" rid="B10">10</xref>], elastic net
+[<xref ref-type="bibr" rid="B11">11</xref>,<xref ref-type="bibr" rid="B12">12</xref>], and Bayesian model averaging (BMA)
+[<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>] have been used
+[<xref ref-type="bibr" rid="B15">15</xref>-<xref ref-type="bibr" rid="B19">19</xref>]. Morrissey, et al.
+[<xref ref-type="bibr" rid="B20">20</xref>] implemented a Markov Chain Monte Carlo (MCMC) sampler for a fully Bayesian formulation of the autoregressive model.</p>
+    <p>Mutual information methods have been used extensively on genetics data
+[<xref ref-type="bibr" rid="B21">21</xref>-<xref ref-type="bibr" rid="B24">24</xref>], but usually for steady-state rather than time-series data. These methods are typically non-directional. Recently, mutual information methods have been extended to analyze time-series data and produce directed networks
+[<xref ref-type="bibr" rid="B25">25</xref>,<xref ref-type="bibr" rid="B26">26</xref>]. Mutual information methods have the advantage of being able to identify nonlinear relationships.</p>
+    <sec>
+      <title>Our contributions</title>
+      <p>We present a new approach using Bayesian Model Averaging (BMA) for variable selection from time-series gene expression data. Our new method offers the following advances over our previous work
+[<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B19">19</xref>]: </p>
+      <p>• We develop a new algorithm called ScanBMA that searches the model space more efficiently and thoroughly than previous algorithms. It is much faster than previous implementations of BMA for a large number of predictors, resulting in running time comparable to that of LASSO. It allows inference for networks of thousands of genes to be completed in minutes on a standard laptop computer.</p>
+      <p>• We transform the time-series data to reduce spurious correlations. Specifically, we remove the effect of a gene on itself by subtracting the mean expression level for each gene at each time point and then using the residuals from a regression of its expression at the current time point on its expression at the previous time point.</p>
+      <p>• We use Zellner’s <italic>g</italic>-prior
+[<xref ref-type="bibr" rid="B27">27</xref>] for the regression parameters and show that using the <italic>g</italic>-prior to compute posterior probabilities out-performs our previous effort using the Bayesian Information Criterion (BIC).</p>
+      <p>• We address the scalability of network inference methods. Our new implementation produces running times of minutes compared to hours or even days for some competing methods, thus offering substantial improvements.</p>
+      <p>We also carried out extensive empirical studies of our new method. Specifically, we compared our new method, ScanBMA, to other network construction methods in the literature, namely LASSO, the mutual information methods MRNET (Maximum Relevance/Minimum Redundancy)
+[<xref ref-type="bibr" rid="B24">24</xref>], CLR (Context Likelihood or Relatedness)
+[<xref ref-type="bibr" rid="B23">23</xref>] and ARACNE (Algorithm for the Reconstruction of Accurate Cellular Networks)
+[<xref ref-type="bibr" rid="B22">22</xref>], and also Dynamic Bayesian Networks (DBN) when the latter were computationally feasible.</p>
+      <p>We benchmarked the performance of our approach, ScanBMA, using two datasets. The first dataset measures the gene expression levels over time of 97 yeast segregants perturbed with the drug rapamycin. The second dataset consists of simulated time-series data from the DREAM4 (Dialogue for Reverse Engineering Assessment and Methods) challenge. For the yeast dataset, we found that our method outperformed competitors and previous analyses in recovering regulatory relationships previously reported in the literature. For the DREAM4 data, for which no prior information was available, our method performed comparably to other methods, while producing more compact networks. Finally, the ScanBMA algorithm presents a substantial improvement in running time over previous implementations of BMA. The method is implemented as the ScanBMA function in the networkBMA Bioconductor software package.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <sec>
+      <title>Method outline</title>
+      <p>In ScanBMA, network inference is formulated as a series of variable selection problems in which parent nodes (regulators) are inferred for each target gene. The BMA framework accounts for model uncertainty in variable selection by averaging over the posterior distributions from multiple models, weighted by their posterior model probabilities
+[<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>]. A challenge of BMA is to efficiently select a set of models to be averaged over. ScanBMA uses a greedy approach to explore the model space and uses the Occam’s window principle
+[<xref ref-type="bibr" rid="B28">28</xref>] to eliminate unlikely models.</p>
+      <p>We previously developed a supervised framework to integrate external data sources, including co-expression, genome-wide binding, sequence polymorphism, physical interaction, genetic interaction, and literature curation data
+[<xref ref-type="bibr" rid="B18">18</xref>]. Using a training set consisting of approximately 500 known regulatory relationships in the literature, we computed prior probabilities of regulatory relationships across all candidate genes and regulators. These prior probabilities were then used to compute the posterior probabilities of of candidate regression models. We used Zellner’s <italic>g</italic>-prior
+[<xref ref-type="bibr" rid="B27">27</xref>] to specify the prior for the model parameters in ScanBMA. We developed an expectation-maximization (EM) algorithm to estimate the prior variance parameter <italic>g</italic>.</p>
+      <p>Before the regression step, we apply a univariate measure (such as R-squared or BIC) to rank candidate regulators for each target gene using these prior probabilities of regulatory relationships. The parameter <italic>nvar</italic> controls the number of top regulators used in the regression step of each target gene. We have performed empirical studies to study the effect of and estimate the optimal <italic>nvar</italic>.</p>
+    </sec>
+    <sec>
+      <title>Assessment</title>
+      <p>A number of metrics have been used to evaluate the quality of inferred networks. We focus on a few that compare the inferred network with a gold-standard network of true edges. One measure that we use is the precision of the inferred network, equal to the number of true positives divided by the total number of edges in the inferred network. Precision is important to researchers because an experiment to verify relationships identified in exploratory work can be expensive. Thus, the more confident we can be when identifying relationships, the better. In light of this, we also look at the area under the precision-recall curve (AUPRC). This gives a more comprehensive view of network quality and does not require that a threshold be chosen for the posterior probability of an edge or for the number of edges included. We also look at the area under the ROC curve (AUROC), which is widely used to assess the quality of networks.</p>
+      <p>Due to incomplete knowledge in real data, we use a partial assessment based on the YEASTRACT database
+[<xref ref-type="bibr" rid="B29">29</xref>]. This is a literature-curated repository of regulatory relationships between known transcription factors and target genes in yeast, based on more than 1,300 literature references. Due to incomplete knowledge in yeast biology, the lack of an edge in YEASTRACT is not hard evidence of the absence of a relationship between two genes, although it is used as such in our evaluation. In contrast, the true underlying networks from the simulated DREAM4 data are known, so that an absence of a true edge is a false negative and a presence of a non-existing edge is a false positive.</p>
+    </sec>
+    <sec>
+      <title>Results: yeast time series data</title>
+      <p>Table
+<xref ref-type="table" rid="T1">1</xref> summarizes the assessment results for different methods applied to the yeast dataset. Our new ScanBMA method with <italic>nvar</italic> = 20 had a precision of 0.39, much higher than any other method, including our previous method, iBMA
+[<xref ref-type="bibr" rid="B19">19</xref>]. The area under the ROC curve (AUROC) for ScanBMA was also much better than for the competing methods. Note that for random guessing, the expected AUROC is 0.5 and the expected AUPRC is 0.038. For these data, the mutual information methods CLR and MRNET produced very large networks — nearly half of the number of possible edges, which is not concordant with what is known about regulatory networks of this type.</p>
+      <table-wrap position="float" id="T1">
+        <label>Table 1</label>
+        <caption>
+          <p>Performance of different methods on the yeast data</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left">
+                <bold>Method</bold>
+              </th>
+              <th align="right">
+                <bold>Precision</bold>
+              </th>
+              <th align="right">
+                <bold>AUROC</bold>
+              </th>
+              <th align="right">
+                <bold>AUPRC</bold>
+              </th>
+              <th align="right">
+                <bold>TP</bold>
+              </th>
+              <th align="right">
+                <bold>FP</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="left" valign="bottom">LASSO<hr/></td>
+              <td align="right" valign="bottom">0.046<hr/></td>
+              <td align="right" valign="bottom">0.506<hr/></td>
+              <td align="right" valign="bottom">0.0416<hr/></td>
+              <td align="right" valign="bottom">996<hr/></td>
+              <td align="right" valign="bottom">20,469<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ARACNE<hr/></td>
+              <td align="right" valign="bottom">0.205<hr/></td>
+              <td align="right" valign="bottom">0.502<hr/></td>
+              <td align="right" valign="bottom">0.0399<hr/></td>
+              <td align="right" valign="bottom">69<hr/></td>
+              <td align="right" valign="bottom">268<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">CLR<hr/></td>
+              <td align="right" valign="bottom">0.039<hr/></td>
+              <td align="right" valign="bottom">0.510<hr/></td>
+              <td align="right" valign="bottom">0.0435<hr/></td>
+              <td align="right" valign="bottom">8,879<hr/></td>
+              <td align="right" valign="bottom">220,942<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">MRNET<hr/></td>
+              <td align="right" valign="bottom">0.039<hr/></td>
+              <td align="right" valign="bottom">0.513<hr/></td>
+              <td align="right" valign="bottom">0.0442<hr/></td>
+              <td align="right" valign="bottom">8,737<hr/></td>
+              <td align="right" valign="bottom">214,757<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ScanBMA <sup>[20]</sup><hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.391</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.601<hr/></td>
+              <td align="right" valign="bottom">0.0747<hr/></td>
+              <td align="right" valign="bottom">227<hr/></td>
+              <td align="right" valign="bottom">353<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ScanBMA <sup>[3556]</sup><hr/></td>
+              <td align="right" valign="bottom">0.274<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.629</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.0740<hr/></td>
+              <td align="right" valign="bottom">127<hr/></td>
+              <td align="right" valign="bottom">336<hr/></td>
+            </tr>
+            <tr>
+              <td align="left">iBMA <sup>[100]</sup></td>
+              <td align="right">0.180</td>
+              <td align="right">0.517</td>
+              <td align="right">
+                <bold>0.0788</bold>
+              </td>
+              <td align="right">593</td>
+              <td align="right">2,702</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>AUROC is the area under the ROC curve, AUPRC is the area under the precision-recall curve, and TP and FP are the numbers of true positive and false positive edges inferred, respectively. Thus TP +FP is the number of edges in the inferred network and Precision = TP/(TP +FP). ScanBMA was applied to the transformed data using the informative edge prior and Zellner’s <italic>g</italic>-prior for the model parameters. The superscript indicates the value of <italic>nvar</italic>. Expected precision and AUPRC from random guessing is 0.0380.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>Table
+<xref ref-type="table" rid="T2">2</xref> compares the preferred version of ScanBMA with four other versions, each of which lacks one of the components of our final method. This table shows that each component contributes to the accuracy of our final network. As shown by
+[<xref ref-type="bibr" rid="B19">19</xref>], the incorporation of the informative prior yields the largest increase in performance, but the other components also contribute. The use of the <italic>g</italic>-prior reduces the number of false positives, while the data transformation substantially reduces the size of the inferred network.</p>
+      <table-wrap position="float" id="T2">
+        <label>Table 2</label>
+        <caption>
+          <p>Performance of different versions of ScanBMA on the yeast data, either on the original scale (Orig) or transformed (Trans)</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left">
+                <bold>Data</bold>
+              </th>
+              <th align="left">
+                <bold>nvar</bold>
+              </th>
+              <th align="left">
+                <bold>Priors</bold>
+              </th>
+              <th align="right">
+                <bold>Precision</bold>
+              </th>
+              <th align="right">
+                <bold>AUROC</bold>
+              </th>
+              <th align="right">
+                <bold>AUPRC</bold>
+              </th>
+              <th align="right">
+                <bold>TP</bold>
+              </th>
+              <th align="right">
+                <bold>FP</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="left" valign="bottom">Trans<hr/></td>
+              <td align="left" valign="bottom">20<hr/></td>
+              <td align="left" valign="bottom"><italic>g</italic>, inform<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.391</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.601<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.0747</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">227<hr/></td>
+              <td align="right" valign="bottom">353<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Trans<hr/></td>
+              <td align="left" valign="bottom">3556<hr/></td>
+              <td align="left" valign="bottom"><italic>g</italic>, inform<hr/></td>
+              <td align="right" valign="bottom">0.274<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.629</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.0740<hr/></td>
+              <td align="right" valign="bottom">127<hr/></td>
+              <td align="right" valign="bottom">336<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Trans<hr/></td>
+              <td align="left" valign="bottom">20<hr/></td>
+              <td align="left" valign="bottom">BIC, inform<hr/></td>
+              <td align="right" valign="bottom">0.244<hr/></td>
+              <td align="right" valign="bottom">0.590<hr/></td>
+              <td align="right" valign="bottom">0.0616<hr/></td>
+              <td align="right" valign="bottom">200<hr/></td>
+              <td align="right" valign="bottom">619<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">Orig<hr/></td>
+              <td align="left" valign="bottom">20<hr/></td>
+              <td align="left" valign="bottom"><italic>g</italic>, inform<hr/></td>
+              <td align="right" valign="bottom">0.274<hr/></td>
+              <td align="right" valign="bottom">0.586<hr/></td>
+              <td align="right" valign="bottom">0.0680<hr/></td>
+              <td align="right" valign="bottom">552<hr/></td>
+              <td align="right" valign="bottom">1460<hr/></td>
+            </tr>
+            <tr>
+              <td align="left">Trans</td>
+              <td align="left">20</td>
+              <td align="left"><italic>g</italic>, Guelzim</td>
+              <td align="right">0.175</td>
+              <td align="right">0.499</td>
+              <td align="right">0.0395</td>
+              <td align="right">34</td>
+              <td align="right">160</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>For the priors, inform refers to the informative prior, while Guelzim refers to the prior probability of 2.76/6000 for all possible relationships.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>The precision-recall curves for the different methods on the yeast data are shown in Figure
+<xref ref-type="fig" rid="F1">1</xref>. This figure shows the quality of the ScanBMA network even beyond the 95% posterior inclusion probability cutoff. The precision stays high through a large range of recall, whereas for the other methods it quickly drops to the level of random guessing. The figure also shows that <italic>nvar</italic> = 20 performs better than <italic>nvar</italic> = 3556.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Yeast precision-recall curves.</bold> Precision-Recall curves for different methods on the yeast data. ScanBMA was run using the <italic>g</italic>-prior, transformed data, and informative prior with nvar = 20 and 3556.</p>
+        </caption>
+        <graphic xlink:href="1752-0509-8-47-1"/>
+      </fig>
+      <p>When analyzing gene networks where the number of nodes is in the thousands, computation time can be an important consideration. We compared ScanBMA with the other methods on the yeast data by running each method on 20 target genes under controlled conditions to find the average cpu time per gene.</p>
+      <p>Table
+<xref ref-type="table" rid="T3">3</xref> shows that ScanBMA with <italic>nvar</italic> = 3556, i.e. considering all other genes whose expression varied as potential regulators, is within a factor of 3 of LASSO, the fastest of the other methods. Some of the mutual information methods, on the other hand, are much slower, with MRNET taking about 50 times longer than ScanBMA. Table
+<xref ref-type="table" rid="T3">3</xref> also shows that ScanBMA produces a substantial improvement in computational efficiency over our previous method iBMA
+[<xref ref-type="bibr" rid="B19">19</xref>], especially when <italic>nvar</italic> is large. Dynamic Bayesian network methods were not included in the comparison because they analyze the entire network at once and do not scale well enough to be run feasibly on large network datasets such as the yeast data.</p>
+      <table-wrap position="float" id="T3">
+        <label>Table 3</label>
+        <caption>
+          <p>Average CPU time per target gene of different methods for the yeast data</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left">
+                <bold>Method</bold>
+              </th>
+              <th align="right">
+                <bold>Running Time Per Gene (s)</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="left" valign="bottom">LASSO<hr/></td>
+              <td align="right" valign="bottom">4.1<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ARACNE<hr/></td>
+              <td align="right" valign="bottom">70.4<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">CLR<hr/></td>
+              <td align="right" valign="bottom">7.9<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">MRNET<hr/></td>
+              <td align="right" valign="bottom">&gt;500<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ScanBMA <sup>[20]</sup><hr/></td>
+              <td align="right" valign="bottom">0.04<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ScanBMA <sup>[3556]</sup><hr/></td>
+              <td align="right" valign="bottom">11.2<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">iBMA <sup>[20]</sup><hr/></td>
+              <td align="right" valign="bottom">0.08<hr/></td>
+            </tr>
+            <tr>
+              <td align="left">iBMA <sup>[3556]</sup></td>
+              <td align="right">85</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>ScanBMA was run with <italic>g</italic>-prior, transformed data, informative prior. Superscript indicates value of <italic>nvar</italic>.</p>
+        </table-wrap-foot>
+      </table-wrap>
+    </sec>
+    <sec>
+      <title>Results: simulated DREAM4 data</title>
+      <p>Table
+<xref ref-type="table" rid="T4">4</xref> summarizes the results of the competing methods for the DREAM4 10-gene networks. For the DREAM4 networks, we were able to add the Dynamic Bayesian Networks method, as implemented in the <monospace>ebdbnet</monospace> R package
+[<xref ref-type="bibr" rid="B30">30</xref>], to the comparison because the networks are small. ScanBMA again performed best among the methods, particularly in terms of the areas under the ROC and precision-recall curves, even though no external information was available. However, the extent of ScanBMA’s superiority to other methods, notably LASSO, was smaller in this case than for the yeast data, reflecting the lack of external information.</p>
+      <table-wrap position="float" id="T4">
+        <label>Table 4</label>
+        <caption>
+          <p>Average performance of different methods on the DREAM4 10-gene networks</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left">
+                <bold>Method</bold>
+              </th>
+              <th align="right">
+                <bold>Precision</bold>
+              </th>
+              <th align="right">
+                <bold>AUROC</bold>
+              </th>
+              <th align="right">
+                <bold>AUPRC</bold>
+              </th>
+              <th align="right">
+                <bold>TP</bold>
+              </th>
+              <th align="right">
+                <bold>FP</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="left" valign="bottom">LASSO<hr/></td>
+              <td align="right" valign="bottom">0.190<hr/></td>
+              <td align="right" valign="bottom">0.731<hr/></td>
+              <td align="right" valign="bottom">0.487<hr/></td>
+              <td align="right" valign="bottom">62<hr/></td>
+              <td align="right" valign="bottom">265<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ebdbnet<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.509</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">0.704<hr/></td>
+              <td align="right" valign="bottom">0.438<hr/></td>
+              <td align="right" valign="bottom">28<hr/></td>
+              <td align="right" valign="bottom">27<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ARACNE<hr/></td>
+              <td align="right" valign="bottom">0.304<hr/></td>
+              <td align="right" valign="bottom">0.668<hr/></td>
+              <td align="right" valign="bottom">0.388<hr/></td>
+              <td align="right" valign="bottom">35<hr/></td>
+              <td align="right" valign="bottom">80<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">CLR<hr/></td>
+              <td align="right" valign="bottom">0.215<hr/></td>
+              <td align="right" valign="bottom">0.681<hr/></td>
+              <td align="right" valign="bottom">0.397<hr/></td>
+              <td align="right" valign="bottom">50<hr/></td>
+              <td align="right" valign="bottom">183<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">MRNET<hr/></td>
+              <td align="right" valign="bottom">0.215<hr/></td>
+              <td align="right" valign="bottom">0.709<hr/></td>
+              <td align="right" valign="bottom">0.409<hr/></td>
+              <td align="right" valign="bottom">53<hr/></td>
+              <td align="right" valign="bottom">193<hr/></td>
+            </tr>
+            <tr>
+              <td align="left">ScanBMA</td>
+              <td align="right">0.432</td>
+              <td align="right">
+                <bold>0.740</bold>
+              </td>
+              <td align="right">
+                <bold>0.505</bold>
+              </td>
+              <td align="right">35</td>
+              <td align="right">46</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>ScanBMA was run with the original data. The true positive (TP) and false positive (FP) columns are totaled across all 5 networks. There are 71 true edges across the 5 networks.</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <p>The precision-recall curves from the various methods are shown for the first of the five 10-gene networks in Figure
+<xref ref-type="fig" rid="F2">2</xref>. Figure
+<xref ref-type="fig" rid="F3">3</xref> shows the actual networks returned by each method in comparison with the true network. The ScanBMA network resembles the true network fairly well. In particular, the compactness of the ScanBMA network is apparent, particularly when compared with LASSO and MRNET. The small number of false positives may be useful in focusing the attention of the biologist on edges of high interest when searching for new regulatory relationships.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>10-gene Precision-Recall curves.</bold> Precision-Recall curves for various methods on network 1 of the 10-gene networks from the DREAM4 competition. This network has 15 true edges.</p>
+        </caption>
+        <graphic xlink:href="1752-0509-8-47-2"/>
+      </fig>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p>DREAM4 10-gene network visual comparison.</p>
+        </caption>
+        <graphic xlink:href="1752-0509-8-47-3"/>
+      </fig>
+      <p>The results of the methods for the DREAM4 100-gene networks are summarized in Table
+<xref ref-type="table" rid="T5">5</xref>. For these networks, the mutual information methods MRNET and CLR performed best in terms of the area under curve measures. ScanBMA was not quite as good by these measures, but its precision was much higher than that of any other method. Figure
+<xref ref-type="fig" rid="F4">4</xref> illustrates the precision-recall curves for the various methods, showing increased precision across a broader range for ScanBMA.</p>
+      <table-wrap position="float" id="T5">
+        <label>Table 5</label>
+        <caption>
+          <p>Average performance of different methods on the DREAM4 100-gene networks</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+            <col align="center"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left">
+                <bold>Method</bold>
+              </th>
+              <th align="right">
+                <bold>Precision</bold>
+              </th>
+              <th align="right">
+                <bold>AUROC</bold>
+              </th>
+              <th align="right">
+                <bold>AUPRC</bold>
+              </th>
+              <th align="right">
+                <bold>TP</bold>
+              </th>
+              <th align="right">
+                <bold>FP</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="left" valign="bottom">LASSO<hr/></td>
+              <td align="right" valign="bottom">0.035<hr/></td>
+              <td align="right" valign="bottom">0.643<hr/></td>
+              <td align="right" valign="bottom">0.073<hr/></td>
+              <td align="right" valign="bottom">571<hr/></td>
+              <td align="right" valign="bottom">15757<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ebdbnet<hr/></td>
+              <td align="right" valign="bottom">0.054<hr/></td>
+              <td align="right" valign="bottom">0.643<hr/></td>
+              <td align="right" valign="bottom">0.043<hr/></td>
+              <td align="right" valign="bottom">182<hr/></td>
+              <td align="right" valign="bottom">3201<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">ARACNE<hr/></td>
+              <td align="right" valign="bottom">0.114<hr/></td>
+              <td align="right" valign="bottom">0.589<hr/></td>
+              <td align="right" valign="bottom">0.106<hr/></td>
+              <td align="right" valign="bottom">208<hr/></td>
+              <td align="right" valign="bottom">1621<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">CLR<hr/></td>
+              <td align="right" valign="bottom">0.035<hr/></td>
+              <td align="right" valign="bottom">0.699<hr/></td>
+              <td align="right" valign="bottom">0.123<hr/></td>
+              <td align="right" valign="bottom">678<hr/></td>
+              <td align="right" valign="bottom">18669<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">MRNET<hr/></td>
+              <td align="right" valign="bottom">0.035<hr/></td>
+              <td align="right" valign="bottom">
+                <bold>0.701</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">
+                <bold>0.130</bold>
+                <hr/>
+              </td>
+              <td align="right" valign="bottom">689<hr/></td>
+              <td align="right" valign="bottom">18784<hr/></td>
+            </tr>
+            <tr>
+              <td align="left">ScanBMA</td>
+              <td align="right">
+                <bold>0.153</bold>
+              </td>
+              <td align="right">0.657</td>
+              <td align="right">0.101</td>
+              <td align="right">193</td>
+              <td align="right">1062</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <p>ScanBMA run with original data. The true positive (TP) and false positive (FP) columns are totaled across all 5 networks. There are 1,024 true edges across the 5 networks</p>
+        </table-wrap-foot>
+      </table-wrap>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>100-gene Precision-Recall curves.</bold> Precision-Recall curves for various methods on network 1 of the 100-gene networks from the DREAM4 competition.</p>
+        </caption>
+        <graphic xlink:href="1752-0509-8-47-4"/>
+      </fig>
+    </sec>
+  </sec>
+  <sec sec-type="conclusions">
+    <title>Conclusions</title>
+    <p>We have presented a Bayesian Model Averaging method for inferring gene regulatory networks from time series data. It incorporates external information in a principled way via the prior edge probabilities, transforms the data to reduce spurious correlations, and uses Zellner’s <italic>g</italic>-prior for model parameters, with <italic>g</italic> estimated from the data. We have introduced a new algorithm, ScanBMA, to search the model space efficiently. Our method infers compact networks with higher precision than the competing methods we have assessed, important features for further analysis in searching for new regulatory relationships.</p>
+    <p>We found that our method outperformed previous methods as well as LASSO and mutual information methods on yeast time-series data. In addition, our method performed comparably to competing methods, including Dynamic Bayesian Networks, on simulated data from the DREAM4 challenge, even in the absence of prior information. The networks from ScanBMA are also similar in size to the target networks.</p>
+  </sec>
+  <sec sec-type="methods">
+    <title>Methods</title>
+    <sec>
+      <title>Bayesian model averaging</title>
+      <p>In regression-based methods for network inference, we infer regulators (parent nodes) for each target gene. Hence, network inference can be formulated as a series of variable selection problems. We use the following multiple linear regression model for network inference from time-series data:</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M1" name="1752-0509-8-47-i1" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mn>0</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>i</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>+</mml:mo>
+              <mml:munder>
+                <mml:mrow>
+                  <mml:mi mathsize="big">∑</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>h</mml:mi>
+                  <mml:mo>∈</mml:mo>
+                  <mml:mi>H</mml:mi>
+                </mml:mrow>
+              </mml:munder>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mtext mathvariant="italic">hi</mml:mtext>
+                </mml:mrow>
+              </mml:msub>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>h</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>-</mml:mo>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>+</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>ε</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>X</italic><sub><italic>i</italic>,<italic>t</italic>,<italic>s</italic></sub> is the expression level for gene <italic>i</italic> at time <italic>t</italic> for strain or replicate <italic>s</italic>, <italic>H</italic> is the set of potential regulators, and
+<inline-formula><mml:math id="M2" name="1752-0509-8-47-i2" overflow="scroll"><mml:msub><mml:mrow><mml:mi>ε</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>t</mml:mi><mml:mo>,</mml:mo><mml:mi>s</mml:mi></mml:mrow></mml:msub><mml:mover><mml:mrow><mml:mo>∼</mml:mo></mml:mrow><mml:mrow><mml:mrow><mml:mtext>iid</mml:mtext></mml:mrow></mml:mrow></mml:mover><mml:mi>N</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>σ</mml:mi></mml:mrow><mml:mrow><mml:mi>ε</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula> is the error term, for <italic>i</italic> = 1,…,<italic>n</italic>, <italic>t</italic> = 2,…,<italic>T</italic> and <italic>s</italic> = 1,…,<italic>S</italic>. We are particularly interested in whether <italic>β</italic><sub><italic>hi</italic></sub> ≠ 0, indicating a regulatory relationship from gene <italic>h</italic> to gene <italic>i</italic>.</p>
+      <p>One difficulty is that for gene network time series data there are typically far more potential regulators than observations. To address this problem, as well as to take into account uncertainty in model selection, we use BMA to obtain the posterior probability that each regulator is in the model
+[<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>]. BMA takes model uncertainty into account by averaging over the posterior distributions of a quantity of interest based on multiple models, weighted by their posterior model probabilities. Thus the posterior probability that <italic>β</italic><sub><italic>hi</italic></sub> ≠ 0, also called the posterior inclusion probability of <italic>β</italic><sub><italic>hi</italic></sub>, is</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M3" name="1752-0509-8-47-i3" overflow="scroll">
+            <mml:mrow>
+              <mml:mtext>Pr</mml:mtext>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mtext mathvariant="italic">hi</mml:mtext>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>≠</mml:mo>
+              <mml:mn>0</mml:mn>
+              <mml:mo stretchy="false">|</mml:mo>
+              <mml:mi>D</mml:mi>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>=</mml:mo>
+              <mml:munderover accentunder="false" accent="false">
+                <mml:mrow>
+                  <mml:mi mathsize="big">∑</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                  <mml:mo>=</mml:mo>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>K</mml:mi>
+                </mml:mrow>
+              </mml:munderover>
+              <mml:mn mathvariant="bold">1</mml:mn>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>β</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mtext mathvariant="italic">hi</mml:mtext>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>≠</mml:mo>
+              <mml:mn>0</mml:mn>
+              <mml:mo stretchy="false">|</mml:mo>
+              <mml:mi>D</mml:mi>
+              <mml:mo>,</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>M</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mtext>Pr</mml:mtext>
+              <mml:mo stretchy="false">(</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>M</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>k</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo stretchy="false">|</mml:mo>
+              <mml:mi>D</mml:mi>
+              <mml:mo stretchy="false">)</mml:mo>
+              <mml:mo>,</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where
+<inline-formula><mml:math id="M4" name="1752-0509-8-47-i4" overflow="scroll"><mml:mtext>Pr</mml:mtext><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">|</mml:mo><mml:mi>D</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>∝</mml:mo><mml:mo>∫</mml:mo><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mi>D</mml:mi><mml:mo stretchy="false">|</mml:mo><mml:msub><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:mo>,</mml:mo><mml:msub><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo><mml:mi>p</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">|</mml:mo><mml:msub><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo><mml:mi>d</mml:mi><mml:msub><mml:mrow><mml:mi>θ</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub></mml:math></inline-formula> is the posterior probability of model <italic>M</italic><sub><italic>k</italic></sub> given data <italic>D</italic>, <italic>p</italic>(<italic>D</italic>|<italic>θ</italic><sub><italic>k</italic></sub>,<italic>M</italic><sub><italic>k</italic></sub>) is the likelihood of the parameter vector <italic>θ</italic><sub><italic>k</italic></sub> of model <italic>M</italic><sub><italic>k</italic></sub>, the prior probability of model <italic>M</italic><sub><italic>k</italic></sub> is
+<inline-formula><mml:math id="M5" name="1752-0509-8-47-i5" overflow="scroll"><mml:mtext>Pr</mml:mtext><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo><mml:mo>∝</mml:mo><mml:msub><mml:mrow><mml:mo>∏</mml:mo></mml:mrow><mml:mrow><mml:mi>h</mml:mi><mml:mo>∈</mml:mo><mml:msub><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:msub><mml:msub><mml:mrow><mml:mi>π</mml:mi></mml:mrow><mml:mrow><mml:mtext mathvariant="italic">hi</mml:mtext></mml:mrow></mml:msub><mml:msub><mml:mrow><mml:mo>∏</mml:mo></mml:mrow><mml:mrow><mml:mi>h</mml:mi><mml:mo>∉</mml:mo><mml:msub><mml:mrow><mml:mi>M</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow></mml:msub></mml:mrow></mml:msub><mml:mo stretchy="false">(</mml:mo><mml:mn>1</mml:mn><mml:mo>-</mml:mo><mml:msub><mml:mrow><mml:mi>π</mml:mi></mml:mrow><mml:mrow><mml:mtext mathvariant="italic">hi</mml:mtext></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula>, <italic>π</italic><sub><italic>hi</italic></sub> is the prior probability that gene <italic>h</italic> regulates gene <italic>i</italic>, and the models considered are denoted by <italic>M</italic><sub>1</sub>,…,<italic>M</italic><sub><italic>K</italic></sub>.</p>
+      <p>An additional issue is that the number of possible models is too large to enumerate in a reasonable amount of time. MCMC approaches have been applied where the number of potential regulators is large
+[<xref ref-type="bibr" rid="B31">31</xref>], but they are expensive computationally. Iterative BMA has also been applied to large genetics datasets, but the number of regulators was restricted prior to analysis
+[<xref ref-type="bibr" rid="B18">18</xref>,<xref ref-type="bibr" rid="B32">32</xref>].</p>
+    </sec>
+    <sec>
+      <title>Data transformations</title>
+      <p>One concern when identifying regulatory relationships among genes is that there is a great deal of variation in gene expression levels that does not come from these interactions. For example, in the yeast data, many of the genes experience a sharp change in expression level over the first few time points caused by the application of the drug. This common trajectory is not important for inference and can produce many large correlations that do not correspond to actual interactions. In addition, we have found that removing the effect of a gene on itself can improve inference. By doing this we are removing excess variation in order to gain accuracy in inferring relationships.</p>
+      <p>In light of these observations, we transform the data in two steps to remove these extra sources of variation. First, we use time-adjusted data by subtracting the mean expression level for each gene <italic>i</italic> at timepoint <italic>t</italic> across strains:</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M6" name="1752-0509-8-47-i6" overflow="scroll">
+            <mml:mrow>
+              <mml:msubsup>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mo>∗</mml:mo>
+                </mml:mrow>
+              </mml:msubsup>
+              <mml:mo>=</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>-</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mover accent="true">
+                    <mml:mrow>
+                      <mml:mi>X</mml:mi>
+                    </mml:mrow>
+                    <mml:mo>¯</mml:mo>
+                  </mml:mover>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mo>·</mml:mo>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where
+<inline-formula><mml:math id="M7" name="1752-0509-8-47-i7" overflow="scroll"><mml:msub><mml:mrow><mml:mover accent="true"><mml:mrow><mml:mi>X</mml:mi></mml:mrow><mml:mo>¯</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>t</mml:mi><mml:mo>,</mml:mo><mml:mo>·</mml:mo></mml:mrow></mml:msub><mml:mo>=</mml:mo><mml:msup><mml:mrow><mml:mi>S</mml:mi></mml:mrow><mml:mrow><mml:mo>-</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msup><mml:msubsup><mml:mrow><mml:mo>∑</mml:mo></mml:mrow><mml:mrow><mml:mi>s</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow><mml:mrow><mml:mi>S</mml:mi></mml:mrow></mml:msubsup><mml:msub><mml:mrow><mml:mi>X</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>t</mml:mi><mml:mo>,</mml:mo><mml:mi>s</mml:mi></mml:mrow></mml:msub></mml:math></inline-formula>. This removes the overall effect of the drug.</p>
+      <p>Second, we take the residuals from regressing the gene on itself at the previous timepoint:</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M8" name="1752-0509-8-47-i8" overflow="scroll">
+            <mml:mrow>
+              <mml:msubsup>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mo>∗</mml:mo>
+                </mml:mrow>
+              </mml:msubsup>
+              <mml:mo>=</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>-</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mover accent="true">
+                    <mml:mrow>
+                      <mml:mi>α</mml:mi>
+                    </mml:mrow>
+                    <mml:mo>^</mml:mo>
+                  </mml:mover>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>-</mml:mo>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>α</italic><sub><italic>i</italic></sub> is the regression coefficient in the simple linear regression model of the expression level of gene <italic>i</italic> at time <italic>t</italic> on its expression level at time <italic>t</italic> - 1:</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M9" name="1752-0509-8-47-i9" overflow="scroll">
+            <mml:mrow>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>=</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>α</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>X</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>-</mml:mo>
+                  <mml:mn>1</mml:mn>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>+</mml:mo>
+              <mml:msub>
+                <mml:mrow>
+                  <mml:mi>δ</mml:mi>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:mi>i</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>t</mml:mi>
+                  <mml:mo>,</mml:mo>
+                  <mml:mi>s</mml:mi>
+                </mml:mrow>
+              </mml:msub>
+              <mml:mo>,</mml:mo>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where
+<inline-formula><mml:math id="M10" name="1752-0509-8-47-i10" overflow="scroll"><mml:msub><mml:mrow><mml:mi>δ</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>,</mml:mo><mml:mi>t</mml:mi><mml:mo>,</mml:mo><mml:mi>s</mml:mi></mml:mrow></mml:msub><mml:mover><mml:mrow><mml:mo>∼</mml:mo></mml:mrow><mml:mrow><mml:mrow><mml:mtext>iid</mml:mtext></mml:mrow></mml:mrow></mml:mover><mml:mi>N</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:msubsup><mml:mrow><mml:mi>σ</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msubsup><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula>. Then
+<inline-formula><mml:math id="M11" name="1752-0509-8-47-i11" overflow="scroll"><mml:msub><mml:mrow><mml:mover accent="true"><mml:mrow><mml:mi>α</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow></mml:msub></mml:math></inline-formula> is the least squares estimate of <italic>α</italic><sub><italic>i</italic></sub> based on all <italic>S</italic>(<italic>T</italic> - 1) relevant observations for gene <italic>i</italic>.</p>
+    </sec>
+    <sec>
+      <title>Specifying prior distributions</title>
+      <p>An important feature of our method is a way to incorporate external information. The Bayesian approach requires the specification of prior distributions and so includes this directly.</p>
+      <p>BMA requires two types of prior information: the prior edge probability, <italic>π</italic><sub><italic>hi</italic></sub>, that potential regulator <italic>h</italic> regulates target gene <italic>i</italic>, for each <italic>h</italic> and <italic>i</italic>, and the prior distribution of the parameter vector for each model considered.</p>
+      <p>For the prior edge probabilities <italic>π</italic><sub><italic>hi</italic></sub>, we considered two different prior distributions. The first is based on the empirical finding of Guelzim et al.
+[<xref ref-type="bibr" rid="B33">33</xref>] that each target gene is regulated by a small number of transcription factors, estimated as 2.76 per gene
+[<xref ref-type="bibr" rid="B19">19</xref>]. We implement this by setting <italic>π</italic><sub><italic>hi</italic></sub> = 2.76/6000 for all <italic>h</italic> and <italic>i</italic>. This prior distribution does not incorporate any gene-specific information. We call it the Guelzim prior.</p>
+      <p>The second prior edge distribution we consider is that of Lo et al.
+[<xref ref-type="bibr" rid="B19">19</xref>], which uses external information in the form of expression data, binding-site data, curated literature and other sources to come up with a prior probability for each individual possible regulatory relationship. This leads to values of <italic>π</italic><sub><italic>hi</italic></sub> specific to each regulator-target pair. We refer to this as the informative prior. Integration of multiple information sources has been shown to be beneficial in network construction
+[<xref ref-type="bibr" rid="B34">34</xref>,<xref ref-type="bibr" rid="B35">35</xref>].</p>
+      <p>As a prior for the model parameters, corresponding to the strengths of the relationships, we use Zellner’s <italic>g</italic>-prior
+[<xref ref-type="bibr" rid="B27">27</xref>], as in
+[<xref ref-type="bibr" rid="B36">36</xref>]. The prior distribution of the parameter vector
+<inline-formula><mml:math id="M12" name="1752-0509-8-47-i12" overflow="scroll"><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mrow><mml:mi>β</mml:mi></mml:mrow><mml:mrow><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:mi>i</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">[</mml:mo><mml:mi>k</mml:mi><mml:mo stretchy="false">]</mml:mo></mml:mrow></mml:msubsup><mml:mo>,</mml:mo><mml:msup><mml:mrow><mml:mi mathvariant="bold">β</mml:mi></mml:mrow><mml:mrow><mml:mo stretchy="false">[</mml:mo><mml:mi>k</mml:mi><mml:mo stretchy="false">]</mml:mo></mml:mrow></mml:msup><mml:mo>,</mml:mo><mml:msup><mml:mrow><mml:mi>σ</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn><mml:mo stretchy="false">[</mml:mo><mml:mi>k</mml:mi><mml:mo stretchy="false">]</mml:mo></mml:mrow></mml:msup><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula> of model <italic>M</italic><sub><italic>k</italic></sub> is</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M13" name="1752-0509-8-47-i13" overflow="scroll">
+            <mml:mrow>
+              <mml:mtable columnalign="left">
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:mspace width=".3em"/>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mi mathvariant="bold">β</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mo stretchy="false">[</mml:mo>
+                        <mml:mi>k</mml:mi>
+                        <mml:mo stretchy="false">]</mml:mo>
+                      </mml:mrow>
+                    </mml:msup>
+                    <mml:mo stretchy="false">|</mml:mo>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mi>σ</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                        <mml:mo stretchy="false">[</mml:mo>
+                        <mml:mi>k</mml:mi>
+                        <mml:mo stretchy="false">]</mml:mo>
+                      </mml:mrow>
+                    </mml:msup>
+                    <mml:mo>,</mml:mo>
+                    <mml:msub>
+                      <mml:mrow>
+                        <mml:mi>M</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>g</mml:mi>
+                    <mml:mo>∼</mml:mo>
+                    <mml:mspace width="0.3em"/>
+                    <mml:mi>N</mml:mi>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mn>0</mml:mn>
+                    <mml:mo>,</mml:mo>
+                    <mml:mi>g</mml:mi>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mi>σ</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                        <mml:mo stretchy="false">[</mml:mo>
+                        <mml:mi>k</mml:mi>
+                        <mml:mo stretchy="false">]</mml:mo>
+                      </mml:mrow>
+                    </mml:msup>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:msubsup>
+                          <mml:mrow>
+                            <mml:mi>X</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>k</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>T</mml:mi>
+                          </mml:mrow>
+                        </mml:msubsup>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>X</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>k</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo stretchy="false">)</mml:mo>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mo>-</mml:mo>
+                        <mml:mn>1</mml:mn>
+                      </mml:mrow>
+                    </mml:msup>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo>,</mml:mo>
+                  </mml:mtd>
+                </mml:mtr>
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:mi>p</mml:mi>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:msubsup>
+                      <mml:mrow>
+                        <mml:mi>β</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>0</mml:mn>
+                        <mml:mo>,</mml:mo>
+                        <mml:mi>i</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mo stretchy="false">[</mml:mo>
+                        <mml:mi>k</mml:mi>
+                        <mml:mo stretchy="false">]</mml:mo>
+                      </mml:mrow>
+                    </mml:msubsup>
+                    <mml:mo>,</mml:mo>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mi>σ</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                        <mml:mo stretchy="false">[</mml:mo>
+                        <mml:mi>k</mml:mi>
+                        <mml:mo stretchy="false">]</mml:mo>
+                      </mml:mrow>
+                    </mml:msup>
+                    <mml:mo stretchy="false">|</mml:mo>
+                    <mml:msub>
+                      <mml:mrow>
+                        <mml:mi>M</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo>∝</mml:mo>
+                    <mml:mspace width="0.3em"/>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo stretchy="false">/</mml:mo>
+                    <mml:msup>
+                      <mml:mrow>
+                        <mml:mi>σ</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                        <mml:mo stretchy="false">[</mml:mo>
+                        <mml:mi>k</mml:mi>
+                        <mml:mo stretchy="false">]</mml:mo>
+                      </mml:mrow>
+                    </mml:msup>
+                    <mml:mo>,</mml:mo>
+                  </mml:mtd>
+                </mml:mtr>
+              </mml:mtable>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>X</italic><sub><italic>k</italic></sub> is the design matrix for model <italic>M</italic><sub><italic>k</italic></sub> and <italic>g</italic> &gt; 0 controls the prior variance of the regression parameters. This prior yields an analytic form for the posterior model probabilities <italic>P</italic><italic>r</italic>(<italic>M</italic><sub><italic>k</italic></sub>|<italic>D</italic>), namely</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M14" name="1752-0509-8-47-i14" overflow="scroll">
+            <mml:mrow>
+              <mml:mtable columnalign="left">
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:mn>2</mml:mn>
+                    <mml:mo>log</mml:mo>
+                    <mml:mfenced open="(" close=")">
+                      <mml:mrow>
+                        <mml:mi>p</mml:mi>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>M</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>k</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo stretchy="false">|</mml:mo>
+                        <mml:mi>D</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                        <mml:mo stretchy="false">/</mml:mo>
+                        <mml:mi>p</mml:mi>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>M</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mn>0</mml:mn>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo stretchy="false">|</mml:mo>
+                        <mml:mi>D</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                      </mml:mrow>
+                    </mml:mfenced>
+                  </mml:mtd>
+                </mml:mtr>
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:mo>=</mml:mo>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mi>n</mml:mi>
+                    <mml:mo>-</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo>log</mml:mo>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo>+</mml:mo>
+                    <mml:mi>g</mml:mi>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo>-</mml:mo>
+                    <mml:msubsup>
+                      <mml:mrow>
+                        <mml:mi>R</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mn>2</mml:mn>
+                      </mml:mrow>
+                    </mml:msubsup>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo>-</mml:mo>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mi>n</mml:mi>
+                    <mml:mo>-</mml:mo>
+                    <mml:msub>
+                      <mml:mrow>
+                        <mml:mi>d</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:mo>-</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mo>log</mml:mo>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:mn>1</mml:mn>
+                    <mml:mo>+</mml:mo>
+                    <mml:mi>g</mml:mi>
+                    <mml:mo stretchy="false">)</mml:mo>
+                  </mml:mtd>
+                </mml:mtr>
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:mspace width="1em"/>
+                    <mml:mo>-</mml:mo>
+                    <mml:mn>2</mml:mn>
+                    <mml:munder>
+                      <mml:mrow>
+                        <mml:mi mathsize="big">∑</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>h</mml:mi>
+                        <mml:mo>∈</mml:mo>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi mathvariant="script">M</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>k</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                      </mml:mrow>
+                    </mml:munder>
+                    <mml:mspace width=".3em"/>
+                    <mml:mo>log</mml:mo>
+                    <mml:mspace width=".3em"/>
+                    <mml:mfenced open="(" close=")">
+                      <mml:mrow>
+                        <mml:mfrac>
+                          <mml:mrow>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>π</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mtext mathvariant="italic">hi</mml:mtext>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mn>1</mml:mn>
+                            <mml:mo>-</mml:mo>
+                            <mml:msub>
+                              <mml:mrow>
+                                <mml:mi>π</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mtext mathvariant="italic">hi</mml:mtext>
+                              </mml:mrow>
+                            </mml:msub>
+                          </mml:mrow>
+                        </mml:mfrac>
+                      </mml:mrow>
+                    </mml:mfenced>
+                    <mml:mo>,</mml:mo>
+                  </mml:mtd>
+                </mml:mtr>
+              </mml:mtable>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>where <italic>M</italic><sub>0</sub> is the null model with no regulators, <italic>d</italic><sub><italic>k</italic></sub> is the number of regulators present in model <italic>M</italic><sub><italic>k</italic></sub>, and
+<inline-formula><mml:math id="M15" name="1752-0509-8-47-i15" overflow="scroll"><mml:msubsup><mml:mrow><mml:mi>R</mml:mi></mml:mrow><mml:mrow><mml:mi>k</mml:mi></mml:mrow><mml:mrow><mml:mn>2</mml:mn></mml:mrow></mml:msubsup></mml:math></inline-formula> is the <italic>R</italic><sup>2</sup> value for <italic>M</italic><sub><italic>k</italic></sub>. This is an alternative to using BIC to approximate the posterior model probabilities, as has been done previously
+[<xref ref-type="bibr" rid="B32">32</xref>,<xref ref-type="bibr" rid="B37">37</xref>].</p>
+      <p>The parameter <italic>g</italic> controls the expected size of the regression parameters <italic>β</italic><sub><italic>hi</italic></sub>, and is approximately equal to the prior variance of
+<inline-formula><mml:math id="M16" name="1752-0509-8-47-i16" overflow="scroll"><mml:msub><mml:mrow><mml:mi>β</mml:mi></mml:mrow><mml:mrow><mml:mtext mathvariant="italic">hi</mml:mtext></mml:mrow></mml:msub><mml:mo stretchy="false">/</mml:mo><mml:mtext>SE</mml:mtext><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mrow><mml:mover accent="true"><mml:mrow><mml:mi>β</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mtext mathvariant="italic">hi</mml:mtext></mml:mrow></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula>, where
+<inline-formula><mml:math id="M17" name="1752-0509-8-47-i17" overflow="scroll"><mml:msub><mml:mrow><mml:mover accent="true"><mml:mrow><mml:mi>β</mml:mi></mml:mrow><mml:mo>^</mml:mo></mml:mover></mml:mrow><mml:mrow><mml:mtext mathvariant="italic">hi</mml:mtext></mml:mrow></mml:msub></mml:math></inline-formula> is the OLS estimator. This suggests that <italic>g</italic> should be at least 1, otherwise the individual <italic>β</italic><sub><italic>hi</italic></sub>’s would be expected to be nearly indistinguishable from the noise even under ideal conditions. Also, the effective number of data points in the prior is <italic>n</italic>/<italic>g</italic>. Using <italic>g</italic> = <italic>n</italic> corresponds to a unit information prior and yields similar results to using the BIC approximation. Raftery
+[<xref ref-type="bibr" rid="B38">38</xref>] argued that the prior should be no more spread out than the unit information prior, suggesting a choice of <italic>g</italic> in the range 1 ≤ <italic>g</italic> ≤ <italic>n</italic>.</p>
+      <p>We estimate <italic>g</italic> from the data by maximum marginal likelihood, where the likelihood is summed over the model space. We do this using an EM algorithm
+[<xref ref-type="bibr" rid="B39">39</xref>,<xref ref-type="bibr" rid="B40">40</xref>], where the “missing data” are the <italic>γ</italic><sub><italic>hi</italic></sub>’s indicating whether regulator gene <italic>h</italic> is in the model for target gene <italic>i</italic>. First, we run BMA with a selected value of <italic>g</italic>, and from this we obtain the posterior probabilities of the models used. We then maximize</p>
+      <p>
+        <disp-formula>
+          <mml:math id="M18" name="1752-0509-8-47-i18" overflow="scroll">
+            <mml:mrow>
+              <mml:mtable columnalign="left">
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:munderover accentunder="false" accent="false">
+                      <mml:mrow>
+                        <mml:mi mathsize="big">∑</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>k</mml:mi>
+                        <mml:mo>=</mml:mo>
+                        <mml:mn>1</mml:mn>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>K</mml:mi>
+                      </mml:mrow>
+                    </mml:munderover>
+                    <mml:mtext>Pr</mml:mtext>
+                    <mml:mo stretchy="false">(</mml:mo>
+                    <mml:msub>
+                      <mml:mrow>
+                        <mml:mi>M</mml:mi>
+                      </mml:mrow>
+                      <mml:mrow>
+                        <mml:mi>k</mml:mi>
+                      </mml:mrow>
+                    </mml:msub>
+                    <mml:mo stretchy="false">|</mml:mo>
+                    <mml:mi>D</mml:mi>
+                    <mml:mo stretchy="false">)</mml:mo>
+                    <mml:mfenced open="(">
+                      <mml:mrow>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mi>n</mml:mi>
+                        <mml:mo>-</mml:mo>
+                        <mml:msub>
+                          <mml:mrow>
+                            <mml:mi>d</mml:mi>
+                          </mml:mrow>
+                          <mml:mrow>
+                            <mml:mi>k</mml:mi>
+                          </mml:mrow>
+                        </mml:msub>
+                        <mml:mo>-</mml:mo>
+                        <mml:mn>1</mml:mn>
+                        <mml:mo stretchy="false">)</mml:mo>
+                        <mml:mo>log</mml:mo>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mn>1</mml:mn>
+                        <mml:mo>+</mml:mo>
+                        <mml:mi>g</mml:mi>
+                        <mml:mo stretchy="false">)</mml:mo>
+                      </mml:mrow>
+                    </mml:mfenced>
+                  </mml:mtd>
+                </mml:mtr>
+                <mml:mtr>
+                  <mml:mtd>
+                    <mml:mspace width="1.5em"/>
+                    <mml:mfenced close=")">
+                      <mml:mrow>
+                        <mml:mo>-</mml:mo>
+                        <mml:mo stretchy="false">(</mml:mo>
+                        <mml:mi>n</mml:mi>
+                        <mml:mo>-</mml:mo>
+                        <mml:mn>1</mml:mn>
+                        <mml:mo stretchy="false">)</mml:mo>
+                        <mml:mo>log</mml:mo>
+                        <mml:mfenced open="[" close="]">
+                          <mml:mrow>
+                            <mml:mn>1</mml:mn>
+                            <mml:mo>+</mml:mo>
+                            <mml:mi>g</mml:mi>
+                            <mml:mo stretchy="false">(</mml:mo>
+                            <mml:mn>1</mml:mn>
+                            <mml:mo>+</mml:mo>
+                            <mml:msubsup>
+                              <mml:mrow>
+                                <mml:mi>R</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mi>k</mml:mi>
+                              </mml:mrow>
+                              <mml:mrow>
+                                <mml:mn>2</mml:mn>
+                              </mml:mrow>
+                            </mml:msubsup>
+                            <mml:mo stretchy="false">)</mml:mo>
+                          </mml:mrow>
+                        </mml:mfenced>
+                        <mml:mspace width=".3em"/>
+                      </mml:mrow>
+                    </mml:mfenced>
+                  </mml:mtd>
+                </mml:mtr>
+              </mml:mtable>
+            </mml:mrow>
+          </mml:math>
+        </disp-formula>
+      </p>
+      <p>with respect to <italic>g</italic>. We use the new value of <italic>g</italic> in the next iteration of ScanBMA. We do this until convergence.</p>
+    </sec>
+    <sec>
+      <title>Searching the model space using ScanBMA</title>
+      <p>To find the models to be included in the BMA summation, we use the Occam’s window principle, according to which models that are substantially worse than the best model found (by a factor of <italic>C</italic> in posterior probability) are discarded
+[<xref ref-type="bibr" rid="B28">28</xref>]. We used <italic>C</italic> = 100, based on an extensive review of conventional standards of scientific evidence. To find the models in Occam’s window, we propose a new, fast algorithm called ScanBMA.</p>
+      <p>The main idea of ScanBMA is to keep an active set of models around which to search. All models which can be created by adding or removing a single predictor from those in the active set are then evaluated and, if they fall within Occam’s window of the current best model, are added to the active set to expand the search. The method is outlined in Algorithm 1.</p>
+      <p><bold>Algorithm 1:</bold> ScanBMA<disp-formula><graphic xlink:href="1752-0509-8-47-i19.gif"/></disp-formula></p>
+      <p>Because ScanBMA does not average over every model in the model space, the algorithm yields posterior inclusion probabilities of either 100% or 0% for many regulators. These extreme posterior inclusion probabilities are only approximations, and we can refine them. To estimate the posterior inclusion probability of a predictor <italic>X</italic><sub><italic>h</italic></sub> with an approximate posterior probability of 100%, we calculate the ratio <italic>O</italic><sub>-<italic>h</italic>,<italic>i</italic>
+</sub> of the posterior probability of the best model to that of the best model with the predictor <italic>X</italic><sub><italic>h</italic></sub> removed. We then approximate the posterior probability of predictor <italic>h</italic> by <italic>O</italic><sub>-<italic>h</italic>,<italic>i</italic>
+</sub>/(1 + <italic>O</italic><sub>-<italic>h</italic>,<italic>i</italic>
+</sub>), which will be less than 100%.</p>
+      <p>Similarly, to estimate the posterior inclusion probability of a predictor <italic>X</italic><sub><italic>h</italic></sub> with approximate posterior probability 0%, we compute <italic>O</italic><sub><italic>h</italic>,<italic>i</italic></sub>, the ratio of the posterior probability of the best model to that of the best model with the predictor <italic>X</italic><sub><italic>h</italic></sub> added. Then the approximate posterior inclusion probability of predictor <italic>h</italic> is (1 + <italic>O</italic><sub><italic>h</italic>,<italic>i</italic></sub>)<sup>-1</sup>, which will be greater than 0%.</p>
+      <p>This post-processing step yields a unique ordering among the predictors, which is useful in evaluation.</p>
+      <p>A variant of ScanBMA that we found to greatly improve computational efficiency without degrading performance is to restrict the number, <italic>nvar</italic>, of potential regulators <italic>h</italic> considered for each target gene <italic>i</italic> to those with the highest prior probabilities, <italic>π</italic><sub><italic>hi</italic></sub>. Guelzim et al.
+[<xref ref-type="bibr" rid="B33">33</xref>] found that the number of transcription factors per gene has approximately an exponential distribution with mean 2.76; they did not find any of the target genes that they considered to have more than 13 regulators. As a result, we consider <italic>nvar</italic> = 20, which leaves some margin over the Guelzim maximum. We compare this with considering all genes with observed variation in expression as potential regulators, which amounts to setting <italic>nvar</italic> = 3556.</p>
+    </sec>
+    <sec>
+      <title>Data</title>
+      <p>To validate our method, we applied it to time-series data from a gene expression experiment on yeast as well as simulated time-series datasets from the DREAM4 competition.</p>
+      <p>The yeast data come from an experiment on 97 strains of yeast crossed from two parent strains
+[<xref ref-type="bibr" rid="B18">18</xref>]. Each strain was subjected to a treatment of the macrolide drug rapamycin, chosen to cause changes in gene transcription across the genome. Gene expression levels were measured for approximately 6,000 genes every 10 minutes from 0 to 50 minutes after the administration of the drug, using Affymetrix microarrays. The data were then filtered to remove genes that did not show significant variation over the measurements, leaving 3,556 genes.</p>
+      <p>The yeast data can be represented as a three-dimensional array consisting of 3,556 genes, 97 segregants and 6 time points. There are no replicates in these data. However, the segregant axis and the time axis capture the genetic and temporal variations. These yeast data are publicly available from ArrayExpress with accession number E-MTAB-412.</p>
+      <p>The simulated DREAM4 In Silico Network Challenge
+[<xref ref-type="bibr" rid="B41">41</xref>-<xref ref-type="bibr" rid="B43">43</xref>] provided 5 networks each of size 10 and 100 genes
+[<xref ref-type="bibr" rid="B44">44</xref>]. Time-series data for each network are produced by artificially perturbing a portion of the genes in the network and simulating the response of the network over time.</p>
+      <p>Specifically, the size 10 DREAM data consist of 10 genes, 21 time points and 5 replicates. The size 100 DREAM data consist of 100 genes, 21 time points, and 10 replicates.</p>
+      <p>Since our focus is on time-series data, we did not use the other data sources provided by the DREAM4 challenge. In particular, the DREAM4 challenge provided the results of simulated gene knock-out experiments for all genes, and in fact the winning entry in the competition used only the knock-out data and ignored the time series data
+[<xref ref-type="bibr" rid="B45">45</xref>]. In practice, however, this is unrealistic, since it is typically feasible to do knock-out experiments for only a small proportion of the genes. Time series data do have the potential to provide some information about all potential regulatory relationships, and our goal is to develop methods for doing this, so we have ignored the knock-out data here.</p>
+    </sec>
+    <sec>
+      <title>Competing methods</title>
+      <p>To evaluate the performance of our method, we compared it with LASSO
+[<xref ref-type="bibr" rid="B9">9</xref>], as well as with the mutual information methods MRNET, CLR and ARACNE. LASSO is a variable selection method based on a linear regression model, and thus can be used as an alternative to BMA. It is known for being computationally efficient.</p>
+      <p>We used the implementation of LASSO in the <monospace>glmnet</monospace> package in <monospace>R</monospace>[<xref ref-type="bibr" rid="B12">12</xref>], with the shrinkage penalty parameter, sometimes denoted by <italic>λ</italic>, chosen by cross-validation.</p>
+      <p>Mutual information methods have been used extensively in identifying relationships among genes
+[<xref ref-type="bibr" rid="B21">21</xref>-<xref ref-type="bibr" rid="B23">23</xref>]. Since mutual information methods are non-directional, we used a modified version inspired by
+[<xref ref-type="bibr" rid="B46">46</xref>], including the response as the first column of the matrix given to the mutual information method, and the predictors as the other columns. We then took the first column from the resulting mutual information matrix as the measure of the directed relationship from the predictors to the target gene. MRNET, CLR and ARACNE are different methods for using the mutual information to infer a weighted adjacency matrix between genes. All are implemented in the <monospace>minet</monospace> package in <monospace>R</monospace>[<xref ref-type="bibr" rid="B47">47</xref>].</p>
+      <p>We have also investigated the possibility of using Dynamic Bayesian Networks (DBN). Methods based on DBNs have been implemented in several R packages. These include the <monospace>GeneNet</monospace> package
+[<xref ref-type="bibr" rid="B48">48</xref>], but this is not designed for multiple time-series and so was not a comparable method on our datasets. The <monospace>ebdbnet</monospace> (Empirical Bayes Estimation of Dynamic Bayesian Networks) R package
+[<xref ref-type="bibr" rid="B30">30</xref>], and the <monospace>G1DBN</monospace> R package
+[<xref ref-type="bibr" rid="B49">49</xref>], do allow for multiple time-series, but they are not designed to handle networks of the size of the yeast data. They are more appropriate for networks of sizes up to a few hundred genes. We were able to use the <monospace>ebdbnet</monospace> package for the much smaller DREAM4 networks.</p>
+    </sec>
+    <sec>
+      <title>YEASTRACT: Assessment of yeast data</title>
+      <p>The YEASTRACT database
+[<xref ref-type="bibr" rid="B29">29</xref>] is a literature-curated repository of regulatory relationships between known transcription factors and target genes in yeast, based on more than 1,300 literature references. Among the 3,556 genes in our filtered yeast time-series data, this database contains documented regulatory relationships for 127 transcription factors (TFs), encompassing a total of 17,173 edges. We therefore evaluate only inferred relationships from these 127 transcription factors, and inferred regulatory relationships from other genes are not used in evaluation.</p>
+    </sec>
+  </sec>
+  <sec>
+    <title>Availability of supporting data</title>
+    <p>The yeast time series data are publicly available from ArrayExpress
+<ext-link ext-link-type="uri" xlink:href="http://www.ebi.ac.uk/arrayexpress">http://www.ebi.ac.uk/arrayexpress</ext-link>[<xref ref-type="bibr" rid="B50">50</xref>] with accession number E-MTAB-412. The DREAM4 data are publicly available from
+<ext-link ext-link-type="uri" xlink:href="http://wiki.c2b2.columbia.edu/dream/index.php?title=D4c2">http://wiki.c2b2.columbia.edu/dream/index.php?title=D4c2</ext-link>[<xref ref-type="bibr" rid="B44">44</xref>].</p>
+  </sec>
+  <sec>
+    <title>Abbreviations</title>
+    <p>ARACNE: Algorithm for the reconstruction of accurate cellular networks; BMA: Bayesian model averaging; CLR: Context likelihood or relatedness; DBN: Dynamic Bayesian network; DREAM: Dialogue for reverse engineering assessments and methods; LASSO: Least absolute shrinkage and selection operator; MRNET: Maximum relevance/minimum redundancy; PRC: Precision recall curve; ROC: Receiver operating characteristic; TF: Transcription factor; YEASTRACT: Yeast search for transcriptional regulators And consensus tracking.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </sec>
+  <sec>
+    <title>Authors’ contributions</title>
+    <p>WCY participated in method development, implemented the ScanBMA method, carried out empirical studies comparing ScanBMA to other competing methods, and drafted the manuscript. AER designed the ScanBMA algorithm, designed the empirical studies and edited the manuscript. KYY identified the datasets, participated in the design of the empirical studies, and assisted in manuscript preparation. All authors read and approved the final manuscript.</p>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>We would like to thank Drs. Roger Bumgarner and Chris Fraley for helpful discussion.</p>
+    <sec>
+      <title>Funding</title>
+      <p>AER, KYY and WCY are supported by NIH grant 5R01GM084163. KYY is also supported by 3R01GM084163-05S1. AER is also supported by NIH grants R01 HD054511 and R01 HD070936, and by Science Foundation Ireland ETS Walton visitor award 11/W.1/I207.</p>
+    </sec>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>Murphy</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Mian</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Modelling gene expression data using dynamic Bayesian networks</article-title>
+        <comment>Technical report, Computer Science Division, University of California, Berkeley, CA, 1999</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kim</surname>
+          <given-names>S.Y</given-names>
+        </name>
+        <name>
+          <surname>Imoto</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Miyano</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Inferring gene networks from time series microarray data using dynamic Bayesian networks</article-title>
+        <source>Brief Bioinform</source>
+        <year>2003</year>
+        <volume>4</volume>
+        <issue>3</issue>
+        <fpage>228</fpage>
+        <lpage>235</lpage>
+        <pub-id pub-id-type="doi">10.1093/bib/4.3.228</pub-id>
+        <?supplied-pmid 14582517?>
+        <pub-id pub-id-type="pmid">14582517</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kim</surname>
+          <given-names>S.Y</given-names>
+        </name>
+        <name>
+          <surname>Imoto</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Miyano</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Dynamic Bayesian network and nonparametric regression for nonlinear modeling of gene networks from time series gene expression data</article-title>
+        <source>Biosystems</source>
+        <year>2004</year>
+        <volume>75</volume>
+        <issue>1</issue>
+        <fpage>57</fpage>
+        <lpage>65</lpage>
+        <?supplied-pmid 15245804?>
+        <pub-id pub-id-type="pmid">15245804</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zou</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Conzen</surname>
+          <given-names>SD</given-names>
+        </name>
+        <article-title>A new dynamic Bayesian network (DBN) approach for identifying gene regulatory networks from time course microarray data</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>1</issue>
+        <fpage>71</fpage>
+        <lpage>79</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bth463</pub-id>
+        <?supplied-pmid 15308537?>
+        <pub-id pub-id-type="pmid">15308537</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zhu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Chen</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>Leonardson</surname>
+          <given-names>AS</given-names>
+        </name>
+        <name>
+          <surname>Wang</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Lamb</surname>
+          <given-names>JR</given-names>
+        </name>
+        <name>
+          <surname>Emilsson</surname>
+          <given-names>V</given-names>
+        </name>
+        <name>
+          <surname>Schadt</surname>
+          <given-names>EE</given-names>
+        </name>
+        <article-title>Characterizing dynamic changes in the human blood transcriptional network</article-title>
+        <source>PLOS Comput Biol</source>
+        <year>2010</year>
+        <volume>6</volume>
+        <issue>2</issue>
+        <fpage>1000671</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pcbi.1000671</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="other">
+        <name>
+          <surname>D’haeseleer</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Wen</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Fuhrman</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Somogyi</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Linear modeling of mRNA expression levels during CNS development and injury</article-title>
+        <source>Pacific Symposium on Biocomputing (PSB) conference: January 4-9, 1999; Hawaii, Volume 4</source>
+        <year>1999</year>
+        <fpage>41</fpage>
+        <lpage>52</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bansal</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Della Gatta</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Di Bernardo</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Inference of gene regulatory networks and compound mode of action from time course gene expression profiles</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <issue>7</issue>
+        <fpage>815</fpage>
+        <lpage>822</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btl003</pub-id>
+        <?supplied-pmid 16418235?>
+        <pub-id pub-id-type="pmid">16418235</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Li</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Li</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Krishnan</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Liu</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Large-scale dynamic gene regulatory network inference combining differential equation models with local dynamic bayesian network analysis</article-title>
+        <source>Bioinformatics</source>
+        <year>2011</year>
+        <volume>27</volume>
+        <issue>19</issue>
+        <fpage>2686</fpage>
+        <lpage>2691</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btr454</pub-id>
+        <?supplied-pmid 21816876?>
+        <pub-id pub-id-type="pmid">21816876</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tibshirani</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Regression shrinkage and selection via the lasso</article-title>
+        <source>J R Stat Soc Series B (Methodol)</source>
+        <year>1996</year>
+        <volume>58</volume>
+        <fpage>267</fpage>
+        <lpage>288</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Tibshirani</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Saunders</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Rosset</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Zhu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Knight</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Sparsity and smoothness via the fused lasso</article-title>
+        <source>J R Stat Soci: Series B (Stat Methodol)</source>
+        <year>2005</year>
+        <volume>67</volume>
+        <issue>1</issue>
+        <fpage>91</fpage>
+        <lpage>108</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.1467-9868.2005.00490.x</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zou</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Hastie</surname>
+          <given-names>T</given-names>
+        </name>
+        <article-title>Regularization and variable selection via the elastic net</article-title>
+        <source>J R Stat Soc: Series B (Stat Methodol)</source>
+        <year>2005</year>
+        <volume>67</volume>
+        <issue>2</issue>
+        <fpage>301</fpage>
+        <lpage>320</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.1467-9868.2005.00503.x</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Friedman</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Hastie</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Tibshirani</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Regularization paths for generalized linear models via coordinate descent</article-title>
+        <source>J Stat Softw</source>
+        <year>2010</year>
+        <volume>33</volume>
+        <issue>1</issue>
+        <fpage>1</fpage>
+        <lpage>22</lpage>
+        <?supplied-pmid 20808728?>
+        <pub-id pub-id-type="pmid">20808728</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Raftery</surname>
+          <given-names>AE</given-names>
+        </name>
+        <name>
+          <surname>Madigan</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Hoeting</surname>
+          <given-names>JA</given-names>
+        </name>
+        <article-title>Bayesian model averaging for linear regression models</article-title>
+        <source>J Am Stat Assoc</source>
+        <year>1997</year>
+        <volume>92</volume>
+        <issue>437</issue>
+        <fpage>179</fpage>
+        <lpage>191</lpage>
+        <pub-id pub-id-type="doi">10.1080/01621459.1997.10473615</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hoeting</surname>
+          <given-names>JA</given-names>
+        </name>
+        <name>
+          <surname>Madigan</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Raftery</surname>
+          <given-names>AE</given-names>
+        </name>
+        <name>
+          <surname>Volinsky</surname>
+          <given-names>CT</given-names>
+        </name>
+        <article-title>Bayesian model averaging: a tutorial</article-title>
+        <source>Stat Sci</source>
+        <year>1999</year>
+        <volume>14</volume>
+        <fpage>382</fpage>
+        <lpage>401</lpage>
+        <pub-id pub-id-type="doi">10.1214/ss/1009212519</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Gustafsson</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Hörnquist</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Lundström</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Björkegren</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Tegnér</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Reverse engineering of gene networks with LASSO and nonlinear basis functions</article-title>
+        <source>Ann N Y Acad Sci</source>
+        <year>2009</year>
+        <volume>1158</volume>
+        <issue>1</issue>
+        <fpage>265</fpage>
+        <lpage>275</lpage>
+        <pub-id pub-id-type="doi">10.1111/j.1749-6632.2008.03764.x</pub-id>
+        <?supplied-pmid 19348648?>
+        <pub-id pub-id-type="pmid">19348648</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Menéndez</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Kourmpetis</surname>
+          <given-names>Y</given-names>
+        </name>
+        <name>
+          <surname>ter Braak</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>van Eeuwijk</surname>
+          <given-names>FA</given-names>
+        </name>
+        <article-title>Gene regulatory networks from multifactorial perturbations using Graphical Lasso: application to the DREAM4 challenge</article-title>
+        <source>PLOS ONE</source>
+        <year>2010</year>
+        <volume>5</volume>
+        <issue>12</issue>
+        <fpage>14147</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0014147</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B17">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Shojaie</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Michailidis</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Discovering graphical Granger causality using the truncating lasso penalty</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <issue>18</issue>
+        <fpage>517</fpage>
+        <lpage>523</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq377</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B18">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yeung</surname>
+          <given-names>KY</given-names>
+        </name>
+        <name>
+          <surname>Dombek</surname>
+          <given-names>KM</given-names>
+        </name>
+        <name>
+          <surname>Lo</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Mittler</surname>
+          <given-names>JE</given-names>
+        </name>
+        <name>
+          <surname>Zhu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Schadt</surname>
+          <given-names>EE</given-names>
+        </name>
+        <name>
+          <surname>Bumgarner</surname>
+          <given-names>RE</given-names>
+        </name>
+        <name>
+          <surname>Raftery</surname>
+          <given-names>AE</given-names>
+        </name>
+        <article-title>Construction of regulatory networks using expression time-series data of a genotyped population</article-title>
+        <source>Proc Nat Acad Sci</source>
+        <year>2011</year>
+        <volume>108</volume>
+        <issue>48</issue>
+        <fpage>19436</fpage>
+        <lpage>19441</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.1116442108</pub-id>
+        <?supplied-pmid 22084118?>
+        <pub-id pub-id-type="pmid">22084118</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B19">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lo</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Raftery</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Dombek</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Zhu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Schadt</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Bumgarner</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Yeung</surname>
+          <given-names>KY</given-names>
+        </name>
+        <article-title>Integrating external biological knowledge in the construction of regulatory networks from time-series expression data</article-title>
+        <source>BMC Syst Biol</source>
+        <year>2012</year>
+        <volume>6</volume>
+        <issue>1</issue>
+        <fpage>101</fpage>
+        <pub-id pub-id-type="doi">10.1186/1752-0509-6-101</pub-id>
+        <?supplied-pmid 22898396?>
+        <pub-id pub-id-type="pmid">22898396</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B20">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Morrissey</surname>
+          <given-names>ER</given-names>
+        </name>
+        <name>
+          <surname>Juárez</surname>
+          <given-names>MA</given-names>
+        </name>
+        <name>
+          <surname>Denby</surname>
+          <given-names>KJ</given-names>
+        </name>
+        <name>
+          <surname>Burroughs</surname>
+          <given-names>NJ</given-names>
+        </name>
+        <article-title>On reverse engineering of gene interaction networks using time course data with repeated measurements</article-title>
+        <source>Bioinformatics</source>
+        <year>2010</year>
+        <volume>26</volume>
+        <issue>18</issue>
+        <fpage>2305</fpage>
+        <lpage>2312</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btq421</pub-id>
+        <?supplied-pmid 20639410?>
+        <pub-id pub-id-type="pmid">20639410</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B21">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Basso</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Margolin</surname>
+          <given-names>AA</given-names>
+        </name>
+        <name>
+          <surname>Stolovitzky</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Klein</surname>
+          <given-names>U</given-names>
+        </name>
+        <name>
+          <surname>Dalla-Favera</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Califano</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>Reverse engineering of regulatory networks in human b cells</article-title>
+        <source>Nat Genet</source>
+        <year>2005</year>
+        <volume>37</volume>
+        <issue>4</issue>
+        <fpage>382</fpage>
+        <lpage>390</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng1532</pub-id>
+        <?supplied-pmid 15778709?>
+        <pub-id pub-id-type="pmid">15778709</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B22">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Margolin</surname>
+          <given-names>AA</given-names>
+        </name>
+        <name>
+          <surname>Nemenman</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Basso</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Wiggins</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Stolovitzky</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Favera</surname>
+          <given-names>RD</given-names>
+        </name>
+        <name>
+          <surname>Califano</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>ARACNE: an algorithm for the reconstruction of gene regulatory networks in a mammalian cellular context</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2006</year>
+        <volume>7</volume>
+        <issue>Suppl 1</issue>
+        <fpage>7</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-7-S1-S7</pub-id>
+        <?supplied-pmid 16401345?>
+        <pub-id pub-id-type="pmid">16401345</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B23">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Faith</surname>
+          <given-names>JJ</given-names>
+        </name>
+        <name>
+          <surname>Hayete</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Thaden</surname>
+          <given-names>JT</given-names>
+        </name>
+        <name>
+          <surname>Mogno</surname>
+          <given-names>I</given-names>
+        </name>
+        <name>
+          <surname>Wierzbowski</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Cottarel</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Kasif</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Collins</surname>
+          <given-names>JJ</given-names>
+        </name>
+        <name>
+          <surname>Gardner</surname>
+          <given-names>TS</given-names>
+        </name>
+        <article-title>Large-scale mapping and validation of Escherichia coli transcriptional regulation from a compendium of expression profiles</article-title>
+        <source>PLOS Biology</source>
+        <year>2007</year>
+        <volume>5</volume>
+        <issue>1</issue>
+        <fpage>8</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pbio.0050008</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B24">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Meyer</surname>
+          <given-names>PE</given-names>
+        </name>
+        <name>
+          <surname>Kontos</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Lafitte</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Bontempi</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Information-theoretic inference of large transcriptional regulatory networks</article-title>
+        <source>EURASIP J Bioinform Syst Biol</source>
+        <year>2007</year>
+        <volume>2007</volume>
+        <fpage>79879</fpage>
+        <pub-id pub-id-type="pmid">18354736</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B25">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zoppoli</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Morganella</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Ceccarelli</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Timedelay-ARACNE: Reverse engineering of gene networks from time-course data by an information theoretic approach</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2010</year>
+        <volume>11</volume>
+        <issue>1</issue>
+        <fpage>154</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-11-154</pub-id>
+        <?supplied-pmid 20338053?>
+        <pub-id pub-id-type="pmid">20338053</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B26">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Lopes</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>de Oliveira</surname>
+          <given-names>E</given-names>
+        </name>
+        <name>
+          <surname>Cesar</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Inference of gene regulatory networks from time series by Tsallis entropy</article-title>
+        <source>BMC Syst Biol</source>
+        <year>2011</year>
+        <volume>5</volume>
+        <issue>1</issue>
+        <fpage>61</fpage>
+        <pub-id pub-id-type="doi">10.1186/1752-0509-5-61</pub-id>
+        <?supplied-pmid 21545720?>
+        <pub-id pub-id-type="pmid">21545720</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B27">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zellner</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>On assessing prior distributions and Bayesian regression analysis with g-prior distributions</article-title>
+        <source>Bayesian Inference Decis Tech: Essays Honor of Bruno De Finetti</source>
+        <year>1986</year>
+        <volume>6</volume>
+        <fpage>233</fpage>
+        <lpage>243</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B28">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Madigan</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Raftery</surname>
+          <given-names>AE</given-names>
+        </name>
+        <article-title>Model selection and accounting for model uncertainty in graphical models using Occam’s window</article-title>
+        <source>J Am Stat Assoc</source>
+        <year>1994</year>
+        <volume>89</volume>
+        <issue>428</issue>
+        <fpage>1535</fpage>
+        <lpage>1546</lpage>
+        <pub-id pub-id-type="doi">10.1080/01621459.1994.10476894</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B29">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Teixeira</surname>
+          <given-names>MC</given-names>
+        </name>
+        <name>
+          <surname>Monteiro</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Jain</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Tenreiro</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Fernandes</surname>
+          <given-names>AR</given-names>
+        </name>
+        <name>
+          <surname>Mira</surname>
+          <given-names>NP</given-names>
+        </name>
+        <name>
+          <surname>Alenquer</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Freitas</surname>
+          <given-names>AT</given-names>
+        </name>
+        <name>
+          <surname>Oliveira</surname>
+          <given-names>AL</given-names>
+        </name>
+        <name>
+          <surname>Sá-Correia</surname>
+          <given-names>I</given-names>
+        </name>
+        <article-title>The YEASTRACT database: a tool for the analysis of transcription regulatory associations in saccharomyces cerevisiae</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2006</year>
+        <volume>34</volume>
+        <issue>suppl 1</issue>
+        <fpage>446</fpage>
+        <lpage>451</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B30">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rau</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Jaffrézic</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Foulley</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Doerge</surname>
+          <given-names>RW</given-names>
+        </name>
+        <article-title>An empirical Bayesian method for estimating biological networks from temporal microarray data</article-title>
+        <source>Stat Appl Genet Mol Biol</source>
+        <year>2010</year>
+        <volume>9</volume>
+        <issue>1</issue>
+        <fpage>1544</fpage>
+        <lpage>6115</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B31">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Bottolo</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Richardson</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Evolutionary stochastic search for Bayesian model exploration</article-title>
+        <source>Bayesian Anal</source>
+        <year>2010</year>
+        <volume>5</volume>
+        <issue>3</issue>
+        <fpage>583</fpage>
+        <lpage>618</lpage>
+        <pub-id pub-id-type="doi">10.1214/10-BA523</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B32">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yeung</surname>
+          <given-names>KY</given-names>
+        </name>
+        <name>
+          <surname>Bumgarner</surname>
+          <given-names>RE</given-names>
+        </name>
+        <name>
+          <surname>Raftery</surname>
+          <given-names>AE</given-names>
+        </name>
+        <article-title>Bayesian model averaging: development of an improved multi-class, gene selection and classification tool for microarray data</article-title>
+        <source>Bioinformatics</source>
+        <year>2005</year>
+        <volume>21</volume>
+        <issue>10</issue>
+        <fpage>2394</fpage>
+        <lpage>2402</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bti319</pub-id>
+        <?supplied-pmid 15713736?>
+        <pub-id pub-id-type="pmid">15713736</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B33">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Guelzim</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Bottani</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Bourgine</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Képès</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>Topological and causal structure of the yeast transcriptional regulatory network</article-title>
+        <source>Nat Genet</source>
+        <year>2002</year>
+        <volume>31</volume>
+        <issue>1</issue>
+        <fpage>60</fpage>
+        <lpage>63</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng873</pub-id>
+        <?supplied-pmid 11967534?>
+        <pub-id pub-id-type="pmid">11967534</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B34">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Zhu</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Zhang</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>EN</given-names>
+        </name>
+        <name>
+          <surname>Drees</surname>
+          <given-names>B</given-names>
+        </name>
+        <name>
+          <surname>Brem</surname>
+          <given-names>RB</given-names>
+        </name>
+        <name>
+          <surname>Kruglyak</surname>
+          <given-names>L</given-names>
+        </name>
+        <name>
+          <surname>Bumgarner</surname>
+          <given-names>RE</given-names>
+        </name>
+        <name>
+          <surname>Schadt</surname>
+          <given-names>EE</given-names>
+        </name>
+        <article-title>Integrating large-scale functional genomic data to dissect the complexity of yeast regulatory networks</article-title>
+        <source>Nat Genet</source>
+        <year>2008</year>
+        <volume>40</volume>
+        <issue>7</issue>
+        <fpage>854</fpage>
+        <lpage>861</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng.167</pub-id>
+        <?supplied-pmid 18552845?>
+        <pub-id pub-id-type="pmid">18552845</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B35">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yip</surname>
+          <given-names>KY</given-names>
+        </name>
+        <name>
+          <surname>Alexander</surname>
+          <given-names>RP</given-names>
+        </name>
+        <name>
+          <surname>Yan</surname>
+          <given-names>K</given-names>
+        </name>
+        <name>
+          <surname>Gerstein</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Improved reconstruction of in silico gene regulatory networks by integrating knockout and perturbation data</article-title>
+        <source>PLOS ONE</source>
+        <year>2010</year>
+        <volume>5</volume>
+        <issue>1</issue>
+        <fpage>8121</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0008121</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B36">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Clyde</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>George</surname>
+          <given-names>E. I</given-names>
+        </name>
+        <article-title>Model uncertainty</article-title>
+        <source>Stat Sci</source>
+        <year>2004</year>
+        <volume>19</volume>
+        <fpage>81</fpage>
+        <lpage>94</lpage>
+        <pub-id pub-id-type="doi">10.1214/088342304000000035</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B37">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Raftery</surname>
+          <given-names>AE</given-names>
+        </name>
+        <article-title>Bayesian model selection in social research</article-title>
+        <source>Sociol Methodol</source>
+        <year>1995</year>
+        <volume>25</volume>
+        <fpage>111</fpage>
+        <lpage>164</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B38">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Raftery</surname>
+          <given-names>AE</given-names>
+        </name>
+        <article-title>Bayes factors and BIC</article-title>
+        <source>Sociol Methods Res</source>
+        <year>1999</year>
+        <volume>27</volume>
+        <issue>3</issue>
+        <fpage>411</fpage>
+        <lpage>417</lpage>
+        <pub-id pub-id-type="doi">10.1177/0049124199027003005</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B39">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Dempster</surname>
+          <given-names>AP</given-names>
+        </name>
+        <name>
+          <surname>Laird</surname>
+          <given-names>NM</given-names>
+        </name>
+        <name>
+          <surname>Rubin</surname>
+          <given-names>DB</given-names>
+        </name>
+        <article-title>Maximum likelihood from incomplete data via the EM algorithm</article-title>
+        <source>J R Stat Soc Series B (Methodological)</source>
+        <year>1977</year>
+        <volume>39</volume>
+        <issue>1</issue>
+        <fpage>1</fpage>
+        <lpage>38</lpage>
+      </mixed-citation>
+    </ref>
+    <ref id="B40">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>McLachlan</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Krishnan</surname>
+          <given-names>T</given-names>
+        </name>
+        <source>The EM Algorithm and Extensions. Volume 382</source>
+        <year>2007</year>
+        <publisher-name>Hoboken, New Jersey: John Wiley &amp; Sons</publisher-name>
+      </mixed-citation>
+    </ref>
+    <ref id="B41">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marbach</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Prill</surname>
+          <given-names>RJ</given-names>
+        </name>
+        <name>
+          <surname>Schaffter</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Mattiussi</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Floreano</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Stolovitzky</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Revealing strengths and weaknesses of methods for gene network inference</article-title>
+        <source>Proc Nat Acad Sci</source>
+        <year>2010</year>
+        <volume>107</volume>
+        <issue>14</issue>
+        <fpage>6286</fpage>
+        <lpage>6291</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.0913357107</pub-id>
+        <?supplied-pmid 20308593?>
+        <pub-id pub-id-type="pmid">20308593</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B42">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Marbach</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Schaffter</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Mattiussi</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Floreano</surname>
+          <given-names>D</given-names>
+        </name>
+        <article-title>Generating realistic in silico gene networks for performance assessment of reverse engineering methods</article-title>
+        <source>J Comput Biol</source>
+        <year>2009</year>
+        <volume>16</volume>
+        <issue>2</issue>
+        <fpage>229</fpage>
+        <lpage>239</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.2008.09TT</pub-id>
+        <?supplied-pmid 19183003?>
+        <pub-id pub-id-type="pmid">19183003</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B43">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Prill</surname>
+          <given-names>RJ</given-names>
+        </name>
+        <name>
+          <surname>Marbach</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Saez-Rodriguez</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Sorger</surname>
+          <given-names>PK</given-names>
+        </name>
+        <name>
+          <surname>Alexopoulos</surname>
+          <given-names>LG</given-names>
+        </name>
+        <name>
+          <surname>Xue</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Clarke</surname>
+          <given-names>ND</given-names>
+        </name>
+        <name>
+          <surname>Altan-Bonnet</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Stolovitzky</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>Towards a rigorous assessment of systems biology models: the DREAM3 challenges</article-title>
+        <source>PLOS ONE</source>
+        <year>2010</year>
+        <volume>5</volume>
+        <issue>2</issue>
+        <fpage>9202</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0009202</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B44">
+      <mixed-citation publication-type="other">
+        <article-title>DREAM4 In Silico Network Challenge</article-title>
+        <comment>[
+<ext-link ext-link-type="uri" xlink:href="http://wiki.c2b2.columbia.edu/dream/index.php?title=D4c2">http://wiki.c2b2.columbia.edu/dream/index.php?title=D4c2</ext-link>]</comment>
+      </mixed-citation>
+    </ref>
+    <ref id="B45">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Pinna</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Soranzo</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>de la Fuente</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>From knockouts to networks: establishing direct cause-effect relationships through graph analysis</article-title>
+        <source>PLOS ONE</source>
+        <year>2010</year>
+        <volume>5</volume>
+        <issue>10</issue>
+        <fpage>12912</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pone.0012912</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B46">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Shimamura</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Imoto</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Yamaguchi</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Fujita</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Nagasaki</surname>
+          <given-names>M</given-names>
+        </name>
+        <name>
+          <surname>Miyano</surname>
+          <given-names>S</given-names>
+        </name>
+        <article-title>Recursive regularization for inferring gene networks from time-course gene expression profiles</article-title>
+        <source>BMC Syst Biol</source>
+        <year>2009</year>
+        <volume>3</volume>
+        <issue>1</issue>
+        <fpage>41</fpage>
+        <pub-id pub-id-type="doi">10.1186/1752-0509-3-41</pub-id>
+        <?supplied-pmid 19386091?>
+        <pub-id pub-id-type="pmid">19386091</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B47">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Meyer</surname>
+          <given-names>PE</given-names>
+        </name>
+        <name>
+          <surname>Lafitte</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Bontempi</surname>
+          <given-names>G</given-names>
+        </name>
+        <article-title>minet: AR/Bioconductor package for inferring large transcriptional networks using mutual information</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2008</year>
+        <volume>9</volume>
+        <issue>1</issue>
+        <fpage>461</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-9-461</pub-id>
+        <?supplied-pmid 18959772?>
+        <pub-id pub-id-type="pmid">18959772</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B48">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Schäfer</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Opgen-Rhein</surname>
+          <given-names>R</given-names>
+        </name>
+        <name>
+          <surname>Strimmer</surname>
+          <given-names>K</given-names>
+        </name>
+        <article-title>Reverse engineering genetic networks using the Genenet package</article-title>
+        <source>J Am Stat Assoc</source>
+        <year>2001</year>
+        <volume>96</volume>
+        <fpage>1151</fpage>
+        <lpage>1160</lpage>
+        <pub-id pub-id-type="doi">10.1198/016214501753382129</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B49">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Smith</surname>
+          <given-names>SM</given-names>
+        </name>
+        <name>
+          <surname>Fulton</surname>
+          <given-names>DC</given-names>
+        </name>
+        <name>
+          <surname>Chia</surname>
+          <given-names>T</given-names>
+        </name>
+        <name>
+          <surname>Thorneycroft</surname>
+          <given-names>D</given-names>
+        </name>
+        <name>
+          <surname>Chapple</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Dunstan</surname>
+          <given-names>H</given-names>
+        </name>
+        <name>
+          <surname>Hylton</surname>
+          <given-names>C</given-names>
+        </name>
+        <name>
+          <surname>Zeeman</surname>
+          <given-names>SC</given-names>
+        </name>
+        <name>
+          <surname>Smith</surname>
+          <given-names>AM</given-names>
+        </name>
+        <article-title>Diurnal changes in the transcriptome encoding enzymes of starch metabolism provide evidence for both transcriptional and posttranscriptional regulation of starch metabolism in Arabidopsis leaves</article-title>
+        <source>Plant Physiol</source>
+        <year>2004</year>
+        <volume>136</volume>
+        <issue>1</issue>
+        <fpage>2687</fpage>
+        <lpage>2699</lpage>
+        <pub-id pub-id-type="doi">10.1104/pp.104.044347</pub-id>
+        <?supplied-pmid 15347792?>
+        <pub-id pub-id-type="pmid">15347792</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B50">
+      <mixed-citation publication-type="other">
+        <article-title>ArrayExpress</article-title>
+        <comment>[
+<ext-link ext-link-type="uri" xlink:href="http://www.ebi.ac.uk/arrayexpress">http://www.ebi.ac.uk/arrayexpress</ext-link>]</comment>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>

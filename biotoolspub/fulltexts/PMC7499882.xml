@@ -1,0 +1,2423 @@
+<?properties open_access?>
+<?DTDIdentifier.IdentifierValue -//Springer-Verlag//DTD A++ V2.4//EN?>
+<?DTDIdentifier.IdentifierType public?>
+<?SourceDTD.DTDName A++V2.4.dtd?>
+<?SourceDTD.Version 2.4?>
+<?ConverterInfo.XSLTName springer2nlmx2.xsl?>
+<?ConverterInfo.Version 1?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Genome Biol</journal-id>
+    <journal-id journal-id-type="iso-abbrev">Genome Biol</journal-id>
+    <journal-title-group>
+      <journal-title>Genome Biology</journal-title>
+    </journal-title-group>
+    <issn pub-type="ppub">1474-7596</issn>
+    <issn pub-type="epub">1474-760X</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+      <publisher-loc>London</publisher-loc>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">7499882</article-id>
+    <article-id pub-id-type="publisher-id">2135</article-id>
+    <article-id pub-id-type="doi">10.1186/s13059-020-02135-8</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Bifrost: highly parallel construction and indexing of colored and compacted de Bruijn graphs</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes">
+        <name>
+          <surname>Holley</surname>
+          <given-names>Guillaume</given-names>
+        </name>
+        <address>
+          <email>guillaumeholley@gmail.com</email>
+        </address>
+        <xref ref-type="aff" rid="Aff1"/>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Melsted</surname>
+          <given-names>Páll</given-names>
+        </name>
+        <xref ref-type="aff" rid="Aff1"/>
+      </contrib>
+      <aff id="Aff1"><institution-wrap><institution-id institution-id-type="GRID">grid.14013.37</institution-id><institution-id institution-id-type="ISNI">0000 0004 0640 0021</institution-id><institution>Faculty of Industrial Engineering, Mechanical Engineering and Computer Science, University of Iceland, </institution></institution-wrap>Reykjavík, Iceland </aff>
+    </contrib-group>
+    <pub-date pub-type="epub">
+      <day>17</day>
+      <month>9</month>
+      <year>2020</year>
+    </pub-date>
+    <pub-date pub-type="pmc-release">
+      <day>17</day>
+      <month>9</month>
+      <year>2020</year>
+    </pub-date>
+    <pub-date pub-type="collection">
+      <year>2020</year>
+    </pub-date>
+    <volume>21</volume>
+    <elocation-id>249</elocation-id>
+    <history>
+      <date date-type="received">
+        <day>13</day>
+        <month>8</month>
+        <year>2019</year>
+      </date>
+      <date date-type="accepted">
+        <day>6</day>
+        <month>8</month>
+        <year>2020</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>© The Author(s) 2020</copyright-statement>
+      <license license-type="OpenAccess">
+        <license-p><bold>Open Access</bold> This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article’s Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article’s Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit <ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</ext-link>. The Creative Commons Public Domain Dedication waiver (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</ext-link>) applies to the data made available in this article, unless otherwise stated in a credit line to the data.</license-p>
+      </license>
+    </permissions>
+    <abstract id="Abs1">
+      <p id="Par1">Memory consumption of de Bruijn graphs is often prohibitive. Most de Bruijn graph-based assemblers reduce the complexity by compacting paths into single vertices, but this is challenging as it requires the uncompacted de Bruijn graph to be available in memory. We present a parallel and memory-efficient algorithm enabling the direct construction of the compacted de Bruijn graph without producing the intermediate uncompacted graph. Bifrost features a broad range of functions, such as indexing, editing, and querying the graph, and includes a graph coloring method that maps each <italic>k</italic>-mer of the graph to the genomes it occurs in.</p>
+      <p>
+        <bold>Availability</bold>
+      </p>
+      <p id="Par2">
+        <ext-link ext-link-type="uri" xlink:href="https://github.com/pmelsted/bifrost">https://github.com/pmelsted/bifrost</ext-link>
+      </p>
+    </abstract>
+    <custom-meta-group>
+      <custom-meta>
+        <meta-name>issue-copyright-statement</meta-name>
+        <meta-value>© The Author(s) 2020</meta-value>
+      </custom-meta>
+    </custom-meta-group>
+  </article-meta>
+</front>
+<body>
+  <sec id="Sec1" sec-type="introduction">
+    <title>Introduction</title>
+    <p>The de Bruijn graph is an abstract data structure with a rich history in computational biology as a tool for genome assembly [<xref ref-type="bibr" rid="CR1">1</xref>, <xref ref-type="bibr" rid="CR2">2</xref>]. With the advent of high throughput sequencing, the Overlap Layout Consensus (OLC) framework frequently used to assemble Sanger sequencing data [<xref ref-type="bibr" rid="CR3">3</xref>] was progressively replaced in favor of de Bruijn graph-based methods. Since 2008, a wide range of genome assemblers based on the de Bruijn graph have been released [<xref ref-type="bibr" rid="CR4">4</xref>–<xref ref-type="bibr" rid="CR10">10</xref>]. Although single molecule sequencing technologies [<xref ref-type="bibr" rid="CR11">11</xref>, <xref ref-type="bibr" rid="CR12">12</xref>] have re-introduced the OLC framework as the method of choice to assemble long and erroneous reads [<xref ref-type="bibr" rid="CR13">13</xref>–<xref ref-type="bibr" rid="CR16">16</xref>], de Bruijn graph-based methods are nonetheless used to assemble and correct long reads [<xref ref-type="bibr" rid="CR17">17</xref>, <xref ref-type="bibr" rid="CR18">18</xref>]. Overall, de Bruijn graphs have found widespread use for a variety of problems such as de novo transcriptome assembly [<xref ref-type="bibr" rid="CR19">19</xref>], variant calling [<xref ref-type="bibr" rid="CR20">20</xref>], short read compression [<xref ref-type="bibr" rid="CR21">21</xref>], short read correction [<xref ref-type="bibr" rid="CR22">22</xref>], long read correction [<xref ref-type="bibr" rid="CR17">17</xref>], and short read mapping [<xref ref-type="bibr" rid="CR23">23</xref>] to name a few. The colored de Bruijn graph is a variant of the de Bruijn graph which keeps track of the source of each vertex in the graph [<xref ref-type="bibr" rid="CR24">24</xref>]. The initial application was for assembly and genotyping, but it has also found use in pan-genomics [<xref ref-type="bibr" rid="CR25">25</xref>], variant calling [<xref ref-type="bibr" rid="CR26">26</xref>], and transcript quantification methods [<xref ref-type="bibr" rid="CR27">27</xref>].</p>
+    <p>Despite serving as a building block for many methods in computational biology, the de Bruijn graph adoption is hindered by two factors. First, the memory usage and computational requirements for building de Bruijn graphs from raw sequencing reads are considerable compared to alignment to a reference genome, while only a handful of tools have focused on de Bruijn graph compaction [<xref ref-type="bibr" rid="CR28">28</xref>–<xref ref-type="bibr" rid="CR33">33</xref>]. Second, de Bruijn graph construction usually requires tight integration with the code. In the best case, software libraries for building and manipulating de Bruijn graphs are used [<xref ref-type="bibr" rid="CR34">34</xref>, <xref ref-type="bibr" rid="CR35">35</xref>], but in most cases, data structures to index the de Bruijn graph are re-implemented. Those downsides are intensified in the colored de Bruijn graph for which the memory consumption of colors rapidly overtakes the vertices and edges memory usage [<xref ref-type="bibr" rid="CR36">36</xref>]. For this reason, a lot of attention has been given to succinct data structures for building the colored de Bruijn graph [<xref ref-type="bibr" rid="CR30">30</xref>, <xref ref-type="bibr" rid="CR31">31</xref>, <xref ref-type="bibr" rid="CR36">36</xref>–<xref ref-type="bibr" rid="CR41">41</xref>] and data structures for multi-set <italic>k</italic>-mer indexing [<xref ref-type="bibr" rid="CR42">42</xref>–<xref ref-type="bibr" rid="CR47">47</xref>]. In the following, we focus on tools for constructing compacted de Bruijn graphs (cdBGs) with or without colors. We refer the reader to the survey of [<xref ref-type="bibr" rid="CR48">48</xref>] for more details about <italic>k</italic>-mer-based data structures as well as the reviews of [<xref ref-type="bibr" rid="CR25">25</xref>] and [<xref ref-type="bibr" rid="CR49">49</xref>] for data structures to index collections of <italic>k</italic>-mer sets.</p>
+    <p>TwoPaCo [<xref ref-type="bibr" rid="CR28">28</xref>] is a highly parallel construction tool for the cdBG. It builds progressively the cdBG from assembled genomes by identifying <italic>junction</italic><italic>k</italic>-mers which are either branching or located at the extremities of unitigs. A Bloom filter is first used to approximate the graph and a hash table is subsequently employed to remove false positives. The approach taken by BCALM2 [<xref ref-type="bibr" rid="CR29">29</xref>] is orthogonal to the one of TwoPaCo: rather than identifying junction <italic>k</italic>-mers, BCALM2 incrementally assembles <italic>k</italic>-mers into unitigs until junction <italic>k</italic>-mers are reached. <italic>K</italic>-mers are partitioned according to their minimizers, and partitions are compacted independently in parallel. A final step glues the compaction of different partitions together. Note that BCALM2 can process assembled genomes as well as short read data. deGSM [<xref ref-type="bibr" rid="CR50">50</xref>] performs an external sorting of the <italic>k</italic>-mers from the input sequences and then constructs a Burrows-Wheeler transform (BWT) [<xref ref-type="bibr" rid="CR51">51</xref>] of the unitigs from which the final graph is extracted. SplitMEM [<xref ref-type="bibr" rid="CR30">30</xref>] uses the suffix tree [<xref ref-type="bibr" rid="CR52">52</xref>] to construct a ccdBG. Unitigs of the graph are derived from the set of Maximum Exact Matches in the input genomes, while colors are implicitly encoded in the suffix tree. SplitMEM is not adapted to short read data input and splits the unitigs to ensure all <italic>k</italic>-mers of each unitig share the same set of colors. Baier et al. [<xref ref-type="bibr" rid="CR31">31</xref>] provided two algorithms improving SplitMEM with a lower time complexity using a Compressed Suffix Tree and the BWT. PanTools [<xref ref-type="bibr" rid="CR33">33</xref>] creates first an uncompacted <italic>k</italic>-mer index from which are derived unitigs. By iterating over the input assembled genomes, <italic>k</italic>-mers that have not been visited yet are extended to form unitigs, possibly leading to the merging and splitting of previously created unitigs. The graph index is maintained in a database providing edit operations such as updating the graph with additional data. PanTools was specifically designed for pan-genomic applications with assembled genomes in input and allows gene annotations in the graph.</p>
+    <p>In this paper, we present Bifrost, a software for efficiently constructing, indexing, and querying the colored and compacted de Bruijn graph (ccdBGs), both in terms of runtime and memory usage. The data structures and algorithms implemented in Bifrost are specifically tailored for fast and lightweight construction, querying, and dynamic manipulation of compacted de Bruijn graphs, both regular and colored. The software is designed to take advantage of multiple cores and modern processors instruction sets (SIMD operations). Bifrost is also available as a C++11 software library with minimal external dependencies and allows developers to build on top of an efficient de Bruijn graph engine by using the Bifrost API. Bifrost has been successfully employed for alignment- and reference-free phylogenomics [<xref ref-type="bibr" rid="CR53">53</xref>] as well as bacterial genomes querying of genes linked to pathogenicity islands and <italic>fluoroquinolone</italic> resistance [<xref ref-type="bibr" rid="CR54">54</xref>].</p>
+  </sec>
+  <sec id="Sec2" sec-type="results">
+    <title>Results</title>
+    <p>We benchmarked Bifrost against state-of-the-art software on publicly available dataset. We focus on three representative use cases: cdBG construction, cdBG querying, and cdBG coloring. All experiments were run of a server with an 16-core Intel Xeon E5-2650 processor and 256G of RAM. Running time was measured as wall clock time using the time command, and peak memory was measured by ps.</p>
+    <sec id="Sec3">
+      <title>cdBG construction</title>
+      <p>We constructed the cdBG of the NA12878 human genome short read dataset from the Genome In A Bottle consortium [<xref ref-type="bibr" rid="CR55">55</xref>]. The dataset is downsampled from 300-fold to 30-fold coverage to reflect normal sequencing depth, resulting in about 696 million 150-bp paired-end sequences.</p>
+      <p>We compared Bifrost to BCALM2 because of its low computational requirements and versatility as it can build a cdBG from short read data or assembled genomes. BCALM2 can be configured for different memory usage where a lower memory usage results in a longer running time. In our experiments, it was configured with the maximum memory usage of Bifrost for each <italic>k</italic>-mer size tested. Additionally, BCALM2 uses by default up to 5 GB of disk space while Bifrost does not use any disk except for the final output. Results are shown in Table <xref rid="Tab1" ref-type="table">1</xref>, and summaries of the unitig N50, <italic>k</italic>-mer cardinality, and unitig cardinality in each graph built are reported in Table <xref rid="Tab2" ref-type="table">2</xref>.
+<table-wrap id="Tab1"><label>Table 1</label><caption><p>Time and memory comparison of Bifrost and BCALM2 for different <italic>k</italic>-mer sizes and number of threads during graph construction</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"/><th align="left">Tool</th><th align="left"><italic>k</italic>-mer size</th><th align="left" colspan="4">Number of threads</th></tr><tr><th align="left"/><th align="left"/><th align="left"/><th align="left">1</th><th align="left">4</th><th align="left">8</th><th align="left">16</th></tr></thead><tbody><tr><td align="left">Time (h)</td><td align="left">Bifrost</td><td align="left">31</td><td align="left"><bold>20.81</bold></td><td align="left"><bold>8.53</bold></td><td align="left"><bold>6.10</bold></td><td align="left"><bold>5.55</bold></td></tr><tr><td align="left"/><td align="left"/><td align="left">63</td><td align="left"><bold>14.38</bold></td><td align="left"><bold>4.20</bold></td><td align="left"><bold>2.40</bold></td><td align="left"><bold>2.00</bold></td></tr><tr><td align="left"/><td align="left"/><td align="left">95</td><td align="left"><bold>12.51</bold></td><td align="left"><bold>3.88</bold></td><td align="left"><bold>2.25</bold></td><td align="left"><bold>1.58</bold></td></tr><tr><td align="left"/><td align="left"/><td align="left">127</td><td align="left"><bold>9.56</bold></td><td align="left"><bold>2.96</bold></td><td align="left"><bold>1.81</bold></td><td align="left"><bold>1.41</bold></td></tr><tr><td align="left"/><td align="left">BCALM2</td><td align="left">31</td><td align="left">44.25</td><td align="left">14.11</td><td align="left">8.48</td><td align="left">6.33</td></tr><tr><td align="left"/><td align="left"/><td align="left">63</td><td align="left">N/A</td><td align="left">25.6</td><td align="left">13.96</td><td align="left">8.71</td></tr><tr><td align="left"/><td align="left"/><td align="left">95</td><td align="left">N/A</td><td align="left">39.91</td><td align="left">21.45</td><td align="left">12.56</td></tr><tr><td align="left"/><td align="left"/><td align="left">127</td><td align="left">N/A</td><td align="left">N/A</td><td align="left">27.73</td><td align="left">16.15</td></tr><tr><td align="left">Memory (GB)</td><td align="left">Bifrost</td><td align="left">31</td><td align="left">39.59</td><td align="left">39.58</td><td align="left">39.59</td><td align="left">39.60</td></tr><tr><td align="left"/><td align="left"/><td align="left">63</td><td align="left">37.77</td><td align="left">37.77</td><td align="left">37.77</td><td align="left">37.78</td></tr><tr><td align="left"/><td align="left"/><td align="left">95</td><td align="left">44.33</td><td align="left">44.30</td><td align="left">44.30</td><td align="left">44.32</td></tr><tr><td align="left"/><td align="left"/><td align="left">127</td><td align="left">55.88</td><td align="left">55.86</td><td align="left">55.86</td><td align="left">55.86</td></tr><tr><td align="left"/><td align="left">BCALM2</td><td align="left">31</td><td align="left"><bold>36.00</bold></td><td align="left"><bold>35.66</bold></td><td align="left"><bold>35.61</bold></td><td align="left"><bold>35.58</bold></td></tr><tr><td align="left"/><td align="left"/><td align="left">63</td><td align="left">N/A</td><td align="left"><bold>29.83</bold></td><td align="left"><bold>29.73</bold></td><td align="left"><bold>29.64</bold></td></tr><tr><td align="left"/><td align="left"/><td align="left">95</td><td align="left">N/A</td><td align="left"><bold>33.47</bold></td><td align="left"><bold>33.51</bold></td><td align="left"><bold>33.66</bold></td></tr><tr><td align="left"/><td align="left"/><td align="left">127</td><td align="left">N/A</td><td align="left">N/A</td><td align="left"><bold>43.42</bold></td><td align="left"><bold>53.77</bold></td></tr></tbody></table><table-wrap-foot><p>Best results are highlighted. N/A indicates the result is unavailable because the computation took more than 48 h</p></table-wrap-foot></table-wrap><table-wrap id="Tab2"><label>Table 2</label><caption><p>Unitig N50, <italic>k</italic>-mer, and unitig cardinalities in cdBGs built from NA12878 for different <italic>k</italic>-mer sizes</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left"><italic>k</italic>-mer size</th><th align="left"><italic>k</italic>-mer cardinality</th><th align="left">Unitig cardinality</th><th align="left">Unitig N50</th></tr></thead><tbody><tr><td align="left">31</td><td align="left">2,675,559,250</td><td align="left">80,478,269</td><td align="left">421</td></tr><tr><td align="left">63</td><td align="left">2,991,703,769</td><td align="left">28,262,463</td><td align="left">950</td></tr><tr><td align="left">95</td><td align="left">3,058,681,425</td><td align="left">16,691,669</td><td align="left">1299</td></tr><tr><td align="left">127</td><td align="left">2,702,556,396</td><td align="left">44,221,433</td><td align="left">297</td></tr></tbody></table></table-wrap></p>
+      <p>Bifrost was consistently faster than BCALM2, up to a factor 15.32, on all <italic>k</italic>-mer sizes and number of threads tested. For increasing <italic>k</italic>-mer sizes, Bifrost construction time kept decreasing while BCALM2 construction time increased. However, BCALM2 used up to 24.3% less memory than Bifrost. Memory usage for a fixed <italic>k</italic>-mer size was fairly constant for both tools across different number of threads, except for BCALM2 using <italic>k</italic>=127.</p>
+    </sec>
+    <sec id="Sec4">
+      <title>cdBG querying</title>
+      <p>We compared Bifrost to two tools for querying dBGs based on the <italic>k</italic>-mer composition of the queries, namely Blight [<xref ref-type="bibr" rid="CR56">56</xref>] and Mantis [<xref ref-type="bibr" rid="CR45">45</xref>]. The dataset used for the graph index was the NA12878 dataset from the Genome In A Bottle consortium described in the “<xref rid="Sec3" ref-type="sec">cdBG construction</xref>” section. For querying, Bifrost takes as input the graph it constructed and builds an index for querying <italic>k</italic>-mers. Mantis requires processing the unitigs of the graph with Squeakr [<xref ref-type="bibr" rid="CR57">57</xref>] to produce a compressed table of all <italic>k</italic>-mers present. Mantis then builds an index directly from the output of Squeakr for querying. Blight takes as input a graph created by BCALM2. All indexes were created using <italic>k</italic>=31 and 16 threads.</p>
+      <p>To query the graph, we used 30 million single-end reads from the NA12878 short read dataset that was used to construct the reference graph.</p>
+      <p>Note that both Bifrost and Mantis return query hits for every query while Blight only returns the total number of <italic>k</italic>-mers found in the graph from all input queries. Furthermore, Mantis and Blight cannot be configured to return the presence or absence of a query based on different <italic>k</italic>-mer inclusion rates. Hence, Bifrost was queried initially with parameter <italic>e</italic>=1.0 to indicate that an input query is returned present in the graph only if all of its composing <italic>k</italic>-mers are present. This is done to ensure that all methods query the graph for all <italic>k</italic>-mers in the read. Results are shown in Table <xref rid="Tab3" ref-type="table">3</xref>. Finally, Bifrost enables graph querying based on <italic>k</italic>-mers with up to one substitution or indel. Table <xref rid="Tab4" ref-type="table">4</xref> shows the performance of Bifrost with different <italic>k</italic>-mer inclusion rates, where <italic>e</italic>=<italic>θ</italic> requires at least the presence of <italic>θ</italic> fraction of the <italic>k</italic>-mers in the graph, both using exact or inexact <italic>k</italic>-mers. Querying for inexact <italic>k</italic>-mers, where an edit distance of 1 is allowed, increases the number of hits but requires more running time. However, even in the case where all <italic>k</italic>-mers are queried, the inexact version is still competitive with Blight and Mantis which only perform exact <italic>k</italic>-mer queries. Overall, the results show that Bifrost is the fastest at querying, while using 26.8 GB of memory, whereas Blight uses less memory at the expense of speed. The low memory usage of Blight is partially explained by the fact that Blight maintains its index in main memory but stores subsequences of the graph on disk.
+<table-wrap id="Tab3"><label>Table 3</label><caption><p>Running time and memory usage for indexing and querying a de Bruijn graph for 30 million short reads</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left">Tool</th><th align="left">Process</th><th align="left">Time (m)</th><th align="left">Memory (GB)</th></tr></thead><tbody><tr><td align="left">Bifrost</td><td align="left">Build</td><td align="left"><bold>333</bold></td><td align="left">39.6</td></tr><tr><td align="left"/><td align="left">Index</td><td align="left"><bold>11.1</bold></td><td align="left">26.8</td></tr><tr><td align="left"/><td align="left">Query</td><td align="left"><bold>4.7</bold></td><td align="left">26.8</td></tr><tr><td align="left"/><td align="left">Query-total</td><td align="left"><bold>16.4</bold></td><td align="left">26.8</td></tr><tr><td align="left">BCALM2</td><td align="left">Build</td><td align="left">380</td><td align="left"><bold>35.58</bold></td></tr><tr><td align="left">Blight</td><td align="left">Index</td><td align="left">80</td><td align="left"><bold>8.3</bold></td></tr><tr><td align="left"/><td align="left">Query</td><td align="left">13.6</td><td align="left"><bold>8.3</bold></td></tr><tr><td align="left"/><td align="left">Query-total</td><td align="left">93.6</td><td align="left"><bold>8.3</bold></td></tr><tr><td align="left">Squeakr</td><td align="left">Build</td><td align="left">1147</td><td align="left">80</td></tr><tr><td align="left">Mantis</td><td align="left">Index</td><td align="left">54</td><td align="left">17</td></tr><tr><td align="left"/><td align="left">Query</td><td align="left">38.8</td><td align="left">168</td></tr><tr><td align="left"/><td align="left">Query-total</td><td align="left">96.9</td><td align="left">168</td></tr></tbody></table><table-wrap-foot><p>The total time of Bifrost and Blight is split into index and query as reported by the software, whereas query-total is the wall time measurement. For Mantis, the index is a separate process and needs only to be run once</p></table-wrap-foot></table-wrap><table-wrap id="Tab4"><label>Table 4</label><caption><p>Running time and fraction of queries found for different <italic>k</italic>-mer inclusion rates (<italic>θ</italic>) using exact and inexact <italic>k</italic>-mers</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left">Query type</th><th align="left"><italic>θ</italic></th><th align="left">Time (m)</th><th align="left">Queries found (%)</th></tr></thead><tbody><tr><td align="left">Exact <italic>k</italic>-mers</td><td align="left">0.50</td><td align="left">2.8</td><td align="left">99.0</td></tr><tr><td align="left"/><td align="left">0.75</td><td align="left">3.8</td><td align="left">96.0</td></tr><tr><td align="left"/><td align="left">0.90</td><td align="left">4.4</td><td align="left">93.9</td></tr><tr><td align="left"/><td align="left">1.00</td><td align="left">4.7</td><td align="left">92.2</td></tr><tr><td align="left">Inexact <italic>k</italic>-mers</td><td align="left">0.50</td><td align="left">7.2</td><td align="left">99.6</td></tr><tr><td align="left"/><td align="left">0.75</td><td align="left">14.8</td><td align="left">99.0</td></tr><tr><td align="left"/><td align="left">0.90</td><td align="left">17.7</td><td align="left">98.1</td></tr><tr><td align="left"/><td align="left">1.00</td><td align="left">21.2</td><td align="left">97.3</td></tr></tbody></table><table-wrap-foot><p>Inexact <italic>k</italic>-mers allow for one substitution or indel in the <italic>k</italic>-mer search</p></table-wrap-foot></table-wrap></p>
+    </sec>
+    <sec id="Sec5">
+      <title>cdBG coloring</title>
+      <p>We constructed ccdBGs with <italic>k</italic>=31 for a maximum of 117,913 assembled genomes of <italic>Salmonella</italic>. The input represents all publicly available <italic>Salmonella</italic> assemblies from the database Enterobase [<xref ref-type="bibr" rid="CR58">58</xref>] as of August 2018. This is a 7.3 × increase in the number of colors compared to the work of [<xref ref-type="bibr" rid="CR41">41</xref>] who reported the ccdBG construction for 16,000 <italic>Salmonella</italic> strains. We compared Bifrost to VARI-merge [<xref ref-type="bibr" rid="CR41">41</xref>] as both tools can construct the colored de Bruijn graph and update it without reconstructing the graph entirely. The main differences between the two tools is that VARI-merge is mainly a disk-based method that produces a non-compacted colored de Bruijn graph. We only benchmarked VARI-merge as it is currently the state-of-the-art for colored de Bruijn graph construction. A comparison of VARI-merge to other colored de Bruijn graph construction tools is given in [<xref ref-type="bibr" rid="CR41">41</xref>]. Results are given in Table <xref rid="Tab5" ref-type="table">5</xref> for a variable number of strains. Note that the reported VARI-merge time includes the time spent by KMC2 [<xref ref-type="bibr" rid="CR59">59</xref>] to compute the <italic>k</italic>-mers required in input of VARI-merge.
+<table-wrap id="Tab5"><label>Table 5</label><caption><p>Running time, memory usage, and external disk usage for constructing the colored de Bruijn graphs of an increasing number of <italic>Salmonella</italic> strains</p></caption><table frame="hsides" rules="groups"><thead><tr><th align="left">Number of strains</th><th align="left">Tool</th><th align="left">Time (h)</th><th align="left">Memory (GB)</th><th align="left">Disk (GB)</th></tr></thead><tbody><tr><td align="left">100</td><td align="left">Bifrost</td><td align="left"><bold>0.016</bold></td><td align="left"><bold>0.16</bold></td><td align="left"><bold>0</bold></td></tr><tr><td align="left"/><td align="left">VARI-merge + KMC2</td><td align="left">0.33</td><td align="left">5.1</td><td align="left">17</td></tr><tr><td align="left">400</td><td align="left">Bifrost</td><td align="left"><bold>0.05</bold></td><td align="left"><bold>0.29</bold></td><td align="left"><bold>0</bold></td></tr><tr><td align="left"/><td align="left">VARI-merge + KMC2</td><td align="left">1.016</td><td align="left">15.4</td><td align="left">51</td></tr><tr><td align="left">1600</td><td align="left">Bifrost</td><td align="left"><bold>0.38</bold></td><td align="left"><bold>2.4</bold></td><td align="left"><bold>0</bold></td></tr><tr><td align="left"/><td align="left">VARI-merge + KMC2</td><td align="left">4.86</td><td align="left">56.9</td><td align="left">228</td></tr><tr><td align="left">4000</td><td align="left">Bifrost</td><td align="left"><bold>1.66</bold></td><td align="left"><bold>3.7</bold></td><td align="left"><bold>0</bold></td></tr><tr><td align="left"/><td align="left">VARI-merge + KMC2</td><td align="left">12.35</td><td align="left">138</td><td align="left">449</td></tr><tr><td align="left">117,913</td><td align="left">Bifrost</td><td align="left"><bold>93.35</bold></td><td align="left"><bold>102.74</bold></td><td align="left"><bold>0</bold></td></tr><tr><td align="left"/><td align="left">VARI-merge + KMC2</td><td align="left">N/A</td><td align="left">N/A</td><td align="left">N/A</td></tr></tbody></table><table-wrap-foot><p>N/A indicates the result is unavailable</p></table-wrap-foot></table-wrap></p>
+      <p>In [<xref ref-type="bibr" rid="CR41">41</xref>], the authors process 16,000 strains in batches of 4000, merging the batches to produce a colored de Bruijn graph of all strains. This required 254 GB of memory and 2.34 TB of external disk, with a total running time of 69 h. In comparison, Bifrost processed 117,913 strains using about 103 GB of memory, no external disk usage and a total running time of 93.35 h. While the running time is not directly comparable across different machines due to different processors, this is in line with Bifrost being about eight times faster than VARI-merge. The graph built from the 117,913 strains contains 413,658,482 <italic>k</italic>-mers: 39.19% of the <italic>k</italic>-mers have only one color (<italic>singleton</italic>), less than 0.01% of the <italic>k</italic>-mers have all the colors (<italic>core</italic>), and 60.80% of the <italic>k</italic>-mers have more than one but not all colors (<italic>dispensable</italic>). Among the 26,324,369 unitigs, 98.72 % have a single set of colors shared by all their <italic>k</italic>-mers.</p>
+    </sec>
+  </sec>
+  <sec id="Sec6" sec-type="discussion">
+    <title>Discussion</title>
+    <p>The de Bruijn graph has been widely used as a fundamental data structure in assemblers, but the memory requirements and focus on speed mean that the implementation has been tightly integrated into the project. Bifrost allows for the integration of the de Bruijn graph as a data structure into projects that work with short read sequencing datasets or assemblies of several genomes. Reusing assemblers can often lead to suboptimal results, e.g., genome assemblers often have coverage assumptions that are not valid for transcriptome assembly. By making minimal assumptions about the input, Bifrost enables researchers to extend our work rather than having to reimplement it.</p>
+  </sec>
+  <sec id="Sec7" sec-type="conclusion">
+    <title>Conclusion</title>
+    <p>We present Bifrost, a method for constructing, indexing, and querying compacted de Bruijn graphs, both regular and colored, with minimal computational requirements. Bifrost is competitive with the state-of-the-art de Bruijn graph construction method BCALM2 and the unitig indexing tool Blight with the advantage that Bifrost is dynamic. For colored de Bruijn graphs, Bifrost is about eight times faster than VARI-merge and uses about 20 times less memory with no external disk. The query capabilities of Bifrost are for both identifying colors for a given <italic>k</italic>-mer and navigating the de Bruijn graph. The software was developed with the intention of being usable as a tool or a library wherever large de Bruijn graphs are needed with minimal external dependencies.</p>
+  </sec>
+  <sec id="Sec8">
+    <title>Methods</title>
+    <p>“<xref rid="Sec9" ref-type="sec">Definitions</xref>” section details the concepts and data structures that will be used throughout this paper. “<xref rid="Sec10" ref-type="sec">Approximating the de Bruijn graph</xref>” section describes how an approximation of the uncompacted de Bruijn graph is built from a set of sequencing reads. “<xref rid="Sec11" ref-type="sec">Constructing the compacted de Bruijn graph</xref>” section shows how the approximate compacted de Bruijn graph is built from its uncompacted counterpart and subsequently converted to an exact compacted de Bruijn graph. “<xref rid="Sec17" ref-type="sec">Coloring</xref>” section presents how the graph coloring is built efficiently on top of the compacted de Bruijn graph.</p>
+    <sec id="Sec9">
+      <title>Definitions</title>
+      <p>A string <italic>s</italic> is a sequence of symbols drawn from an alphabet <inline-formula id="IEq1"><alternatives><tex-math id="M1">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\mathcal {A}$\end{document}</tex-math><mml:math id="M2"><mml:mi mathvariant="script">A</mml:mi></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq1.gif"/></alternatives></inline-formula>. The length of <italic>s</italic> is denoted by |<italic>s</italic>|. A substring of <italic>s</italic> is a string occurring in <italic>s</italic>: it has a starting position <italic>i</italic> and a length <italic>l</italic> and is denoted by <italic>s</italic>(<italic>i</italic>,<italic>l</italic>). A substring of length <italic>l</italic> is also denoted an <italic>l</italic>-mer. In the following, we assume <inline-formula id="IEq2"><alternatives><tex-math id="M3">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\mathcal {A}$\end{document}</tex-math><mml:math id="M4"><mml:mi mathvariant="script">A</mml:mi></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq2.gif"/></alternatives></inline-formula> is the DNA alphabet <inline-formula id="IEq3"><alternatives><tex-math id="M5">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\mathcal {A} = \{A, C, G, T\}$\end{document}</tex-math><mml:math id="M6"><mml:mi mathvariant="script">A</mml:mi><mml:mo>=</mml:mo><mml:mo>{</mml:mo><mml:mi>A</mml:mi><mml:mo>,</mml:mo><mml:mi>C</mml:mi><mml:mo>,</mml:mo><mml:mi>G</mml:mi><mml:mo>,</mml:mo><mml:mi>T</mml:mi><mml:mo>}</mml:mo></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq3.gif"/></alternatives></inline-formula> for which symbols have complements: (<italic>A</italic>,<italic>T</italic>) and (<italic>C</italic>,<italic>G</italic>) are the complementing pairs. The reverse-complemented string <inline-formula id="IEq4"><alternatives><tex-math id="M7">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\overline {s}$\end{document}</tex-math><mml:math id="M8"><mml:mover accent="false"><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mo accent="true">¯</mml:mo></mml:mover></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq4.gif"/></alternatives></inline-formula> is the reverse sequence of complemented symbols in <italic>s</italic>. The canonical string <inline-formula id="IEq5"><alternatives><tex-math id="M9">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\hat {s}$\end{document}</tex-math><mml:math id="M10"><mml:mi>ŝ</mml:mi></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq5.gif"/></alternatives></inline-formula> is the lexicographically smallest of <italic>s</italic> and its reverse-complement <inline-formula id="IEq6"><alternatives><tex-math id="M11">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\overline {s}$\end{document}</tex-math><mml:math id="M12"><mml:mover accent="false"><mml:mrow><mml:mi>s</mml:mi></mml:mrow><mml:mo accent="true">¯</mml:mo></mml:mover></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq6.gif"/></alternatives></inline-formula>. The minimizer [<xref ref-type="bibr" rid="CR60">60</xref>, <xref ref-type="bibr" rid="CR61">61</xref>] of an <italic>l</italic>-mer <italic>x</italic> is a <italic>g</italic>-mer <italic>y</italic> occurring in <italic>x</italic> such that <italic>g</italic>&lt;<italic>l</italic> and <italic>y</italic> is the lexicographically smallest of all the <italic>g</italic>-mers in <italic>x</italic>. The lexicographical order can be cumbersome to use since poly-A <italic>g</italic>-mers naturally occur in sequencing data and is often replaced by a random order. The simplest way to obtain a random order is to compute a hash-value for each <italic>g</italic>-mer in <italic>x</italic> and select the <italic>g</italic>-mer with the smallest hash-value as the minimizer. In this work, we will only consider minimizers generated by random orderings.</p>
+      <p>A de Bruijn graph (dBG) is a directed graph <italic>G</italic>=(<italic>V</italic>,<italic>E</italic>) in which each vertex <italic>v</italic>∈<italic>V</italic> represents a <italic>k</italic>-mer. A directed edge <italic>e</italic>∈<italic>E</italic> from vertex <italic>v</italic> to vertex <italic>v</italic><sup>′</sup> representing <italic>k</italic>-mers <italic>x</italic> and <italic>x</italic><sup>′</sup>, respectively, exists if and only if <italic>x</italic>(2,<italic>k</italic>−1)=<italic>x</italic><sup>′</sup>(1,<italic>k</italic>−1). Each <italic>k</italic>-mer <italic>x</italic> has <inline-formula id="IEq7"><alternatives><tex-math id="M13">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$|\mathcal {A}|$\end{document}</tex-math><mml:math id="M14"><mml:mo>|</mml:mo><mml:mi mathvariant="script">A</mml:mi><mml:mo>|</mml:mo></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq7.gif"/></alternatives></inline-formula> possible successors <italic>x</italic>(2,<italic>k</italic>−1)⊙<italic>a</italic> and <inline-formula id="IEq8"><alternatives><tex-math id="M15">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$|\mathcal {A}|$\end{document}</tex-math><mml:math id="M16"><mml:mo>|</mml:mo><mml:mi mathvariant="script">A</mml:mi><mml:mo>|</mml:mo></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq8.gif"/></alternatives></inline-formula> possible predecessors <italic>a</italic>⊙<italic>x</italic>(1,<italic>k</italic>−1) in <italic>G</italic> with <inline-formula id="IEq9"><alternatives><tex-math id="M17">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$a\in \mathcal {A}$\end{document}</tex-math><mml:math id="M18"><mml:mi>a</mml:mi><mml:mo>∈</mml:mo><mml:mi mathvariant="script">A</mml:mi></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq9.gif"/></alternatives></inline-formula> and ⊙ as the concatenation operator. Note that in the original combinatorial definition of the dBG, all possible <italic>k</italic>-mers for an alphabet <inline-formula id="IEq10"><alternatives><tex-math id="M19">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\mathcal {A}$\end{document}</tex-math><mml:math id="M20"><mml:mi mathvariant="script">A</mml:mi></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq10.gif"/></alternatives></inline-formula> are present in the graph, whereas in computational biology, the definition is restricted to a subset of the de Bruijn graph representing the <italic>k</italic>-mers in the input. A path in the graph is a sequence of distinct and connected vertices <italic>p</italic>=(<italic>v</italic><sub>1</sub>,...,<italic>v</italic><sub><italic>m</italic></sub>). We say that the path <italic>p</italic> is <italic>non-branching</italic> if all its vertices have an in- and out-degree of one with exception of the head vertex <italic>v</italic><sub>1</sub> which can have more than one incoming edge and the tail vertex <italic>v</italic><sub><italic>m</italic></sub> which can have more than one outgoing edge. A non-branching path is maximal if it cannot be extended in the graph without being branching. A compacted de Bruijn graph (cdBG) merges all maximal non-branching paths of <italic>η</italic> vertices from the dBG into single vertices, called unitigs, representing words of length <italic>k</italic>+<italic>η</italic>−1. Minimal examples of dBG and cdBG are provided in Fig. <xref rid="Fig1" ref-type="fig">1</xref>a and b respectively. A colored de Bruijn graph is a graph <italic>G</italic>=(<italic>V</italic>,<italic>E</italic>,<italic>C</italic>) in which (<italic>V</italic>,<italic>E</italic>) is a dBG and <italic>C</italic> is a set of colors such that each vertex <italic>v</italic>∈<italic>V</italic> maps to a subset of <italic>C</italic>; we extend the definition of a cdBG to a colored compacted de Bruijn Graph (ccdBG) to be a graph <italic>G</italic>=(<italic>V</italic>,<italic>E</italic>,<italic>C</italic>), where (<italic>V</italic>,<italic>E</italic>) is a cdBG, so the vertices represent unitigs, and each <italic>k</italic>-mer of a unitig maps to a subset of <italic>C</italic>.
+<fig id="Fig1"><label>Fig. 1</label><caption><p>A de Bruijn graph in <bold>a</bold> and its compacted counterpart in <bold>b</bold> using 3-mers. For simplicity, reverse-complements are not considered</p></caption><graphic xlink:href="13059_2020_2135_Fig1_HTML" id="MO1"/></fig></p>
+      <p>Introduced by [<xref ref-type="bibr" rid="CR62">62</xref>], the Bloom filter (BF) is a space- and time-efficient data structure that records the approximate membership of elements in a set. The BF is represented as a bitmap <italic>B</italic> of <italic>m</italic> bits initialized with 0s, coupled with a set of <italic>f</italic> hash functions <italic>h</italic><sub>1</sub>,...,<italic>h</italic><sub><italic>f</italic></sub>. Inserting and querying an element <italic>e</italic> into <italic>B</italic> is performed with the functions
+<disp-formula id="Equa"><alternatives><tex-math id="M21">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document} $$\textsf{Insert}(e,B): B[h_{i}(e)] \gets 1 \textrm{ for all} i = 1,...,f $$ \end{document}</tex-math><mml:math id="M22"><mml:mrow><mml:mtext mathvariant="sans-serif">Insert</mml:mtext><mml:mo>(</mml:mo><mml:mi>e</mml:mi><mml:mo>,</mml:mo><mml:mi>B</mml:mi><mml:mo>)</mml:mo><mml:mo>:</mml:mo><mml:mi>B</mml:mi><mml:mo>[</mml:mo><mml:msub><mml:mrow><mml:mi>h</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow></mml:msub><mml:mo>(</mml:mo><mml:mi>e</mml:mi><mml:mo>)</mml:mo><mml:mo>]</mml:mo><mml:mo>←</mml:mo><mml:mn>1</mml:mn><mml:mtext>for all</mml:mtext><mml:mi>i</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn><mml:mo>,</mml:mo><mml:mi>...</mml:mi><mml:mo>,</mml:mo><mml:mi>f</mml:mi></mml:mrow></mml:math><graphic xlink:href="13059_2020_2135_Article_Equa.gif" position="anchor"/></alternatives></disp-formula> and
+<disp-formula id="Equb"><alternatives><tex-math id="M23">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document} $$\textsf{MayContain}(e,B) : \bigwedge\limits_{i=1}^{f}B[h_{i}(e)], $$ \end{document}</tex-math><mml:math id="M24"><mml:mrow><mml:mtext mathvariant="sans-serif">MayContain</mml:mtext><mml:mo>(</mml:mo><mml:mi>e</mml:mi><mml:mo>,</mml:mo><mml:mi>B</mml:mi><mml:mo>)</mml:mo><mml:mo>:</mml:mo><mml:munderover accent="false" accentunder="false"><mml:mrow><mml:mo mathsize="big">∧</mml:mo></mml:mrow><mml:mrow><mml:mi>i</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn></mml:mrow><mml:mrow><mml:mi>f</mml:mi></mml:mrow></mml:munderover><mml:mi>B</mml:mi><mml:mo>[</mml:mo><mml:msub><mml:mrow><mml:mi>h</mml:mi></mml:mrow><mml:mrow><mml:mi>i</mml:mi></mml:mrow></mml:msub><mml:mo>(</mml:mo><mml:mi>e</mml:mi><mml:mo>)</mml:mo><mml:mo>]</mml:mo><mml:mo>,</mml:mo></mml:mrow></mml:math><graphic xlink:href="13059_2020_2135_Article_Equb.gif" position="anchor"/></alternatives></disp-formula> respectively, in which <inline-formula id="IEq11"><alternatives><tex-math id="M25">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\bigwedge $\end{document}</tex-math><mml:math id="M26"><mml:mo>∧</mml:mo></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq11.gif"/></alternatives></inline-formula> is the logical conjunction operator. Those functions require <inline-formula id="IEq12"><alternatives><tex-math id="M27">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\mathcal {O}(1)$\end{document}</tex-math><mml:math id="M28"><mml:mi mathvariant="script">O</mml:mi><mml:mo>(</mml:mo><mml:mn>1</mml:mn><mml:mo>)</mml:mo></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq12.gif"/></alternatives></inline-formula> time. The function MayContain may report false positives when querying for elements which were never inserted but are present in <italic>B</italic> as a result of independent insertions. Given <italic>n</italic> elements to insert, the optimal number of hash functions to use [<xref ref-type="bibr" rid="CR63">63</xref>] is <inline-formula id="IEq13"><alternatives><tex-math id="M29">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$f = \frac {m}{n}\ln (2)$\end{document}</tex-math><mml:math id="M30"><mml:mi>f</mml:mi><mml:mo>=</mml:mo><mml:mfrac><mml:mrow><mml:mi>m</mml:mi></mml:mrow><mml:mrow><mml:mi>n</mml:mi></mml:mrow></mml:mfrac><mml:mo>ln</mml:mo><mml:mo>(</mml:mo><mml:mn>2</mml:mn><mml:mo>)</mml:mo></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq13.gif"/></alternatives></inline-formula>, for an approximate false positive rate of
+<disp-formula id="Equc"><alternatives><tex-math id="M31">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document} $$ \varphi \approx \left(1 - e^{\frac{-fn}{m}} \right)^{f} \approx 0.7^{\frac{m}{n}} $$ \end{document}</tex-math><mml:math id="M32"><mml:mrow><mml:mi>φ</mml:mi><mml:mo>≈</mml:mo><mml:msup><mml:mrow><mml:mfenced close=")" open="("><mml:mrow><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:msup><mml:mrow><mml:mi>e</mml:mi></mml:mrow><mml:mrow><mml:mfrac><mml:mrow><mml:mo>−</mml:mo><mml:mtext mathvariant="italic">fn</mml:mtext></mml:mrow><mml:mrow><mml:mi>m</mml:mi></mml:mrow></mml:mfrac></mml:mrow></mml:msup></mml:mrow></mml:mfenced></mml:mrow><mml:mrow><mml:mi>f</mml:mi></mml:mrow></mml:msup><mml:mo>≈</mml:mo><mml:mn>0</mml:mn><mml:mi>.</mml:mi><mml:msup><mml:mrow><mml:mn>7</mml:mn></mml:mrow><mml:mrow><mml:mfrac><mml:mrow><mml:mi>m</mml:mi></mml:mrow><mml:mrow><mml:mi>n</mml:mi></mml:mrow></mml:mfrac></mml:mrow></mml:msup></mml:mrow></mml:math><graphic xlink:href="13059_2020_2135_Article_Equc.gif" position="anchor"/></alternatives></disp-formula> Hence, the BF trades off memory usage and time complexity with a decreased false positive rate.</p>
+      <p>In order to accelerate BFs, [<xref ref-type="bibr" rid="CR63">63</xref>] demonstrated that two hash functions combined in a double hashing technique can be applied in order to simulate more than two hash functions and obtain similar hashing performance. One main drawback of BFs is their poor data locality as bits corresponding to one element are scattered over <italic>B</italic>, resulting in several CPU cache misses when inserting and querying. This issue was addressed in [<xref ref-type="bibr" rid="CR64">64</xref>], which presented the Blocked Bloom Filter (BBF), an array of smaller BFs individually fitting into one or multiple cache lines. To insert or look-up an element, a supplementary hash function is used to determine which BF to load. While BBFs are fast, their false positive ratios are usually higher than regular BFs due to the unbalanced load of each BF in the array.</p>
+      <p>As minimizers are used extensively throughout Bifrost, we use an efficient rolling hash function based on the work of [<xref ref-type="bibr" rid="CR65">65</xref>] to select a <italic>g</italic>-mer as the minimizer within a single <italic>k</italic>-mer. Since overlapping <italic>k</italic>-mers are likely to share minimizers, we use an ascending minima approach [<xref ref-type="bibr" rid="CR66">66</xref>] to recompute minimizers with amortized <italic>O</italic>(1) costs, so that iterating over minimizers of adjacent <italic>k</italic>-mers in a sequence is linear in the length of the sequence. Another optimization is to restrict the computation of minimizers to a subset of <italic>g</italic>-mers of a <italic>k</italic>-mer, namely, we exclude the first and last <italic>g</italic>-mer as a candidate for being a minimizer. This ensures that for a given <italic>k</italic>-mer, all of its forward, respectively backward, adjacent <italic>k</italic>-mers necessarily share the same minimizer. While it is likely that a <italic>k</italic>-mer <italic>x</italic> and its neighbor <italic>x</italic><sup>′</sup> share a minimizer, this neighbor hashing trick [<xref ref-type="bibr" rid="CR38">38</xref>] guarantees that when searching all forward, respectively backward, neighbors of <italic>x</italic>, they will all have the same minimizer and will be stored within the same block of a BBF, thus minimizing cache misses.</p>
+    </sec>
+    <sec id="Sec10">
+      <title>Approximating the de Bruijn graph</title>
+      <p>The <italic>k</italic>-mers extracted from the reads will be inserted into two BBFs: <italic>B</italic><italic>B</italic><italic>F</italic><sub>1</sub> will contain all <italic>k</italic>-mers occurring at least once in the input read sets while <italic>B</italic><italic>B</italic><italic>F</italic><sub>2</sub> will contain all <italic>k</italic>-mers occurring twice or more often. This separation allows us to filter out unique <italic>k</italic>-mers which are likely to be sequencing errors [<xref ref-type="bibr" rid="CR67">67</xref>]. Algorithm 1 starts by iterating over the reads and extracts all the canonical <italic>k</italic>-mers. <italic>B</italic><italic>B</italic><italic>F</italic><sub>1</sub> is queried for the presence of each such <italic>k</italic>-mer, and <italic>k</italic>-mers already present in <italic>B</italic><italic>B</italic><italic>F</italic><sub>1</sub> are inserted into <italic>B</italic><italic>B</italic><italic>F</italic><sub>2</sub>. Finally, <italic>B</italic><italic>B</italic><italic>F</italic><sub>1</sub> is discarded as the cdBG will be built from the <italic>k</italic>-mers of <italic>B</italic><italic>B</italic><italic>F</italic><sub>2</sub>.</p>
+      <p>
+        <graphic position="anchor" xlink:href="13059_2020_2135_Figa_HTML" id="MO4"/>
+      </p>
+      <p>In order to accelerate the insertions into the BBFs, the minimizer hash-value of each <italic>k</italic>-mer is used to determine the BBF block in which the <italic>k</italic>-mer is inserted. This guarantees that overlapping <italic>k</italic>-mers sharing the same minimizer position within a read are inserted into the same BBF block, thus improving the cache efficiency of BBFs. Furthermore, the neighbor hashing of the minimizers guarantees that all predecessors and successors of a <italic>k</italic>-mer are hashing to the same block, thus improving graph traversal for the exact cdBG construction step. Finally, the BBFs in Bifrost use 2-choice hashing [<xref ref-type="bibr" rid="CR68">68</xref>] to balance the number of insertions per block and reduce the number of false positives. Instead of selecting a single BBF block when inserting a <italic>k</italic>-mer, two blocks are selected. If none of the two blocks already contains the <italic>k</italic>-mer, it is inserted into the block which has the fewest number of bits set. To enable parallel insertions, each BBF block is equipped with a spinlock to avoid multiple threads inserting at the same time within the same block. Algorithm 2 refines the insertion function introduced in the “<xref rid="Sec9" ref-type="sec">Definitions</xref>” section to enable 2-choice hashing and spinlocks usage with BBFs. Bifrost can make use of modern processors instruction sets to query simultaneously up to 16 bits within a block using AVX instructions.</p>
+      <p>
+        <graphic position="anchor" xlink:href="13059_2020_2135_Figb_HTML" id="MO9"/>
+      </p>
+    </sec>
+    <sec id="Sec11">
+      <title>Constructing the compacted de Bruijn graph</title>
+      <p>The following section describes the data structure indexing the unitigs. The “<xref rid="Sec13" ref-type="sec">Unitig extraction</xref>” section details the unitig extraction procedure from the BBF and the insertion of unitigs into the cdBG data structure.</p>
+      <sec id="Sec12">
+        <title>Data structure</title>
+        <p>The cdBG data structure <italic>D</italic>=(<italic>U</italic>,<italic>M</italic>) is composed of a unitig array <italic>U</italic> and a hash table of minimizers <italic>M</italic>. A unitig <italic>u</italic> is first inserted into <italic>U</italic> and gets a unique identifier <italic>i</italic><italic>d</italic><sub><italic>u</italic></sub>. Unitig <italic>u</italic> is then decomposed into its set of constituent <italic>k</italic>-mers from which minimizers are extracted. Each minimizer is identified by a position <italic>p</italic><sub><italic>m</italic></sub> in <italic>u</italic>. While there can be as many minimizer positions as there are <italic>k</italic>-mers in the unitig, it is likely that multiple overlapping <italic>k</italic>-mers share the same minimizer position. The canonical <italic>g</italic>-mers corresponding to the minimizers are inserted into <italic>M</italic> and associated with their position <italic>p</italic><sub><italic>m</italic></sub> in <italic>u</italic> and the identifier <italic>i</italic><italic>d</italic><sub><italic>u</italic></sub>. Note that a minimizer might have multiple occurrences, either within a unitig or in different unitigs of the graph. The cdBG data structure <italic>D</italic> is illustrated in Fig. <xref rid="Fig2" ref-type="fig">2</xref>. Algorithm 3 details the insertion of a unitig <italic>u</italic> in the cdBG data structure. Note that removing a unitig from the graph can be done in a reversed-fashion to Algorithm 3: The tuples associated with unitig <italic>u</italic> are removed from <italic>M</italic> and unitig <italic>u</italic> is removed from <italic>U</italic>.
+<fig id="Fig2"><label>Fig. 2</label><caption><p>Data structure of a cdBG composed of a hash table <italic>M</italic> and a unitig array <italic>U</italic>. Unitigs are composed of 3-mers and are indexed using minimizers of length 1. For simplicity, a lexicographic ordering of minimizers is here used and only one minimizer is shown</p></caption><graphic xlink:href="13059_2020_2135_Fig2_HTML" id="MO2"/></fig></p>
+        <p>
+          <graphic position="anchor" xlink:href="13059_2020_2135_Figc_HTML" id="MO5"/>
+        </p>
+        <p>Looking-up a <italic>k</italic>-mer <italic>x</italic> in the cdBG data structure is similar to inserting a unitig. The canonical <italic>g</italic>-mer corresponding to the minimizer of <italic>x</italic> is extracted and used to query <italic>M</italic>. If the <italic>g</italic>-mer is not in <italic>M</italic>, <italic>x</italic> does not occur in a unitig of the cdBG. However, if the <italic>g</italic>-mer is present, the identifiers of the unitigs containing the <italic>g</italic>-mer and the <italic>g</italic>-mer positions within those unitigs are returned. <italic>K</italic>-mer <italic>x</italic> and its reverse-complement <inline-formula id="IEq14"><alternatives><tex-math id="M33">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\overline {x}$\end{document}</tex-math><mml:math id="M34"><mml:mover accent="false"><mml:mrow><mml:mi>x</mml:mi></mml:mrow><mml:mo accent="true">¯</mml:mo></mml:mover></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq14.gif"/></alternatives></inline-formula> are then anchored in those unitigs at the given minimizer positions and compared. If the comparison is positive, a tuple with the unitig identifier and the <italic>k</italic>-mer position in the unitig is returned. Algorithm 4 shows how to look-up <italic>D</italic> for a <italic>k</italic>-mer.</p>
+        <p>
+          <graphic position="anchor" xlink:href="13059_2020_2135_Figd_HTML" id="MO6"/>
+        </p>
+      </sec>
+      <sec id="Sec13">
+        <title>Unitig extraction</title>
+        <p>The BBF returned by Algorithm 1 represents an approximation of the dBG: It contains the true positive <italic>k</italic>-mers, namely all the <italic>k</italic>-mers present in the unitigs of the cdBG, but also false positive <italic>k</italic>-mers, which do not belong to the cdBG. The false positive <italic>k</italic>-mers are either artifacts of <italic>B</italic><italic>B</italic><italic>F</italic><sub>2</sub> or single occurrence <italic>k</italic>-mers that should have been filtered out by Algorithm 1 but were inserted into <italic>B</italic><italic>B</italic><italic>F</italic><sub>2</sub> as a result of their false occurrences in <italic>B</italic><italic>B</italic><italic>F</italic><sub>1</sub>. Although BBFs are efficient data structures, they do not allow to iterate over the contents. To get around this limitation, we iterate over the original set of reads and query <italic>B</italic><italic>B</italic><italic>F</italic><sub>2</sub> to identify <italic>k</italic>-mers that are present.</p>
+        <p>Given a <italic>k</italic>-mer <italic>x</italic>, Algorithm 5 extracts from the BBF the unitig from which <italic>x</italic> is a substring, conditioned upon the presence of <italic>x</italic> in the BBF. <italic>K</italic>-mer <italic>x</italic> is extended forward, respectively backward, by reconstructing iteratively the prefix, respectively suffix, of the unitig using function Extend. Note that a backward extension is performed by extending forward from the reverse-complement of <italic>x</italic> and the extracted suffix is reverse-complemented to obtain the unitig prefix. Forward extensions are made with function ExtendForward which iteratively concatenate the last character from the next <italic>k</italic>-mer in the extension until no more <italic>k</italic>-mer is found or the extracted <italic>k</italic>-mer creates a cycle. Finally, <italic>k</italic>-mer <italic>x</italic> is extended with <italic>x</italic><sup>′</sup> using function ExtendKmer if the two <italic>k</italic>-mers belong to the same maximal non-branching path, i.e, if <italic>x</italic><sup>′</sup> is the only successor of <italic>x</italic> in the BBF and <italic>x</italic> is the only predecessor of <italic>x</italic><sup>′</sup> in the BBF,</p>
+        <p>
+          <graphic position="anchor" xlink:href="13059_2020_2135_Fige_HTML" id="MO7"/>
+        </p>
+        <p>Given the read set, the BBF containing the filtered <italic>k</italic>-mers, and an empty cdBG data structure, Algorithm 6 extracts the unitigs from the BBF and inserts them into the cdBG data structure. The algorithm iterates over the <italic>k</italic>-mers of the reads and queries the BBF for their presence. A missing <italic>k</italic>-mer in the BBF indicates the <italic>k</italic>-mer was filtered out by Algorithm 1 and will not be part of a unitig, in which case the next <italic>k</italic>-mer in the read is queried. However, in case of the <italic>k</italic>-mer presence in the BBF, the cdBG is searched for the unitig containing this <italic>k</italic>-mer using Algorithm 4. If the <italic>k</italic>-mer is missing from the unitigs present in the cdBG data structure, it means its unitig has not been extracted yet from the BBF. The extraction using Algorithm 5 takes place, and the extracted unitig is inserted into the cdBG data structure with Algorithm 3.</p>
+        <p>
+          <graphic position="anchor" xlink:href="13059_2020_2135_Figf_HTML" id="MO8"/>
+        </p>
+      </sec>
+      <sec id="Sec14">
+        <title>Eliminating the false positive <italic>k</italic>-mers</title>
+        <p>The cdBG constructed by Algorithm 6 is not exact as it contains false positive <italic>k</italic>-mers of <italic>B</italic><italic>B</italic><italic>F</italic><sub>2</sub>. Those false positive <italic>k</italic>-mers create two types of errors in the graph:
+<list list-type="bullet"><list-item><p>False connection: A false positive <italic>k</italic>-mer connects a unitig with no successors to a unitig with no predecessors. Hence, one unitig is extracted from the BBF instead of two.</p></list-item><list-item><p>False branching: A false positive <italic>k</italic>-mer connects as a successor, respectively predecessor, to a true positive <italic>k</italic>-mer which already has a successor, respectively predecessor. Hence, three unitigs are extracted from the BBF instead of one.</p></list-item></list></p>
+        <p>An example of a cdBG containing the two types of errors is illustrated in Fig. <xref rid="Fig3" ref-type="fig">3</xref>: K-mer “CCG” creates a false branching and “ACT” creates a false connection.
+<fig id="Fig3"><label>Fig. 3</label><caption><p>A compacted de Bruijn graph containing false positive 3-mers. Errors are represented in red dashed line vertices: <italic>K</italic>-mer “CCG” creates a false branching and “ACT” creates a false connection. <italic>K</italic>-mers that are compacted in a unitig are grouped in a gray line box</p></caption><graphic xlink:href="13059_2020_2135_Fig3_HTML" id="MO3"/></fig></p>
+        <p>In order to distinguish false positive from true positive <italic>k</italic>-mers, a counter is maintained on each <italic>k</italic>-mer of the unitigs and Algorithm 6 is modified to increment the counters of the <italic>k</italic>-mers occurring in the reads. Hence, false positive <italic>k</italic>-mers with no or one single occurrence are deleted from the graph. In the case of a false connection <italic>k</italic>-mer, deleting the <italic>k</italic>-mer splits a unitig. In case of a false branching, deleting the <italic>k</italic>-mer joins one or multiple unitigs.</p>
+        <p>
+          <graphic position="anchor" xlink:href="13059_2020_2135_Figg_HTML" id="MO10"/>
+        </p>
+      </sec>
+      <sec id="Sec15">
+        <title>Ghost <italic>k</italic>-mers</title>
+        <p>The false positive rate of the BBF will affect the length of the unitigs extracted by Algorithm 5. Consider a unitig of length <italic>k</italic>+<italic>η</italic>−1 in the true cdBG, consisting of <italic>η</italic><italic>k</italic>-mers. For each internal <italic>k</italic>-mer, the algorithm makes 8 queries to the BBF, two of which will return true and 6 of which should return false. If the BBF has a false positive rate of <italic>p</italic>, the algorithm will advance to the next <italic>k</italic>-mer with probability (1−<italic>p</italic>)<sup>6</sup>≈1−6<italic>p</italic> and stop prematurely with probability ≈6<italic>p</italic>. The number of <italic>k</italic>-mers in the extracted unitig will then be limited by <italic>η</italic> on one hand and a geometric distribution with probability 6<italic>p</italic>, whose expected value is <inline-formula id="IEq15"><alternatives><tex-math id="M35">\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$\frac {1}{6p}$\end{document}</tex-math><mml:math id="M36"><mml:mfrac><mml:mrow><mml:mn>1</mml:mn></mml:mrow><mml:mrow><mml:mn>6</mml:mn><mml:mi>p</mml:mi></mml:mrow></mml:mfrac></mml:math><inline-graphic xlink:href="13059_2020_2135_Article_IEq15.gif"/></alternatives></inline-formula>. When <italic>p</italic>=10<sup>−3</sup>, this would lead to an average unitig length of 167. While these errors are fixed with Algorithm 7, this leads to an increased memory usage. One way to increase the length would be to use more memory in the BBF which would reduce the false positive rate. However, we observe that the most likely configuration is that a single false positive <italic>k</italic>-mer <italic>x</italic><sup>′</sup>, adjacent to a real <italic>k</italic>-mer <italic>x</italic> in the unitig, causes a premature halt to the extraction of the true unitig. When <italic>x</italic><sup>′</sup> has no other neighbor in the BBF except for <italic>x</italic>, we call it a ghost <italic>k</italic>-mer, insert it into a hash table to keep track of it in case we observe it later but do not stop the extraction of the unitig. In the rare case that <italic>x</italic><sup>′</sup> turns out to belong to the true cdBG, we identify the unitig containing <italic>x</italic><sup>′</sup> and fix the mistake. The probability that we halt can now be approximated as 42<italic>p</italic><sup>2</sup>, since this would require two adjacent false positive <italic>k</italic>-mers to occur in the BBF. The use of ghost <italic>k</italic>-mers greatly reduces fragmentation which improves memory usage and running time.</p>
+      </sec>
+      <sec id="Sec16">
+        <title>Recurrent minimizers</title>
+        <p>Even in the case of a minimizer random ordering as described in the “<xref rid="Sec9" ref-type="sec">Definitions</xref>” section, some minimizers are expected to occur more often in unitigs than others, due to indels occurring in homopolymer and tandem repeat sequences. Those minimizers are likely to increase the running time as their lists of tuples in the minimizer hash table <italic>M</italic> will be much longer than for the other minimizers. We define a minimizer as <italic>recurrent</italic> if it occurs <italic>t</italic> times or more in the unitigs of the cdBG. In order to limit the impact of recurrent minimizers on the graph construction, lists of tuples in <italic>M</italic> have a maximum length <italic>t</italic>. When a <italic>k</italic>-mer <italic>x</italic> and its corresponding minimizer <italic>y</italic> must be inserted into the cdBG data structure, the length of the list associated with <italic>y</italic> in <italic>M</italic> is verified first. If the length is greater or equals to <italic>t</italic>, <italic>y</italic> is a recurrent minimizer. In such case, a non-recurrent minimizer <italic>y</italic><sup>′</sup>&gt;<italic>y</italic> is extracted from <italic>x</italic> and inserted into <italic>M</italic>. If <italic>x</italic> does not contain a non-recurrent minimizer <italic>y</italic><sup>′</sup>, the recurrent minimizer <italic>y</italic> is inserted into <italic>M</italic> instead. Whenever <italic>k</italic>-mer <italic>x</italic> is searched, the list of tuples associated with its minimizer <italic>y</italic> is traversed and <italic>x</italic> is anchored on the instances of <italic>y</italic> in the unitigs of the graph until a match is found, as described in Algorithm 4. However, if no match is found for <italic>x</italic> and the list of tuples associated with <italic>y</italic> contains <italic>t</italic> or more tuples, the non-recurrent minimizer <italic>y</italic><sup>′</sup> is extracted from <italic>x</italic> and the search continues using minimizer <italic>y</italic><sup>′</sup>.</p>
+      </sec>
+    </sec>
+    <sec id="Sec17">
+      <title>Coloring</title>
+      <p>We denote as <italic>D</italic><sup>′</sup> the data structure of a ccdBG: It is composed of a unitig array <italic>U</italic>, a minimizer hash table <italic>M</italic>, an array <italic>O</italic> of color containers, an array <italic>H</italic> of hash functions, and a hash table <italic>K</italic> of <italic>k</italic>-mers.</p>
+      <sec id="Sec18">
+        <title>Container representation</title>
+        <p>In Bifrost, a color is represented by an integer from 1 to |<italic>C</italic>|. A unitig <italic>u</italic> composed of <italic>η</italic>=|<italic>u</italic>|−<italic>k</italic>+1<italic>k</italic>-mers is associated with a binary matrix of size <italic>η</italic>×|<italic>C</italic>|: rows represent the different <italic>k</italic>-mer positions in <italic>u</italic> and columns represent the colors from <italic>C</italic>. A bit set at row 1≤<italic>i</italic>≤<italic>η</italic> and column 1≤<italic>j</italic>≤|<italic>C</italic>| indicates that <italic>k</italic>-mer <italic>u</italic>(<italic>i</italic>,<italic>k</italic>) occurs in dataset <italic>j</italic>. In order to limit the memory usage of colors, multiple compressed index is used to represent these binary matrices depending on their sparsity:
+<list list-type="bullet"><list-item><p>A 64-bit word that can be either a tuple 〈position<italic>i</italic>,color<italic>j</italic>〉 or a binary matrix of size <italic>η</italic>×|<italic>C</italic>|≤62 (2 bits are reserved for the meta-data)</p></list-item><list-item><p>A compressed bitmap adapted from a Roaring bitmap container [<xref ref-type="bibr" rid="CR69">69</xref>]. This compressed bitmap stores up to 65488 tuples 〈position<italic>i</italic>,color<italic>j</italic>〉 and uses a maximum of 8 KB of memory. This container has 3 representations of the tuples it indexes: bit vector, sorted list of tuples, and run-length encoded list of sorted tuples. Compared to a Roaring bitmap, this compressed bitmap uses less memory for its meta-data and incurs fewer cache misses to access the tuples.</p></list-item><list-item><p>A Roaring bitmap [<xref ref-type="bibr" rid="CR69">69</xref>] to store more than 65488 tuples. Roaring bitmaps are SIMD accelerated and propose numerous functions to manipulate bitmaps such as set intersection and union.</p></list-item></list></p>
+        <p>Those representations have a logarithmic worst-case time look-up and insertion.</p>
+        <p>
+          <graphic position="anchor" xlink:href="13059_2020_2135_Figh_HTML" id="MO11"/>
+        </p>
+      </sec>
+      <sec id="Sec19">
+        <title>Container indexing</title>
+        <p>Color containers can become substantially large, and in order to avoid costly data transfer operations when the ccdBG data structure <italic>D</italic><sup>′</sup> is modified, color containers are not associated directly to unitigs in <italic>D</italic><sup>′</sup>. Instead, a solution derived from the MPHF (Minimal Perfect Hash Function) library BBHash [<xref ref-type="bibr" rid="CR70">70</xref>] is used to link unitigs of array <italic>U</italic> to color containers of array <italic>O</italic>. The benefit of such a method is that operations which affect only the structure of the graph do not move the color containers in memory. Algorithm 8 describes how color containers are associated to their respective unitigs.</p>
+      </sec>
+    </sec>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary information</title>
+    <sec id="Sec20">
+      <p>
+        <supplementary-material content-type="local-data" id="MOESM1">
+          <media xlink:href="13059_2020_2135_MOESM1_ESM.pdf">
+            <caption>
+              <p><bold>Additional file 1</bold> Supplementary file.</p>
+            </caption>
+          </media>
+        </supplementary-material>
+      </p>
+      <p>
+        <supplementary-material content-type="local-data" id="MOESM2">
+          <media xlink:href="13059_2020_2135_MOESM2_ESM.docx">
+            <caption>
+              <p><bold>Additional file 2</bold> Review history.</p>
+            </caption>
+          </media>
+        </supplementary-material>
+      </p>
+    </sec>
+  </sec>
+</body>
+<back>
+  <fn-group>
+    <fn>
+      <p>
+        <bold>Publisher’s Note</bold>
+      </p>
+      <p>Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.</p>
+    </fn>
+  </fn-group>
+  <sec>
+    <title>Supplementary information</title>
+    <p><bold>Supplementary information</bold> accompanies this paper at 10.1186/s13059-020-02135-8.</p>
+  </sec>
+  <ack>
+    <title>Acknowledgements</title>
+    <p>The authors would like to thank Nina Luhmann, Birte Kehr, and Thomas Krannich for their helpful feedback during the development of the software and Trausti Sæmundsson for his work on an early draft of the software.</p>
+    <sec id="d30e3443">
+      <title>Review history</title>
+      <p>The review history is available as Additional file <xref rid="MOESM2" ref-type="media">2</xref>.</p>
+    </sec>
+  </ack>
+  <notes notes-type="author-contribution">
+    <title>Authors’ contributions</title>
+    <p>All authors implemented the Bifrost software and designed the algorithm and the experiments. All authors wrote the manuscript. All authors reviewed and approved the final version of the manuscript.</p>
+  </notes>
+  <notes notes-type="funding-information">
+    <title>Funding</title>
+    <p>This work was supported by the Icelandic Research Fund Project grant number 152399-053.</p>
+  </notes>
+  <notes notes-type="data-availability">
+    <title>Availability of data and materials</title>
+    <p>We have made the source code of Bifrost available as open source software at <ext-link ext-link-type="uri" xlink:href="https://github.com/pmelsted/bifrost">https://github.com/pmelsted/bifrost</ext-link>[<xref ref-type="bibr" rid="CR71">71</xref>]. The source code is released under a BSD-2 license. The website contains details on installation, setup, and usage. The exact version used in this paper is archived at Zenodo under <ext-link ext-link-type="uri" xlink:href="https://zenodo.org/record/3973373">https://zenodo.org/record/3973373</ext-link>[<xref ref-type="bibr" rid="CR72">72</xref>].</p>
+  </notes>
+  <notes id="FPar1">
+    <title>Ethics approval and consent to participate</title>
+    <p>Not applicable.</p>
+  </notes>
+  <notes id="FPar2">
+    <title>Consent for publication</title>
+    <p>Not applicable.</p>
+  </notes>
+  <notes id="FPar3" notes-type="COI-statement">
+    <title>Competing interests</title>
+    <p>The authors declare that they have no competing interests.</p>
+  </notes>
+  <ref-list id="Bib1">
+    <title>References</title>
+    <ref id="CR1">
+      <label>1</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pevzner</surname>
+            <given-names>PA</given-names>
+          </name>
+          <name>
+            <surname>Tang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Waterman</surname>
+            <given-names>MS</given-names>
+          </name>
+        </person-group>
+        <article-title>An Eulerian path approach to DNA fragment assembly</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2001</year>
+        <volume>98</volume>
+        <issue>17</issue>
+        <fpage>9748</fpage>
+        <lpage>53</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.171285098</pub-id>
+        <?supplied-pmid 11504945?>
+        <pub-id pub-id-type="pmid">11504945</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR2">
+      <label>2</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Idury</surname>
+            <given-names>RM</given-names>
+          </name>
+          <name>
+            <surname>Waterman</surname>
+            <given-names>MS</given-names>
+          </name>
+        </person-group>
+        <article-title>A new algorithm for DNA sequence assembly</article-title>
+        <source>J Comput Biol</source>
+        <year>1995</year>
+        <volume>2</volume>
+        <issue>2</issue>
+        <fpage>291</fpage>
+        <lpage>306</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.1995.2.291</pub-id>
+        <?supplied-pmid 7497130?>
+        <pub-id pub-id-type="pmid">7497130</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR3">
+      <label>3</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yang</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Mu</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Yuan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Gan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Fan</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Hu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Shi</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>Z</given-names>
+          </name>
+        </person-group>
+        <article-title>Comparison of the two major classes of assembly algorithms: overlap–layout–consensus and de-bruijn-graph</article-title>
+        <source>Brief Funct Genomics</source>
+        <year>2011</year>
+        <volume>11</volume>
+        <issue>1</issue>
+        <fpage>25</fpage>
+        <lpage>37</lpage>
+        <?supplied-pmid 22184334?>
+        <pub-id pub-id-type="pmid">22184334</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR4">
+      <label>4</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chaisson</surname>
+            <given-names>MJ</given-names>
+          </name>
+          <name>
+            <surname>Pevzner</surname>
+            <given-names>PA</given-names>
+          </name>
+        </person-group>
+        <article-title>Short read fragment assembly of bacterial genomes</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <issue>2</issue>
+        <fpage>324</fpage>
+        <lpage>30</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.7088808</pub-id>
+        <?supplied-pmid 18083777?>
+        <pub-id pub-id-type="pmid">18083777</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR5">
+      <label>5</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zerbino</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Birney</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Velvet: algorithms for de novo short read assembly using de Bruijn graphs</article-title>
+        <source>Genome Res</source>
+        <year>2008</year>
+        <volume>18</volume>
+        <issue>5</issue>
+        <fpage>821</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.074492.107</pub-id>
+        <?supplied-pmid 18349386?>
+        <pub-id pub-id-type="pmid">18349386</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR6">
+      <label>6</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Simpson</surname>
+            <given-names>JT</given-names>
+          </name>
+          <name>
+            <surname>Wong</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Jackman</surname>
+            <given-names>SD</given-names>
+          </name>
+          <name>
+            <surname>Schein</surname>
+            <given-names>JE</given-names>
+          </name>
+          <name>
+            <surname>Jones</surname>
+            <given-names>SJ</given-names>
+          </name>
+          <name>
+            <surname>Birol</surname>
+            <given-names>İ</given-names>
+          </name>
+        </person-group>
+        <article-title>ABySS: a parallel assembler for short read sequence data</article-title>
+        <source>Genome Res</source>
+        <year>2009</year>
+        <volume>19</volume>
+        <issue>6</issue>
+        <fpage>1117</fpage>
+        <lpage>23</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.089532.108</pub-id>
+        <?supplied-pmid 19251739?>
+        <pub-id pub-id-type="pmid">19251739</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR7">
+      <label>7</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Luo</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Xie</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Huang</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Yuan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>He</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Chen</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Pan</surname>
+            <given-names>Q</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Tang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Shi</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Yu</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Lu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Han</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Cheung</surname>
+            <given-names>DW</given-names>
+          </name>
+          <name>
+            <surname>Yiu</surname>
+            <given-names>S-M</given-names>
+          </name>
+          <name>
+            <surname>Peng</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Xiaoqian</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Liao</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Yang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Lam</surname>
+            <given-names>T-W</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>SOAPdenovo2: an empirically improved memory-efficient short-read de novo assembler,</article-title>
+        <source>GigaScience</source>
+        <year>2012</year>
+        <volume>1</volume>
+        <issue>1</issue>
+        <fpage>1</fpage>
+        <lpage>18</lpage>
+        <pub-id pub-id-type="doi">10.1186/2047-217X-1-18</pub-id>
+        <pub-id pub-id-type="pmid">23587310</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR8">
+      <label>8</label>
+      <mixed-citation publication-type="other">Chikhi R, Rizk G. Space-efficient and exact de Bruijn graph representation based on a Bloom filter. Algorithms Mol Biol. 2013;8(22).</mixed-citation>
+    </ref>
+    <ref id="CR9">
+      <label>9</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bankevich</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Nurk</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Antipov</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Gurevich</surname>
+            <given-names>AA</given-names>
+          </name>
+          <name>
+            <surname>Dvorkin</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Kulikov</surname>
+            <given-names>AS</given-names>
+          </name>
+          <name>
+            <surname>Lesin</surname>
+            <given-names>VM</given-names>
+          </name>
+          <name>
+            <surname>Nikolenko</surname>
+            <given-names>SI</given-names>
+          </name>
+          <name>
+            <surname>Pham</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Prjibelski</surname>
+            <given-names>AD</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>SPAdes: a new genome assembly algorithm and its applications to single-cell sequencing</article-title>
+        <source>J Comput Biol</source>
+        <year>2012</year>
+        <volume>19</volume>
+        <issue>5</issue>
+        <fpage>455</fpage>
+        <lpage>77</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.2012.0021</pub-id>
+        <?supplied-pmid 3342519?>
+        <pub-id pub-id-type="pmid">22506599</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR10">
+      <label>10</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>MacCallum</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Przybylski</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Gnerre</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Burton</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Shlyakhter</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Gnirke</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Malek</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>McKernan</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Ranade</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Shea</surname>
+            <given-names>TP</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>ALLPATHS 2: small genomes assembled accurately and with high continuity from short paired reads</article-title>
+        <source>Genome Biol</source>
+        <year>2009</year>
+        <volume>10</volume>
+        <fpage>103</fpage>
+        <pub-id pub-id-type="doi">10.1186/gb-2009-10-10-r103</pub-id>
+        <pub-id pub-id-type="pmid">19344496</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR11">
+      <label>11</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rang</surname>
+            <given-names>FJ</given-names>
+          </name>
+          <name>
+            <surname>Kloosterman</surname>
+            <given-names>WP</given-names>
+          </name>
+          <name>
+            <surname>de Ridder</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>From squiggle to basepair: computational approaches for improving nanopore sequencing read accuracy</article-title>
+        <source>Genome Biol</source>
+        <year>2018</year>
+        <volume>19</volume>
+        <issue>1</issue>
+        <fpage>90</fpage>
+        <pub-id pub-id-type="doi">10.1186/s13059-018-1462-9</pub-id>
+        <?supplied-pmid 30005597?>
+        <pub-id pub-id-type="pmid">30005597</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR12">
+      <label>12</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Rhoads</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Au</surname>
+            <given-names>KF</given-names>
+          </name>
+        </person-group>
+        <article-title>PacBio sequencing and its applications</article-title>
+        <source>Genomics Proteome Bioinforma</source>
+        <year>2015</year>
+        <volume>13</volume>
+        <issue>5</issue>
+        <fpage>278</fpage>
+        <lpage>89</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.gpb.2015.08.002</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR13">
+      <label>13</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Koren</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Walenz</surname>
+            <given-names>BP</given-names>
+          </name>
+          <name>
+            <surname>Berlin</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Miller</surname>
+            <given-names>JR</given-names>
+          </name>
+          <name>
+            <surname>Bergman</surname>
+            <given-names>NH</given-names>
+          </name>
+          <name>
+            <surname>Phillippy</surname>
+            <given-names>AM</given-names>
+          </name>
+        </person-group>
+        <article-title>Canu: scalable and accurate long-read assembly via adaptive k-mer weighting and repeat separation</article-title>
+        <source>Genome Res</source>
+        <year>2017</year>
+        <volume>27</volume>
+        <issue>5</issue>
+        <fpage>722</fpage>
+        <lpage>36</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.215087.116</pub-id>
+        <?supplied-pmid 28298431?>
+        <pub-id pub-id-type="pmid">28298431</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR14">
+      <label>14</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Minimap and miniasm: fast mapping and de novo assembly for noisy long sequences</article-title>
+        <source>Bioinformatics</source>
+        <year>2016</year>
+        <volume>32</volume>
+        <issue>14</issue>
+        <fpage>2103</fpage>
+        <lpage>10</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btw152</pub-id>
+        <?supplied-pmid 27153593?>
+        <pub-id pub-id-type="pmid">27153593</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR15">
+      <label>15</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chin</surname>
+            <given-names>C-S</given-names>
+          </name>
+          <name>
+            <surname>Peluso</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Sedlazeck</surname>
+            <given-names>FJ</given-names>
+          </name>
+          <name>
+            <surname>Nattestad</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Concepcion</surname>
+            <given-names>GT</given-names>
+          </name>
+          <name>
+            <surname>Clum</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Dunn</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>O’Malley</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Figueroa-Balderas</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Morales-Cruz</surname>
+            <given-names>A</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Phased diploid genome assembly with single-molecule real-time sequencing</article-title>
+        <source>Nat Methods</source>
+        <year>2016</year>
+        <volume>13</volume>
+        <issue>12</issue>
+        <fpage>1050</fpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.4035</pub-id>
+        <?supplied-pmid 27749838?>
+        <pub-id pub-id-type="pmid">27749838</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR16">
+      <label>16</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Kamath</surname>
+            <given-names>GM</given-names>
+          </name>
+          <name>
+            <surname>Shomorony</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Xia</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Courtade</surname>
+            <given-names>TA</given-names>
+          </name>
+          <name>
+            <surname>David</surname>
+            <given-names>NT</given-names>
+          </name>
+        </person-group>
+        <article-title>Hinge: long-read assembly achieves optimal repeat resolution</article-title>
+        <source>Genome Res</source>
+        <year>2017</year>
+        <volume>27</volume>
+        <issue>5</issue>
+        <fpage>747</fpage>
+        <lpage>56</lpage>
+        <pub-id pub-id-type="doi">10.1101/gr.216465.116</pub-id>
+        <?supplied-pmid 28320918?>
+        <pub-id pub-id-type="pmid">28320918</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR17">
+      <label>17</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Salmela</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Rivals</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>LoRDEC: accurate and efficient long read error correction</article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <issue>24</issue>
+        <fpage>3506</fpage>
+        <lpage>14</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu538</pub-id>
+        <?supplied-pmid 25165095?>
+        <pub-id pub-id-type="pmid">25165095</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR18">
+      <label>18</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ruan</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Li</surname>
+            <given-names>H</given-names>
+          </name>
+        </person-group>
+        <article-title>Fast and accurate long-read assembly with wtdbg2</article-title>
+        <source>Nat Methods</source>
+        <year>2020</year>
+        <volume>17</volume>
+        <fpage>155</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="doi">10.1038/s41592-019-0669-3</pub-id>
+        <?supplied-pmid 31819265?>
+        <pub-id pub-id-type="pmid">31819265</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR19">
+      <label>19</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Robertson</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Schein</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Chiu</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Corbett</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Field</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Jackman</surname>
+            <given-names>SD</given-names>
+          </name>
+          <name>
+            <surname>Mungall</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Okada</surname>
+            <given-names>HM</given-names>
+          </name>
+          <name>
+            <surname>Qian</surname>
+            <given-names>JQ</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>De novo assembly and analysis of RNA-seq data</article-title>
+        <source>Nat Methods</source>
+        <year>2010</year>
+        <volume>7</volume>
+        <fpage>909</fpage>
+        <lpage>12</lpage>
+        <pub-id pub-id-type="doi">10.1038/nmeth.1517</pub-id>
+        <?supplied-pmid 20935650?>
+        <pub-id pub-id-type="pmid">20935650</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR20">
+      <label>20</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Uricaru</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Rizk</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Lacroix</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Quillery</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Plantard</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Chikhi</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Lemaitre</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Peterlongo</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Reference-free detection of isolated SNPs</article-title>
+        <source>Nucleic Acids Res</source>
+        <year>2015</year>
+        <volume>43</volume>
+        <issue>2</issue>
+        <fpage>11</fpage>
+        <pub-id pub-id-type="doi">10.1093/nar/gku1187</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR21">
+      <label>21</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Benoit</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Lemaitre</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Lavenier</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Drezen</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Dayris</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Uricaru</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Rizk</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>Reference-free compression of high throughput sequencing data with a probabilistic de Bruijn graph</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2015</year>
+        <volume>16</volume>
+        <issue>1</issue>
+        <fpage>288</fpage>
+        <pub-id pub-id-type="doi">10.1186/s12859-015-0709-7</pub-id>
+        <?supplied-pmid 26370285?>
+        <pub-id pub-id-type="pmid">26370285</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR22">
+      <label>22</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Limasset</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Flot</surname>
+            <given-names>J-F</given-names>
+          </name>
+          <name>
+            <surname>Peterlongo</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Toward perfect reads: self-correction of short reads via mapping on de Bruijn graphs</article-title>
+        <source>Bioinformatics</source>
+        <year>2020</year>
+        <volume>36</volume>
+        <issue>5</issue>
+        <fpage>1374</fpage>
+        <lpage>81</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btz102</pub-id>
+        <?supplied-pmid 30785192?>
+        <pub-id pub-id-type="pmid">30785192</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR23">
+      <label>23</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Liu</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Guo</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Brudno</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>Y</given-names>
+          </name>
+        </person-group>
+        <article-title>deBGA: read alignment with de Bruijn graph-based seed and extension</article-title>
+        <source>Bioinformatics</source>
+        <year>2016</year>
+        <volume>32</volume>
+        <issue>21</issue>
+        <fpage>3224</fpage>
+        <lpage>32</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btw371</pub-id>
+        <?supplied-pmid 27378303?>
+        <pub-id pub-id-type="pmid">27378303</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR24">
+      <label>24</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Iqbal</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Caccamo</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Turner</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Flicek</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>McVean</surname>
+            <given-names>G</given-names>
+          </name>
+        </person-group>
+        <article-title>De novo assembly and genotyping of variants using colored de Bruijn graphs</article-title>
+        <source>Nat Genet</source>
+        <year>2012</year>
+        <volume>44</volume>
+        <fpage>226</fpage>
+        <lpage>32</lpage>
+        <pub-id pub-id-type="doi">10.1038/ng.1028</pub-id>
+        <?supplied-pmid 22231483?>
+        <pub-id pub-id-type="pmid">22231483</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR25">
+      <label>25</label>
+      <mixed-citation publication-type="other">Zekic T, Holley G, Stoye J. Pan-genome storage and analysis techniques. In: Comparative Genomics. Springer: 2018. p. 29–53.</mixed-citation>
+    </ref>
+    <ref id="CR26">
+      <label>26</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Fang</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Bergmann</surname>
+            <given-names>EA</given-names>
+          </name>
+          <name>
+            <surname>Arora</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Vacic</surname>
+            <given-names>V</given-names>
+          </name>
+          <name>
+            <surname>Zody</surname>
+            <given-names>MC</given-names>
+          </name>
+          <name>
+            <surname>Iossifov</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>O’Rawe</surname>
+            <given-names>JA</given-names>
+          </name>
+          <name>
+            <surname>Wu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Barron</surname>
+            <given-names>LTJ</given-names>
+          </name>
+          <name>
+            <surname>Rosenbaum</surname>
+            <given-names>J</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Indel variant analysis of short-read sequencing data with Scalpel</article-title>
+        <source>Nat Protoc</source>
+        <year>2016</year>
+        <volume>11</volume>
+        <fpage>2529</fpage>
+        <lpage>48</lpage>
+        <pub-id pub-id-type="doi">10.1038/nprot.2016.150</pub-id>
+        <?supplied-pmid 27854363?>
+        <pub-id pub-id-type="pmid">27854363</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR27">
+      <label>27</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bray</surname>
+            <given-names>NL</given-names>
+          </name>
+          <name>
+            <surname>Pimentel</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Melsted</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Pachter</surname>
+            <given-names>L</given-names>
+          </name>
+        </person-group>
+        <article-title>Near-optimal probabilistic RNA-seq quantification</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2016</year>
+        <volume>34</volume>
+        <fpage>525</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt.3519</pub-id>
+        <?supplied-pmid 27043002?>
+        <pub-id pub-id-type="pmid">27043002</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR28">
+      <label>28</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Minkin</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Pham</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Medvedev</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>TwoPaCo: an efficient algorithm to build the compacted de Bruijn graph from many complete genomes</article-title>
+        <source>Bioinformatics</source>
+        <year>2017</year>
+        <volume>33</volume>
+        <issue>24</issue>
+        <fpage>4024</fpage>
+        <lpage>32</lpage>
+        <?supplied-pmid 27659452?>
+        <pub-id pub-id-type="pmid">27659452</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR29">
+      <label>29</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chikhi</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Limasset</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Medvedev</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <article-title>Compacting de Bruijn graphs from sequencing data quickly and in low memory</article-title>
+        <source>Bioinformatics</source>
+        <year>2016</year>
+        <volume>32</volume>
+        <issue>12</issue>
+        <fpage>201</fpage>
+        <lpage>8</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btw279</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR30">
+      <label>30</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Marcus</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Lee</surname>
+            <given-names>H</given-names>
+          </name>
+          <name>
+            <surname>Schatz</surname>
+            <given-names>MC</given-names>
+          </name>
+        </person-group>
+        <article-title>SplitMEM: a graphical algorithm for pan-genome analysis with suffix skips</article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <issue>24</issue>
+        <fpage>3476</fpage>
+        <lpage>83</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu756</pub-id>
+        <?supplied-pmid 25398610?>
+        <pub-id pub-id-type="pmid">25398610</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR31">
+      <label>31</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Baier</surname>
+            <given-names>U</given-names>
+          </name>
+          <name>
+            <surname>Beller</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Ohlebusch</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Graphical pan-genome analysis with compressed suffix trees and the Burrows-Wheeler transform</article-title>
+        <source>Bioinformatics</source>
+        <year>2016</year>
+        <volume>32</volume>
+        <issue>4</issue>
+        <fpage>497</fpage>
+        <lpage>504</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btv603</pub-id>
+        <?supplied-pmid 26504144?>
+        <pub-id pub-id-type="pmid">26504144</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR32">
+      <label>32</label>
+      <mixed-citation publication-type="other">Minkin I, Patel A, Kolmogorov M, Vyahhi N, Pham S. Sibelia: a scalable and comprehensive synteny block generation tool for closely related microbial genomes. In: Proc. of the 13th Workshop on Algorithms in Bioinformatics (WABI’13): 2013. p. 215–29.</mixed-citation>
+    </ref>
+    <ref id="CR33">
+      <label>33</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Sheikhizadeh</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Schranz</surname>
+            <given-names>ME</given-names>
+          </name>
+          <name>
+            <surname>Akdel</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>de Ridder</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Smit</surname>
+            <given-names>S</given-names>
+          </name>
+        </person-group>
+        <article-title>PanTools: representation, storage and exploration of pan-genomic data</article-title>
+        <source>Bioinformatics</source>
+        <year>2016</year>
+        <volume>32</volume>
+        <issue>17</issue>
+        <fpage>487</fpage>
+        <lpage>93</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btw455</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR34">
+      <label>34</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Drezen</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Rizk</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Chikhi</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Deltel</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Lemaitre</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Peterlongo</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Lavenier</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <article-title>GATB: genome assembly &amp; analysis tool box</article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <issue>20</issue>
+        <fpage>2959</fpage>
+        <lpage>61</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu406</pub-id>
+        <?supplied-pmid 24990603?>
+        <pub-id pub-id-type="pmid">24990603</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR35">
+      <label>35</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Crusoe</surname>
+            <given-names>MR</given-names>
+          </name>
+          <name>
+            <surname>Alameldin</surname>
+            <given-names>HF</given-names>
+          </name>
+          <name>
+            <surname>Awad</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Boucher</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Caldwell</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Cartwright</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Charbonneau</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Constantinides</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Edvenson</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Fay</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>The khmer software package: enabling efficient nucleotide sequence analysis</article-title>
+        <source>F1000Research</source>
+        <year>2015</year>
+        <volume>4</volume>
+        <fpage>900</fpage>
+        <pub-id pub-id-type="doi">10.12688/f1000research.6924.1</pub-id>
+        <?supplied-pmid 26535114?>
+        <pub-id pub-id-type="pmid">26535114</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR36">
+      <label>36</label>
+      <mixed-citation publication-type="other">Almodaresi F, Pandey P, Patro R. Rainbowfish: a succinct colored de Bruijn graph representation. In: Proc. of the 17th Workshop on Algorithms in Bioinformatics (WABI’17). Schloss Dagstuhl-Leibniz-Zentrum für Informatik: 2017.</mixed-citation>
+    </ref>
+    <ref id="CR37">
+      <label>37</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Holt</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>McMillan</surname>
+            <given-names>L</given-names>
+          </name>
+        </person-group>
+        <article-title>Merging of multi-string BWTs with applications</article-title>
+        <source>Bioinformatics</source>
+        <year>2014</year>
+        <volume>30</volume>
+        <issue>24</issue>
+        <fpage>3524</fpage>
+        <lpage>31</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu584</pub-id>
+        <?supplied-pmid 25172922?>
+        <pub-id pub-id-type="pmid">25172922</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR38">
+      <label>38</label>
+      <mixed-citation publication-type="other">Holley G, Wittler R, Stoye J. Bloom filter trie–a data structure for pan-genome storage. In: Proc. of the 15th Workshop on Algorithms in Bioinformatics (WABI’15), vol. 9289. Springer: 2015. p. 217–30.</mixed-citation>
+    </ref>
+    <ref id="CR39">
+      <label>39</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Muggli</surname>
+            <given-names>MD</given-names>
+          </name>
+          <name>
+            <surname>Bowe</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Noyes</surname>
+            <given-names>NR</given-names>
+          </name>
+          <name>
+            <surname>Morley</surname>
+            <given-names>PS</given-names>
+          </name>
+          <name>
+            <surname>Belk</surname>
+            <given-names>KE</given-names>
+          </name>
+          <name>
+            <surname>Raymond</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Gagie</surname>
+            <given-names>T</given-names>
+          </name>
+          <name>
+            <surname>Puglisi</surname>
+            <given-names>SJ</given-names>
+          </name>
+          <name>
+            <surname>Boucher</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Succinct colored de Bruijn graphs</article-title>
+        <source>Bioinformatics</source>
+        <year>2017</year>
+        <volume>33</volume>
+        <issue>20</issue>
+        <fpage>3181</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btx067</pub-id>
+        <?supplied-pmid 28200001?>
+        <pub-id pub-id-type="pmid">28200001</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR40">
+      <label>40</label>
+      <mixed-citation publication-type="other">Almodaresi F, Pandey P, Ferdman M, Johnson R, Patro R. An efficient, scalable and exact representation of high-dimensional color information enabled via de Bruijn graph search. In: Proc. of the 23rd International Conference on Research in Computational Molecular Biology (RECOMB’19). Springer: 2019.</mixed-citation>
+    </ref>
+    <ref id="CR41">
+      <label>41</label>
+      <mixed-citation publication-type="other">Muggli MD, Alipanahi B, Boucher C. Building large updatable colored de Bruijn graphs via merging. bioRxiv. 2019. 10.1101/229641.</mixed-citation>
+    </ref>
+    <ref id="CR42">
+      <label>42</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Solomon</surname>
+            <given-names>B</given-names>
+          </name>
+          <name>
+            <surname>Kingsford</surname>
+            <given-names>C</given-names>
+          </name>
+        </person-group>
+        <article-title>Fast search of thousands of short-read sequencing experiments</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2016</year>
+        <volume>34</volume>
+        <fpage>300</fpage>
+        <lpage>2</lpage>
+        <pub-id pub-id-type="doi">10.1038/nbt.3442</pub-id>
+        <?supplied-pmid 26854477?>
+        <pub-id pub-id-type="pmid">26854477</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR43">
+      <label>43</label>
+      <mixed-citation publication-type="other">Sun C, Harris RS, Chikhi R, Medvedev P. Allsome sequence bloom trees. J Comput Biol. 2018;25(5):467–79.</mixed-citation>
+    </ref>
+    <ref id="CR44">
+      <label>44</label>
+      <mixed-citation publication-type="other">Solomon B, Kingsford C. Improved search of large transcriptomic sequencing databases using split sequence Bloom trees. J Comput Biol. 2018;25(7):755–65.</mixed-citation>
+    </ref>
+    <ref id="CR45">
+      <label>45</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pandey</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Almodaresi</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Bender</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Ferdman</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Johnson</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Patro</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Mantis: a fast, small, and exact large-scale sequence-search index</article-title>
+        <source>Cell Syst</source>
+        <year>2018</year>
+        <volume>7</volume>
+        <issue>2</issue>
+        <fpage>201</fpage>
+        <lpage>7</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.cels.2018.05.021</pub-id>
+        <?supplied-pmid 29936185?>
+        <pub-id pub-id-type="pmid">29936185</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR46">
+      <label>46</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Magner</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Lehnert</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Qian</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Seqothello: querying RNA-seq experiments at scale</article-title>
+        <source>Genome Biol</source>
+        <year>2018</year>
+        <volume>19</volume>
+        <fpage>167</fpage>
+        <pub-id pub-id-type="doi">10.1186/s13059-018-1535-9</pub-id>
+        <?supplied-pmid 30340508?>
+        <pub-id pub-id-type="pmid">30340508</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR47">
+      <label>47</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bradley</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>den Bakker</surname>
+            <given-names>HC</given-names>
+          </name>
+          <name>
+            <surname>Rocha</surname>
+            <given-names>EP</given-names>
+          </name>
+          <name>
+            <surname>McVean</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Iqbal</surname>
+            <given-names>Z</given-names>
+          </name>
+        </person-group>
+        <article-title>Ultrafast search of all deposited bacterial and viral genomic data</article-title>
+        <source>Nat Biotechnol</source>
+        <year>2019</year>
+        <volume>37</volume>
+        <fpage>152</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="doi">10.1038/s41587-018-0010-1</pub-id>
+        <?supplied-pmid 30718882?>
+        <pub-id pub-id-type="pmid">30718882</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR48">
+      <label>48</label>
+      <mixed-citation publication-type="other">Chikhi R, Holub J, Medvedev P. Data structures to represent sets of k-long DNA sequences. arXiv: 1903.12312. 2019.</mixed-citation>
+    </ref>
+    <ref id="CR49">
+      <label>49</label>
+      <mixed-citation publication-type="other">Marchet C, Boucher C, Puglisi SJ, Medvedev P, Salson M, Chikhi R. Data structures based on k-mers for querying large collections of sequencing datasets. bioRxiv. 2019. 10.1101/866756.</mixed-citation>
+    </ref>
+    <ref id="CR50">
+      <label>50</label>
+      <mixed-citation publication-type="other">Guo H, Fu Y, Gao Y, Li J, Wang Y, Liu B. deGSM: memory scalable construction of large scale de Bruijn Graph. IEEE/ACM Trans Comput Biol Bioinform. 2019. 10.1109/TCBB.2019.2913932.</mixed-citation>
+    </ref>
+    <ref id="CR51">
+      <label>51</label>
+      <mixed-citation publication-type="other">Burrows M, Wheeler DJ. A block-sorting lossless data compression algorithm. Tech. Rep. 124, Digital SRC Research Report. 1994.</mixed-citation>
+    </ref>
+    <ref id="CR52">
+      <label>52</label>
+      <mixed-citation publication-type="other">Weiner P. Linear pattern matching algorithms. In: Proc. of the 14th Annual Symposium on Switching and Automata Theory (SWAT’73).). IEEE: 1973.</mixed-citation>
+    </ref>
+    <ref id="CR53">
+      <label>53</label>
+      <mixed-citation publication-type="other">Wittler R. Alignment- and reference-free phylogenomics with colored de-Bruijn graphs. In: Proc. of the 19th Workshop on Algorithms in Bioinformatics (WABI’19). Springer: 2019.</mixed-citation>
+    </ref>
+    <ref id="CR54">
+      <label>54</label>
+      <mixed-citation publication-type="other">Luhmann N, Holley G, Achtman M. BlastFrost: fast querying of 100,000s of bacterial genomes in Bifrost graphs. bioRxiv. 2020. 10.1101/2020.01.21.914168.</mixed-citation>
+    </ref>
+    <ref id="CR55">
+      <label>55</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Zook</surname>
+            <given-names>JM</given-names>
+          </name>
+          <name>
+            <surname>Catoe</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>McDaniel</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Vang</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Spies</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Sidow</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Weng</surname>
+            <given-names>Z</given-names>
+          </name>
+          <name>
+            <surname>Liu</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Mason</surname>
+            <given-names>CE</given-names>
+          </name>
+          <name>
+            <surname>Alexander</surname>
+            <given-names>N</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <article-title>Extensive sequencing of seven human genomes to characterize benchmark reference materials</article-title>
+        <source>Sci Data</source>
+        <year>2016</year>
+        <volume>3</volume>
+        <fpage>160025</fpage>
+        <pub-id pub-id-type="doi">10.1038/sdata.2016.25</pub-id>
+        <?supplied-pmid 27271295?>
+        <pub-id pub-id-type="pmid">27271295</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR56">
+      <label>56</label>
+      <mixed-citation publication-type="other">Marchet C, Kerbiriou M, Limasset A. Indexing de Bruijn graphs with minimizers. In: Proc. of the 23rd International Conference on Research in Computational Molecular Biology (RECOMB’19): 2019. 10.1101/546309.</mixed-citation>
+    </ref>
+    <ref id="CR57">
+      <label>57</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Pandey</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Bender</surname>
+            <given-names>MA</given-names>
+          </name>
+          <name>
+            <surname>Johnson</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Patro</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Squeakr: an exact and approximate k-mer counting system</article-title>
+        <source>Bioinformatics</source>
+        <year>2017</year>
+        <volume>34</volume>
+        <issue>4</issue>
+        <fpage>568</fpage>
+        <lpage>75</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btx636</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR58">
+      <label>58</label>
+      <mixed-citation publication-type="other">Zhou Z, Alikhan N-F, Mohamed K, Achtman M. The user’s guide to comparative genomics with EnteroBase. Three case studies: micro-clades within Salmonella enterica serovar Agama, ancient and modern populations of Yersinia pestis, and core genomic diversity of all Escherichia. bioRxiv. 2019. 10.1101/613554.</mixed-citation>
+    </ref>
+    <ref id="CR59">
+      <label>59</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Deorowicz</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Kokot</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Grabowski</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Debudaj-Grabysz</surname>
+            <given-names>A</given-names>
+          </name>
+        </person-group>
+        <article-title>KMC 2: fast and resource-frugal k-mer counting</article-title>
+        <source>Bioinformatics</source>
+        <year>2015</year>
+        <volume>31</volume>
+        <issue>10</issue>
+        <fpage>1569</fpage>
+        <lpage>76</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btv022</pub-id>
+        <?supplied-pmid 25609798?>
+        <pub-id pub-id-type="pmid">25609798</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR60">
+      <label>60</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Roberts</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Hayes</surname>
+            <given-names>W</given-names>
+          </name>
+          <name>
+            <surname>Hunt</surname>
+            <given-names>BR</given-names>
+          </name>
+          <name>
+            <surname>Mount</surname>
+            <given-names>SM</given-names>
+          </name>
+          <name>
+            <surname>Yorke</surname>
+            <given-names>JA</given-names>
+          </name>
+        </person-group>
+        <article-title>Reducing storage requirements for biological sequence comparison</article-title>
+        <source>Bioinformatics</source>
+        <year>2004</year>
+        <volume>20</volume>
+        <issue>18</issue>
+        <fpage>3363</fpage>
+        <lpage>9</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/bth408</pub-id>
+        <?supplied-pmid 15256412?>
+        <pub-id pub-id-type="pmid">15256412</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR61">
+      <label>61</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Grabowski</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Deorowicz</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Roguski</surname>
+            <given-names>L</given-names>
+          </name>
+        </person-group>
+        <article-title>Disk-based compression of data from genome sequencing</article-title>
+        <source>Bioinformatics</source>
+        <year>2015</year>
+        <volume>31</volume>
+        <issue>9</issue>
+        <fpage>1389</fpage>
+        <lpage>95</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btu844</pub-id>
+        <?supplied-pmid 25536966?>
+        <pub-id pub-id-type="pmid">25536966</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR62">
+      <label>62</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Bloom</surname>
+            <given-names>BH</given-names>
+          </name>
+        </person-group>
+        <article-title>Space/time trade-offs in hash coding with allowable errors</article-title>
+        <source>Comm ACM</source>
+        <year>1970</year>
+        <volume>13</volume>
+        <issue>7</issue>
+        <fpage>422</fpage>
+        <lpage>6</lpage>
+        <pub-id pub-id-type="doi">10.1145/362686.362692</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR63">
+      <label>63</label>
+      <mixed-citation publication-type="other">Kirsch A, Mitzenmacher M. Less hashing, same performance: building a better Bloom filter. In: Proc. of the European Symposium on Algorithms (ESA’06), vol. 4168: 2006. p. 456–67.</mixed-citation>
+    </ref>
+    <ref id="CR64">
+      <label>64</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Putze</surname>
+            <given-names>F</given-names>
+          </name>
+          <name>
+            <surname>Sanders</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Singler</surname>
+            <given-names>J</given-names>
+          </name>
+        </person-group>
+        <article-title>Cache-, hash- and space-efficient bloom filters</article-title>
+        <source>ACM J Exp Algorithmic</source>
+        <year>2009</year>
+        <volume>14</volume>
+        <fpage>9</fpage>
+        <pub-id pub-id-type="doi">10.1145/1498698.1594230</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR65">
+      <label>65</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Lemire</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Kaser</surname>
+            <given-names>O</given-names>
+          </name>
+        </person-group>
+        <article-title>Recursive n-gram hashing is pairwise independent, at best</article-title>
+        <source>Comput Speech Lang</source>
+        <year>2010</year>
+        <volume>24</volume>
+        <issue>4</issue>
+        <fpage>698</fpage>
+        <lpage>710</lpage>
+        <pub-id pub-id-type="doi">10.1016/j.csl.2009.12.001</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR66">
+      <label>66</label>
+      <mixed-citation publication-type="other">Harter R. The minimum on a sliding window algorithm. 2009. <ext-link ext-link-type="uri" xlink:href="http://richardhartersworld.com/cri/2001/slidingmin.html">http://richardhartersworld.com/cri/2001/slidingmin.html</ext-link>. Accessed 25 Mar 2019.</mixed-citation>
+    </ref>
+    <ref id="CR67">
+      <label>67</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Melsted</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Pritchard</surname>
+            <given-names>JK</given-names>
+          </name>
+        </person-group>
+        <article-title>Efficient counting of k-mers in DNA sequences using a bloom filter</article-title>
+        <source>BMC Bioinformatics</source>
+        <year>2011</year>
+        <volume>12</volume>
+        <issue>1</issue>
+        <fpage>333</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2105-12-333</pub-id>
+        <?supplied-pmid 21831268?>
+        <pub-id pub-id-type="pmid">21831268</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR68">
+      <label>68</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Azar</surname>
+            <given-names>Y</given-names>
+          </name>
+          <name>
+            <surname>Broder</surname>
+            <given-names>AZ</given-names>
+          </name>
+          <name>
+            <surname>Karlin</surname>
+            <given-names>AR</given-names>
+          </name>
+          <name>
+            <surname>Upfal</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <article-title>Balanced allocations</article-title>
+        <source>SIAM J Comput</source>
+        <year>1999</year>
+        <volume>29</volume>
+        <issue>1</issue>
+        <fpage>180</fpage>
+        <lpage>200</lpage>
+        <pub-id pub-id-type="doi">10.1137/S0097539795288490</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR69">
+      <label>69</label>
+      <element-citation publication-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Chambi</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Lemire</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Kaser</surname>
+            <given-names>O</given-names>
+          </name>
+          <name>
+            <surname>Godin</surname>
+            <given-names>R</given-names>
+          </name>
+        </person-group>
+        <article-title>Better bitmap performance with Roaring bitmaps</article-title>
+        <source>Softw Pract Exp</source>
+        <year>2016</year>
+        <volume>46</volume>
+        <issue>5</issue>
+        <fpage>709</fpage>
+        <lpage>19</lpage>
+        <pub-id pub-id-type="doi">10.1002/spe.2325</pub-id>
+      </element-citation>
+    </ref>
+    <ref id="CR70">
+      <label>70</label>
+      <mixed-citation publication-type="other">Limasset A, Rizk G, Chikhi R, Peterlongo P. Fast and scalable minimal perfect hashing for massive key sets. arXiv. 2017.</mixed-citation>
+    </ref>
+    <ref id="CR71">
+      <label>71</label>
+      <mixed-citation publication-type="other">Holley G, Melsted P. Bifrost Github repository. 2020. <ext-link ext-link-type="uri" xlink:href="https://github.com/pmelsted/bifrost">https://github.com/pmelsted/bifrost</ext-link>.</mixed-citation>
+    </ref>
+    <ref id="CR72">
+      <label>72</label>
+      <mixed-citation publication-type="other">Holley G, Melsted P. Zenodo repository for Bifrost. 10.5281/zenodo.3973373.</mixed-citation>
+    </ref>
+  </ref-list>
+</back>

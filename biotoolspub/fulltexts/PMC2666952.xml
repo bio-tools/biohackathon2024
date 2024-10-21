@@ -1,0 +1,836 @@
+<?properties open_access?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">Cancer Inform</journal-id>
+    <journal-id journal-id-type="publisher-id">101258149</journal-id>
+    <journal-title>Cancer Informatics</journal-title>
+    <issn pub-type="epub">1176-9351</issn>
+    <publisher>
+      <publisher-name>Libertas Academica</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">2666952</article-id>
+    <article-id pub-id-type="publisher-id">cin-05-25</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Systems Biology Special Issue</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>Application of Gene Shaving and Mixture Models to Cluster Microarray Gene Expression Data</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Do</surname>
+          <given-names>K-A.</given-names>
+        </name>
+        <xref ref-type="aff" rid="af1-cin-05-25">1</xref>
+        <xref ref-type="corresp" rid="c1-cin-05-25"/>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>McLachlan</surname>
+          <given-names>G.J.</given-names>
+        </name>
+        <xref ref-type="aff" rid="af2-cin-05-25">2</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Bean</surname>
+          <given-names>R.</given-names>
+        </name>
+        <xref ref-type="aff" rid="af2-cin-05-25">2</xref>
+      </contrib>
+      <contrib contrib-type="author">
+        <name>
+          <surname>Wen</surname>
+          <given-names>S.</given-names>
+        </name>
+        <xref ref-type="aff" rid="af1-cin-05-25">1</xref>
+      </contrib>
+    </contrib-group>
+    <aff id="af1-cin-05-25"><label>1</label>University of Texas, M.D. Anderson Cancer Center, Houston, Texas, U.S.A</aff>
+    <aff id="af2-cin-05-25"><label>2</label>Department of Mathematics &amp; Institute for Molecular Bioscience, University of Queensland Brisbane, 4072, Australia</aff>
+    <author-notes>
+      <corresp id="c1-cin-05-25">Correspondence: K-A. Do, Tel: 713-794-4155; Fax: 713-563-4242; Email:
+<email>kim@mdanderson.org</email></corresp>
+    </author-notes>
+    <pub-date pub-type="collection">
+      <year>2007</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>02</day>
+      <month>4</month>
+      <year>2007</year>
+    </pub-date>
+    <volume>5</volume>
+    <fpage>25</fpage>
+    <lpage>43</lpage>
+    <permissions>
+      <copyright-statement>© 2007 The authors.</copyright-statement>
+      <copyright-year>2007</copyright-year>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/3.0">
+        <p><!--CREATIVE COMMONS-->This article is an open-access article distributed under the terms and conditions of the Creative Commons Attribution license (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/3.0/">http://creativecommons.org/licenses/by/3.0/</ext-link>).</p>
+      </license>
+    </permissions>
+    <abstract>
+      <p>Researchers are frequently faced with the analysis of microarray data of a relatively large number of genes using a small number of tissue samples. We examine the application of two statistical methods for clustering such microarray expression data: EMMIX-GENE and GeneClust. EMMIX-GENE is a mixture-model based clustering approach, designed primarily to cluster tissue samples on the basis of the genes. GeneClust is an implementation of the gene shaving methodology, motivated by research to identify distinct sets of genes for which variation in expression could be related to a biological property of the tissue samples. We illustrate the use of these two methods in the analysis of Affymetrix oligonucleotide arrays of well-known data sets from colon tissue samples with and without tumors, and of tumor tissue samples from patients with leukemia. Although the two approaches have been developed from different perspectives, the results demonstrate a clear correspondence between gene clusters produced by GeneClust and EMMIX-GENE for the colon tissue data. It is demonstrated, for the case of ribosomal proteins and smooth muscle genes in the colon data set, that both methods can classify genes into co-regulated families. It is further demonstrated that tissue types (tumor and normal) can be separated on the basis of subtle distributed patterns of genes. Application to the leukemia tissue data produces a division of tissues corresponding closely to the external classification, acute myeloid meukemia (AML) and acute lymphoblastic leukemia (ALL), for both methods. In addition, we also identify genes specific for the subgroup of ALL-Tcell samples. Overall, we find that the gene shaving method produces gene clusters at great speed; allows variable cluster sizes and can incorporate partial or full supervision; and finds clusters of genes in which the gene expression varies greatly over the tissue samples while maintaining a high level of coherence between the gene expression profiles. The intent of the EMMIX-GENE method is to cluster the tissue samples. It performs a filtering step that results in a subset of relevant genes, followed by gene clustering, and then tissue clustering, and is favorable in its accuracy of ranking the clusters produced.</p>
+    </abstract>
+  </article-meta>
+</front>
+<body>
+  <sec sec-type="intro">
+    <label>1.</label>
+    <title>Introduction</title>
+    <p>With the recent advent in DNA array technologies, researchers have recently focused on developing methods to cluster gene microarray data, and the analysis of such data has an important role to play in the discovery, validation, and understanding of various classes and subclasses of cancer; see, for example, <xref ref-type="bibr" rid="b7-cin-05-25">Eisen et al. (1998)</xref>; <xref ref-type="bibr" rid="b2-cin-05-25">Ben-Dor et al. (1999</xref>, <xref ref-type="bibr" rid="b3-cin-05-25">2000)</xref>; Alon et al. (2000); Golub et al. (2000); <xref ref-type="bibr" rid="b11-cin-05-25">Hastie et al. (2000)</xref>; <xref ref-type="bibr" rid="b17-cin-05-25">Moler et al. (2000)</xref>; and <xref ref-type="bibr" rid="b20-cin-05-25">Xing and Karp (2001)</xref>, among others. Most clustering procedures seek a single global re-ordering of the samples or cell lines for all genes, and although they are effective in uncovering gross global structure, they are much less effective when applied to more complex clustering patterns; for example, where there are overlapping gene clusters; see <xref ref-type="bibr" rid="b16-cin-05-25">McLachlan and Basford (1988)</xref>; and <xref ref-type="bibr" rid="b21-cin-05-25">Xu and Wunsch (2005)</xref>. In this paper, we concentrate on the gene shaving method of <xref ref-type="bibr" rid="b11-cin-05-25">Hastie et al. (2000)</xref> and the mixture-model based approach of <xref ref-type="bibr" rid="b14-cin-05-25">McLachlan et al. (2002)</xref>, called EMMIX-GENE. EMMIX-GENE is designed primarily to cluster tissue samples on the basis of the genes. It does have an intermediate step on which the genes are clustered into groups on the basis of Euclidean distance in order to reduce the dimension of the gene space. The reader is referred to the more recent work of <xref ref-type="bibr" rid="b12-cin-05-25">Heard et al. (2006)</xref>; <xref ref-type="bibr" rid="b13-cin-05-25">Liu et al. (2006)</xref>; <xref ref-type="bibr" rid="b18-cin-05-25">Ng et al. (2006)</xref>; and <xref ref-type="bibr" rid="b19-cin-05-25">Thalamuthu et al. (2006)</xref>, among others, for model-based approaches designed specifically for the clustering of gene profiles. Gene shaving is a simple but effective method for identifying subsets of genes with coherent expression patterns and large variation across samples or conditions. To illustrate the performance of the two methods in their ability to extract true clusters, we examine the well-known data sets of Alon and Golub, while taking into account knowledge about the genes and tissue samples provided in such sources as <xref ref-type="bibr" rid="b8-cin-05-25">Getz et al. (2000)</xref> and <xref ref-type="bibr" rid="b3-cin-05-25">Ben-Dor et al. (2000)</xref>.</p>
+  </sec>
+  <sec>
+    <label>2.</label>
+    <title>Description of EMMIX-GENE</title>
+    <p>For a detailed description of the normal mixture model and the extensions to mixtures of <italic>t</italic> distributions and mixtures of factor analyzers, see <xref ref-type="bibr" rid="b14-cin-05-25">McLachlan et al. (2002)</xref>. Very briefly, we let α<sub>1</sub>, …, α<italic><sub>N</sub></italic>, denote <italic>N p-</italic>dimensional observations. We then attempt to use the expectation-maximization (EM) algorithm of <xref ref-type="bibr" rid="b5-cin-05-25">Dempster et al. (1977)</xref> to assign the observations to <italic>g</italic> different normal components.</p>
+    <p>The EMMIX-GENE program uses a three-part process: first, the selection of relevant genes; second, the clustering of the selected genes; and third, the clustering of the tissues of the basis of the selected genes or gene clusters. At each step, the EMMIX program of <xref ref-type="bibr" rid="b15-cin-05-25">McLachlan et al. (1999)</xref> is used to fit mixtures of normal components or <italic>t</italic> components to the data. The analysis is to be performed on microarray data collected on <italic>N</italic> genes from <italic>p</italic> experiments, represented in the form of an <italic>N</italic> × <italic>p</italic> data matrix <italic>A</italic> whose <italic>i</italic>th row contains the expression levels for the <italic>i</italic>th gene in the <italic>p</italic> tissue samples.</p>
+    <sec>
+      <label>2.1.</label>
+      <title>Selection of relevant genes</title>
+      <p>In the first step, consideration is given to the selection of relevant genes in terms of the likelihood ratio statistic −2 log λ for the fitting of a single <italic>t</italic> distribution versus a mixture of two <italic>t</italic> components. Due to the possible presence of atypically large expression values for a particular tissue in the microarray data, it is better to use mixtures of <italic>t</italic> components as opposed to mixtures of normal components. When assessing the relevance of a gene, we examine −2 log λ where λ is the likelihood ratio statistic for testing <italic>g</italic> = 1 versus <italic>g</italic> = 2 components in the mixture model.</p>
+      <p>However, the use of <italic>t</italic> components in place of normal components still does not eliminate the effect of outliers on inference of the number of clusters in the tissue samples. For example, suppose that for a given gene there is no genuine clustering in the tissues, but that there are a small number of gross outliers. Then a significantly large value of λ might be obtained, with one component representing the main body of the data (and providing robust estimates of their underlying distribution) and the other representing the outliers. That is, although the <italic>t</italic> mixture model may provide robust estimates of the underlying distribution, it does not provide a robust assessment of the number of clusters in the data.</p>
+      <p>In light of the above, the EMMIX-GENE software automatically assesses the relevance of each of the <italic>N</italic> genes by fitting one- and two-component <italic>t</italic> mixture models to the expression data over the <italic>p</italic> tissues for each gene considered individually. If −2 log λ is greater than a specified threshold <italic>b</italic><sub>1</sub>
+<disp-formula id="FD1"><label>(1)</label><mml:math id="M1"><mml:mrow><mml:mo>−</mml:mo><mml:mn>2</mml:mn><mml:mo> </mml:mo><mml:mtext>log</mml:mtext><mml:mo> </mml:mo><mml:mo>λ</mml:mo><mml:mo> </mml:mo><mml:mo>&gt;</mml:mo><mml:mo> </mml:mo><mml:msub><mml:mi>b</mml:mi><mml:mn>1</mml:mn></mml:msub></mml:mrow></mml:math></disp-formula>then the gene is taken to be relevant provided that
+<disp-formula id="FD2"><label>(2)</label><mml:math id="M2"><mml:msub><mml:mtext>s</mml:mtext><mml:mrow><mml:mtext>min</mml:mtext></mml:mrow></mml:msub><mml:mi> </mml:mi><mml:mo>≥</mml:mo><mml:mi> </mml:mi><mml:msub><mml:mi>b</mml:mi><mml:mn>2</mml:mn></mml:msub><mml:mo>,</mml:mo></mml:math></disp-formula>where s<sub>min</sub> is the minimum size of the two clusters implied by the two-component <italic>t</italic> mixture model and <italic>b</italic><sub>2</sub> is a specified threshold.</p>
+      <p>If (1) holds but (2) does not for a given gene, then the three-component <italic>t</italic> mixture model is fitted to the tissue samples on this gene, and the value of −2 log λ calculated for the test of <italic>g</italic> = 2 versus <italic>g</italic> = 3; see <xref ref-type="fig" rid="f1-cin-05-25">Figure 1</xref>. If (1) holds for this value of −2 log λ the gene is selected as being relevant. Although the null distribution of −2 log λ for <italic>g</italic> = 2 versus <italic>g</italic> = 3 is not the same as for <italic>g</italic> = 1 versus <italic>g</italic> = 2 components, it would appear to be reasonable here to use the same threshold (1).</p>
+      <p>For the data discussed in this paper, we took <italic>b</italic><sub>1</sub> = 8 and <italic>b</italic><sub>2</sub> = 8. In fitting the two- and three-component <italic>t</italic> mixture models to the tissue samples, we need to provide a starting point for the parameter estimate, or equivalently, the clustering of the data. This can be done by the user specifying a number of random starts and a number of <italic>k</italic>-means-based starts. In EMMIX-GENE, the default choice is four random and four <italic>k</italic>-means-based starts, which is used in the analyses presented later.</p>
+      <p>This first step is responsible for most of the time taken to implement EMMIX-GENE. If a less formal method of selection of the genes were to be used, then the procedure would be very quick. For example, one ad hoc method for selecting the genes would be to select those genes whose sample interquartile range is greater than some specified multiplicative factor of the sample standard deviation.</p>
+    </sec>
+    <sec>
+      <label>2.2.</label>
+      <title>Clustering of genes</title>
+      <p>Concerning the end problem of clustering the tissue samples on the basis of the genes considered simultaneously, we could examine the univariate clusterings provided by each of the selected genes taken individually. But this would be rather tedious when a large number of genes have been selected. Thus, with the EMMIX approach, the genes are clustered into a user-specified number (<italic>N</italic><sub>0</sub>) of clusters by fitting a mixture of g = <italic>N</italic><sub>0</sub> normal distributions with covariance matrices restricted to being equal to a multiple of the <italic>p</italic> × <italic>p</italic> identity matrix. In particular, if the mixing proportions were fixed at 0.5, then it would be equivalent to using <italic>k</italic>-means and clustering the genes in terms of Euclidean distance between them. One could attempt to make a more objective choice of the number <italic>N</italic><sub>0</sub> of clusters by using, say, the likelihood ratio criterion or the Bayesian information criterion (BIC), but regularity conditions do not hold for this problem. Moreover, there is an extra complication here since the genes are not independently distributed within a tissue sample. The clusters of genes are ranked in terms of the likelihood ratio statistic calculated on the basis of the fitted mean of a cluster over the tissues for the test of a single versus two <italic>t</italic>-distributions. If the smaller cluster is found to be of size less than <italic>b</italic><sub>2</sub>, the test is run for two versus three <italic>t</italic>-distributions.</p>
+    </sec>
+    <sec>
+      <label>2.3.</label>
+      <title>Clustering of tissues</title>
+      <p>In the last step, the tissues are clustered by fitting mixtures of factor analyzers to the genes where the information in all the genes has been condensed as above. Factor analysis can be used for dimensionality reduction by modeling each observation <italic>A<sub>j</sub></italic> as
+<disp-formula id="FD3"><label>(3)</label><mml:math id="M3"><mml:msub><mml:mi>α</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>=</mml:mo><mml:mo>μ</mml:mo><mml:mo>+</mml:mo><mml:mi>B</mml:mi><mml:msub><mml:mi>U</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo>+</mml:mo><mml:msub><mml:mi>e</mml:mi><mml:mi>j</mml:mi></mml:msub><mml:mo> </mml:mo><mml:mo stretchy="false">(</mml:mo><mml:mi>j</mml:mi><mml:mo>=</mml:mo><mml:mn>1</mml:mn><mml:mo>,</mml:mo><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mo>,</mml:mo><mml:mi> </mml:mi><mml:mi>n</mml:mi><mml:mo stretchy="false">)</mml:mo><mml:mo>,</mml:mo></mml:math></disp-formula></p>
+      <p>where <italic>U</italic><bold><italic>j</italic></bold> is a <italic>q</italic>-dimensional (<italic>q</italic> &lt; <italic>p</italic>) vector of latent or unobservable variables called factors and <italic>B</italic> is a <italic>p</italic> × <italic>q</italic> matrix of factor loadings (parameters). The <italic>U</italic><bold><italic>j</italic></bold> are assumed to be independent and identically (i.i.d.) as <italic>N</italic> (0, <italic>I</italic> <italic><sub>q</sub></italic>), independently of the errors <italic>e<sub>j</sub></italic>, which are assumed to be i.i.d. as <italic>N</italic>(0, <italic>D</italic>), where <italic>D</italic> is a diagonal matrix,
+<disp-formula><mml:math id="M4"><mml:mi>D</mml:mi><mml:mo>=</mml:mo><mml:mtext>diag</mml:mtext><mml:mo stretchy="false">(</mml:mo><mml:msubsup><mml:mo>σ</mml:mo><mml:mn>1</mml:mn><mml:mn>2</mml:mn></mml:msubsup><mml:mo>,</mml:mo><mml:mo>…</mml:mo><mml:msubsup><mml:mo>σ</mml:mo><mml:mtext>p</mml:mtext><mml:mn>2</mml:mn></mml:msubsup><mml:mo stretchy="false">)</mml:mo><mml:mo>,</mml:mo></mml:math></disp-formula>and where <italic>I<sub>q</sub></italic> denotes the <italic>q</italic> × <italic>q</italic> identity matrix. Thus, conditional on the <italic>u<sub>j</sub></italic>, the <italic>a<sub>j</sub></italic> are independently distributed as <italic>N</italic>(μ + <italic>B u<sub>j</sub></italic>, <italic>D</italic>). Unconditionally, the <italic>a</italic><sub>j</sub> are i.i.d. according to a normal distribution with mean μ and covariance matrix
+<disp-formula id="FD4"><label>(4)</label><mml:math id="M5"><mml:mo>∑</mml:mo><mml:mo>=</mml:mo><mml:mi>B</mml:mi><mml:msup><mml:mi>B</mml:mi><mml:mtext>T</mml:mtext></mml:msup><mml:mo>+</mml:mo><mml:mi>D</mml:mi><mml:mo>.</mml:mo></mml:math></disp-formula>With model (3), we avoid having to compute the inverses of iterates of the estimated <italic>p</italic> × <italic>p</italic> covariance matrix ∑ that may be singular for large <italic>p</italic> relative to <italic>n</italic>. The reason for this is that at each iteration the inversion of the current value of the <italic>p</italic> × <italic>p</italic> matrix (<italic>BB</italic><sup>T</sup> + <italic>D</italic>) can be undertaken using only inverses of <italic>q</italic> × <italic>q</italic> matrices. See <xref ref-type="bibr" rid="b14-cin-05-25">McLachlan et al. (2002)</xref> for more details.</p>
+    </sec>
+  </sec>
+  <sec>
+    <label>3.</label>
+    <title>Description of the Gene Shaving Algorithm</title>
+    <p><italic>Gene shaving</italic> (Hastie et al. 2001) searches for clusters of genes showing both high variation across the samples, and correlation across the genes. Both of these important aspects cannot be captured by simple clustering of the genes, or thresholding of individual genes based on the variation over samples (such as a simple <italic>t</italic> –test or rank test). The gene shaving procedure involves an iterative algorithm based on the principal components or the singular value decomposition (SVD) of the data matrix. The algorithm starts with the <italic>N</italic> × <italic>p</italic> matrix <italic>A</italic> (the entire microarray gene expression dataset) and seeks a gene cluster in the direction of maximal variation across the tissue samples. The simplest form of this function is a normalized linear combination of the genes weighted by its largest principal component loadings, referred to as the <italic>super gene</italic>. The genes may be sorted according to the principal component weights. A fraction α of the genes having lowest correlation (essentially the absolute inner product) with the <italic>super gene</italic> are then <italic>shaved</italic> off (discarded) from the original data matrix. The process of calculating the leading principal component and shaving off some genes is iterated on the updated/reduced data matrix until only two genes remain, which generates a nested sequence of clusters <italic>A</italic> = <italic>B</italic><sub>0</sub> ⊃ <italic>B</italic><sub>1</sub> ⊃ <italic>B</italic><sub>2</sub> ⊃ … ⊃ <italic>B</italic><sub>s.</sub> The method thus requires a quality measure for an optimal cluster. A <italic>Gap</italic> function was used by Hastie et al. (2001) to select a reasonable cluster size from the sequence of nested clusters. For a particular gene block <italic>B<sub>s</sub></italic> of <italic>k</italic> rows with elements α<italic><sub>ij</sub></italic>, define the <italic>percent variance explained</italic> as
+<disp-formula><mml:math id="M6"><mml:msup><mml:mi>R</mml:mi><mml:mn>2</mml:mn></mml:msup><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>B</mml:mi><mml:mi>S</mml:mi></mml:msub><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:mn>100</mml:mn><mml:mo>×</mml:mo><mml:mfrac><mml:mrow><mml:msub><mml:mi>V</mml:mi><mml:mi>B</mml:mi></mml:msub></mml:mrow><mml:mrow><mml:msub><mml:mi>V</mml:mi><mml:mi>B</mml:mi></mml:msub><mml:mo>+</mml:mo><mml:msub><mml:mi>V</mml:mi><mml:mi>w</mml:mi></mml:msub></mml:mrow></mml:mfrac><mml:mo>=</mml:mo><mml:mo>=</mml:mo><mml:mn>100</mml:mn><mml:mo>×</mml:mo><mml:mfrac><mml:mrow><mml:msub><mml:mi>V</mml:mi><mml:mi>B</mml:mi></mml:msub><mml:mo>/</mml:mo><mml:msub><mml:mi>V</mml:mi><mml:mi>w</mml:mi></mml:msub></mml:mrow><mml:mrow><mml:mn>1</mml:mn><mml:mo>+</mml:mo><mml:msub><mml:mi>V</mml:mi><mml:mi>B</mml:mi></mml:msub><mml:mo>/</mml:mo><mml:msub><mml:mi>V</mml:mi><mml:mi>w</mml:mi></mml:msub></mml:mrow></mml:mfrac></mml:math></disp-formula>where <italic>V<sub>W</sub></italic>, <italic>V<sub>B</sub></italic> and <italic>V<sub>T</sub></italic> denote the within, between, and total variances for cluster <italic>B<sub>s</sub></italic>. The range of <italic>R</italic><sup>2</sup> is over the interval [0, 1] where values close to 0 imply no clustering evidence, while values closer to one imply tight clusters of similarly expressing genes.</p>
+    <p>Let <italic>NumPerm</italic> be the pre-defined number of permutations, and A<sup>*1</sup>, ..., A<sup>*</sup> <italic><sup>NumPerm</sup></italic> denote the corresponding permuted data matrices, obtained by permuting the elements within each row of <italic>A</italic>. For each generic A<sup>*</sup>, we form a nested sequence of clusters 
+<inline-formula><mml:math id="M7"><mml:msup><mml:mi>A</mml:mi><mml:mo>*</mml:mo></mml:msup><mml:mo>=</mml:mo><mml:msubsup><mml:mi>B</mml:mi><mml:mn>0</mml:mn><mml:mo>*</mml:mo></mml:msubsup><mml:mo>⊃</mml:mo><mml:msubsup><mml:mi>B</mml:mi><mml:mn>1</mml:mn><mml:mo>*</mml:mo></mml:msubsup><mml:mo>⊃</mml:mo><mml:msubsup><mml:mi>B</mml:mi><mml:mn>2</mml:mn><mml:mo>*</mml:mo></mml:msubsup><mml:mo>⊃</mml:mo><mml:mo>…</mml:mo><mml:mo>⊃</mml:mo><mml:mi> </mml:mi><mml:msubsup><mml:mi>B</mml:mi><mml:mi>s</mml:mi><mml:mo>*</mml:mo></mml:msubsup></mml:math></inline-formula> with corresponding cluster sizes <italic>N</italic> = k<sub>0</sub>, k<sub>1</sub>, ..., k<italic><sub>s</sub></italic> = 2 respectively. Under the null hypothesis of independence between genes (rows) and samples (columns) 
+<inline-formula><mml:math id="M8"><mml:msubsup><mml:mover accent="true"><mml:mi>R</mml:mi><mml:mo>¯</mml:mo></mml:mover><mml:mrow><mml:msub><mml:mi>k</mml:mi><mml:mi>s</mml:mi></mml:msub></mml:mrow><mml:mrow><mml:mn>2</mml:mn><mml:mo>*</mml:mo></mml:mrow></mml:msubsup></mml:math></inline-formula> denote the averaged estimated value of the percent variance explained by clusters of size, computed from <italic>NumPerm</italic> permutations. The <italic>Gap function</italic> for cluster <italic>B<sub>s</sub></italic> of size <italic>k<sub>s</sub></italic> is defined as
+<disp-formula id="FD5"><label>(5)</label><mml:math id="M9"><mml:mi mathvariant="italic">Gap</mml:mi><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>k</mml:mi><mml:mi>s</mml:mi></mml:msub><mml:mo stretchy="false">)</mml:mo><mml:mo>=</mml:mo><mml:msubsup><mml:mi>R</mml:mi><mml:mrow><mml:msub><mml:mi>k</mml:mi><mml:mi>S</mml:mi></mml:msub></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>B</mml:mi><mml:mi>S</mml:mi></mml:msub><mml:mo stretchy="false">)</mml:mo><mml:mo>−</mml:mo><mml:msubsup><mml:mover accent="true"><mml:mi>R</mml:mi><mml:mo>¯</mml:mo></mml:mover><mml:mrow><mml:msub><mml:mi>k</mml:mi><mml:mi>S</mml:mi></mml:msub></mml:mrow><mml:mrow><mml:mn>2</mml:mn><mml:mo>*</mml:mo></mml:mrow></mml:msubsup><mml:mo>.</mml:mo></mml:math></disp-formula>The optimal cluster size is the value <italic>k<sub>opt</sub></italic> that maximizes the Gap statistic over all values of <italic>k<sub>s</sub></italic> ∈ {2,3, ..., <italic>N</italic>}. Implementation of the Gap statistic criterion is enhanced by plotting the percent variance curve 
+<inline-formula><mml:math id="M10"><mml:msubsup><mml:mi>R</mml:mi><mml:mrow><mml:msub><mml:mi>k</mml:mi><mml:mi>s</mml:mi></mml:msub></mml:mrow><mml:mn>2</mml:mn></mml:msubsup><mml:mo stretchy="false">(</mml:mo><mml:msub><mml:mi>B</mml:mi><mml:mi>s</mml:mi></mml:msub><mml:mo stretchy="false">)</mml:mo></mml:math></inline-formula> for the observed data matrix, versus the corresponding averaged curve 
+<inline-formula><mml:math id="M11"><mml:msubsup><mml:mover accent="true"><mml:mi>R</mml:mi><mml:mo>¯</mml:mo></mml:mover><mml:mrow><mml:msub><mml:mi>k</mml:mi><mml:mi>s</mml:mi></mml:msub></mml:mrow><mml:mrow><mml:mn>2</mml:mn><mml:mo>*</mml:mo></mml:mrow></mml:msubsup></mml:math></inline-formula> for the collection n of permuted data matrices, as a function of <italic>k<sub>s</sub></italic> ∈ {2, ..., <italic>N</italic>}. Alternatively, one can also include a plot of the computed values of Gap(<italic>k<sub>s</sub></italic>) against <italic>k<sub>s</sub></italic>∈ {2, ..., <italic>N</italic>}. Since the optimal cluster size usually assumes a small integer, these plots are more meaningful if depicted on the log scale.</p>
+    <p>The next step is to remove the effect of genes in the optimal cluster, <italic>C</italic><sub>1</sub> say, from the original matrix <italic>A</italic>. By computing the average gene or the vector of column averages for <italic>C</italic><sub>1</sub>, denoted by <italic>C̄</italic><sub>1</sub>, we can remove the component that is correlated with this average. This is equivalent to regressing each row of <italic>A</italic> on the average gene row <italic>C̄</italic><sub>1</sub>, and replacing the former with the regression residuals. Such a process was referred to as <italic>orthogonalization</italic> by Hastie et al. (2001), from which a modified data matrix <italic>A</italic><sub>ortho</sub> is produced. The next optimal cluster C<sub>2</sub> then can be obtained by using the same procedure with the data matrix <italic>A</italic><sub>ortho</sub>, a substitution of <italic>A</italic>. This sequence of operations is iterated until <italic>M</italic> gene clusters <italic>C</italic><sub>1</sub>, ..., <italic>C<sub>M</sub></italic> are found, which can be displayed graphically for visual inspection. To allow for negatively correlated genes to be included in a cluster, the average gene is actually a <italic>signed mean gene</italic>, that is a gene row has a negative principal component weight, and then the signs of the expression values are flipped before the average is calculated.</p>
+    <p>A fully <italic>supervised shaving</italic> for class discrimination can be carried out if information of the column (sample) classification is available. In particular, suppose that the <italic>p</italic> columns (samples) can be classified by <italic>g</italic> groups, labeled by <italic>G</italic><sub>1</sub>, ..., <italic>G<sub>g</sub></italic> with <italic>n</italic><sub>1</sub>, ..., <italic>n<sub>g</sub></italic> columns in each group, define a <italic>p</italic> × <italic>g</italic> matrix
+<disp-formula><mml:math id="M12"><mml:msup><mml:mi>Q</mml:mi><mml:mi>T</mml:mi></mml:msup><mml:mo>=</mml:mo><mml:mrow><mml:mo>(</mml:mo><mml:mtable columnalign="left"><mml:mtr><mml:mtd><mml:mfrac><mml:mn>1</mml:mn><mml:mrow><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mn>1</mml:mn></mml:msub></mml:mrow></mml:msqrt></mml:mrow></mml:mfrac><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mfrac><mml:mn>1</mml:mn><mml:mrow><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mn>1</mml:mn></mml:msub></mml:mrow></mml:msqrt></mml:mrow></mml:mfrac><mml:mi> </mml:mi><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mn>0</mml:mn><mml:mo>…</mml:mo><mml:mn>0</mml:mn></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mfrac><mml:mn>1</mml:mn><mml:mrow><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mn>2</mml:mn></mml:msub></mml:mrow></mml:msqrt></mml:mrow></mml:mfrac><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mfrac><mml:mn>1</mml:mn><mml:mrow><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mn>2</mml:mn></mml:msub></mml:mrow></mml:msqrt></mml:mrow></mml:mfrac><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mn>0</mml:mn></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mo>…</mml:mo></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mi> </mml:mi><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mn>0</mml:mn><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mi> </mml:mi><mml:mfrac><mml:mn>1</mml:mn><mml:mrow><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mi>g</mml:mi></mml:msub></mml:mrow></mml:msqrt></mml:mrow></mml:mfrac><mml:mi> </mml:mi><mml:mo>…</mml:mo><mml:mfrac><mml:mn>1</mml:mn><mml:mrow><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mi>g</mml:mi></mml:msub></mml:mrow></mml:msqrt></mml:mrow></mml:mfrac></mml:mtd></mml:mtr></mml:mtable><mml:mo>)</mml:mo></mml:mrow></mml:math></disp-formula></p>
+    <p>It can be easily proven that the cluster <italic>C<sub>k</sub></italic> of rows of the data matrix <italic>A</italic> with maximal <italic>between-group variance</italic> (with respect to its mean gene) is also the cluster that maximizes the sum of squares of the mean of the rows of <italic>A</italic><sup>†</sup> = <italic>AQ</italic>, a matrix with fewer columns than <italic>A</italic>.</p>
+    <p>The difference between supervised and unsupervised shaving algorithms is that, in order to generate the nested sequence of clusters <italic>B</italic><sub>0</sub> ⊃ <italic>B</italic><sub>1</sub> ⊃ <italic>B</italic><sub>2</sub> ⊃... ⊃ <italic>B<sub>S</sub></italic>, the unsupervised shaving algorithm calculates the principal component of <italic>A</italic>, while the supervised shaving algorithm calculates the principal component of <italic>A</italic><sup>†</sup>. Note that each column of <italic>A</italic><sup>†</sup> is a weighted linear combination of the columns of A. In particular, the weight is equal to 
+<inline-formula><mml:math id="M13"><mml:mfrac><mml:mn>1</mml:mn><mml:mrow><mml:msqrt><mml:mrow><mml:msub><mml:mi>n</mml:mi><mml:mi>i</mml:mi></mml:msub></mml:mrow></mml:msqrt></mml:mrow></mml:mfrac></mml:math></inline-formula> if the <italic>i</italic><sup>th</sup> column belongs to group <italic>G<sub>i</sub></italic> and zero if otherwise. Hence each column of <italic>A</italic><sup>†</sup> is the ‘representative’ of the group of columns (samples) of A; thus, supervised shaving maximizes a weighted combination of column variance. Another advantage is that the computing speed of supervised shaving is faster than unsupervised shaving since <italic>A</italic><sup>†</sup> has much fewer columns than <italic>A</italic>. In addition, the method can be developed to more general situation. For example, the amount of supervision can be modified to get a partially supervised algorithm (see Hastie et al. 2001). Specifically, a partially supervised gene shaving algorithm with prior external classification knowledge is based on maximizing a weighted combination of the column means variance and an information measure that is the sum of squared differences between the class averages. That is, the original matrix <italic>A</italic> is first transformed by the projection P (<italic>A</italic>) = <italic>A</italic>* = <italic>A</italic>*<italic>Q</italic>* where
+<disp-formula id="FD6"><label>(6)</label><mml:math id="M14"><mml:mi>Q</mml:mi><mml:mo>*</mml:mo><mml:mi> </mml:mi><mml:msup><mml:mrow><mml:mi>Q</mml:mi><mml:mo>*</mml:mo></mml:mrow><mml:mi>T</mml:mi></mml:msup><mml:mo>=</mml:mo><mml:mo stretchy="false">(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mo>ω</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mi> </mml:mi><mml:mi>I</mml:mi><mml:mo>+</mml:mo><mml:mo>ω</mml:mo><mml:mi>Q</mml:mi><mml:mo>*</mml:mo><mml:msup><mml:mi>Q</mml:mi><mml:mtext>T</mml:mtext></mml:msup><mml:mi> </mml:mi><mml:mo>ω</mml:mo><mml:mo>∈</mml:mo><mml:mo stretchy="false">[</mml:mo><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">]</mml:mo><mml:mo>,</mml:mo></mml:math></disp-formula>and then gene shaving is performed on the transformed matrix <italic>A</italic>*. Full supervision is equivalent to ω = 1; while partial supervision is indicated by values of ω between 0 and 1.</p>
+    <p>When the external information of the <italic>p</italic> samples is in the form of a continuous variable <italic>Y</italic>, then one can define the quality measure for a cluster mean by the strength of its regression on <italic>Y.</italic> For example, consider the case when survival times <italic>Y</italic> for the samples are observed, then the relationship of <italic>Y</italic> and <italic>A</italic> may be represented by a Cox proportional hazards model of <italic>Y</italic> to the covariate represented by the column averages of <italic>A</italic> via the coefficient β, where β = 0 indicates no relationship. Let the vector of score components evaluated at β = 0 be represented by a <italic>p</italic> × 1 vector <italic>s</italic> with components <italic>s<sub>j</sub></italic>(0) for <italic>j</italic> = 1, ..., <italic>p</italic>. Under this scenario, the projection of <italic>A</italic> is of the form <italic>P</italic>(<italic>A</italic>) = <italic>A</italic>* = <italic>A</italic>* <italic>Q</italic>* where
+<disp-formula id="FD7"><label>(7)</label><mml:math id="M15"><mml:mi>Q</mml:mi><mml:mo>*</mml:mo><mml:mi> </mml:mi><mml:msup><mml:mrow><mml:mi>Q</mml:mi><mml:mo>*</mml:mo></mml:mrow><mml:mi>T</mml:mi></mml:msup><mml:mo>=</mml:mo><mml:mo stretchy="false">(</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mo>ω</mml:mo><mml:mo stretchy="false">)</mml:mo><mml:mi> </mml:mi><mml:mi>I</mml:mi><mml:mo>+</mml:mo><mml:mo>ω</mml:mo><mml:mtext>s</mml:mtext><mml:mi> </mml:mi><mml:mo>*</mml:mo><mml:mi> </mml:mi><mml:msup><mml:mtext>s</mml:mtext><mml:mtext>T</mml:mtext></mml:msup><mml:mi> </mml:mi><mml:mo>ω</mml:mo><mml:mo>∈</mml:mo><mml:mo stretchy="false">[</mml:mo><mml:mn>0</mml:mn><mml:mo>,</mml:mo><mml:mn>1</mml:mn><mml:mo stretchy="false">]</mml:mo><mml:mo>.</mml:mo></mml:math></disp-formula>Thus under full supervision, gene shaving is equivalent to simply ranking the genes in order of the size of the Cox model score test.</p>
+    <p>In many applications, we note that the Gap curve of the gene shaving clusters may be flat near the maximum, or may not be unimodal. This implies that there are larger cluster sizes that may include additional genes highly correlated with the super gene in this specific cluster with a Gap statistic almost as large as the Maximum Gap value. An automatic implementation of choosing the cluster size according to the Maximum Gap statistic usually would end up with smaller cluster sizes than other methods, but with much higher coherence in the cluster. We devised a simple extension to the original gene shaving algorithm, by allowing the user to relax the Maximum Gap Statistic criterion, that is, the user can pick the cluster size within a certain percentage (say 5% or 10%) of the Maximum Gap Statistic. Perhaps an improved version of cluster size selection should be based on both the modulus and the slope of change of the Gap statistic with respect to cluster size. This requires further investigation and is beyond the scope of this paper.</p>
+    <p>The gene shaving algorithm under general supervision with the Gap Statistic relaxation option has been implemented (and is continuously updated) by our group in the Department of Biostatistics at M. D. Anderson Cancer Center. There are two versions:
+<list list-type="bullet"><list-item><p>An implementation (entirely in S and R) of gene shaving (including unsupervised and general supervision) and documentation can be downloaded from <ext-link ext-link-type="uri" xlink:href="http://lib.stat.cmu.edu/S/">http://lib.stat.cmu.edu/S/</ext-link></p></list-item><list-item><p>GeneClust (<ext-link ext-link-type="uri" xlink:href="http://odin.mdacc.tmc.edu/~kim/gene-clust">http://odin.mdacc.tmc.edu/~kim/gene-clust</ext-link>): is a suite of Splus/R functions and C routines with a graphical user interface written in JAVA. This allows the user the ability to interact directly with the program, to have visualization power of the data and resulting clusters, and to have control of numerous intermediate output results.</p></list-item></list></p>
+    <p>In the next section, we present an illustration of how the two software GeneClust and EMMIX-GENE can be applied to the analysis of two widely studied cancer data sets. Note that for the sake of simplicity, we use the generic term “gene ID” here to refer to “Affymetrix Probe Set ID” for data collected from Affymetrix oligonucleotide arrays.</p>
+  </sec>
+  <sec sec-type="methods">
+    <label>4.</label>
+    <title>Colon Data</title>
+    <p><xref ref-type="bibr" rid="b1-cin-05-25">Alon et al. (1999)</xref> used Affymetrix oligonucleotide arrays to monitor absolute measurements on expressions of over 6,500 human gene expressions in 40 tumor and 22 normal colon tissue samples. These samples were taken from 40 different patients so that 22 patients supplied both a tumor and normal tissue sample. <xref ref-type="bibr" rid="b1-cin-05-25">Alon et al. (1999)</xref> focused on the 2,000 genes with highest minimal intensity across the samples, and it is these 2,000 genes that comprise our data set. The microarray data matrix <italic>A</italic> for this set thus has <italic>N</italic> = 2,000 rows and <italic>M</italic> = 62 columns. In <xref ref-type="bibr" rid="b1-cin-05-25">Alon et al. (1999)</xref>, the tissues are not listed consecutively, but here we have rearranged the data so that the tumors are labeled 1 to 40 and the normals 41 to 62. Also, since several of the Affymetrix probe sets have the same IDs, we differentiate between these IDs by the addition of an underscore and a number. We use the generic term “gene” to refer to a “probe set” in this case. Thus, for example, the first occurrence of gene H43908 in the list of 2000 genes is still called H43908, but the two subsequent occurrences are labeled H43908_2 and H43908_3.</p>
+    <p><xref ref-type="bibr" rid="b8-cin-05-25">Getz et al. (2000)</xref> reported that there was a change in the protocol during the conduct of the microarray experiments. The 11 tumor tissue samples (labeled 1 to 11 here) and 11 normal tissue samples (41 to 51) were taken from the first 11 patients using a poly detector, while the 29 tumor tissue samples (12 to 40) and normal tissue samples (52 to 62) were taken from the remaining 29 patients using total extraction of RNA. In the following, we find some evidence of this change in protocols in the clusterings we discovered.</p>
+    <p>Before we considered the clustering of this set, we processed the data by taking the (natural) logarithm of each expression level in <italic>A</italic>. We subsequently normalized the columns of the microarray data to have mean zero and unit standard deviation, then standardized the rows of the resulting matrix to have mean zero and unit standard deviation.</p>
+    <sec>
+      <label>4.1.</label>
+      <title>EMMIX-GENE approach</title>
+      <p>The gene selection approach of Section 2.1 was applied, with thresholds of <italic>b</italic><sub>1</sub> = <italic>b</italic><sub>2</sub> = 8, which retained 446 genes from the original 2,000 genes. The 446 selected genes were split into twenty clusters by fitting a mixture of twenty normal distributions with covariance matrices restricted to being equal to a multiple of the 62 × 62 identity matrix. These twenty clusters ranged in size from 8 to 41. In <xref ref-type="bibr" rid="b14-cin-05-25">McLachlan et al. (2002)</xref> it was noted that the second Alon cluster as produced by EMMIX-GENE gave a clustering of the tissues <italic>C</italic><sub>2</sub> as follows.
+<disp-formula><mml:math id="M16"><mml:mtable columnalign="left"><mml:mtr><mml:mtd><mml:msub><mml:mi>C</mml:mi><mml:mn>2</mml:mn></mml:msub><mml:mo>=</mml:mo><mml:mo>{</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mn>29</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>31</mml:mn><mml:mo>−</mml:mo><mml:mn>32</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>34</mml:mn><mml:mo>−</mml:mo><mml:mn>35</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>37</mml:mn><mml:mo>−</mml:mo><mml:mn>40</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>48</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>58</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>60</mml:mn><mml:mo>}</mml:mo></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo>∪</mml:mo><mml:mo>{</mml:mo><mml:mn>30</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>33</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>36</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>41</mml:mn><mml:mo>−</mml:mo><mml:mn>47</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>49</mml:mn><mml:mo>−</mml:mo><mml:mn>57</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>59</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>61</mml:mn><mml:mo>−</mml:mo><mml:mn>62</mml:mn><mml:mo>}</mml:mo><mml:mo>.</mml:mo></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mrow/></mml:mtd></mml:mtr></mml:mtable></mml:math></disp-formula>We note that the error rate of <italic>C</italic><sub>2</sub> compared with the external classification is six, the lowest of any of the twenty clusters, and that this cluster of genes contains the smooth muscle genes and genes suspected of being related to smooth muscle that were mentioned in <xref ref-type="bibr" rid="b3-cin-05-25">Ben-Dor et al. (2000)</xref>. (Ben-Dor et al. noted that the normal colon biopsy included smooth muscle tissue from the colon walls and consequently smooth muscle-related genes showed high expression levels in the normal tissues samples compared to the tumor samples.) However, it should be noted that the six tissues which are misallocated under this clustering occur among those tissues which have been misallocated in other analyses of this data set. For example, with the support vector machine classifier formed in <xref ref-type="bibr" rid="b17-cin-05-25">Moler et al. (2000)</xref> using the known classification of the tissues, these six tissues along with tumor tissue 35 were misallocated in the (leave-one-out) cross-validation of this classifier. Thus the “true” classification of these six tissues is in doubt. On comparing the clustering C<sub>2</sub> and the true classification, the Rand index was found to be 0.82.</p>
+      <p>In <xref ref-type="fig" rid="f2-cin-05-25">Figure 2</xref>, we show two heat maps extracted from fitting twenty clusters using EMMIX-GENE. We also note that all the smooth muscle related genes and suspected smooth muscle related genes mentioned in <xref ref-type="bibr" rid="b3-cin-05-25">Ben-Dor et al. (2000)</xref> are placed in C<sub>2</sub> represented by the upper heat map in <xref ref-type="fig" rid="f2-cin-05-25">Figure 2</xref>. The lower heat map corresponds essentially to a dichotomy between tissues obtained under the “old” and “new” protocols, note the similarity of columns 1–11 and columns 41–51, representing the “old” protocol. On a Pentium-4 with a 3.2 GHz processor, the gene selection step takes 87 minutes for the full set of 2000 genes; the gene clustering step takes 85 seconds to cluster the reduced set of 446 genes into twenty clusters; and the tissue clustering step takes two seconds working with the mean of one of the clusters.</p>
+    </sec>
+    <sec>
+      <label>4.2.</label>
+      <title>Gene shaving approach</title>
+      <p>The gene shaving algorithm was then applied to the same data set of 2000 genes used by the EMMIX-GENE approach. On a Pentium-4 with a 3.2 GHz processor, the overall gene shaving procedure takes less than 2 minutes to extract 4 clusters and using 20 permutations per cluster. Heat maps of the first four gene-shaved clusters using 10% shaving and 20 permutations are presented in <xref ref-type="fig" rid="f3-cin-05-25">Figure 3</xref>. <xref ref-type="fig" rid="f4-cin-05-25">Figure 4</xref> shows the percent-variance curves for both the original and randomized data as a function of size, and the gap curves used to select the specific cluster sizes in <xref ref-type="fig" rid="f3-cin-05-25">Figure 3</xref>. Visual examination of the first four unsupervised gene-shaved clusters reveals some interesting patterns. The first cluster of 50 genes group 25 of the tumors to the right, indicating that these specific genes are highly expressed in tumors. The second cluster of 40 genes can be interpreted similarly, though the pattern of high expression is different from that of the first cluster. The third cluster of 41 genes corresponds to the clustering of the “old” versus “new” protocols where most samples (tumor and normal) from the 11 patients using a poly detector are mostly under expressed for these genes and are grouped towards the left hand side of the heat map. Subsequent clusters display coherent patterns of expression with high values of <italic>V<sub>B</sub></italic> <italic>/ V<sub>W</sub></italic> but do not suggest any clear clusterings that resemble either the external classification or the change in protocol paradigms identified by <xref ref-type="bibr" rid="b8-cin-05-25">Getz (2000)</xref>.</p>
+      <p>We also reanalyzed the full Alon data set with different levels of supervision ranging from 10% to 100% supervision using the external classification of tumor versus normal. With 50% supervision, the first four gene clusters are presented in <xref ref-type="fig" rid="f5-cin-05-25">Figure 5</xref>. The first cluster (samples are not reordered) shows 50 genes (including the two smooth-muscle genes J02854 and T60155) representing two distinct groups of negatively correlated genes that correspond well to the external classification. The third cluster of 5 genes (sorted by the column means of the cluster) group the tissues according to the old versus new protocols. When 100% supervision is used (<xref ref-type="fig" rid="f6a-cin-05-25">Figure 6</xref>), the most coherent cluster that correspond to the external classification consists of 9 genes and classifies the tumors and normals with an error rate of 6 (Rand index of 0.82), as found by other methods. These nine genes also correspond to those with the top TNoM scores used by <xref ref-type="bibr" rid="b3-cin-05-25">Ben-Dor et al. (2000)</xref>. TnoM is the threshold number of misclassification which measures the “relevance” of a gene. Inspection of the variance and Gap plots under the full supervised scenario indicates that only the first cluster captures the full external classification.</p>
+      <p>We relaxed the Maximum Gap Statistic to pick the largest cluster size within 5% of the Maximum Gap value. Under 50% supervision, the relaxed gene shaving method identifies the first gene-shave cluster with 77 genes, capturing the normal versus tumor structure and including all the six smooth muscle genes (J02854, T60155, M63391, D31885, X74295, X12369) as well as two ribosomal genes (T95018, T62947).</p>
+      <p>We further investigated the performance of unsupervised gene shaving when applied to the reduced Alon data set of 446 genes using a preliminary filtering step similar to the first step in EMMIX-GENE. The first four gene shave clusters are presented in <xref ref-type="fig" rid="f7-cin-05-25">Figure 7</xref>. It can be seen that cluster 2 (13 genes) captures the normal versus tumor structure quite well, while the change in paradigm structure is reflected in cluster 3 (7 genes). Application of the relaxed gene shaving method increases cluster 2 to 19 genes and cluster 3 to 17 genes while maintaining the discovered structures. Further, cluster 2 now includes all the smooth muscle genes.</p>
+    </sec>
+  </sec>
+  <sec sec-type="methods">
+    <label>5.</label>
+    <title>Leukemia Data</title>
+    <p><xref ref-type="bibr" rid="b10-cin-05-25">Golub et al. (1999)</xref>, studied gene expressions on two types of acute leukemia: acute lymphoblastic leukemia (ALL) and acute myeloid leukemia (AML). Gene expression levels were measured using Affymetrix high density oligonucleotide arrays containing <italic>N</italic> = 7,129 genes on <italic>M</italic> = 72 tissues, comprising 47 cases of ALL (38 B-cell and 9 T-cell ALL) and 25 cases of AML. We have rearranged the order of the tissues so that the first 47 columns of the microarray data matrix <italic>A</italic> refer to the ALL cases and the next 25 to the AML cases.</p>
+    <p>We followed the processing steps of <xref ref-type="bibr" rid="b6-cin-05-25">Dudoit et al. (2002)</xref> of (i) thresholding: floor of 100 and ceiling of 16,000; (ii) filtering: exclusion of genes with max/min ≤ 5 and (max–min) ≤ 500, where max and min refer respectively to the maximum and minimum expression levels of a particular gene across a tissue sample; (iii) the natural logarithm of the expression levels was taken (<xref ref-type="bibr" rid="b6-cin-05-25">Dudoit et al. (2002</xref>) used base 10 logarithms). This left us with 3,731 genes.</p>
+    <sec>
+      <label>5.1.</label>
+      <title>EMMIX-GENE approach</title>
+      <p>Firstly, the approach of Section 2.1 was used, retaining 2,015 genes from the original 3,731 genes. Using the same approach as was applied to the Alon data, we clustered the 2,015 genes into forty clusters using the EMMIX-GENE program. The sizes of the forty clusters ranged from 14 to 137. We observe that the EMMIX-GENE approach gives an error rate of nine when the first or third cluster from the forty Golub clusters was used to cluster tissues using a mixture of factor analyzers. The clustering is <italic>C</italic><sub>1</sub> for the first cluster and <italic>C</italic><sub>3</sub> for the third cluster as follows:
+<disp-formula><mml:math id="M17"><mml:mtable columnalign="left"><mml:mtr><mml:mtd><mml:msub><mml:mi>C</mml:mi><mml:mn>1</mml:mn></mml:msub><mml:mo>=</mml:mo><mml:mo>{</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mn>4</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>8</mml:mn><mml:mo>−</mml:mo><mml:mn>43</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>45</mml:mn><mml:mo>−</mml:mo><mml:mn>47</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>49</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>52</mml:mn><mml:mo>−</mml:mo><mml:mn>53</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>67</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>69</mml:mn><mml:mo>}</mml:mo></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo>∪</mml:mo><mml:mo> </mml:mo><mml:mo>{</mml:mo><mml:mn>5</mml:mn><mml:mo>−</mml:mo><mml:mn>7</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>44</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>48</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>50</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>51</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>54</mml:mn><mml:mo>−</mml:mo><mml:mn>66</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>68</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>70</mml:mn><mml:mo>−</mml:mo><mml:mn>72</mml:mn><mml:mo>}</mml:mo><mml:mo>.</mml:mo></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:msub><mml:mi>C</mml:mi><mml:mn>3</mml:mn></mml:msub><mml:mo>=</mml:mo><mml:mo>{</mml:mo><mml:mn>1</mml:mn><mml:mo>−</mml:mo><mml:mn>10</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>13</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>15</mml:mn><mml:mo>−</mml:mo><mml:mn>16</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>19</mml:mn><mml:mo>−</mml:mo><mml:mn>22</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>24</mml:mn><mml:mo>−</mml:mo><mml:mn>28</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>30</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>32</mml:mn><mml:mo>−</mml:mo><mml:mn>43</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>45</mml:mn><mml:mo>−</mml:mo><mml:mn>47</mml:mn><mml:mo>}</mml:mo></mml:mtd></mml:mtr><mml:mtr><mml:mtd><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo> </mml:mo><mml:mo>∪</mml:mo><mml:mo> </mml:mo><mml:mo>{</mml:mo><mml:mn>11</mml:mn><mml:mo>−</mml:mo><mml:mn>12</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>14</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>17</mml:mn><mml:mo>−</mml:mo><mml:mn>18</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>23</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>29</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>31</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>44</mml:mn><mml:mo>,</mml:mo><mml:mo> </mml:mo><mml:mn>48</mml:mn><mml:mo>−</mml:mo><mml:mn>72</mml:mn><mml:mo>}</mml:mo><mml:mo>.</mml:mo></mml:mtd></mml:mtr></mml:mtable></mml:math></disp-formula>Thus, these clusters correspond closely to the external classification of ALL versus AML tumors. By examining the heat maps, we can see that this pattern is evident for the forty clusters in general. We measured the Rand index for both of these clusters and they both equal 0.78.</p>
+      <p>We present the heat maps for the two representative EMMIX-GENE clusters (extracted from forty clusters) in <xref ref-type="fig" rid="f8-cin-05-25">Figure 8</xref>. Using the second gene cluster as a basis for clustering the 72 tissues produces the best results; for example, using a mixture <italic>q</italic> = 6 factor analyzers gives a clustering in which only six tissues are misallocated (44, 49, 52, 53, 67 and 69). If the group mean of this cluster is used, we arrive at a clustering in which only five tissues are misallocated (44, 49, 52, 53 and 69).</p>
+    </sec>
+    <sec>
+      <label>5.2.</label>
+      <title>Gene shaving approach</title>
+      <p>We first applied unsupervised gene shaving to the original 3,731 genes in the Golub data set, using 10% shaving and 20 permutations to calculate the Gap statistics. Four of the top six clusters are presented in <xref ref-type="fig" rid="f9-cin-05-25">Figure 9</xref>. The variance and Gap plots for the first four clusters are depicted in <xref ref-type="fig" rid="f10-cin-05-25">Figure 10</xref>. Cluster 2 consisting of 30 genes depicts a clear grouping of the AML versus ALL tumor types, with a Rand Index of 0.78. The genes that are specifically differentially expressed for the ALL-Tcells alone are captured by the fifth cluster (30 genes) which shows two subgroups of positively and negatively correlated genes (Rand Index = 1.0). Due to the orthogonality property of gene shaving, other clusters may show high coherence amongst the genes but are not expected to adhere to the structures already captured by clusters 2 and 5.</p>
+      <p>We also applied the relaxed unsupervised gene shaving approach to the reduced Golub data set of 2,015 genes after the preliminary filtering. The resulting top four gene-shave clusters are given in <xref ref-type="fig" rid="f11-cin-05-25">Figure 11</xref>. With this reduced data set, the structure of AML versus ALL tumor types is captured immediately in the first gene-shave cluster of 69 coherent genes (Rand-index = 0.78). Specific differentially expressing genes for the ALL-Tcells are captured by the third cluster of 27 genes (Rand-Index = 1.0).</p>
+      <p>We observe that the EMMIX-GENE clusters which produced <italic>C</italic><sub>1</sub> and <italic>C</italic><sub>3</sub> above each contains many genes with very high values of −2 log λ. For example, the first EMMIX-GENE cluster contains eight genes (out of fifty-nine) with −2 log λ values above the highest value found in the gene shaving clusters, 62.870. The third EMMIX-GENE cluster also contains eight genes above this value.</p>
+      <p>There is a clear correspondence between the clusters produced by the gene shaving method and those produced by EMMIX-GENE. The highest value of −2 log λ for the selected genes in the Alon data is 238.770. In the gene shaving clusters, the highest value of −2 log λ for any gene is 169.954. This is the second gene (out of 446) in descending order of −2 log λ. For the Golub data, the highest value of −2 log λ is 133.394, and the highest in the gene shaving clusters is 62.870. This is the sixty-third gene, out of 2,015, in descending order of −2 log λ .</p>
+      <p>If we take each pair of genes in each gene cluster, we may calculate the correlation coefficient between such pairs of genes. For the gene shaving clusters, the coefficient is between 0.39 and 1.00 for the top three Golub clusters, and between 0.8581 and 0.9994 in the case of the third cluster. Some negative correlation occurs in all these clusters except for numbers 1, 3 and 7. Considering the coefficients for the Alon clusters, we find that these are always positive and lie between 0.157 and 0.974. If we omit cluster 7, the coefficients lie between 0.332 and 0.925.</p>
+      <p>For the Alon clusters, such correlation does not exist in the larger EMMIX-GENE clusters; for example, for the 59 genes in the first Golub cluster, the correlation coefficient ranges from 0.01 to 0.88. Taking the top 10 by 2 log λ from this cluster changes this range to 0.41 to 0.88, and taking the top five gives 0.65 to 0.88. In general, for EMMIX-GENE clusters, the top genes in terms of −2 log λ are more highly correlated than the remaining genes.</p>
+      <p>We observe that four of the gene shaving clusters in the case of the Alon colon cancer data are subsets of exactly one EMMIX-GENE cluster, and three clusters are subsets of exactly one EMMIX-GENE cluster in the case of the Golub data. Focussing on the full Alon cancer data set, we find that the smooth muscle genes (J02854, T60155, M63391, D31885, X74295, X12369), each has estimated empirical Bayes posterior probability of differential expression that is greater than <bold>0.95</bold>. These genes are found within the top 66 ranked genes using EMMIX-GENE and within the top 78 ranked genes using t-test with a false discovery rate (FDR) of 0.001. For this data set, Do et al. (2005) conducted a full Bayesian mixture modeling approach and estimated the posterior probability of differential expression for each smooth muscle gene to be greater than 0.998. In their original analysis, <xref ref-type="bibr" rid="b1-cin-05-25">Alon et al. (1999)</xref> identified a ribosomal gene cluster (29 genes), associated with over-expression in tumor tissues relative to normal tissues, only 10 which are declared differentially expressed at a threshold of 0.95 posterior probability using EMMIX-GENE, supported by similar results in Do et al. (2005) and by standard t-test with an FDR correction.</p>
+    </sec>
+  </sec>
+  <sec sec-type="discussion">
+    <label>6.</label>
+    <title>Discussion</title>
+    <p>In general, there is no obvious way to compare the clusters obtained between the two methods since the basic criterion of cluster choice is quite different. Extensive surveys of clustering algorithms including rigorous comparisons have been addressed in the literature, see for example, <xref ref-type="bibr" rid="b22-cin-05-25">Yeung et al. (2001)</xref>; <xref ref-type="bibr" rid="b6-cin-05-25">Dudoit et al. (2002)</xref>; <xref ref-type="bibr" rid="b9-cin-05-25">Gibbons and Roth (2002)</xref>; <xref ref-type="bibr" rid="b4-cin-05-25">Costa et al. (2004)</xref>; <xref ref-type="bibr" rid="b21-cin-05-25">Xu (2005)</xref>. Our main aim of this article is to demonstrate the usefulness of two recent methodology along with the available software in the analysis of two publicly available data sets. The top-down gene shaving method finds clusters of genes in which the gene expression varies greatly over the tissue samples while simultaneously maintaining a high level of coherence between the gene expression profiles; the cluster size is rigorously governed by the Gap statistic. In contrast, the EMMIX-GENE method uses the EMMIX program together with factor analyzers to first perform a filtering step and obtain a subset of relevant genes, and subsequently perform clustering of genes followed by clustering of tissues; there is no rigorous method for the choice of cluster size. Another major difference in the two methods is the way in which the clusters are constructed. An advantage of the gene shaving method is that it is totally nonparametric. In addition, the gene-shave clusters are orthogonal to each other and are of varying sizes, so that once a specific structure is captured in one cluster, the same structure will no longer be captured in subsequent clusters. However, overlapping genes are allowed between clusters if such genes induce different groupings of the columns (tissue samples). We observe that the maximum Gap statistic is useful in identifying the smallest and most coherent cluster, and thus is an excellent tool for identifying small clusters of genes. However, picking the largest cluster within a 5% or 10% of the Maximum Gap statistic is recommended in practice; this is a reasonable trade-off between coherence and a larger cluster size for exploratory purposes.</p>
+    <p>Gene shaving is also flexible in allowing the user to apply any amount of supervision required during the data analysis process. <italic>GeneClust</italic> is implemented with this flexibility in mind and allows interaction with the user to choose the Gap tolerance level as well as the amount of supervision. The advantage of GeneClust is its great speed in producing gene clusters. The advantage of the EMMIX-GENE method is in its accuracy of the ranking of the clusters produced. The disadvantage of this method is that it is comparatively quite slow, due to the time taken to implement the select-genes step. If a less formal approach were used to select genes, for example a <italic>t</italic>-test or a simple rank test, then the time required would be greatly reduced.</p>
+    <p>Both methods are treated as exploratory in this article. The parameter choices are chosen by a great amount of repetitive runs or by consulting existing literature, assessing the stability of the genes in the clusters with respect to varying parameter values. For example, with gene-shaving, the number of permutations needed and the percent shaving have been studied by <xref ref-type="bibr" rid="b11-cin-05-25">Hastie et al. (2000)</xref>. While with EMMIX-GENE, some simulations we performed for the Alon data set of g = 1 versus g = 2 for <italic>t</italic> components suggest that the 90th percentile of the null distribution of the likelihood ratio test statistic for testing a single <italic>t</italic> component versus a mixture of two <italic>t</italic> components with unrestricted variances is around 9. We have decided to act in a conservative manner by taking b<sub>1</sub> = 8 to have a greater chance of not deleting a gene that may have clustering potential. The value b<sub>2</sub> = 8 for the minimum cluster sizes is somewhat arbitrary. Some threshold is needed to avoid spurious clusters obtained by fitting a single <italic>t</italic>-component to a small number of observations that are very close together.</p>
+  </sec>
+</body>
+<back>
+  <ack>
+    <p>This work was partially funded by the National Institutes of Health via the University of Texas SPORE in Prostate Cancer (CA90270) and the Early Detection Research Network grant (CA99007). We thank three reviewers whose comments significantly improved the paper.</p>
+  </ack>
+  <ref-list>
+    <title>References</title>
+    <ref id="b1-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Alon</surname>
+            <given-names>U</given-names>
+          </name>
+          <name>
+            <surname>Barkai</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Notterman</surname>
+            <given-names>DA</given-names>
+          </name>
+          <name>
+            <surname>Gish</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Ybarra</surname>
+            <given-names>S</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <year>1999</year>
+        <article-title>Broad patterns of gene expression revealed by clustering analysis of tumor and normal colon tissues probed by oligonucleotide arrays</article-title>
+        <source>Proceedings of the National Academy of Sciences</source>
+        <volume>96</volume>
+        <fpage>6745</fpage>
+        <lpage>6750</lpage>
+      </citation>
+    </ref>
+    <ref id="b2-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ben-Dor</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Shamir</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Yakhini</surname>
+            <given-names>Z</given-names>
+          </name>
+        </person-group>
+        <year>1999</year>
+        <article-title>Clustering gene expression patterns</article-title>
+        <source>Journal of Computational Biology</source>
+        <volume>6</volume>
+        <fpage>281</fpage>
+        <lpage>297</lpage>
+        <pub-id pub-id-type="pmid">10582567</pub-id>
+      </citation>
+    </ref>
+    <ref id="b3-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ben-Dor</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Bruhn</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Friedman</surname>
+            <given-names>N</given-names>
+          </name>
+          <name>
+            <surname>Nachman</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Schummer</surname>
+            <given-names>M</given-names>
+          </name>
+          <name>
+            <surname>Yakhini</surname>
+            <given-names>Z</given-names>
+          </name>
+        </person-group>
+        <year>2000</year>
+        <article-title>Tissue Classification with Gene Expression Profiles</article-title>
+        <source>Journal of Computational Biology</source>
+        <volume>7</volume>
+        <fpage>559</fpage>
+        <lpage>584</lpage>
+        <pub-id pub-id-type="pmid">11108479</pub-id>
+      </citation>
+    </ref>
+    <ref id="b4-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Costa</surname>
+            <given-names>IG</given-names>
+          </name>
+          <name>
+            <surname>De Cavalho</surname>
+            <given-names>FDAT</given-names>
+          </name>
+          <name>
+            <surname>De Soto</surname>
+            <given-names>MCP</given-names>
+          </name>
+        </person-group>
+        <year>2004</year>
+        <article-title>Comparative analysis of clustering methods for gene expression time course data</article-title>
+        <source>Genetics and Molecular Biology</source>
+        <volume>27</volume>
+        <fpage>623</fpage>
+        <lpage>631</lpage>
+      </citation>
+    </ref>
+    <ref id="b5-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dempster</surname>
+            <given-names>AP</given-names>
+          </name>
+          <name>
+            <surname>Laird</surname>
+            <given-names>NM</given-names>
+          </name>
+          <name>
+            <surname>Rubin</surname>
+            <given-names>DB</given-names>
+          </name>
+        </person-group>
+        <year>1977</year>
+        <article-title>Maximum likelihood from incomplete data via the EM algorithm (with discussion)</article-title>
+        <source>Journal of the Royal Statistical Society, B</source>
+        <volume>39</volume>
+        <fpage>1</fpage>
+        <lpage>38</lpage>
+      </citation>
+    </ref>
+    <ref id="b6-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Dudoit</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Fridlyand</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Speed</surname>
+            <given-names>TP</given-names>
+          </name>
+        </person-group>
+        <year>2002</year>
+        <article-title>Comparison of discriminant methods for the classification of tumors using gene expression data</article-title>
+        <source>Journal of the American Statistical Association</source>
+        <volume>97</volume>
+        <fpage>77</fpage>
+        <lpage>87</lpage>
+      </citation>
+    </ref>
+    <ref id="b7-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Eisen</surname>
+            <given-names>MB</given-names>
+          </name>
+          <name>
+            <surname>Spellman</surname>
+            <given-names>PT</given-names>
+          </name>
+          <name>
+            <surname>Brown</surname>
+            <given-names>PO</given-names>
+          </name>
+          <name>
+            <surname>Botstein</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <year>1998</year>
+        <article-title>Cluster analysis and display of genome-wide expression patterns</article-title>
+        <source>Proceedings of the National Academy of Sciences U.S.A</source>
+        <volume>95</volume>
+        <fpage>14863</fpage>
+        <lpage>14868</lpage>
+      </citation>
+    </ref>
+    <ref id="b8-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Getz</surname>
+            <given-names>G</given-names>
+          </name>
+          <name>
+            <surname>Levine</surname>
+            <given-names>E</given-names>
+          </name>
+          <name>
+            <surname>Domany</surname>
+            <given-names>E</given-names>
+          </name>
+        </person-group>
+        <year>2000</year>
+        <article-title>Coupled two-way clustering analysis of gene microarray data</article-title>
+        <source>Computational Biology</source>
+        <volume>97</volume>
+        <fpage>12079</fpage>
+        <lpage>12084</lpage>
+      </citation>
+    </ref>
+    <ref id="b9-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Gibbons</surname>
+            <given-names>FD</given-names>
+          </name>
+          <name>
+            <surname>Roth</surname>
+            <given-names>FP</given-names>
+          </name>
+        </person-group>
+        <year>2002</year>
+        <article-title>Judging the quality of gene expression-based clustering methods using gene annotation</article-title>
+        <source>Genome Research</source>
+        <volume>12</volume>
+        <fpage>1574</fpage>
+        <lpage>1581</lpage>
+        <pub-id pub-id-type="pmid">12368250</pub-id>
+      </citation>
+    </ref>
+    <ref id="b10-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Golub</surname>
+            <given-names>TR</given-names>
+          </name>
+          <name>
+            <surname>Slonim</surname>
+            <given-names>DK</given-names>
+          </name>
+          <name>
+            <surname>Tamayo</surname>
+            <given-names>P</given-names>
+          </name>
+          <name>
+            <surname>Huard</surname>
+            <given-names>C</given-names>
+          </name>
+          <name>
+            <surname>Gassenbeck</surname>
+            <given-names>M</given-names>
+          </name>
+          <etal/>
+        </person-group>
+        <year>1999</year>
+        <article-title>Molecular classification of cancer: class discovery and class prediction by gene expression monitoring</article-title>
+        <source>Science</source>
+        <volume>286</volume>
+        <fpage>531</fpage>
+        <lpage>537</lpage>
+        <pub-id pub-id-type="pmid">10521349</pub-id>
+      </citation>
+    </ref>
+    <ref id="b11-cin-05-25">
+      <citation citation-type="journal"><person-group person-group-type="author"><name><surname>Hastie</surname><given-names>T</given-names></name><name><surname>Tibshirani</surname><given-names>R</given-names></name><name><surname>Eisen</surname><given-names>MB</given-names></name><name><surname>Alizadeh</surname><given-names>A</given-names></name><name><surname>Levy</surname><given-names>R</given-names></name><name><surname>Staudt</surname><given-names>L</given-names></name><name><surname>Chan</surname><given-names>WC</given-names></name><name><surname>Botstein</surname><given-names>D</given-names></name><name><surname>Brown</surname><given-names>P</given-names></name></person-group><year>2000</year><article-title>‘Gene shaving’ as a method for identifying distinct sets of genes with similar expression patterns</article-title><source>Genome Biology</source><volume>1</volume>research <fpage>0003.1</fpage><lpage>0003.21</lpage></citation>
+    </ref>
+    <ref id="b12-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Heard</surname>
+            <given-names>NA</given-names>
+          </name>
+          <name>
+            <surname>Holmes</surname>
+            <given-names>CC</given-names>
+          </name>
+          <name>
+            <surname>Stephens</surname>
+            <given-names>DA</given-names>
+          </name>
+        </person-group>
+        <year>2006</year>
+        <article-title>A quantitative study of gene regulation involved the immune response of anopheline mosquitoes: an application of Bayesian hierarchical clustering of curves</article-title>
+        <source>Journal of the American Statistical Association</source>
+        <volume>101</volume>
+        <fpage>18</fpage>
+        <lpage>29</lpage>
+      </citation>
+    </ref>
+    <ref id="b13-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Liu</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Sivaganesan</surname>
+            <given-names>S</given-names>
+          </name>
+          <name>
+            <surname>Yeung</surname>
+            <given-names>KY</given-names>
+          </name>
+          <name>
+            <surname>Guo</surname>
+            <given-names>J</given-names>
+          </name>
+          <name>
+            <surname>Bumgarner</surname>
+            <given-names>RE</given-names>
+          </name>
+          <name>
+            <surname>Medvedovic</surname>
+            <given-names>M</given-names>
+          </name>
+        </person-group>
+        <year>2006</year>
+        <article-title>Context-specific infinite mixtures for clustering gene expression profiles across diverse microarray dataset</article-title>
+        <source>Bioinformatics</source>
+        <volume>22</volume>
+        <fpage>1737</fpage>
+        <lpage>1744</lpage>
+        <pub-id pub-id-type="pmid">16709591</pub-id>
+      </citation>
+    </ref>
+    <ref id="b14-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McLachlan</surname>
+            <given-names>GJ</given-names>
+          </name>
+          <name>
+            <surname>Bean</surname>
+            <given-names>RW</given-names>
+          </name>
+          <name>
+            <surname>Peel</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <year>2002</year>
+        <article-title>A Mixture Model-Based Approach to the Clustering of Microarray Expression Data</article-title>
+        <source>Bioin-formatics</source>
+        <volume>18</volume>
+        <fpage>413</fpage>
+        <lpage>422</lpage>
+      </citation>
+    </ref>
+    <ref id="b15-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McLachlan</surname>
+            <given-names>GJ</given-names>
+          </name>
+          <name>
+            <surname>Peel</surname>
+            <given-names>D</given-names>
+          </name>
+          <name>
+            <surname>Basford</surname>
+            <given-names>KE</given-names>
+          </name>
+          <name>
+            <surname>Adams</surname>
+            <given-names>P</given-names>
+          </name>
+        </person-group>
+        <year>1999</year>
+        <article-title>The EMMIX software for the fitting of mixtures of normal and <italic>t</italic>-components</article-title>
+        <source>Journal of Statistical Software</source>
+        <volume>4</volume>
+        <fpage>2</fpage>
+      </citation>
+    </ref>
+    <ref id="b16-cin-05-25">
+      <citation citation-type="book">
+        <person-group person-group-type="author">
+          <name>
+            <surname>McLachlan</surname>
+            <given-names>GJ</given-names>
+          </name>
+          <name>
+            <surname>Basford</surname>
+            <given-names>KE</given-names>
+          </name>
+        </person-group>
+        <year>1988</year>
+        <source>Mixture models: inference and applications to clustering</source>
+        <publisher-loc>New York</publisher-loc>
+        <publisher-name>Marcel Dekker</publisher-name>
+      </citation>
+    </ref>
+    <ref id="b17-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Moler</surname>
+            <given-names>EJ</given-names>
+          </name>
+          <name>
+            <surname>Chow</surname>
+            <given-names>ML</given-names>
+          </name>
+          <name>
+            <surname>Mian</surname>
+            <given-names>IS</given-names>
+          </name>
+        </person-group>
+        <year>2000</year>
+        <article-title>Analysis of molecular profile data using regenerative and discriminative methods</article-title>
+        <source>Physiological Genomics</source>
+        <volume>4</volume>
+        <fpage>109</fpage>
+        <lpage>126</lpage>
+        <pub-id pub-id-type="pmid">11120872</pub-id>
+      </citation>
+    </ref>
+    <ref id="b18-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Ng</surname>
+            <given-names>SK</given-names>
+          </name>
+          <name>
+            <surname>McLachlan</surname>
+            <given-names>GJ</given-names>
+          </name>
+          <name>
+            <surname>Wang</surname>
+            <given-names>K</given-names>
+          </name>
+          <name>
+            <surname>Ben-Tovim</surname>
+            <given-names>L</given-names>
+          </name>
+          <name>
+            <surname>Ng</surname>
+            <given-names>SW</given-names>
+          </name>
+        </person-group>
+        <year>2006</year>
+        <article-title>A mixture model with random-effects components for clustering correlated gene-expression profiles</article-title>
+        <source>Bioinformatics</source>
+        <volume>22</volume>
+        <fpage>1745</fpage>
+        <lpage>1752</lpage>
+        <pub-id pub-id-type="pmid">16675467</pub-id>
+      </citation>
+    </ref>
+    <ref id="b19-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Thalamuthu</surname>
+            <given-names>A</given-names>
+          </name>
+          <name>
+            <surname>Mukhopadhyay</surname>
+            <given-names>I</given-names>
+          </name>
+          <name>
+            <surname>Zheng</surname>
+            <given-names>X</given-names>
+          </name>
+          <name>
+            <surname>Tseng</surname>
+            <given-names>GC</given-names>
+          </name>
+        </person-group>
+        <year>2006</year>
+        <article-title>Evaluation and comparison of gene clustering methods in microarray analysis</article-title>
+        <source>Bioinformatics</source>
+        <volume>22</volume>
+        <fpage>2405</fpage>
+        <lpage>2412</lpage>
+        <pub-id pub-id-type="pmid">16882653</pub-id>
+      </citation>
+    </ref>
+    <ref id="b20-cin-05-25">
+      <citation citation-type="journal"><person-group person-group-type="author"><name><surname>Xing</surname><given-names>EP</given-names></name><name><surname>Karp</surname><given-names>RM</given-names></name></person-group><year>2001</year><article-title>CLIFF: Clustering of high-dimensional microarray data via interative feature filter using normalized cuts</article-title><source>Bioinformatics</source><volume>17</volume><issue>Suppl 1</issue><fpage>S306</fpage><lpage>15</lpage><italic>(special issue for the Ninth International Conference on Intelligence Systems for Molecular Biology.</italic> (ISMB 2001)).<pub-id pub-id-type="pmid">11473022</pub-id></citation>
+    </ref>
+    <ref id="b21-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Xu</surname>
+            <given-names>R</given-names>
+          </name>
+          <name>
+            <surname>Wunsch</surname>
+            <given-names>D</given-names>
+          </name>
+        </person-group>
+        <year>2005</year>
+        <article-title>Survey of clustering algorithms</article-title>
+        <source>IEEE Transactions on Neural Networks</source>
+        <volume>16</volume>
+        <fpage>645</fpage>
+        <lpage>678</lpage>
+        <pub-id pub-id-type="pmid">15940994</pub-id>
+      </citation>
+    </ref>
+    <ref id="b22-cin-05-25">
+      <citation citation-type="journal">
+        <person-group person-group-type="author">
+          <name>
+            <surname>Yeung</surname>
+            <given-names>KY</given-names>
+          </name>
+          <name>
+            <surname>Haynor</surname>
+            <given-names>DR</given-names>
+          </name>
+          <name>
+            <surname>Ruzzo</surname>
+            <given-names>WL</given-names>
+          </name>
+        </person-group>
+        <year>2001</year>
+        <article-title>Validating clustering for gene expression data</article-title>
+        <source>Bioinformatics</source>
+        <volume>16</volume>
+        <fpage>309</fpage>
+        <lpage>318</lpage>
+        <pub-id pub-id-type="pmid">11301299</pub-id>
+      </citation>
+    </ref>
+  </ref-list>
+</back>
+<floats-wrap>
+  <fig id="f1-cin-05-25" position="float">
+    <label>Figure 1.</label>
+    <caption>
+      <p>Histogram of Gene 474 (T70046) with Mixture of <italic>g</italic> = 3 Fitted <italic>t</italic> Components.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g001"/>
+  </fig>
+  <fig id="f2-cin-05-25" position="float">
+    <label>Figure 2.</label>
+    <caption>
+      <p>Heat maps of EMMIX-GENE clusters for the colon data.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g002"/>
+  </fig>
+  <fig id="f3-cin-05-25" position="float">
+    <label>Figure 3.</label>
+    <caption>
+      <p>Heat maps of the first four unsupervised gene shaving clusters for the colon data, sorted by the column mean gene.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g003"/>
+  </fig>
+  <fig id="f4-cin-05-25" position="float">
+    <label>Figure 4.</label>
+    <caption>
+      <p>(<italic>a</italic>) Variance plots for the original and randomized data. The percent variance explained by each cluster, both for the original data, and for an average over twenty randomized versions. (<italic>b</italic>) Gap estimates of cluster size. The Gap curve corresponds to the difference between the pair of variance curves.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g004"/>
+  </fig>
+  <fig id="f5-cin-05-25" position="float">
+    <label>Figure 5.</label>
+    <caption>
+      <p>Heat maps of the first four gene shaving clusters for the colon data with 50% supervision. The samples for clusters 2–4 are sorted by the column mean gene.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g005"/>
+  </fig>
+  <fig id="f6a-cin-05-25" position="float">
+    <label>Figure 6(a).</label>
+    <caption>
+      <p>Analysis of the Alon data set (2,000 genes) under full supervision. Heat maps of the first two gene shaving clusters for the colon data with full supervision; the samples are sorted by the column mean gene.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g006a"/>
+  </fig>
+  <fig id="f6b-cin-05-25" position="float">
+    <label>Figure 6(b).</label>
+    <caption>
+      <p>Analysis of the Alon data set (2,000 genes) under full supervision. <bold>Top two panels:</bold> Variance plots for the original and randomized data. The percent variance explained by each cluster, both for the original data, and for an average over twenty randomized versions. <bold>Bottom two panels:</bold> Gap estimates of cluster size. The Gap curve corresponds to the difference between the pair of variance curves.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g006b"/>
+  </fig>
+  <fig id="f7-cin-05-25" position="float">
+    <label>Figure 7.</label>
+    <caption>
+      <p>Heat maps of the first four unsupervised gene shaving clusters for the reduced colon data (446 genes), sorted by the column mean gene.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g007"/>
+  </fig>
+  <fig id="f8-cin-05-25" position="float">
+    <label>Figure 8.</label>
+    <caption>
+      <p>Analysis of leukemia data by EMMIX-GENE. Heat maps of two main clusters from fitting 40 clusters.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g008"/>
+  </fig>
+  <fig id="f9-cin-05-25" position="float">
+    <label>Figure 9.</label>
+    <caption>
+      <p>Heat maps of four of the first six unsupervised gene shaving clusters for the leukemia data, sorted by the column mean gene.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g009"/>
+  </fig>
+  <fig id="f10-cin-05-25" position="float">
+    <label>Figure 10.</label>
+    <caption>
+      <p>(<bold>a</bold>) Variance plots for the original and randomized data. The percent variance explained by each cluster, both for the original data, and for an average over twenty randomized versions. (<bold>b</bold>) Gap estimates of cluster size. The Gap curve corresponds to the difference between the pair of variance curves.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g0010"/>
+  </fig>
+  <fig id="f11-cin-05-25" position="float">
+    <label>Figure 11.</label>
+    <caption>
+      <p>Analysis of the reduced Golub data set (2,015 genes). (<bold>a</bold>) Heat maps of the first four unsupervised gene shaving clusters; the samples are sorted by the column mean gene.</p>
+    </caption>
+    <graphic xlink:href="CIN-05-25-g0011"/>
+  </fig>
+</floats-wrap>

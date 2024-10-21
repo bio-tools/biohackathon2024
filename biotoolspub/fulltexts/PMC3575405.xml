@@ -1,0 +1,706 @@
+<?DTDIdentifier.IdentifierValue article.dtd?>
+<?DTDIdentifier.IdentifierType system?>
+<?SourceDTD.DTDName article.dtd?>
+<?SourceDTD.Version 1.0?>
+<?ConverterInfo.XSLTName bmc2nlmx2.xsl?>
+<?ConverterInfo.Version 2?>
+<front>
+  <journal-meta>
+    <journal-id journal-id-type="nlm-ta">BMC Bioinformatics</journal-id>
+    <journal-id journal-id-type="iso-abbrev">BMC Bioinformatics</journal-id>
+    <journal-title-group>
+      <journal-title>BMC Bioinformatics</journal-title>
+    </journal-title-group>
+    <issn pub-type="epub">1471-2105</issn>
+    <publisher>
+      <publisher-name>BioMed Central</publisher-name>
+    </publisher>
+  </journal-meta>
+  <article-meta>
+    <article-id pub-id-type="pmcid">3575405</article-id>
+    <article-id pub-id-type="publisher-id">1471-2105-14-40</article-id>
+    <article-id pub-id-type="pmid">23379678</article-id>
+    <article-id pub-id-type="doi">10.1186/1471-2105-14-40</article-id>
+    <article-categories>
+      <subj-group subj-group-type="heading">
+        <subject>Software</subject>
+      </subj-group>
+    </article-categories>
+    <title-group>
+      <article-title>ACG: rapid inference of population history from recombining nucleotide sequences</article-title>
+    </title-group>
+    <contrib-group>
+      <contrib contrib-type="author" corresp="yes" id="A1">
+        <name>
+          <surname>O'Fallon</surname>
+          <given-names>Brendan D</given-names>
+        </name>
+        <xref ref-type="aff" rid="I1">1</xref>
+        <email>brendan.d.ofallon@aruplab.com</email>
+      </contrib>
+    </contrib-group>
+    <aff id="I1"><label>1</label>ARUP Labs, 500 Chipeta Way, Salt Lake City, UT, 84108, USA</aff>
+    <pub-date pub-type="collection">
+      <year>2013</year>
+    </pub-date>
+    <pub-date pub-type="epub">
+      <day>5</day>
+      <month>2</month>
+      <year>2013</year>
+    </pub-date>
+    <volume>14</volume>
+    <fpage>40</fpage>
+    <lpage>40</lpage>
+    <history>
+      <date date-type="received">
+        <day>23</day>
+        <month>3</month>
+        <year>2012</year>
+      </date>
+      <date date-type="accepted">
+        <day>29</day>
+        <month>1</month>
+        <year>2013</year>
+      </date>
+    </history>
+    <permissions>
+      <copyright-statement>Copyright ©2013 O'Fallon; licensee BioMed Central Ltd.</copyright-statement>
+      <copyright-year>2013</copyright-year>
+      <copyright-holder>O'Fallon; licensee BioMed Central Ltd.</copyright-holder>
+      <license license-type="open-access" xlink:href="http://creativecommons.org/licenses/by/2.0">
+        <license-p>This is an Open Access article distributed under the terms of the Creative Commons Attribution License (<ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/2.0">http://creativecommons.org/licenses/by/2.0</ext-link>), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly cited.</license-p>
+      </license>
+    </permissions>
+    <self-uri xlink:href="http://www.biomedcentral.com/1471-2105/14/40"/>
+    <abstract>
+      <sec>
+        <title>Background</title>
+        <p>Reconstruction of population history from genetic data often requires Monte Carlo integration over the genealogy of the samples. Among tools that perform such computations, few are able to consider genetic histories including recombination events, precluding their use on most alignments of nuclear DNA. Explicit consideration of recombinations requires modeling the history of the sequences with an Ancestral Recombination Graph (ARG) in place of a simple tree, which presents significant computational challenges.</p>
+      </sec>
+      <sec>
+        <title>Results</title>
+        <p>ACG is an extensible desktop application that uses a Bayesian Markov chain Monte Carlo procedure to estimate the posterior likelihood of an evolutionary model conditional on an alignment of genetic data. The ancestry of the sequences is represented by an ARG, which is estimated from the data with other model parameters. Importantly, ACG computes the full, Felsenstein likelihood of the ARG, not a pairwise or composite likelihood. Several strategies are used to speed computations, and ACG is roughly 100x faster than a similar, recombination-aware program.</p>
+      </sec>
+      <sec>
+        <title>Conclusions</title>
+        <p>Modeling the ancestry of the sequences with an ARG allows ACG to estimate the evolutionary history of recombining nucleotide sequences. ACG can accurately estimate the posterior distribution of population parameters such as the (scaled) population size and recombination rate, as well as many aspects of the recombinant history, including the positions of recombination breakpoints, the distribution of time to most recent common ancestor along the sequence, and the non-recombining trees at individual sites. Multiple substitution models and population size models are provided. ACG also provides a richly informative graphical interface that allows users to view the evolution of model parameters and likelihoods in real time.</p>
+      </sec>
+    </abstract>
+    <kwd-group>
+      <kwd>Coalescent</kwd>
+      <kwd>ARG</kwd>
+      <kwd>Ancestral recombination graph</kwd>
+      <kwd>Bayesian inference</kwd>
+      <kwd>Recombination</kwd>
+    </kwd-group>
+  </article-meta>
+</front>
+<body>
+  <sec>
+    <title>Background</title>
+    <p>Reconstruction of population history from genetic data often requires computationally intensive Markov chain Monte Carlo strategies to estimate Bayesian posterior or likelihood surfaces (e.g.
+[<xref ref-type="bibr" rid="B1">1</xref>]). Tools that perform this task are sometimes called “genealogy samplers”
+[<xref ref-type="bibr" rid="B2">2</xref>] because they construct many quasi-independent samples of the genealogy describing the ancestry of the sequences. Genealogy samplers have become essential components of modern population genetic analysis, with the most popular tools, MrBayes
+[<xref ref-type="bibr" rid="B3">3</xref>,<xref ref-type="bibr" rid="B4">4</xref>], BEAST
+[<xref ref-type="bibr" rid="B5">5</xref>], IMa
+[<xref ref-type="bibr" rid="B6">6</xref>], and LAMARC
+[<xref ref-type="bibr" rid="B7">7</xref>] accumulating some 10,000 citations over the last decade. While these tools have rapidly increased in sophistication, with the exception of LAMARC they share a common limitation: they cannot be used to accurately analyze sequences with recombination. This restriction means that analyses cannot be carried out on most alignments of nuclear data, and as a result typical investigations are limited to mitochondria and non-recombining viruses. While LAMARC can be used on recombining sequences, analyses are impeded by slow performance and single runs may take several days or weeks to complete.</p>
+    <p>Several challenges face population genetics analysis with recombining data. When sequences recombine, their ancestry cannot be described by a simple tree or genealogy, and instead must be represented as an Ancestral Recombination Graph (ARG,
+[<xref ref-type="bibr" rid="B8">8</xref>]). All but the simplest of ARGs are difficult to visualize, and few resources are available for drawing, reading, and simulating ARGs. Additionally, the space of likely ARGs supported by a given alignment is often much larger than the space of trees, hence MCMC algorithms likely will take longer to converge. When satisfactory convergence is reached, few tools exist to extract meaningful information from ARGs.</p>
+    <p>Despite these challenges, the presence of recombination also facilitates some aspects of analysis. Because nearby sites may have partially independent histories more power may exist to infer population parameters. Similarly, evolutionary forces such as selection may create detectable genealogical features that would be obscured if all sites shared the same tree. For instance, a selective sweep may shorten the time to most recent common ancestor (TMRCA) in a given region, but such a shortening may be obscured if the region is completely linked to regions affected by different forces. Inference of complex demography may also be aided – for example, periods of admixture with other populations may cause some regions to have a relatively ancient TMRCA, but such features can only exist when recombinations allow some genomic regions to have an alternative history.</p>
+    <p>ACG (Analysis of reCombinant Genealogies) is a graphical desktop application that aims to overcome the challenges inherent in ARG inference, and to provide rapid and informative coalescent analysis of recombinant genetic data. It takes as input an alignment of homologous nucleotide sequences, and executes a Bayesian Markov chain Monte Carlo algorithm to infer the posterior distribution of parameters such as population size, recombination rate, transition to transversion ratio, as well as the history of the sequences represented by an ARG. Importantly, ACG computes the “full” likelihood of the ARG using a modified Felsenstein pruning algorithm
+[<xref ref-type="bibr" rid="B9">9</xref>], not an ad-hoc or composite likelihood. As with other genealogy samplers, the raw output of the program is a collection of parameters sampled from the Markov chain. ACG also contains many data collection tools and utilities designed to simplify the analysis of the sampled states.</p>
+  </sec>
+  <sec>
+    <title>Implementation</title>
+    <p>Yang &amp; Rannala
+[<xref ref-type="bibr" rid="B1">1</xref>] described a method for estimating the posterior distribution of a phylogenetic tree conditional on an alignment of genetic data using a Markov chain Monte Carlo (MCMC) approach. The method involves proposing small, successive changes in the structure of the tree and evaluating the likelihood that the tree produced the observed data using a Felsenstein pruning algorithm
+[<xref ref-type="bibr" rid="B9">9</xref>]. Proposed changes are accepted or rejected according to the Metropolis-Hastings criterion, which is an increasing function of the ratio of the likelihood of the proposed vs. current state. While originally proposed as a method of tree estimation, minor modifications of the algorithm allow for inference of additional model parameters, such as properties of the nucleotide substitution model, lineage birth and death rates (in the case of phylogenetic estimation), or population size (in the case of coalescent models). The basic approach described has experienced relatively wide adoption, with software tools such as MrBayes
+[<xref ref-type="bibr" rid="B4">4</xref>], LAMARC
+[<xref ref-type="bibr" rid="B7">7</xref>], and BEAST
+[<xref ref-type="bibr" rid="B5">5</xref>], applying, extending, and optimizing the algorithm. ACG continues to build upon this fundamental algorithm and, in a manner similar to the tools mentioned above, estimates the probability of an evolutionary model conditional on observation of an alignment of homologous nucleotide sequences. In mathematical terms, ACG produces an estimate of</p>
+    <p>
+      <disp-formula id="bmcM1">
+        <label>(1)</label>
+        <mml:math id="M1" name="1471-2105-14-40-i1" overflow="scroll">
+          <mml:mrow>
+            <mml:mi mathvariant="italic">Pr</mml:mi>
+            <mml:mfenced open="{" close="}">
+              <mml:mrow>
+                <mml:mi>M</mml:mi>
+                <mml:mo stretchy="true">/</mml:mo>
+                <mml:mi>D</mml:mi>
+              </mml:mrow>
+            </mml:mfenced>
+            <mml:mo>=</mml:mo>
+            <mml:mi mathvariant="italic">Pr</mml:mi>
+            <mml:mfenced open="{" close="}">
+              <mml:mrow>
+                <mml:mi>D</mml:mi>
+                <mml:mo stretchy="true">/</mml:mo>
+                <mml:mi>M</mml:mi>
+              </mml:mrow>
+            </mml:mfenced>
+            <mml:mspace width="0.25em"/>
+            <mml:mi mathvariant="italic">Pr</mml:mi>
+            <mml:mspace width="0.25em"/>
+            <mml:mfenced open="{" close="}">
+              <mml:mi>M</mml:mi>
+            </mml:mfenced>
+            <mml:mo stretchy="true">/</mml:mo>
+            <mml:mi mathvariant="italic">Pr</mml:mi>
+            <mml:mspace width="0.25em"/>
+            <mml:mfenced open="{" close="}">
+              <mml:mi>D</mml:mi>
+            </mml:mfenced>
+          </mml:mrow>
+        </mml:math>
+      </disp-formula>
+    </p>
+    <p>where D is the input alignment and M is an evolutionary model containing parameters that are estimated from the data. At minimum, the model includes a description of how nucleotide sequences change over time (for instance, the Felsenstein 1984 or Timura-Nei 1993 model), a structure describing the ancestral relationships among the samples, and a function describing population size. Each of these sub-models may in turn encapsulate one or more parameters that are estimated from the data. For instance, the Timura-Nei 1993 model of nucleotide substitution involves two parameters that affect the transition-to-transversion ratio in addition to a vector describing stationary state nucleotide frequencies. As in LAMARC, the ancestry of the samples is represented by an Ancestral Recombination Graph (ARG), which is estimated from the data simultaneously with other model parameters.</p>
+    <p>To estimate the probability of the model given the data, ACG constructs and executes a Markov chain whose stationary state is the desired distribution (eq. 1). Generation of new states involves proposing a new value for a selected parameter, calculating the likelihood of the newly proposed state as well as the Hastings ratio associated with the proposal, and accepting or rejecting the state based on the Metropolis-Hastings-Green criterion
+[<xref ref-type="bibr" rid="B10">10</xref>,<xref ref-type="bibr" rid="B11">11</xref>]. A typical run involves repeating this procedure for some tens of millions of steps. States are sampled periodically and properties of model parameters are recorded by a variety of data collection utilities. If the chain has reached stationarity, the sampled parameters may be assumed to be correlated draws from the posterior density Pr{Model | Data}.</p>
+    <p>While the above scheme is similar to that used in other genealogy samplers, several aspects of the implementation are worthy of note. Most importantly, ACG implements data structures and MCMC proposal kernels that allow ARGs to be sampled from the data, where the probability of a particular ARG being sampled is proportional to its full likelihood under the data and some model of nucleotide substitution. Currently, the Felsenstein '84 (F84) and Timura-Nei '93 (TN93) substitution models are supported. Seven different proposal kernels operate on ARGs, these include some previously described and two novel kernels. ARG proposal kernels are detailed in the Additional file
+<xref ref-type="supplementary-material" rid="S1">1</xref>: Appendix A: ARG proposal kernels.</p>
+    <p>ARGs are a complex and rich source of information regarding the history of populations, and ACG provides several novel features that aid in interpreting the collection of ARGs sampled by the Markov chain. First, ACG by default tracks many of the bulk properties of ARGs, such as the number of recombination breakpoints and height of the deepest accessible nodes. In addition, ACG records the locations of all recombination breakpoints as well as the TMRCA across the sequence. ACG also provides utilities to examine the consensus tree at individual sites. These consensus trees are familiar, non-recombining trees ancestral to a single site only. Such trees may be useful when the ancestry in a small region is of particular interest, or when several such regions are to be compared. Further, ACG provides a companion utility (the <italic>argutils</italic> tool) that is capable of examining a single ARG and collecting information from it, such as the positions and heights of all recombination breakpoints, a list of all of the marginal trees contained in the ARG, or a plot of the TMRCA across the length of the sequence subtended by the ARG.</p>
+    <p>Users may interact with ACG in several ways. ACG features a simple command-line interface suitable for batch processing, but also provides a rich graphical user interface (GUI). The GUI allows users to both construct an analysis by selecting parameters, proposal kernels, and model priors, as well as to observe selected parameters and likelihoods as they change in real time as the chain progresses. Observed parameters and likelihoods can be viewed in trace or histogram form, and allow for rapid assessment of MCMC characteristics and convergence. Input files may also be saved and reloaded from within the GUI, and saved input can be executed from the command line.</p>
+    <p>A primary design goal of ACG is efficient computational performance and several techniques are used to speed calculations. First, every MCMC state involves calculation of new likelihoods followed by acceptance of rejection of the proposed state. If the state is accepted, the entire proposed proposed state must be moved to the current state before the next step can be initiated. In contrast to some other algorithms, ACG does not perform a full copy of the data and instead uses a reference-swapping technique to move the information to the desired location. Because the state data may be quite large and must be updated with every MCMC step, reference swapping results in a significant performance increase compared to copying. A second optimization technique involves identification of all identical alignment columns and computation of the data likelihood only once for each unique column. While many implementations involve some degree of alignment column ‘aliasing’, ACG performs this aliasing at every node where sites coalesce, again substantially reducing the number of likelihood calculations performed. Finally, ACG tracks which ARG nodes are affected by various proposals, and recomputes likelihoods only for the nodes and sites ranges affected.</p>
+  </sec>
+  <sec>
+    <title>Results and discussion</title>
+    <sec>
+      <title>Resolution of individual recombination breakpoints in space and time</title>
+      <p>To demonstrate some of the unique features of ACG, we present a small analysis based on simulation data. To begin, an ARG was simulated with 10 sequences of length 10,000 sites under the standard neutral coalescent model with the population size parameter θ = 2<italic>Nμ</italic>= 0.02 and recombination parameter ρ = 2<italic>Nr</italic> = 1.0, using the <italic>argutils</italic> package included with ACG (where <italic>N</italic> is population size, μ is the mutation rate, and <italic>r</italic> is the recombination rate). The resulting ARG contained a total of 13 recombination breakpoints. All marginal trees were extracted again using <italic>argutils</italic>, and nucleotide sequences were simulated along each tree using <italic>seq-gen</italic>[<xref ref-type="bibr" rid="B12">12</xref>], using the F84 model of evolution. These sequences were then used as input to a standard ACG run. The run was conducted for 20,000,000 MCMC steps using a single chain, and completed in 53 minutes. Examination of parameter value traces suggested convergence in fewer than 1,000,000 MCMC steps for all parameters.</p>
+      <p>A novel feature of ACG is the ability to determine the locations of individual recombination breakpoints not only along the length of the sequence, but also in time. As ARGs are sampled from the running chain, recombination breakpoints are collected, and both the site of splitting as well as the height of the node containing the recombination are retained. These values are then added to a two-dimensional histogram, with one axis representing position along the sequence, and the other representing time. Figure
+<xref ref-type="fig" rid="F1">1</xref> demonstrates that this method can yield an informative visualization of the locations of recombination breakpoints, with clusters of high density indicating that a high proportion of ARGs sampled bore a recombination near a particular location. The breadth and height of such clusters aid in quantifying the degree of uncertainty, with broad or shallow distributions indicating relatively low confidence. Because of the inclusion of the time dimension, this method can resolve multiple locations that occur at or near the same position on the sequence, but at different times, potentially aiding in the investigation of recombination hotspots where multiple recombinations might otherwise obscure one another.</p>
+      <fig id="F1" position="float">
+        <label>Figure 1</label>
+        <caption>
+          <p><bold>Densities of recombination breakpoints sampled for a simulated alignment. </bold>See text for details.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-40-1"/>
+      </fig>
+      <p>The presence of recombinations may also cause the TMRCA to vary across the length of the sequence. By sampling ARGs and assessing the TMRCA at multiple positions ACG can quantify how TMRCA changes across a sequence. Figure
+<xref ref-type="fig" rid="F2">2</xref> demonstrates such a plot, indicating substantial variation in TMRCA in this data set, as well as very close correspondence in inferred TMRCA and the true TMRCA obtained from the simulated ARG.</p>
+      <fig id="F2" position="float">
+        <label>Figure 2</label>
+        <caption>
+          <p><bold>Inferred time to most recent common ancestor (TMRCA) across the sequence for simulated sequence data.</bold> Lighter colors indicate lower confidence. Dotted line indicates true TMRCA.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-40-2"/>
+      </fig>
+      <p>To illustrate the ability of ACG to infer the sequence positions of recombination breakpoints, we created another dataset using the same procedure as above and collected the sequence positions of all recombinations, 5 in total. We again simulated sequence data on the ARG and used the sequence data as input to ACG. We conducted a single-chain ACG run for 10M steps, inferring the ARG, the transition-transversion ratio, population size and recombination rate from the data. Using the “Breakpoint Location Logger” the sequence positions of all inferred recombination breakpoints were collected (Figure
+<xref ref-type="fig" rid="F3">3</xref>b). ACG correctly identified three recombinations (at positions 1,398, 11,876, and 16,887), but found no evidence for the two remaining recombinations (at positions 4,661 and 7,453). Inspection of the ARG (Figure
+<xref ref-type="fig" rid="F3">3</xref>a) reveals that the two undetected recombinations each belong to a different class that are impossible to detect from sequence data alone. The branches created by the recombination at position 7,453 coalesce with one another before coalescing with any other branch, making the marginal trees on either side of the breakpoint identical. These types of recombinations are “trivial” in the sense that they have no impact on the topology of any tree in the ARG. Similarly, the recombination at position 4,661 does not affect any sites ancestral to the sampled sequences. The branch it affects is ancestral to another recombination at site 16,959, and the branch ‘contains’ only sites from 16,959-20,000. Thus, the split at position 4,661 does not affect any data in the sequences that were sampled.</p>
+      <fig id="F3" position="float">
+        <label>Figure 3</label>
+        <caption>
+          <p><bold>a)</bold><bold>Simulated ARG with all recombination breakpoints shown as red dots, with sequence position of the breakpoint indicated below. </bold><bold>b)</bold> Inferred positions of recombination breakpoints from sequence data simulated from ARG shown in a). Black arrows indicate true positions of recombination breakpoints.</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-40-3"/>
+      </fig>
+    </sec>
+    <sec>
+      <title>Empirical example</title>
+      <p>To demonstrate ACG’s utility on empirical alignments of recombining sequence data we investigate the history of a 10 Mb portion of the human X chromosome. The data set is composed of 12 X chromosome sequences from a worldwide sample of males obtained from the Complete Genomics Diversity panel, and hence is unambiguously phased (pseudo-autosomal regions were not examined). Summary information for the twelve individuals is listed in Table
+<xref ref-type="table" rid="T1">1</xref>. The region spans chromosomal locations Xp11.4 – Xp11.23, and thus is located on the proximal region of the short arm. RefSeq annotations indicate 253 genes in the region investigated.</p>
+      <table-wrap position="float" id="T1">
+        <label>Table 1</label>
+        <caption>
+          <p>Sample identifier and population of origin for samples used in the empirical example</p>
+        </caption>
+        <table frame="hsides" rules="groups" border="1">
+          <colgroup>
+            <col align="left"/>
+            <col align="left"/>
+          </colgroup>
+          <thead valign="top">
+            <tr>
+              <th align="left">
+                <bold>ID</bold>
+              </th>
+              <th align="left">
+                <bold>Population</bold>
+              </th>
+            </tr>
+          </thead>
+          <tbody valign="top">
+            <tr>
+              <td align="left" valign="bottom">NA07357<hr/></td>
+              <td align="left" valign="bottom">CEU (European ancestry, United States)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA18501<hr/></td>
+              <td align="left" valign="bottom">YRI (Yoruba, Idaban, Nigeria)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA18558<hr/></td>
+              <td align="left" valign="bottom">CHB (Han Chinese, Beijing)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA18940<hr/></td>
+              <td align="left" valign="bottom">JPT (Japan, Tokyo)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA19025<hr/></td>
+              <td align="left" valign="bottom">LWK (Luhya in Webuye, Kenya)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA19649<hr/></td>
+              <td align="left" valign="bottom">MXL (Mexican ancestry, United States)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA19670<hr/></td>
+              <td align="left" valign="bottom">MXL (Mexican ancestry, United States)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA20510<hr/></td>
+              <td align="left" valign="bottom">TSI (Toscan, Italy)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA20845<hr/></td>
+              <td align="left" valign="bottom">GIH (Gujarati Indian, India)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA20846<hr/></td>
+              <td align="left" valign="bottom">GIH (Gujarati Indian, India)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left" valign="bottom">NA20850<hr/></td>
+              <td align="left" valign="bottom">GIH (Gujarati Indian, India)<hr/></td>
+            </tr>
+            <tr>
+              <td align="left">NA21737</td>
+              <td align="left">MKK (Masai, Kinyawa, Kenya)</td>
+            </tr>
+          </tbody>
+        </table>
+      </table-wrap>
+      <p>10 Mb is too large a region for a single run of ACG, hence the region was divided into 50 Kb fragments, with 10 Kb overlap between adjacent fragments, and ACG was run on each fragment independently. Initially, runs were conducted for 50,000,000 MCMC steps using 4 chains in a Metropolis-coupled scheme. The first 50% of steps were discarded as burn-in, and independence was assessed by comparing the means and standard deviations of the data likelihood trace between adjacent quartiles of the non-burn-in portion of the run. Some 20% of chains did not reach convergence in the initial run, for these chains ACG was run again using the maximally likely ARG found during the initial run as the starting ARG for the new run. This procedure was repeated until all chains reached convergence. Typical run time was 3–5 hours on a 2.2 GHz Intel Xeon quad-core processor.</p>
+      <p>Figure
+<xref ref-type="fig" rid="F4">4</xref> demonstrates the broad chromosomal features that can be assessed using ACG. For instance, the structure of the marginal TMRCA (the time to the most recent common ancestor at individual sites along the length of the sequence) is seen to vary widely, with tracts of relatively recent TMRCA (near site 52,000,000) and regions of very deep ancestry, in some cases extending beyond 0.003 subs./site. This type of analysis may have implications for the study of haplotype structure. For instance, regions of shallow TMRCA appear to be relatively broad, suggesting that fewer recombinations have occurred, and thus that haplotype blocks will likely extend over relatively long distances. Conversely, in areas with especially deep TMRCA the ancestry are likely to contain a greater total number of recombinations, reducing the length of haplotype blocks. Studies that utilize haplotype structure to infer recent selection (e.g.
+[<xref ref-type="bibr" rid="B13">13</xref>,<xref ref-type="bibr" rid="B14">14</xref>]), for instance, may benefit from this additional, relatively fine-grained source of information. Overall, both deep and shallow regions may indicate areas of evolutionary interest, such as ancient admixture or recent selective sweeps, respectively.</p>
+      <fig id="F4" position="float">
+        <label>Figure 4</label>
+        <caption>
+          <p><bold>Marginal TMRCA and recombination rate inferred over a 10Mb portion of the human X chromosome.</bold> Shaded regions indicate 95% credibility region (TMRCA) and mean ± one standard deviation (recombination rate).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-40-4"/>
+      </fig>
+      <p>Figure
+<xref ref-type="fig" rid="F4">4</xref> also demonstrates that ACG can be used to assess recombination rate and the number of recombination breakpoints in a specified region. Currently, ACG assumes that recombination rate is constant across sites and over time, although it was estimated independently for each 50Kb fragment. This functionality is similar to that provided by tools such as LDHat
+[<xref ref-type="bibr" rid="B15">15</xref>], but is likely to be more accurate than composite-likelihood based methods for several reasons. First, ACG considers the “full” likelihood of the ARG, not a composite of pairwise likelihoods. Additionally, ACG employs more flexible models of nucleotide substitution that co-estimate base frequencies and transition/transversion parameters along with other likelihood features. Finally, ACG provides not a point estimate of recombination rate but an estimate of the posterior distribution, allowing an appropriate characterization of the degree of uncertainty in the estimated parameter.</p>
+    </sec>
+    <sec>
+      <title>Performance</title>
+      <p>A primary design goal of ACG is high computational performance. To compare the performance of ACG to that of the only other recombination aware genealogy sampler, LAMARC
+[<xref ref-type="bibr" rid="B7">7</xref>], 10 data sets each including 20 sequences of length 50Kb were generated using the following procedure. First, ARGs were simulated using the <italic>argutils</italic> package included with ACG with θ=0.01 and ρ=1. ARGs were decomposed into marginal trees also using <italic>argutils</italic>, from which nucleotide sequences were generated with <italic>seq-gen</italic>[<xref ref-type="bibr" rid="B12">12</xref>] using the F84 model of evolution. For each of the ten input alignments both ACG and LAMARC were run for exactly one hour of real time, and both tools estimated θ, ρ, the transition- to-transversion ratio, as well as the structure of the ARG. Log files of parameter values and the likelihood of the data conditional on the ARG were produced for all runs with sampling every 5000 steps from ACG and every 20 steps from LAMARC. The program Tracer (v 1.5) was then used to examine the log files and calculate the effective sample size (ESS). To assess convergence we examined the likelihood of the data conditional on the ARG (the “data likelihood”).</p>
+      <p>In several respects ACG significantly outperformed LAMARC. In raw number of MCMC states processed ACG was over 100-fold faster than LAMARC, computing on average 1.8×10<sup>7</sup> total states, while LAMARC computed 1.4×10<sup>5</sup>. In terms of effective sample size (ESS) for the data likelihood, the mean for ACG was 1284 (range 178–3122) indicating satisfactory convergence, while for LAMARC the mean was 23 (range 6–53). Similarly, ESSs for the scaled population size parameter θ were on average 1861 (range 188–3964) for ACG and 19 (range 8–36) for LAMARC. In addition, ACG's memory requirements are typically modest, and 512MB per chain is sufficient for typical data sets. Finally, we note that these results used only a single chain. Because ACG can execute multiple heated chains simultaneously the performance margin over LAMARC is likely to be further increased when multiple CPU cores are available.</p>
+    </sec>
+    <sec>
+      <title>Validation</title>
+      <p>Algorithms with the complexity and sensitivity of ACG are prone to error. Here, we present several analyses demonstrating that ACG performs as expected. Perhaps the most sensitive component of the analysis is ensuring that the distribution of ARGs sampled in the absence of input data matches the theoretical distribution described by neutral coalescent theory. To assess the properties of ARGs sampled by ACG in the absence of data to those generated by neutral simulation, we held population size constant at 1.0 and ran ACG for 2.5×10<sup>7</sup> MCMC steps, recording the height of the root node every 1000 steps. Figure
+<xref ref-type="fig" rid="F5">5</xref> demonstrates that ARGs sampled from the MCMC are very similar to those generated under direct (backward) simulation in terms of both the distribution of the number of recombination breakpoints as well as the distribution of height of the deepest node.</p>
+      <fig id="F5" position="float">
+        <label>Figure 5</label>
+        <caption>
+          <p>Distributions of the number of recombination breakpoints (left column) and root height (right column) obtained from direct backward simulation of ARGs (black lines) and from ARGs sampled from the MCMC implemented in ACG (gray lines).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-40-5"/>
+      </fig>
+      <p>As an additional test of ARG correctness we note that the distribution of non-recombining trees sampled from a single site should be identical to standard neutral coalescent trees, because the presence of recombinations elsewhere along the sequence should not affect any property of trees sampled. We therefore examined the distribution of TMRCA at trees sampled from a single site by the MCMC, for varying levels of recombination, and compared these distributions to those obtained from direct backward simulation. The distributions show close correspondence, and no deviation associated with increasing levels of recombination (Figure
+<xref ref-type="fig" rid="F6">6</xref>) is apparent.</p>
+      <fig id="F6" position="float">
+        <label>Figure 6</label>
+        <caption>
+          <p>Distribution of time to most recent common ancestor at a single site, estimated from direct backward simulation of coalescent trees (thick black line), and the MCMC scheme implemented in ACG for several recombination rates (gray lines).</p>
+        </caption>
+        <graphic xlink:href="1471-2105-14-40-6"/>
+      </fig>
+      <p>Another potential source of error stems from the accuracy of the likelihood computations, in particular the likelihood of the data conditional on the ARG (the “data likelihood”). To ensure that ACG computes the correct likelihood at every MCMC step, test classes were implemented that emit marginal trees and their associated likelihoods periodically during a run. Utility scripts were developed to read these files and input each tree into an external program capable of computing the likelihood of an alignment given a tree, in this case the DNAMLK tool distributed with the phylip (3.69) package
+[<xref ref-type="bibr" rid="B16">16</xref>]. When ACG functions as expected, the sum of the log likelihoods for each marginal tree should be equal to the full log likelihood of the ARG. This procedure has been conducted numerous times during development and has been used to identify and correct data likelihood calculation errors.</p>
+    </sec>
+  </sec>
+  <sec sec-type="conclusions">
+    <title>Conclusions</title>
+    <p>Bayesian genealogy samplers provide a means of inferring a wide variety of population parameters from genetic data. ACG builds upon techniques developed in earlier samplers, and significantly extends the range of input data that can be considered as well as the types of data that can be collected. Most importantly, ACG’s use of an ARG to represent the ancestry of the sequences enables the examination of alignments of nuclear DNA, opening new avenues of investigation for common alignments of sequence data (although the data must be properly phased). While ARGs present considerable inferential challenges compared to non-recombining trees, ACG provides several utilities for ameliorating these difficulties and extracting useful information from the cloud of ARGs sampled. These utilities include estimation of TMRCA along the sequence, locations of recombination breakpoints in space and time, and construction of consensus trees at particular sites of interest. In addition to these tools, the <italic>argutils</italic> utility included with ACG provides a number of convenient functions, including breaking an ARG into marginal trees, extracting a single tree from a specific site, enumerating recombination positions from an ARG, and simulating neutral ARGs.</p>
+    <p>While ACG shares some features with LAMARC, including the use of an ARG to represent ancestral relationships, several important features distinguish the programs. As demonstrated above, ACG is roughly 100-fold faster than LAMARC. Additionally, ACG can estimate the shapes of marginal trees at specific sites, the locations of recombination breakpoints along the sequence as well as in time, and the time to most recent common ancestor along the sequence. ACG can also import data from the. VCF file format commonly used in next-generation sequencing projects. LAMARC, in contrast, has several features ACG does not, most significantly the ability to model multiple populations and the migration rates between them.</p>
+    <p>Finally, ACG offers a convenient graphical interface that allows users to not only construct an analysis, but also to observe the evolution of various parameters and likelihoods in trace or histogram form in real time, allowing researchers to monitor many features of the analysis as it unfolds.</p>
+  </sec>
+  <sec>
+    <title>Availability and requirements</title>
+    <p>ACG is freely available for academic use and will operate on any platform with a Java Virtual Machine version 1.6 or higher installed.</p>
+    <p>Project name: ACG</p>
+    <p>Homepage:
+<ext-link ext-link-type="uri" xlink:href="http://arup.utah.edu/acg">http://arup.utah.edu/acg</ext-link></p>
+    <p>Operating systems: Platform independent</p>
+    <p>Programming language: Java (v 1.6)</p>
+    <p>Requirements: Java 1.6 or higher</p>
+    <p>License: Copyright 2012 Brendan O’Fallon, freely available for academic use</p>
+  </sec>
+  <sec>
+    <title>Abbreviation</title>
+    <p>ARG: Ancestral Recombination Graph.</p>
+  </sec>
+  <sec>
+    <title>Competing interests</title>
+    <p>The author declares that he have no competing interests.</p>
+  </sec>
+  <sec sec-type="supplementary-material">
+    <title>Supplementary Material</title>
+    <supplementary-material content-type="local-data" id="S1">
+      <caption>
+        <title>Additional file 1</title>
+        <p><bold>Appendix A.</bold> ARG proposal kernels.</p>
+      </caption>
+      <media xlink:href="1471-2105-14-40-S1.pdf" mimetype="application" mime-subtype="pdf">
+        <caption>
+          <p>Click here for file</p>
+        </caption>
+      </media>
+    </supplementary-material>
+  </sec>
+</body>
+<back>
+  <sec>
+    <title>Acknowledgements</title>
+    <p>I would like to thank the members of the Felsenstein/Kuhner lab, especially Mary Kuhner, for help understanding the complexities of recombination. Funding was provided by NSF postdoctoral research fellowship DBI-0906018, an NIH Genome Training Grant, and the ARUP Institute for Clinical and Experimental Pathology.</p>
+  </sec>
+  <ref-list>
+    <ref id="B1">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Yang</surname>
+          <given-names>Z</given-names>
+        </name>
+        <name>
+          <surname>Rannala</surname>
+          <given-names>B</given-names>
+        </name>
+        <article-title>Bayesian phylogenetic inference using DNA sequences: a Markov chain Monte Carlo method</article-title>
+        <source>Mol Biol Evol</source>
+        <year>1997</year>
+        <volume>14</volume>
+        <issue>7</issue>
+        <fpage>717</fpage>
+        <lpage>724</lpage>
+        <pub-id pub-id-type="doi">10.1093/oxfordjournals.molbev.a025811</pub-id>
+        <pub-id pub-id-type="pmid">9214744</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B2">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kuhner</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>Coalescent genealogy samplers: windows into population history</article-title>
+        <source>Trends Ecol Evol</source>
+        <year>2008</year>
+        <volume>24</volume>
+        <issue>2</issue>
+        <fpage>86</fpage>
+        <lpage>93</lpage>
+        <pub-id pub-id-type="pmid">19101058</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B3">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Huelsenbeck</surname>
+          <given-names>JP</given-names>
+        </name>
+        <name>
+          <surname>Ronquist</surname>
+          <given-names>F</given-names>
+        </name>
+        <article-title>MrBayes: Bayesian inference of phylogenetic trees</article-title>
+        <source>Bioinformatics</source>
+        <year>2001</year>
+        <volume>17</volume>
+        <issue>8</issue>
+        <fpage>754</fpage>
+        <lpage>755</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/17.8.754</pub-id>
+        <pub-id pub-id-type="pmid">11524383</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B4">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Ronquist</surname>
+          <given-names>F</given-names>
+        </name>
+        <name>
+          <surname>Huelsenbeck</surname>
+          <given-names>JP</given-names>
+        </name>
+        <article-title>MrBayes 3: phylogenetic inference under mixed models</article-title>
+        <source>Bioinformatics</source>
+        <year>2003</year>
+        <volume>19</volume>
+        <issue>12</issue>
+        <fpage>1572</fpage>
+        <lpage>1574</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btg180</pub-id>
+        <pub-id pub-id-type="pmid">12912839</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B5">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Drummond</surname>
+          <given-names>AJ</given-names>
+        </name>
+        <name>
+          <surname>Rambaut</surname>
+          <given-names>A</given-names>
+        </name>
+        <article-title>BEAST: Bayesian evolutionary analysis by sampling trees</article-title>
+        <source>BMC Evol Biol</source>
+        <year>2007</year>
+        <volume>7</volume>
+        <fpage>214</fpage>
+        <pub-id pub-id-type="doi">10.1186/1471-2148-7-214</pub-id>
+        <pub-id pub-id-type="pmid">17996036</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B6">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Hey</surname>
+          <given-names>J</given-names>
+        </name>
+        <name>
+          <surname>Nielsen</surname>
+          <given-names>R</given-names>
+        </name>
+        <article-title>Integration within the Felsenstein equation for improved Markov chain Monte Carlo methods in population genetics</article-title>
+        <source>Proc Natl Acad Sci USA</source>
+        <year>2007</year>
+        <volume>104</volume>
+        <fpage>2785</fpage>
+        <lpage>2790</lpage>
+        <pub-id pub-id-type="doi">10.1073/pnas.0611164104</pub-id>
+        <pub-id pub-id-type="pmid">17301231</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B7">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Kuhner</surname>
+          <given-names>M</given-names>
+        </name>
+        <article-title>LAMARC 2.0: maximum likelihood and Bayesian estimation of population parameters</article-title>
+        <source>Bioinformatics</source>
+        <year>2006</year>
+        <volume>22</volume>
+        <issue>6</issue>
+        <fpage>768</fpage>
+        <lpage>770</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/btk051</pub-id>
+        <pub-id pub-id-type="pmid">16410317</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B8">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Griffiths</surname>
+          <given-names>RC</given-names>
+        </name>
+        <name>
+          <surname>Marjoram</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>Ancestral inference from samples of DNA sequences with recombination</article-title>
+        <source>J Comp Biol</source>
+        <year>1996</year>
+        <volume>3</volume>
+        <issue>4</issue>
+        <fpage>479</fpage>
+        <lpage>502</lpage>
+        <pub-id pub-id-type="doi">10.1089/cmb.1996.3.479</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B9">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Felsenstein</surname>
+          <given-names>J</given-names>
+        </name>
+        <article-title>Evolutionary trees from DNA sequences: a maximum likelihood approach</article-title>
+        <source>J Mol Evol</source>
+        <year>1981</year>
+        <volume>17</volume>
+        <fpage>368</fpage>
+        <lpage>376</lpage>
+        <pub-id pub-id-type="doi">10.1007/BF01734359</pub-id>
+        <pub-id pub-id-type="pmid">7288891</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B10">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Green</surname>
+          <given-names>PJ</given-names>
+        </name>
+        <article-title>Reversible jump Markov chain Monte Carlo computation and Bayesian model determination</article-title>
+        <source>Biometrika</source>
+        <year>1995</year>
+        <volume>82</volume>
+        <issue>4</issue>
+        <fpage>711</fpage>
+        <lpage>732</lpage>
+        <pub-id pub-id-type="doi">10.1093/biomet/82.4.711</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B11">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Metropolis</surname>
+          <given-names>N</given-names>
+        </name>
+        <name>
+          <surname>Rosenbluth</surname>
+          <given-names>AW</given-names>
+        </name>
+        <name>
+          <surname>Resonbluth</surname>
+          <given-names>MN</given-names>
+        </name>
+        <name>
+          <surname>Teller</surname>
+          <given-names>AH</given-names>
+        </name>
+        <name>
+          <surname>Teller</surname>
+          <given-names>E</given-names>
+        </name>
+        <article-title>Equations of state calculations by fast computing machines</article-title>
+        <source>J Chem Phys</source>
+        <year>1953</year>
+        <volume>21</volume>
+        <issue>6</issue>
+        <fpage>1087</fpage>
+        <lpage>1092</lpage>
+        <pub-id pub-id-type="doi">10.1063/1.1699114</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B12">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Rambaut</surname>
+          <given-names>A</given-names>
+        </name>
+        <name>
+          <surname>Grassly</surname>
+          <given-names>N</given-names>
+        </name>
+        <article-title>Seq-Gen: an application for the Monte Carlo simulation of DNA sequence evolution along phylogenetic trees</article-title>
+        <source>Bioinformatics</source>
+        <year>1997</year>
+        <volume>13</volume>
+        <issue>3</issue>
+        <fpage>235</fpage>
+        <lpage>238</lpage>
+        <pub-id pub-id-type="doi">10.1093/bioinformatics/13.3.235</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B13">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Sabeti</surname>
+          <given-names>PC</given-names>
+        </name>
+        <name>
+          <surname>Reich</surname>
+          <given-names>DE</given-names>
+        </name>
+        <name>
+          <surname>Higgins</surname>
+          <given-names>JM</given-names>
+        </name>
+        <name>
+          <surname>Levine</surname>
+          <given-names>HZP</given-names>
+        </name>
+        <name>
+          <surname>Richter</surname>
+          <given-names>DJ</given-names>
+        </name>
+        <etal/>
+        <article-title>Detecting recent positive selection in the human genome from haplotype structure</article-title>
+        <source>Nature</source>
+        <year>2002</year>
+        <volume>419</volume>
+        <fpage>832</fpage>
+        <lpage>837</lpage>
+        <pub-id pub-id-type="doi">10.1038/nature01140</pub-id>
+        <pub-id pub-id-type="pmid">12397357</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B14">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>Voight</surname>
+          <given-names>BF</given-names>
+        </name>
+        <name>
+          <surname>Kudaravalli</surname>
+          <given-names>S</given-names>
+        </name>
+        <name>
+          <surname>Wen</surname>
+          <given-names>X</given-names>
+        </name>
+        <name>
+          <surname>Pritchard</surname>
+          <given-names>JK</given-names>
+        </name>
+        <article-title>A Map of recent positive selection in the human genome</article-title>
+        <source>PLoS Biol</source>
+        <year>2006</year>
+        <volume>4</volume>
+        <issue>3</issue>
+        <fpage>e72</fpage>
+        <pub-id pub-id-type="doi">10.1371/journal.pbio.0040072</pub-id>
+        <pub-id pub-id-type="pmid">16494531</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B15">
+      <mixed-citation publication-type="journal">
+        <name>
+          <surname>McVean</surname>
+          <given-names>G</given-names>
+        </name>
+        <name>
+          <surname>Awadalla</surname>
+          <given-names>P</given-names>
+        </name>
+        <name>
+          <surname>Fearnhead</surname>
+          <given-names>P</given-names>
+        </name>
+        <article-title>A coalescent-based method for detecting and estimation recombination from gene sequences</article-title>
+        <source>Genetics</source>
+        <year>2002</year>
+        <volume>160</volume>
+        <fpage>1231</fpage>
+        <lpage>1241</lpage>
+        <pub-id pub-id-type="pmid">11901136</pub-id>
+      </mixed-citation>
+    </ref>
+    <ref id="B16">
+      <mixed-citation publication-type="book">
+        <name>
+          <surname>Felsenstein</surname>
+          <given-names>J</given-names>
+        </name>
+        <source>PHYLIP (phylogeny inference package) version 3.69. Distributed by the J. Felsenstein</source>
+        <year>1993</year>
+        <publisher-name>Seattle: Department of Genetics, University of
+Washington</publisher-name>
+      </mixed-citation>
+    </ref>
+  </ref-list>
+</back>
