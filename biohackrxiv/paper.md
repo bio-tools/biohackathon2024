@@ -28,6 +28,14 @@ event: BioHackathon Europe 2024
 
 Add to this section a couple of paragraphs introducing the work done dring the BioHackathon, CodeFest, VoCamp or Sprint event. Please add references whenever needed, for instance [@Katayama:2010].
 
+
+# Related work?
+
+
+In a major effort, Schindler et al. [@10.7717/peerj-cs.835] constructed in 2022 a knowledge graph from software mentions in the scientific literature, differenting different types of software, such as applications, plugins, or operating systems, and types of mention, including usage, creation and deposition. The bio.tools corpus built primarily from primary publications would be expected to cover all types of mention, including describing the creation and availability (deposition) of the tool, as well as some use cases (usage).
+
+
+
 Please separate paragraphs with a double line.
 
 ## Subsection level 2
