@@ -41,9 +41,14 @@ Disambiguation (has anyone looked at this?) Comet, CoMet, coMET and COMET
 
 Please separate paragraphs with a double line.
 
-## Subsection level 2
+## bio.tools and the literature
 
-Please keep sections to a maximum of three levels, even better if only two levels.
+We identify three distinct types of relationships between software tools (entries) in bio.tools and articles:
+
+1. Articles associated with bio.tools entries in bio.tools, e.g. 10.1002/pmic.201200439 in https://bio.tools/comet
+2. Articles citing articles associated with entries in bio.tools, e.g. 10.1002/rcm.9937 cites 10.1002/pmic.201200439 associated with https://bio.tools/comet
+3. Articles mentioning tool in bio.tools, e.g. 10.1021/acs.jproteome.3c00902
+
 
 ### Subsection level 3
 
