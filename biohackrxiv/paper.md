@@ -35,6 +35,9 @@ The Chan Zuckerberg Initiative (CZI) has produced a software mentions dataset, C
 Schindler et al. [@10.7717/peerj-cs.835] constructed a knowledge graph from software mentions in the scientific literature, differenting different types of software, such as applications, plugins, or operating systems, and types of mention, including usage, creation and deposition. The bio.tools corpus built primarily from primary publications would be expected to cover all types of mention, including describing the creation and availability (deposition) of the tool, as well as some use cases (usage).
 
 
+Software synonyms - SciCrunch
+
+Disambiguation (has anyone looked at this?) Comet, CoMet, coMET and COMET
 
 Please separate paragraphs with a double line.
 
