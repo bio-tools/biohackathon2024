@@ -11,7 +11,7 @@
                 <title><xsl:value-of select="article/front/article-meta/title-group/article-title"/></title>
                 <style>
                     body { font-family: Arial, sans-serif; line-height: 1.6; }
-                    .highlight { background-color: yellow; font-weight: bold; }
+                    .highlight { background-color: rgb(127, 255, 127); font-weight: normal; }
                 </style>
             </head>
             <body>
