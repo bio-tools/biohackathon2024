@@ -15,6 +15,10 @@ class Article:
     doi: Optional[str] = None
     pmcid: Optional[str] = None
     pmid: Optional[str] = None
+    isOpenAccess: Optional[bool] = None
+    citedByCount: Optional[int] = None
+    pubType: Optional[str] = None
+    
 
 class EuropePMCClient:
     """Client for interacting with the Europe PMC API."""
@@ -90,7 +94,10 @@ class EuropePMCClient:
                 pubDate=item.get("pubDate"),
                 doi=item.get("doi"),
                 pmcid=item.get("pmcid"),
-                pmid=item.get("pmid")
+                pmid=item.get("pmid"),
+                isOpenAccess=item.get("isOpenAccess"),
+                citedByCount=item.get("citedByCount"),
+                pubType=item.get("pubType")
             )
             articles.append(article)
         return articles
