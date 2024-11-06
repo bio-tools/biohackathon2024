@@ -154,7 +154,7 @@ class EuropePMCClient:
         query = f"cites:{pmid}_MED"
         return self.get_data(query=query, result_type="core")
 
-    def get_relevant_paragraphs(self, pmcid):
+    def get_relevant_paragraphs(self, pmcid: str, tool_name: str):
         """
         Retrieves paragraphs from the full text of an article that contain specific sentences.
         """
@@ -167,8 +167,8 @@ class EuropePMCClient:
             
             for tag in p_tags:
                 paragraph_text = tag.get_text()
-                # if any(partial_sentence in paragraph_text for partial_sentence in partial_sentences):
-                relevant_paragraphs.append(paragraph_text)
+                if tool_name in paragraph_text:
+                    relevant_paragraphs.append(paragraph_text)
 
             return relevant_paragraphs
         else:
@@ -182,19 +182,19 @@ def find_sentence_with_substring(string_list, substring):
                 return sentence
     return None
 
-def process_pmcid(df, pmcid, p_texts):
+def process_pmcid(pmcid, tool_name, p_texts):
     sentences_data = {}
-    for _, row in df[df['pmc_id'] == pmcid].iterrows():
-        sentence = find_sentence_with_substring(p_texts, row['partial_sentence'])
-        if sentence:
-            token = row['token']
-            start_span = sentence.find(token)
-            end_span = start_span + len(token)
+    sentence = find_sentence_with_substring(p_texts, tool_name)
+    if sentence:
+        token = tool_name
+        start_span = sentence.find(token)
+        end_span = start_span + len(token)
 
-            if start_span != -1:  # Ensure the token is found in the sentence
-                if sentence not in sentences_data:
-                    sentences_data[sentence] = set()
+        if start_span != -1:  # Ensure the token is found in the sentence
+            if sentence not in sentences_data:
+                sentences_data[sentence] = set()
 
-                sentences_data[sentence].add((start_span, end_span, token, row['ner']))
+            tool_id = tool_name
+            sentences_data[sentence].add((start_span, end_span, token, tool_id))
 
     return [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
