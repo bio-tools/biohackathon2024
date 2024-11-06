@@ -32,12 +32,14 @@ OpenAIRE...
 
 The Chan Zuckerberg Initiative (CZI) has produced a software mentions dataset, CZ Software Mentions [@istrate2022largedatasetsoftwarementions], where the mentions were extracted with a trained SciBERT model from several sources: the NIH PubMed Central collection and from papers provided by various publishers to the Chan Zuckerberg Initiative.
 
-Schindler et al. [@10.7717/peerj-cs.835] constructed a knowledge graph from software mentions in the scientific literature, differenting different types of software, such as applications, plugins, or operating systems, and types of mention, including usage, creation and deposition. The bio.tools corpus built primarily from primary publications would be expected to cover all types of mention, including describing the creation and availability (deposition) of the tool, as well as some use cases (usage).
+Schindler et al. [@PMID:35111920] constructed a knowledge graph from software mentions in the scientific literature, differenting different types of software, such as applications, plugins, or operating systems, and types of mention, including usage, creation and deposition. The bio.tools corpus built primarily from primary publications would be expected to cover all types of mention, including describing the creation and availability (deposition) of the tool, as well as some use cases (usage).
 
 
 Software synonyms - SciCrunch
 
-Disambiguation (has anyone looked at this?) Comet, CoMet, coMET and COMET
+Disambiguation (has anyone looked at this?)
+
+For example, there are currently four distinct tools named "comet" with varying capitalization: Comet [@PMID:23148064], coMET [@PMID:25928765], CoMet [@PMID:21622656] and COMET [@PMID:32034124]. The first is a tool used in proteomics to match tandem mass spectra to peptides. The last three are used in genetics, metagenomics and epigenetics, respectivly. Since it cannot be assumed that capitalization is consistent, disambiguating homonyms such as these is a non-trivial task, but necessary for accurate mining of tool mentions and extracting information on the (co-)usage of software tools.
 
 Please separate paragraphs with a double line.
 
