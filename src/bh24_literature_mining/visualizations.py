@@ -10,7 +10,7 @@ def plot_histogram(biotools_cites, type="cites"):
     num_cites = {len(x["articles"]) for x in biotools_cites}
     log10_values = [math.log10(num) for num in num_cites]
     plt.hist(log10_values, bins=100)
-    plt.xlabel("log10(Number of " + type)
+    plt.xlabel("log10(Number of " + type + ")")
     plt.ylabel("Number of tools")
     plt.title("Number of " + type + " per tool")
     plt.show()
@@ -30,7 +30,10 @@ def compare_mentions_cites(biotools_mentions, biotools_cites):
     num_mentions = [tool_mentions[tool] for tool in common_tools]
     num_cites = [tool_cites[tool] for tool in common_tools]
 
+    # create a scatter plot, double log scale
     plt.scatter(num_mentions, num_cites)
+    plt.yscale("log")
+    plt.xscale("log")
     plt.xlabel("Number of mentions")
     plt.ylabel("Number of citations")
     plt.title("Number of mentions vs number of cites")
