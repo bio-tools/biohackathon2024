@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import re
 import requests
 from typing import List, Optional
 from bs4 import BeautifulSoup
@@ -172,3 +173,28 @@ class EuropePMCClient:
             return relevant_paragraphs
         else:
             return None
+        
+def find_sentence_with_substring(string_list, substring):
+    for text in string_list:
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        for sentence in sentences:
+            if substring in sentence:
+                return sentence
+    return None
+
+def process_pmcid(df, pmcid, p_texts):
+    sentences_data = {}
+    for _, row in df[df['pmc_id'] == pmcid].iterrows():
+        sentence = find_sentence_with_substring(p_texts, row['partial_sentence'])
+        if sentence:
+            token = row['token']
+            start_span = sentence.find(token)
+            end_span = start_span + len(token)
+
+            if start_span != -1:  # Ensure the token is found in the sentence
+                if sentence not in sentences_data:
+                    sentences_data[sentence] = set()
+
+                sentences_data[sentence].add((start_span, end_span, token, row['ner']))
+
+    return [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
