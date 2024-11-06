@@ -3,9 +3,11 @@ import re
 import csv
 import pandas as pd
 import requests
-from pathlib import Path
 from typing import List, Optional
 from bs4 import BeautifulSoup
+from pathlib import Path
+
+
 
 from bh24_literature_mining.biotools import Tool_entry
 from bh24_literature_mining.utils import parse_to_bool
@@ -288,3 +290,23 @@ def split_train_test_dev(dataframe: pd.DataFrame, train_size=0.7, dev_size=0.5, 
     test_df, dev_df = train_test_split(test_dev_df, test_size=dev_size, random_state=random_state)
     
     return train_df, test_df, dev_df
+
+def filter_trainning_data(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filters the input DataFrame to only include rows that are ground truth.
+
+    Parameters:
+        dataframe (pd.DataFrame): The DataFrame to filter.
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame.
+    """
+
+    p = Path().cwd().parents[0]
+    if not p/"generated_data":
+        p.mkdir(parents=True, exist_ok=True)
+
+    filtered_df = dataframe[dataframe["True?"]].drop(columns=["True?", "False?"])
+    filtered_df.to_csv(p / "generated_data" / "filtered_data.csv", index=False)
+
+    return filtered_df
