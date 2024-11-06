@@ -534,17 +534,14 @@ def filter_trainning_data(dataframe_path: str) -> pd.DataFrame:
         'NER_Tags': lambda x: [eval(tag) for tag in x],
         'Sentence': lambda x: ' '.join(x)
     })
-
     df = df.drop(columns=["NER_Tags", "Sentence", "Topics"]).merge(ner_tags_sentences, on='PMCID')
 
     p = Path.cwd().parent / "generated_data"
     if not p.exists(): 
         p.mkdir(parents=True, exist_ok=True)
+    df.to_csv(p / "generated_data" / "filtered_data.csv", index=False)
 
-    filtered_df = dataframe[dataframe["True?"]].drop(columns=["True?", "False?"])
-    filtered_df.to_csv(p / "generated_data" / "filtered_data.csv", index=False)
-
-    return filtered_df
+    return df
 
 def find_sub_span(token_span, entity_span):
     if token_span[0] < entity_span[1] and token_span[1] > entity_span[0]:
