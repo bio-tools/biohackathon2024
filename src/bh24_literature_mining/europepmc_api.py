@@ -5,6 +5,7 @@ from typing import List, Optional
 from bs4 import BeautifulSoup
 
 from bh24_literature_mining.utils import parse_to_bool
+from sentence_splitter import SentenceSplitter
 
 @dataclass
 class Article:
@@ -174,6 +175,16 @@ class EuropePMCClient:
         else:
             return None
         
+    def segment_sentences_spacy(text):
+        splitter = SentenceSplitter(language='en')
+        sentences = splitter.split(text)
+
+        # Print each sentence
+        for sentence in sentences:
+            print(sentence)
+        return sentences
+    
+
 def find_sentence_with_substring(string_list, substring):
     for text in string_list:
         sentences = re.split(r'(?<=[.!?])\s+', text)
@@ -182,7 +193,12 @@ def find_sentence_with_substring(string_list, substring):
                 return sentence
     return None
 
+<<<<<<< HEAD
 def process_pmcid(pmcid, tool_name, p_texts):
+=======
+
+def process_pmcid(df, pmcid, p_texts):
+>>>>>>> f903080 (feat: adding sentence splitter)
     sentences_data = {}
     sentence = find_sentence_with_substring(p_texts, tool_name)
     if sentence:
