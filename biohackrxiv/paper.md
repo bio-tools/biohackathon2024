@@ -93,8 +93,13 @@ We identify three distinct types of relationships between software tools (entrie
 
 For example, there are currently four distinct tools named "comet" with different capitalization: Comet [@PMID:23148064], coMET [@PMID:25928765], CoMet [@PMID:21622656] and COMET [@PMID:32034124]. The first is a tool used in proteomics to match tandem mass spectra to peptides. The other three are primarily used in genetics, metagenomics and epigenetics, respectivly. Since it cannot be assumed that capitalization is consistent, disambiguating homonyms such as these in the scientific literature is a non-trivial task, but necessary for accurate mining of tool mentions and extracting information on the (co-)usage of software tools. However, the software metadata and semantic annotations in bio.tools opens several possible paths to improving disambiguation. Most tools are associated with one or more topics, Comet with Proteomics, coMET with Epigenomics and Methylated DNA immunoprecipitation, CoMet with Metagenomics and Microbial ecology, and COMET with Transcription factors and regulatory sites, Gene transcripts and Epigenetics. Topics could in theory be mapped to journals. Furthermore, most tools are associated with at least one publication describing the creation, deposition and usage of the tool. These publications, or at least their titles and abstracts, could be used as reference points for the tools. If a pubication is textually more similar to the primary CoMet publication [@PMID:21622656] than the primary COMET publication [@PMID:32034124], mentions of "comet", ignoring capitalization, is _ceteris paribus_ more likely to be about CoMet.
 
-To illustrate the challenges of matching Europe PMC article with bio.tools enties, we selected 3 commonly used mass-spectrometry proteomics tools with large numbers of citations in the literature: Comet, Mascot and MaxQuant. Figure X illustrates the number of IDs (pmids) identified for the search terms indicated and the overlap between the sets of IDs retrieved.
+To illustrate the challenges of matching Europe PMC article with bio.tools enties, we selected 3 commonly used mass-spectrometry proteomics tools with large numbers of citations in the literature: Comet[@PMID:23148064], Mascot[@PMID:10612281] and MaxQuant[@PMID:19029910]. Figure X illustrates the number of IDs (pmids) identified for the search terms indicated and the overlap between the sets of IDs retrieved.
 
+[Need to reformat / resize these images. Also may not want all of them?]
+
+![Alt text](maxquant_venn.png)
+![Alt text](mascot_venn.png)
+![Alt text](comet_venn.png)
 
 
 ### Subsection level 3
