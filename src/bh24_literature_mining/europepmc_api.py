@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 import re
 import requests
+from sentence_splitter import SentenceSplitter
 from typing import List, Optional
 from bs4 import BeautifulSoup
 
 from bh24_literature_mining.utils import parse_to_bool
-from sentence_splitter import SentenceSplitter
 
 @dataclass
 class Article:
@@ -193,10 +193,14 @@ def find_sentence_with_substring(string_list, substring):
                 return sentence
     return None
 
+<<<<<<< HEAD
 
 def process_pmcid(pmcid, tool_name, p_texts):
+=======
+def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, sentences:List[str]):
+>>>>>>> 7915b456d94803a98a36f32f28ba778871791493
     sentences_data = {}
-    sentence = find_sentence_with_substring(p_texts, tool_name)
+    sentence = find_sentence_with_substring(sentences, tool_name)
     if sentence:
         token = tool_name
         start_span = sentence.find(token)
@@ -206,7 +210,6 @@ def process_pmcid(pmcid, tool_name, p_texts):
             if sentence not in sentences_data:
                 sentences_data[sentence] = set()
 
-            tool_id = tool_name
             sentences_data[sentence].add((start_span, end_span, token, tool_id))
 
     return [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
