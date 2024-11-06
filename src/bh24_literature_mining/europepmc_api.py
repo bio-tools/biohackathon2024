@@ -176,37 +176,41 @@ class EuropePMCClient:
         else:
             return []
         
-def segment_sentences_spacy(string_list, substring):
-    if not string_list:
+def segment_sentences_spacy(paragraphs:List[str], substring):
+    if not paragraphs:
         return None
-    splitter = SentenceSplitter(language='en')
-    sentences = splitter.split(string_list)
-    for sentence in sentences:
-        if substring in sentence:
-            return sentence
-    return None
+    all_sentences = []
+    for parahgraph in paragraphs:
+        splitter = SentenceSplitter(language='en')
+        sentences = splitter.split(parahgraph)
+        for sentence in sentences:
+            if substring in sentence:
+                all_sentences.append(sentence)
+    return all_sentences
 
 def find_sentence_with_substring(string_list, substring):
+    all_sentences = []
     for text in string_list:
         sentences = re.split(r'(?<=[.!?])\s+', text)
         for sentence in sentences:
             if substring in sentence:
-                return sentence
-    return None
+                all_sentences.append(sentence.replace('\n', ' '))
+    return all_sentences
 
-def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, sentences:List[str]):
+def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, paragraphs:List[str]):
     sentences_data = {}
-    sentence = find_sentence_with_substring(sentences, tool_name)
-    if sentence:
-        token = tool_name
-        start_span = sentence.find(token)
-        end_span = start_span + len(token)
+    sentences = find_sentence_with_substring(paragraphs, tool_name)
+    for sentence in sentences:
+        if sentence:
+            token = tool_name
+            start_span = sentence.find(token)
+            end_span = start_span + len(token)
 
-        if start_span != -1:  # Ensure the token is found in the sentence
-            if sentence not in sentences_data:
-                sentences_data[sentence] = set()
+            if start_span != -1:  # Ensure the token is found in the sentence
+                if sentence not in sentences_data:
+                    sentences_data[sentence] = set()
 
-            sentences_data[sentence].add((start_span, end_span, token, tool_id))
+                sentences_data[sentence].add((start_span, end_span, token, tool_id))
 
     return [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
 
