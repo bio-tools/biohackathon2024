@@ -128,21 +128,27 @@ class EuropePMCClient:
         return articles
     
 
-    def search_mentions(self, tool_name: str) -> List[Article]:
+    def search_mentions(self, tool_name: str, topics: str) -> List[Article]:
         """Searches for mentions of a specific tool using the Europe PMC API.
 
         Parameters
         ----------
         tool_name : str
             The name of the tool to search for.
+        use_topics : bool
+            Whether to use the tool EDAM topics as additional keywords.
 
         Returns
         -------
         List[Article]
             List of Article objects for the specified tool query.
         """
-
-        return self.get_data(query=tool_name + " OPEN_ACCESS:y IN_EPMC:y")
+        if topics != "":
+            query = f'"{tool_name}" AND {topics}'
+        else:
+            query = f'"{tool_name}"'
+        print(query)
+        return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y")
 
     def search_cites(self, pmid: str) -> List[Article]:
         """Searches for articles citing a specific PubMed ID.
@@ -197,7 +203,9 @@ class EuropePMCClient:
 
         return biotools_cites
 
-    def get_mentions_for_tools(self, tools=pd.DataFrame) -> List[dict]:
+    def get_mentions_for_tools(
+        self, tools=pd.DataFrame, use_topics=False
+    ) -> List[dict]:
         """Searches for articles that mention a list of tools using the Europe PMC API keyword search.
         Provides a list of dictionaries with the tool name and the list of mentioning articles  as
         article objects.
@@ -206,6 +214,8 @@ class EuropePMCClient:
         ----------
         tools : DataFrame
             DataFrame with name: tool name, biotoolsID: bio.tools ID, pubmedid: PubMedID, pubmedcid: PubMedCentralID, link: link to fulltext xml
+        use_topics : bool
+            Whether to use the tool EDAM topics as additional keywords.
 
         Returns
         -------
@@ -227,7 +237,17 @@ class EuropePMCClient:
                     f"Iter: {index}, Name: {name}, PubMed ID: {pubmedid}, Link: {link}"
                 )
                 # Call bio.tools query and get a list of Article objects
-                tool_cites = self.search_mentions(name)
+                tool_cites = []
+                topics = row["EDAM_topics"]
+                if use_topics and not str(topics) == "nan" and not str(topics) == "":
+                    # Separate comma-separated EDAM_topics string into list
+                    topics = row["EDAM_topics"].split(", ")
+                    # embed each topics into quotes
+                    topics = [f'"{topic}"' for topic in topics]
+                    topics = "(" + " OR ".join(topics) + ")"
+                    tool_cites = self.search_mentions(name, topics)
+                else:
+                    tool_cites = self.search_mentions(name, "")
                 if len(tool_cites) > 0:
                     biotools_cites.append(
                         {"name": name, "pubmedid": pubmedid, "articles": tool_cites}
