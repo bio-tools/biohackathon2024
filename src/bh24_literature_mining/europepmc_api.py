@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import re
+import csv
 import requests
 from sentence_splitter import SentenceSplitter
 from typing import List, Optional
@@ -39,7 +40,7 @@ class EuropePMCClient:
         """
         self.base_url = base_url
 
-    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1000, format: str = "json", page_limit : int = 1) -> List[Article]:
+    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1, format: str = "json", page_limit : int = 1) -> List[Article]:
         """
         Makes an API request and retrieves all pages by looping until all results are fetched.
         
@@ -173,16 +174,16 @@ class EuropePMCClient:
 
             return relevant_paragraphs
         else:
-            return None
+            return []
         
-    def segment_sentences_spacy(text):
-        splitter = SentenceSplitter(language='en')
-        sentences = splitter.split(text)
+def segment_sentences_spacy(text):
+    splitter = SentenceSplitter(language='en')
+    sentences = splitter.split(text)
 
-        # Print each sentence
-        for sentence in sentences:
-            print(sentence)
-        return sentences
+    # Print each sentence
+    for sentence in sentences:
+        print(sentence)
+    return sentences
     
 
 def find_sentence_with_substring(string_list, substring):
@@ -205,6 +206,19 @@ def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, s
             if sentence not in sentences_data:
                 sentences_data[sentence] = set()
 
-            sentences_data[sentence].add((start_span, end_span, token, tool_id))
+            sentences_data[sentence].add([start_span, end_span, token, tool_id])
 
     return [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
+
+def write_tool_mentions_to_file(output_data: List[list], file_path: str):
+    # Open the file in append mode to add data to the end of the file
+    with open(file_path, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Write headers if the file is empty
+        if file.tell() == 0:
+            writer.writerow(["PMCID", "Sentence", "NER_Tags"])
+        
+        # Write each row of data
+        for row in output_data:
+            writer.writerow(row)
