@@ -14,7 +14,7 @@ def load_biotools_pub(path: str) -> pd.DataFrame:
 
 def load_biotools_from_json(path: str) -> list:
     """Load tools from a JSON file.
-
+    
     Returns:
     list: A list of tools.
     """
@@ -23,6 +23,10 @@ def load_biotools_from_json(path: str) -> list:
 
 def load_biotools_from_zip(path: str, file_name: str) -> list:
     """Load tools from a ZIP file.
+
+    Parameters:
+    path (str): The path to the ZIP file.
+    file_name (str): The name of the file to load from the zip file. (e.g., "biotools.json", "proteomics_tools.json")    
 
     Returns:
     list: A list of tools.
