@@ -11,12 +11,22 @@ authors:
   - name: Magnus Palmblad
     orcid: 0000-0002-5865-8994
     affiliation: 2
-
+  - name: Ana Mendes
+    orcid: 0009-0008-5170-0927
+    affiliation: 3
+  - name: Veit Schwämmler
+    orcid: 0000-0002-9708-6722
+    affiliation: 3
+  - name: Aleksandra Szmigiel
+    orcid: 
+    affiliation: 3
 affiliations:
  - name: Netherlands eScience Center, Science Park 402, 1098 XH, Amsterdam, The Netherlands
    index: 1
  - name: Leiden University Medical Center, Albinusdreef 2, 2333 ZA, Leiden, The Netherlands
    index: 2
+ - name: University of Southern Denmark, Campusvej 55, 5230, Odense, Denmark
+   index: 3
 date: 05 November 2024
 bibliography: paper.bib
 authors_short: Last et al. Enhancing bio.tools by Semantic Literature Mining
