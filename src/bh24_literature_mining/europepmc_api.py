@@ -177,13 +177,11 @@ class EuropePMCClient:
         
     def segment_sentences_spacy(text):
         splitter = SentenceSplitter(language='en')
-        sentences = splitter.split(text)
-
-        # Print each sentence
+        sentences = splitter.split(string_list)
         for sentence in sentences:
-            print(sentence)
-        return sentences
-    
+            if substring in sentence:
+                return sentence
+    return None
 
 def find_sentence_with_substring(string_list, substring):
     for text in string_list:
@@ -193,9 +191,10 @@ def find_sentence_with_substring(string_list, substring):
                 return sentence
     return None
 
-def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, sentences:List[str]):
+def process_pmcid(pmcid, tool_name, p_texts):
     sentences_data = {}
-    sentence = find_sentence_with_substring(sentences, tool_name)
+    sentence = segment_sentences(p_texts, tool_name)
+>>>>>>> 1bee813 (using Sentence Splitter)
     if sentence:
         token = tool_name
         start_span = sentence.find(token)
