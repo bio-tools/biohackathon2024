@@ -4,6 +4,9 @@ from typing import List, Optional
 import pandas as pd
 import math
 
+from bs4 import BeautifulSoup
+
+from bh24_literature_mining.utils import parse_to_bool
 
 @dataclass
 class Article:
@@ -22,6 +25,8 @@ class Article:
     citedByCount: Optional[int] = None
     pubType: Optional[str] = None
 
+    inEPMC: Optional[bool] = None
+    
 
 class EuropePMCClient:
     """Client for interacting with the Europe PMC API."""
@@ -38,23 +43,29 @@ class EuropePMCClient:
         """
         self.base_url = base_url
 
-    def get_data(
-        self,
-        query: str,
-        result_type: str = "lite",
-        page_size: int = 1000,
-        format: str = "json",
-        page_limit: int = 9,
-    ) -> List[Article]:
+    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1000, format: str = "json", page_limit : int = 9) -> List[Article]:
         """
         Makes an API request and retrieves all pages by looping until all results are fetched.
-
-        :param query: The query string for the search.
-        :param result_type: The type of result to retrieve (default is "lite").
-        :param page_size: The number of results to retrieve per page (default is 25).
-        :param format: The format of the response (default is "json").
-        :return: List of all Article objects from the API response.
+        
+        Parameters
+        ----------
+        query : str
+            The query string for the search.
+        result_type : str, optional
+            The type of result to retrieve, by default "lite".
+        page_size : int, optional
+            The number of results to retrieve per page, by default 25.
+        format : str, optional
+            The format of the response, by default "json".
+        page_limit : int, optional
+            The maximum number of pages to retrieve, by default 3.
+        
+        Returns
+        -------
+        List[Article]
+            List of all Article objects from the API response.
         """
+
         articles = []
         cursor_mark = "*"
         counter = 0
@@ -77,11 +88,7 @@ class EuropePMCClient:
 
             # Update cursor_mark to the nextCursorMark from the response
             next_cursor_mark = json_response.get("nextCursorMark")
-            if (
-                not next_cursor_mark
-                or cursor_mark == next_cursor_mark
-                or counter > page_limit
-            ):
+            if not next_cursor_mark or cursor_mark == next_cursor_mark or counter >= page_limit:
                 break  # Exit loop when we've retrieved all pages
             cursor_mark = next_cursor_mark  # Move to next page
 
@@ -103,21 +110,23 @@ class EuropePMCClient:
         articles = []
         for item in json_response.get("resultList", {}).get("result", []):
             article = Article(
-                id=item.get("id", ""),
-                title=item.get("title", ""),
-                authorString=item.get("authorString", ""),
-                pubYear=item.get("pubYear", ""),
-                journalTitle=item.get("journalTitle", ""),
+                id=item.get("id"),
+                title=item.get("title"),
+                authorString=item.get("authorString"),
+                pubYear=item.get("pubYear"),
+                journalTitle=item.get("journalTitle"),
                 pubDate=item.get("pubDate"),
                 doi=item.get("doi"),
                 pmcid=item.get("pmcid"),
                 pmid=item.get("pmid"),
-                isOpenAccess=item.get("isOpenAccess"),
+                isOpenAccess= parse_to_bool(item.get("isOpenAccess")),
+                inEPMC=parse_to_bool(item.get("inEPMC")),
                 citedByCount=item.get("citedByCount"),
                 pubType=item.get("pubType"),
             )
             articles.append(article)
         return articles
+    
 
     def search_mentions(self, tool_name: str, topics: str) -> List[Article]:
         """Searches for mentions of a specific tool using the Europe PMC API.
@@ -139,7 +148,7 @@ class EuropePMCClient:
         else:
             query = f'"{tool_name}"'
         print(query)
-        return self.get_data(query=query)
+        return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y")
 
     def search_cites(self, pmid: str) -> List[Article]:
         """Searches for articles citing a specific PubMed ID.
@@ -245,3 +254,22 @@ class EuropePMCClient:
                     )
 
         return biotools_cites
+    def get_relevant_paragraphs(self, pmcid):
+        """
+        Retrieves paragraphs from the full text of an article that contain specific sentences.
+        """
+        relevant_paragraphs = []
+        url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML"
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'lxml-xml')
+            p_tags = soup.find_all('p')
+            
+            for tag in p_tags:
+                paragraph_text = tag.get_text()
+                # if any(partial_sentence in paragraph_text for partial_sentence in partial_sentences):
+                relevant_paragraphs.append(paragraph_text)
+
+            return relevant_paragraphs
+        else:
+            return None
