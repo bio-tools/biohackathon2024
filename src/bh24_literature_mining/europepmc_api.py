@@ -527,7 +527,7 @@ def filter_trainning_data(dataframe_path: str) -> pd.DataFrame:
         pd.DataFrame: Filtered DataFrame.
     """
     
-    df =  pd.read_csv("/home/tess/biohackathon2024/mentions - montions.csv")
+    df =  pd.read_csv(dataframe_path)
     df = df[df["True?"]].drop(columns=["True?", "False?"]) 
     
     ner_tags_sentences = df.groupby(['PMCID']).agg({
