@@ -5,6 +5,7 @@ import requests
 from typing import List, Optional
 from bs4 import BeautifulSoup
 
+from bh24_literature_mining.biotools import Tool_entry
 from bh24_literature_mining.utils import parse_to_bool
 from sentence_splitter import SentenceSplitter
 
@@ -193,16 +194,16 @@ def find_sentence_with_substring(string_list, substring):
     for text in string_list:
         sentences = re.split(r'(?<=[.!?])\s+', text)
         for sentence in sentences:
-            if substring in sentence:
+            if substring.lower() in sentence.lower():
                 all_sentences.append(sentence.replace('\n', ' '))
     return all_sentences
 
-def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, paragraphs:List[str]):
+def identify_tool_mentions_in_sentences(pmcid:str, tool: Tool_entry, paragraphs:List[str]):
     sentences_data = {}
-    sentences = find_sentence_with_substring(paragraphs, tool_name)
+    sentences = find_sentence_with_substring(paragraphs, tool.name)
     for sentence in sentences:
         if sentence:
-            token = tool_name
+            token = tool.name
             start_span = sentence.find(token)
             end_span = start_span + len(token)
 
@@ -210,9 +211,9 @@ def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, p
                 if sentence not in sentences_data:
                     sentences_data[sentence] = set()
 
-                sentences_data[sentence].add((start_span, end_span, token, tool_id))
+                sentences_data[sentence].add((start_span, end_span, token, tool.biotool_id))
 
-    return [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
+    return [[pmcid, sentence, list(ner_tags), tool.topics] for sentence, ner_tags in sentences_data.items()]
 
 def write_tool_mentions_to_file(output_data: List[list], file_path: str):
     # Open the file in append mode to add data to the end of the file
