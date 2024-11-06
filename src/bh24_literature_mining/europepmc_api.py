@@ -193,12 +193,8 @@ def find_sentence_with_substring(string_list, substring):
                 return sentence
     return None
 
-<<<<<<< HEAD
-def process_pmcid(pmcid, tool_name, p_texts):
-=======
 
-def process_pmcid(df, pmcid, p_texts):
->>>>>>> f903080 (feat: adding sentence splitter)
+def process_pmcid(pmcid, tool_name, p_texts):
     sentences_data = {}
     sentence = find_sentence_with_substring(p_texts, tool_name)
     if sentence:
