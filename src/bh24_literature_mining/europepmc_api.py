@@ -193,12 +193,7 @@ def find_sentence_with_substring(string_list, substring):
                 return sentence
     return None
 
-<<<<<<< HEAD
-
-def process_pmcid(pmcid, tool_name, p_texts):
-=======
 def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, sentences:List[str]):
->>>>>>> 7915b456d94803a98a36f32f28ba778871791493
     sentences_data = {}
     sentence = find_sentence_with_substring(sentences, tool_name)
     if sentence:
