@@ -35,7 +35,6 @@ authors:
   - name: Zunaira Shafique
     orcid: 0000-0000-0000-0000
     affiliation: 5
-
 affiliations:
  - name: University of Southern Denmark, Campusvej 55, 5230, Odense, Denmark
    index: 1
