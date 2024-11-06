@@ -441,7 +441,7 @@ def split_train_test_dev(dataframe: pd.DataFrame, train_size=0.7, dev_size=0.5, 
     
     return train_df, test_df, dev_df
 
-def filter_trainning_data(dataframe: pd.DataFrame) -> pd.DataFrame:
+def filter_trainning_data(dataframe_path: str) -> pd.DataFrame:
     """
     Filters the input DataFrame to only include rows that are ground truth.
 
@@ -451,12 +451,21 @@ def filter_trainning_data(dataframe: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered DataFrame.
     """
+    
+    df =  pd.read_csv("/home/tess/biohackathon2024/mentions - montions.csv")
+    df = df[df["True?"]].drop(columns=["True?", "False?"]) 
+    
+    ner_tags_sentences = df.groupby(['PMCID']).agg({
+        'NER_Tags': lambda x: [eval(tag) for tag in x],
+        'Sentence': lambda x: ' '.join(x)
+    })
 
-    p = Path().cwd().parents[0]
-    if not p/"generated_data":
+    df = df.drop(columns=["NER_Tags", "Sentence", "Topics"]).merge(ner_tags_sentences, on='PMCID')
+
+    p = Path.cwd().parent / "generated_data"
+    if not p.exists(): 
         p.mkdir(parents=True, exist_ok=True)
+    path_out = p / "filtered_data.csv"
+    df.to_csv(path_out, index=False)
 
-    filtered_df = dataframe[dataframe["True?"]].drop(columns=["True?", "False?"])
-    filtered_df.to_csv(p / "generated_data" / "filtered_data.csv", index=False)
-
-    return filtered_df
+    return df
