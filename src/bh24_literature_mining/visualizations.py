@@ -37,6 +37,8 @@ def compare_mentions_cites(biotools_mentions, biotools_cites):
     plt.xlabel("Number of mentions")
     plt.ylabel("Number of citations")
     plt.title("Number of mentions vs number of cites")
+    # add x=y line
+    plt.plot([1, 1000], [1, 1000], color="red")
     plt.show()
 
 

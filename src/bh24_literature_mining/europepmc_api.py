@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 
 from bh24_literature_mining.utils import parse_to_bool
 
+
 @dataclass
 class Article:
     """Data structure for storing article information."""
@@ -26,7 +27,7 @@ class Article:
     pubType: Optional[str] = None
 
     inEPMC: Optional[bool] = None
-    
+
 
 class EuropePMCClient:
     """Client for interacting with the Europe PMC API."""
@@ -43,10 +44,17 @@ class EuropePMCClient:
         """
         self.base_url = base_url
 
-    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1000, format: str = "json", page_limit : int = 9) -> List[Article]:
+    def get_data(
+        self,
+        query: str,
+        result_type: str = "lite",
+        page_size: int = 1000,
+        format: str = "json",
+        page_limit: int = 9,
+    ) -> List[Article]:
         """
         Makes an API request and retrieves all pages by looping until all results are fetched.
-        
+
         Parameters
         ----------
         query : str
@@ -59,7 +67,7 @@ class EuropePMCClient:
             The format of the response, by default "json".
         page_limit : int, optional
             The maximum number of pages to retrieve, by default 3.
-        
+
         Returns
         -------
         List[Article]
@@ -88,7 +96,11 @@ class EuropePMCClient:
 
             # Update cursor_mark to the nextCursorMark from the response
             next_cursor_mark = json_response.get("nextCursorMark")
-            if not next_cursor_mark or cursor_mark == next_cursor_mark or counter >= page_limit:
+            if (
+                not next_cursor_mark
+                or cursor_mark == next_cursor_mark
+                or counter >= page_limit
+            ):
                 break  # Exit loop when we've retrieved all pages
             cursor_mark = next_cursor_mark  # Move to next page
 
@@ -119,14 +131,13 @@ class EuropePMCClient:
                 doi=item.get("doi"),
                 pmcid=item.get("pmcid"),
                 pmid=item.get("pmid"),
-                isOpenAccess= parse_to_bool(item.get("isOpenAccess")),
+                isOpenAccess=parse_to_bool(item.get("isOpenAccess")),
                 inEPMC=parse_to_bool(item.get("inEPMC")),
                 citedByCount=item.get("citedByCount"),
                 pubType=item.get("pubType"),
             )
             articles.append(article)
         return articles
-    
 
     def search_mentions(self, tool_name: str, topics: str) -> List[Article]:
         """Searches for mentions of a specific tool using the Europe PMC API.
@@ -147,7 +158,6 @@ class EuropePMCClient:
             query = f'"{tool_name}" AND {topics}'
         else:
             query = f'"{tool_name}"'
-        print(query)
         return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y")
 
     def search_cites(self, pmid: str) -> List[Article]:
@@ -164,7 +174,9 @@ class EuropePMCClient:
             List of Article objects for the citations query.
         """
         query = f"cites:{pmid}_MED"
-        return self.get_data(query=query, result_type="core")
+        return self.get_data(
+            query=query + " OPEN_ACCESS:y IN_EPMC:y", result_type="core"
+        )
 
     def get_cites_for_tools(self, tools=pd.DataFrame) -> List[dict]:
         """Searches for articles that cite a list of tools using the Europe PMC API.
@@ -254,6 +266,7 @@ class EuropePMCClient:
                     )
 
         return biotools_cites
+
     def get_relevant_paragraphs(self, pmcid):
         """
         Retrieves paragraphs from the full text of an article that contain specific sentences.
@@ -262,9 +275,9 @@ class EuropePMCClient:
         url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML"
         response = requests.get(url)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'lxml-xml')
-            p_tags = soup.find_all('p')
-            
+            soup = BeautifulSoup(response.content, "lxml-xml")
+            p_tags = soup.find_all("p")
+
             for tag in p_tags:
                 paragraph_text = tag.get_text()
                 # if any(partial_sentence in paragraph_text for partial_sentence in partial_sentences):
