@@ -2,11 +2,11 @@ from dataclasses import dataclass
 import re
 import csv
 import requests
-from sentence_splitter import SentenceSplitter
 from typing import List, Optional
 from bs4 import BeautifulSoup
 
 from bh24_literature_mining.utils import parse_to_bool
+from sentence_splitter import SentenceSplitter
 
 @dataclass
 class Article:
@@ -176,15 +176,15 @@ class EuropePMCClient:
         else:
             return []
         
-def segment_sentences_spacy(text):
+def segment_sentences_spacy(string_list, substring):
+    if not string_list:
+        return None
     splitter = SentenceSplitter(language='en')
-    sentences = splitter.split(text)
-
-    # Print each sentence
+    sentences = splitter.split(string_list)
     for sentence in sentences:
-        print(sentence)
-    return sentences
-    
+        if substring in sentence:
+            return sentence
+    return None
 
 def find_sentence_with_substring(string_list, substring):
     for text in string_list:
@@ -206,7 +206,7 @@ def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, s
             if sentence not in sentences_data:
                 sentences_data[sentence] = set()
 
-            sentences_data[sentence].add([start_span, end_span, token, tool_id])
+            sentences_data[sentence].add((start_span, end_span, token, tool_id))
 
     return [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
 
