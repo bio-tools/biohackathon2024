@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import re
 import requests
+from sentence_splitter import SentenceSplitter
 from typing import List, Optional
 from bs4 import BeautifulSoup
 
@@ -174,6 +175,16 @@ class EuropePMCClient:
         else:
             return None
         
+    def segment_sentences_spacy(text):
+        splitter = SentenceSplitter(language='en')
+        sentences = splitter.split(text)
+
+        # Print each sentence
+        for sentence in sentences:
+            print(sentence)
+        return sentences
+    
+
 def find_sentence_with_substring(string_list, substring):
     for text in string_list:
         sentences = re.split(r'(?<=[.!?])\s+', text)
