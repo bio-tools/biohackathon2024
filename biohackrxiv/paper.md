@@ -20,6 +20,9 @@ authors:
   - name: Aleksandra Szmigiel
     orcid: 
     affiliation: 3
+  - name: Tess Afanasyeva
+    orcid: 0000-0003-3962-0779
+    affiliation: 4
 affiliations:
  - name: Netherlands eScience Center, Science Park 402, 1098 XH, Amsterdam, The Netherlands
    index: 1
@@ -27,6 +30,8 @@ affiliations:
    index: 2
  - name: University of Southern Denmark, Campusvej 55, 5230, Odense, Denmark
    index: 3
+ - name: Sanquin Research, Amsterdam, Netherlands.
+   index: 4
 date: 05 November 2024
 bibliography: paper.bib
 authors_short: Last et al. Enhancing bio.tools by Semantic Literature Mining
