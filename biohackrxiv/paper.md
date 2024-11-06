@@ -59,9 +59,10 @@ event: BioHackathon Europe 2024
 
 # Background
 
-The mining and study of mentions of software in the scientific literature has recenntly received much attention.
 
-Erik - would you like to help summarize (major) prior work in this domain?
+## Software mentions in the scientific literature
+
+The mining and study of mentions of software in the scientific literature has recenntly received much attention.
 
 OpenAIRE...
 
@@ -71,10 +72,15 @@ Schindler et al. [@PMID:35111920] constructed a knowledge graph from software me
 
 Software synonyms - SciCrunch
 
+Disambiguation (if anyone looked at this?)
+
+
+## bio.tools
+
+bio.tools [@PMID:31405382] is a comprehensive registry of bioinformatics tools and data services, designed to assist researchers in discovering, understanding, and utilizing software resources in the life sciences. Developed under the ELIXIR infrastructure, it serves as a centralized platform for accessing essential scientific and technical metadata about various bioinformatics tools, databases, and services. This metadata includes software licenses, operating system compatibility, repository URLs, but also semantic notation of the operation(s) performed by (or with) the software, and the data types and file format consumed and produced in the EDAM ontology [@PMID:23479348].
+
 
 ## bio.tools and the literature
-
-Bio.tools is the...
 
 We identify three distinct types of relationships between software tools (entries) in bio.tools and articles:
 
