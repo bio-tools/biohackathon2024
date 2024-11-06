@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import re
 import csv
 import requests
+from pathlib import Path
 from typing import List, Optional
 from bs4 import BeautifulSoup
 
@@ -41,7 +42,7 @@ class EuropePMCClient:
         """
         self.base_url = base_url
 
-    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1, format: str = "json", page_limit : int = 1) -> List[Article]:
+    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1, format: str = "json", page_limit : int = 2) -> List[Article]:
         """
         Makes an API request and retrieves all pages by looping until all results are fetched.
         

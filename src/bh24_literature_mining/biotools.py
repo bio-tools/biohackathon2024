@@ -12,6 +12,7 @@ class Tool_entry:
 
 
     def get_topics(self):
+        self.topics = "N/A"
         json = get_tool_by_id(self.biotool_id)
         json_topics = json.get("topic")
 
@@ -20,7 +21,7 @@ class Tool_entry:
         for topic in json_topics:
             # Access the 'term' value from the current dictionary and append it to the terms list
             terms.append(topic['term'])
-        self.topics = terms
+        self.topics = ", ".join(terms)
 
 def get_tool_by_id(biotoolsid: str) -> dict:
     base_url = f"https://bio.tools/api/tool/{biotoolsid}"
