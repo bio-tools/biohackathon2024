@@ -1,9 +1,12 @@
 from dataclasses import dataclass
+import json
 import re
-import csv
 import pandas as pd
 import requests
 from typing import List, Optional
+import math
+from sentence_splitter import SentenceSplitter
+from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
 from pathlib import Path
 
@@ -11,9 +14,6 @@ from pathlib import Path
 
 from bh24_literature_mining.biotools import Tool_entry
 from bh24_literature_mining.utils import parse_to_bool
-from sentence_splitter import SentenceSplitter
-from sklearn.model_selection import train_test_split
-import pandas as pd
 
 @dataclass
 class Article:
@@ -31,13 +31,54 @@ class Article:
     isOpenAccess: Optional[bool] = None
     citedByCount: Optional[int] = None
     pubType: Optional[str] = None
+
     inEPMC: Optional[bool] = None
+
+    @staticmethod
+    def dict_to_article(article_dict: dict):
+        return Article(
+            id=article_dict.get("id"),
+            title=article_dict.get("title"),
+            authorString=article_dict.get("authorString"),
+            pubYear=article_dict.get("pubYear"),
+            journalTitle=article_dict.get("journalTitle"),
+            pubDate=article_dict.get("pubDate"),
+            doi=article_dict.get("doi"),
+            pmcid=article_dict.get("pmcid"),
+            pmid=article_dict.get("pmid"),
+            isOpenAccess=article_dict.get("isOpenAccess"),
+            inEPMC=article_dict.get("inEPMC"),
+            citedByCount=article_dict.get("citedByCount"),
+            pubType=article_dict.get("pubType"),
+        )
     
+    @staticmethod
+    def read_cites_from_json(path: str) -> list[dict]:
+        """Reads the list of tools and their citing articles from a JSON file.
+
+        Parameters
+        ----------
+        path : str
+                Path to the JSON file.
+
+        Returns
+        -------
+        list[dict]
+            List of dictionaries with the tool name and the list of citing articles.
+        """
+        with open(path, "r") as file:
+            dat = json.load(file)
+            for i, tool in enumerate(dat):
+                dat[i]["articles"] = [Article.dict_to_article(x) for x in tool["articles"]]
+            return dat
+
 
 class EuropePMCClient:
     """Client for interacting with the Europe PMC API."""
 
-    def __init__(self, base_url="https://www.ebi.ac.uk/europepmc/webservices/rest/search"):
+    def __init__(
+        self, base_url="https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+    ):
         """Initializes the EuropePMCClient with a base URL for the API.
 
         Parameters
@@ -47,10 +88,17 @@ class EuropePMCClient:
         """
         self.base_url = base_url
 
-    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1, format: str = "json", page_limit : int = 3) -> List[Article]:
+    def get_data(
+        self,
+        query: str,
+        result_type: str = "lite",
+        page_size: int = 1000,
+        format: str = "json",
+        page_limit: int = 9,
+    ) -> List[Article]:
         """
         Makes an API request and retrieves all pages by looping until all results are fetched.
-        
+
         Parameters
         ----------
         query : str
@@ -63,7 +111,7 @@ class EuropePMCClient:
             The format of the response, by default "json".
         page_limit : int, optional
             The maximum number of pages to retrieve, by default 3.
-        
+
         Returns
         -------
         List[Article]
@@ -80,18 +128,23 @@ class EuropePMCClient:
                 "resultType": result_type,
                 "cursorMark": cursor_mark,
                 "pageSize": page_size,
-                "format": format
+                "format": format,
             }
-            
             response = requests.get(self.base_url, params=params)
             response.raise_for_status()  # Raises an error for bad status codes
-            
+
             json_response = response.json()
-            articles.extend(self._parse_articles(json_response))  # Add batch to main list
-            
+            articles.extend(
+                self._parse_articles(json_response)
+            )  # Add batch to main list
+
             # Update cursor_mark to the nextCursorMark from the response
             next_cursor_mark = json_response.get("nextCursorMark")
-            if not next_cursor_mark or cursor_mark == next_cursor_mark or counter >= page_limit:
+            if (
+                not next_cursor_mark
+                or cursor_mark == next_cursor_mark
+                or counter >= page_limit
+            ):
                 break  # Exit loop when we've retrieved all pages
             cursor_mark = next_cursor_mark  # Move to next page
 
@@ -122,34 +175,40 @@ class EuropePMCClient:
                 doi=item.get("doi"),
                 pmcid=item.get("pmcid"),
                 pmid=item.get("pmid"),
-                isOpenAccess= parse_to_bool(item.get("isOpenAccess")),
+                isOpenAccess=parse_to_bool(item.get("isOpenAccess")),
                 inEPMC=parse_to_bool(item.get("inEPMC")),
                 citedByCount=item.get("citedByCount"),
-                pubType=item.get("pubType")
+                pubType=item.get("pubType"),
             )
             articles.append(article)
         return articles
-    
 
-    def search_mentions(self, tool_name: str, article_limit = None) -> List[Article]:
+    def search_mentions(self, tool_name: str, article_limit = None, topics: str = None) -> List[Article]:
         """Searches for mentions of a specific tool using the Europe PMC API.
 
         Parameters
         ----------
         tool_name : str
             The name of the tool to search for.
+        use_topics : bool
+            Whether to use the tool EDAM topics as additional keywords.
 
         Returns
         -------
         List[Article]
             List of Article objects for the specified tool query.
         """
+        if topics:
+            query = f'"{tool_name}" AND {topics}'
+        else:
+            query = f'"{tool_name}"'
+    
         if article_limit:
             page_limit = min(article_limit, 100)
             page_size = -(-article_limit // page_limit)  # This rounds up the division
-            return self.get_data(query=tool_name + " OPEN_ACCESS:y IN_EPMC:y", page_size=page_size, page_limit=page_limit)
+            return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y", page_size=page_size, page_limit=page_limit)
         else:
-            return self.get_data(query=tool_name + " OPEN_ACCESS:y IN_EPMC:y")
+            return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y")
 
     def search_cites(self, pmid: str) -> List[Article]:
         """Searches for articles citing a specific PubMed ID.
@@ -165,7 +224,98 @@ class EuropePMCClient:
             List of Article objects for the citations query.
         """
         query = f"cites:{pmid}_MED"
-        return self.get_data(query=query, result_type="core")
+        return self.get_data(
+            query=query + " OPEN_ACCESS:y IN_EPMC:y", result_type="core"
+        )
+
+    def get_cites_for_tools(self, tools=pd.DataFrame) -> List[dict]:
+        """Searches for articles that cite a list of tools using the Europe PMC API.
+        Provides a list of dictionaries with the tool name and the list of citing articles as
+        article objects.
+
+        Parameters
+        ----------
+        tools : DataFrame
+            DataFrame with name: tool name, biotoolsID: bio.tools ID, pubmedid: PubMedID, pubmedcid: PubMedCentralID, link: link to fulltext xml
+
+        Returns
+        -------
+        List[Article]
+            List of dictionaries with name of tools, pubmediid and list of Article objects for the citations query.
+        """
+        biotools_cites = []
+        print("Total number of tools: ", len(tools.index))
+
+        for index, row in tools.iterrows():
+            if index > -1:
+                name = row["name"]
+                pubmedid = row["pubmedid"]
+                if not math.isnan(pubmedid):
+                    pubmedid = round(pubmedid)
+                link = row["link"]
+                print(
+                    f"Iter: {index}, Name: {name}, PubMed ID: {pubmedid}, Link: {link}"
+                )
+                # Call bio.tools query and get a list of Article objects
+                tool_cites = self.search_cites(pubmedid)
+                if len(tool_cites) > 0:
+                    biotools_cites.append(
+                        {"name": name, "pubmedid": pubmedid, "articles": tool_cites}
+                    )
+
+        return biotools_cites
+
+    def get_mentions_for_tools(
+        self, tools=pd.DataFrame, use_topics=False
+    ) -> List[dict]:
+        """Searches for articles that mention a list of tools using the Europe PMC API keyword search.
+        Provides a list of dictionaries with the tool name and the list of mentioning articles  as
+        article objects.
+
+        Parameters
+        ----------
+        tools : DataFrame
+            DataFrame with name: tool name, biotoolsID: bio.tools ID, pubmedid: PubMedID, pubmedcid: PubMedCentralID, link: link to fulltext xml
+        use_topics : bool
+            Whether to use the tool EDAM topics as additional keywords.
+
+        Returns
+        -------
+        List[Article]
+            List of dictionaries with name of tools, pubmediid and list of Article objects for the citations query.
+        """
+
+        biotools_cites = []
+        print("Total number of tools: ", len(tools.index))
+
+        for index, row in tools.iterrows():
+            if index > -1:
+                name = row["name"]
+                pubmedid = row["pubmedid"]
+                if not math.isnan(pubmedid):
+                    pubmedid = round(pubmedid)
+                link = row["link"]
+                print(
+                    f"Iter: {index}, Name: {name}, PubMed ID: {pubmedid}, Link: {link}"
+                )
+                # Call bio.tools query and get a list of Article objects
+                tool_cites = []
+                topics = row["EDAM_topics"]
+                if use_topics and not str(topics) == "nan" and not str(topics) == "":
+                    # Separate comma-separated EDAM_topics string into list
+                    topics = row["EDAM_topics"].split(", ")
+                    # embed each topics into quotes
+                    topics = [f'"{topic}"' for topic in topics]
+                    topics = "(" + " OR ".join(topics) + ")"
+                    tool_cites = self.search_mentions(name, topics)
+                else:
+                    tool_cites = self.search_mentions(name, "")
+                if len(tool_cites) > 0:
+                    biotools_cites.append(
+                        {"name": name, "pubmedid": pubmedid, "articles": tool_cites}
+                    )
+
+        return biotools_cites
 
     def get_relevant_paragraphs(self, pmcid: str, tool_name: str):
         """
@@ -175,9 +325,9 @@ class EuropePMCClient:
         url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML"
         response = requests.get(url)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'lxml-xml')
-            p_tags = soup.find_all('p')
-            
+            soup = BeautifulSoup(response.content, "lxml-xml")
+            p_tags = soup.find_all("p")
+
             for tag in p_tags:
                 paragraph_text = tag.get_text()
                 if tool_name in paragraph_text:
