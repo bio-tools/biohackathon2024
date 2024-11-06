@@ -61,6 +61,8 @@ event: BioHackathon Europe 2024
 
 The mining and study of mentions of software in the scientific literature has recenntly received much attention.
 
+Erik - would you like to help summarize (major) prior work in this domain?
+
 OpenAIRE...
 
 The Chan Zuckerberg Initiative (CZI) has produced a software mentions dataset, CZ Software Mentions [@istrate2022largedatasetsoftwarementions], where the mentions were extracted with a trained SciBERT model from several sources: the NIH PubMed Central collection and from papers provided by various publishers to the Chan Zuckerberg Initiative.
@@ -69,13 +71,10 @@ Schindler et al. [@PMID:35111920] constructed a knowledge graph from software me
 
 Software synonyms - SciCrunch
 
-Disambiguation (has anyone looked at this?)
-
-
-
-Please separate paragraphs with a double line.
 
 ## bio.tools and the literature
+
+Bio.tools is the...
 
 We identify three distinct types of relationships between software tools (entries) in bio.tools and articles:
 
