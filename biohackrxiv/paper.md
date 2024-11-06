@@ -5,18 +5,51 @@ tags:
   - bio.tools
   - Europe PMC
 authors:
-  - name: Vedran Kasalica
-    orcid: 0000-0002-0097-1056
+  - name: Aleksandra Szmigiel
+    orcid: 0000-0000-0000-0000
     affiliation: 1
+  - name: Ana Mendes
+    orcid: 0009-0008-5170-0927
+    affiliation: 1
+  - name: Erik Jaaniso
+    orcid: 0000-0000-0000-0000
+    affiliation: 2
   - name: Magnus Palmblad
     orcid: 0000-0002-5865-8994
-    affiliation: 2
-
+    affiliation: 3
+  - name: Rob M. Ewing
+    orcid: 0000-0001-6510-4001
+    affiliation: 4  
+  - name: Santosh Tirunagari
+    orcid: 
+    affiliation: 5
+  - name: Tess Afanasyeva
+    orcid: 0000-0003-3962-0779
+    affiliation: 6
+  - name: Vedran Kasalica
+    orcid: 0000-0002-0097-1056
+    affiliation: 7
+  - name: Veit Schwämmle
+    orcid: 0000-0002-9708-6722
+    affiliation: 1
+  - name: Zunaira Shafique
+    orcid: 0000-0000-0000-0000
+    affiliation: 5
 affiliations:
- - name: Netherlands eScience Center, Science Park 402, 1098 XH, Amsterdam, The Netherlands
+ - name: University of Southern Denmark, Campusvej 55, 5230, Odense, Denmark
    index: 1
- - name: Leiden University Medical Center, Albinusdreef 2, 2333 ZA, Leiden, The Netherlands
+ - name:
    index: 2
+ - name: Leiden University Medical Center, Albinusdreef 2, 2333 ZA, Leiden, The Netherlands
+   index: 3
+ - name: School of Biological Sciences, University of Southampton, Southampton, SO17 1BJ, UK
+   index: 4
+ - name:
+   index: 5
+ - name: Sanquin Research, Amsterdam, The Netherlands
+   index: 6
+ - name: Netherlands eScience Center, Science Park 402, 1098 XH, Amsterdam, The Netherlands
+   index: 7
 date: 05 November 2024
 bibliography: paper.bib
 authors_short: Last et al. Enhancing bio.tools by Semantic Literature Mining
@@ -24,23 +57,34 @@ group: BioHackrXiv
 event: BioHackathon Europe 2024
 ---
 
-# Introduction or Background
+# Background
 
-Add to this section a couple of paragraphs introducing the work done dring the BioHackathon, CodeFest, VoCamp or Sprint event. Please add references whenever needed, for instance [@Katayama:2010].
+The mining and study of mentions of software in the scientific literature has recenntly received much attention.
 
+OpenAIRE...
 
-# Related work?
+The Chan Zuckerberg Initiative (CZI) has produced a software mentions dataset, CZ Software Mentions [@istrate2022largedatasetsoftwarementions], where the mentions were extracted with a trained SciBERT model from several sources: the NIH PubMed Central collection and from papers provided by various publishers to the Chan Zuckerberg Initiative.
 
+Schindler et al. [@PMID:35111920] constructed a knowledge graph from software mentions in the scientific literature, differenting different types of software, such as applications, plugins, or operating systems, and types of mention, including usage, creation and deposition. The bio.tools corpus built primarily from primary publications would be expected to cover all types of mention, including describing the creation and availability (deposition) of the tool, as well as some use cases (usage).
 
-In a major effort, Schindler et al. [@10.7717/peerj-cs.835] constructed in 2022 a knowledge graph from software mentions in the scientific literature, differenting different types of software, such as applications, plugins, or operating systems, and types of mention, including usage, creation and deposition. The bio.tools corpus built primarily from primary publications would be expected to cover all types of mention, including describing the creation and availability (deposition) of the tool, as well as some use cases (usage).
+Software synonyms - SciCrunch
+
+Disambiguation (has anyone looked at this?)
 
 
 
 Please separate paragraphs with a double line.
 
-## Subsection level 2
+## bio.tools and the literature
 
-Please keep sections to a maximum of three levels, even better if only two levels.
+We identify three distinct types of relationships between software tools (entries) in bio.tools and articles:
+
+1. Articles associated with bio.tools entries in bio.tools, e.g. 10.1002/pmic.201200439 in https://bio.tools/comet
+2. Articles citing articles associated with entries in bio.tools, e.g. 10.1002/rcm.9937 cites 10.1002/pmic.201200439 associated with https://bio.tools/comet
+3. Articles mentioning tool in bio.tools, e.g. 10.1021/acs.jproteome.3c00902
+
+For example, there are currently four distinct tools named "comet" with varying capitalization: Comet [@PMID:23148064], coMET [@PMID:25928765], CoMet [@PMID:21622656] and COMET [@PMID:32034124]. The first is a tool used in proteomics to match tandem mass spectra to peptides. The last three are used in genetics, metagenomics and epigenetics, respectivly. Since it cannot be assumed that capitalization is consistent, disambiguating homonyms such as these is a non-trivial task, but necessary for accurate mining of tool mentions and extracting information on the (co-)usage of software tools.
+
 
 ### Subsection level 3
 
