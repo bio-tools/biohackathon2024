@@ -177,83 +177,53 @@ class EuropePMCClient:
         else:
             return []
         
-def segment_sentences_spacy(string_list, substring):
-    if not string_list:
+def segment_sentences_spacy(paragraphs:List[str], substring):
+    if not paragraphs:
         return None
-    splitter = SentenceSplitter(language='en')
-    sentences = splitter.split(string_list)
-    for sentence in sentences:
-        if substring in sentence:
-            return sentence
-    return None
+    all_sentences = []
+    for parahgraph in paragraphs:
+        splitter = SentenceSplitter(language='en')
+        sentences = splitter.split(parahgraph)
+        for sentence in sentences:
+            if substring in sentence:
+                all_sentences.append(sentence)
+    return all_sentences
 
 def find_sentence_with_substring(string_list, substring):
+    all_sentences = []
     for text in string_list:
         sentences = re.split(r'(?<=[.!?])\s+', text)
         for sentence in sentences:
             if substring in sentence:
-                return sentence
-    return None
+                all_sentences.append(sentence.replace('\n', ' '))
+    return all_sentences
 
-def write_tool_mentions_to_file(output_data: List[List[str]], file_path: str):
-    """
-    Writes tool mentions data to a CSV file.
-
-    Parameters
-    ----------
-    output_data : List[List[str]]
-        List of lists containing tool mention data.
-    file_path : str
-        Path to the output CSV file.
-    """
-    try:
-        # Open the file in append mode to add data to the end of the file
-        with open(file_path, mode='a', newline='') as file:
-            writer = csv.writer(file)
-            
-            # Write headers if the file is empty
-            if file.tell() == 0:
-                writer.writerow(["PMCID", "Sentence", "NER_Tags"])
-            
-            # Write each row of data
-            for row in output_data:
-                writer.writerow(row)
-    except IOError as e:
-        print(f"An error occurred while writing to the file: {e}")
-
-def identify_tool_mentions_in_sentences(pmcid: str, tool_name: str, tool_id: str, sentences: List[str]):
-    """
-    Identifies tool mentions in sentences and creates a DataFrame with the results.
-
-    Parameters
-    ----------
-    pmcid : str
-        PubMed Central ID of the article.
-    tool_name : str
-        Name of the tool to search for.
-    tool_id : str
-        Identifier for the tool.
-    sentences : List[str]
-        List of sentences to search for tool mentions.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame containing the PMCID, sentence, and NER tags.
-    """
+def identify_tool_mentions_in_sentences(pmcid:str, tool_name:str, tool_id:str, paragraphs:List[str]):
     sentences_data = {}
-    sentence = find_sentence_with_substring(sentences, tool_name)
-    if sentence:
-        token = tool_name
-        start_span = sentence.find(token)
-        end_span = start_span + len(token)
+    sentences = find_sentence_with_substring(paragraphs, tool_name)
+    for sentence in sentences:
+        if sentence:
+            token = tool_name
+            start_span = sentence.find(token)
+            end_span = start_span + len(token)
 
-        if start_span != -1:  # Ensure the token is found in the sentence
-            if sentence not in sentences_data:
-                sentences_data[sentence] = set()
+            if start_span != -1:  # Ensure the token is found in the sentence
+                if sentence not in sentences_data:
+                    sentences_data[sentence] = set()
 
-            sentences_data[sentence].add((start_span, end_span, token, tool_id))
-    
-    result = [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
+                sentences_data[sentence].add((start_span, end_span, token, tool_id))
 
-    return result
+    return [[pmcid, sentence, list(ner_tags)] for sentence, ner_tags in sentences_data.items()]
+
+def write_tool_mentions_to_file(output_data: List[list], file_path: str):
+    # Open the file in append mode to add data to the end of the file
+    with open(file_path, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Write headers if the file is empty
+        if file.tell() == 0:
+            writer.writerow(["PMCID", "Sentence", "NER_Tags"])
+        
+        # Write each row of data
+        for row in output_data:
+            writer.writerow(row)
