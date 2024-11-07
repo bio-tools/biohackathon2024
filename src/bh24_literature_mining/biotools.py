@@ -50,17 +50,22 @@ def get_tool_by_id(biotoolsid: str) -> dict:
 
 
 
-def get_biotools() -> List[Tool_entry]:
+def get_biotools(path_to_file: str) -> List[Tool_entry]:
     """
     Load the BioTools data and create a list of Tool_entry objects.
     
+    Parameters
+    ----------
+    pat_to_file : str
+        The path to the tsv file containing the BioTools data.
+        
     Returns
     -------
     List[Tool_entry]
         A list of Tool_entry objects.
     """
 
-    tools = load_biotools_pub("../biotoolspub/biotoolspub.tsv")
+    tools = load_biotools_pub(path_to_file)
 
     # Initialize set to track unique names and a list to store Biotool objects
     tools_lower = set()

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import re
 import csv
+import pandas as pd
 import requests
 from pathlib import Path
 from typing import List, Optional
@@ -216,15 +217,42 @@ def identify_tool_mentions_in_sentences(pmcid:str, tool: Tool_entry, paragraphs:
 
     return [[pmcid, sentence, list(ner_tags), tool.topics] for sentence, ner_tags in sentences_data.items()]
 
-def write_tool_mentions_to_file(output_data: List[list], file_path: str):
-    # Open the file in append mode to add data to the end of the file
-    with open(file_path, mode='a', newline='') as file:
-        writer = csv.writer(file)
+def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry]) -> pd.DataFrame:
+    """
+    Identifies tool mentions in sentences using the Europe PMC API.
+
+    Parameters
+    ----------
+    biotools : List[Tool_entry]
+        List of Tool_entry objects.
+    
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing the tool mentions.
+    """
+    results_list = []
+    client = EuropePMCClient()
+    for tool in biotools:
+        # Call bio.tools query and get a list of Article objects
         
-        # Write headers if the file is empty
-        if file.tell() == 0:
-            writer.writerow(["PMCID", "Sentence", "NER_Tags"])
+        biotools_articles = client.search_mentions(tool.name)
+
+        if len(biotools_articles) == 0:
+            continue
+        first_article = biotools_articles[0]
+
+        relevant_parahraphs = client.get_relevant_paragraphs(first_article.pmcid, tool.name)
+        if len(relevant_parahraphs) == 0:
+            print("No relevant paragraphs found", tool.name)
+            continue
         
-        # Write each row of data
-        for row in output_data:
-            writer.writerow(row)
+        tool.get_topics()
+
+        result = identify_tool_mentions_in_sentences(first_article.pmcid, tool, relevant_parahraphs)
+        results_list.extend(result)
+
+        result_df = pd.DataFrame(results_list, columns=["PMCID", "Sentence", "NER_Tags", "Topics"])
+        result_df = result_df.explode("NER_Tags").drop_duplicates()
+
+        return result_df
