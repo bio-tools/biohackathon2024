@@ -1,3 +1,4 @@
+import csv
 from dataclasses import dataclass
 import json
 import random
@@ -10,8 +11,9 @@ from sentence_splitter import SentenceSplitter
 from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+import os
+from pathlib import Path
 import pathlib
-import osfrom pathlib import Path
 
 
 
@@ -533,27 +535,6 @@ def filter_trainning_data(dataframe: pd.DataFrame) -> pd.DataFrame:
     filtered_df.to_csv(p / "generated_data" / "filtered_data.csv", index=False)
 
     return filtered_df
-
-def filter_trainning_data(dataframe: pd.DataFrame) -> pd.DataFrame:
-    """
-    Filters the input DataFrame to only include rows that are ground truth.
-
-    Parameters:
-        dataframe (pd.DataFrame): The DataFrame to filter.
-
-    Returns:
-        pd.DataFrame: Filtered DataFrame.
-    """
-
-    p = Path().cwd().parents[0]
-    if not p/"generated_data":
-        p.mkdir(parents=True, exist_ok=True)
-
-    filtered_df = dataframe[dataframe["True?"]].drop(columns=["True?", "False?"])
-    filtered_df.to_csv(p / "generated_data" / "filtered_data.csv", index=False)
-
-    return filtered_df
-
 
 def find_sub_span(token_span, entity_span):
     if token_span[0] < entity_span[1] and token_span[1] > entity_span[0]:
