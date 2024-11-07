@@ -1,3 +1,4 @@
+import csv
 from dataclasses import dataclass
 import json
 import random
@@ -9,12 +10,20 @@ import math
 from sentence_splitter import SentenceSplitter
 from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
+from tqdm import tqdm
+import os
 from pathlib import Path
+import pathlib
 
 
 
 from bh24_literature_mining.biotools import Tool_entry
 from bh24_literature_mining.utils import parse_to_bool
+import nltk
+from nltk.tokenize import wordpunct_tokenize
+
+# Ensure NLTK is installed and the tokenizer is available
+# nltk.download('punkt')
 
 @dataclass
 class Article:
@@ -526,3 +535,63 @@ def filter_trainning_data(dataframe: pd.DataFrame) -> pd.DataFrame:
     filtered_df.to_csv(p / "generated_data" / "filtered_data.csv", index=False)
 
     return filtered_df
+
+def find_sub_span(token_span, entity_span):
+    if token_span[0] < entity_span[1] and token_span[1] > entity_span[0]:
+        return max(token_span[0], entity_span[0]), min(token_span[1], entity_span[1])
+    return None
+
+def convert_to_iob(texts, ner_tags_list):
+    results = []
+
+    for text, ner_tags in zip(texts, ner_tags_list):
+        # Tokenize using NLTK's wordpunct_tokenizer
+        tokens = wordpunct_tokenize(text)
+        token_spans = []
+        current_idx = 0
+
+        # Calculate token spans based on the original text
+        for token in tokens:
+            start_idx = text.find(token, current_idx)
+            end_idx = start_idx + len(token)
+            token_spans.append((start_idx, end_idx))
+            current_idx = end_idx
+
+        iob_tags = ['O'] * len(tokens)
+
+        for start, end, entity, entity_type in sorted(ner_tags, key=lambda x: x[0]):
+            entity_flag = False  # Flag to indicate if we are inside an entity
+            for i, token_span in enumerate(token_spans):
+                if find_sub_span(token_span, (start, end)):
+                    if not entity_flag:  # If it's the start of an entity
+                        iob_tags[i] = 'B-' + entity_type
+                        entity_flag = True
+                    elif iob_tags[i] == 'O':  # Continue tagging inside of the entity
+                        iob_tags[i] = 'I-' + entity_type
+                else:
+                    entity_flag = False  # Reset flag when we're no longer in an entity
+
+        results.append(list(zip(tokens, iob_tags)))
+    return results
+
+def convert_to_IOB_format_from_df(dataframe, output_folder, filename, batch_size=500):
+    # Prepare data for batch processing
+    data = [(row['Sentence'], row['NER_Tags']) for index, row in dataframe.iterrows()]
+
+    pathlib.Path(output_folder).mkdir(parents=True, exist_ok=True)
+    result_path = os.path.join(output_folder, filename)
+
+    with open(result_path, 'w', newline='\n') as f1:
+        train_writer = csv.writer(f1, delimiter='\t', lineterminator='\n')
+
+        for i in tqdm(range(0, len(data), batch_size), desc="Processing batches"):
+            batch = data[i:i+batch_size]
+            sentences, ner_tags_batch = zip(*batch)
+
+            # Convert to IOB format
+            batch_results = convert_to_iob(sentences, ner_tags_batch)
+
+            for tagged_tokens in batch_results:
+                for each_token in tagged_tokens:
+                    train_writer.writerow(list(each_token))
+                train_writer.writerow('')
