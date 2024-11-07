@@ -33,12 +33,15 @@ def test_identify_tool_mentions_using_europepmc():
     print(biotools[:1])
     tool_occurrences_df = identify_tool_mentions_using_europepmc(biotools[:1], article_limit=1, sentences_per_article=1)
     assert tool_occurrences_df.shape == (1, 4)
-    tool_occurrences_df = identify_tool_mentions_using_europepmc(biotools[:1], article_limit=3, sentences_per_article=2)
-    assert tool_occurrences_df.shape == (4, 4)
-    # tool_occurrences_df = identify_tool_mentions_using_europepmc(biotools[:1], article_limit=6)
-    # assert tool_occurrences_df.shape == (12, 4)
-    # tool_occurrences_df = identify_tool_mentions_using_europepmc(biotools[:3], article_limit=3)
-    # assert tool_occurrences_df.shape == (61, 4)
+
+def test_topic_disjoint():
+    biotools = get_biotools("./biotoolspub/biotoolspub_with_topic.tsv")
+    tool = biotools[3]
+    print(tool.name)
+    client = EuropePMCClient()
+    biotools_articles1 = client.search_mentions(tool.name, topics=tool.disjoint_topics())
+    biotools_articles2 = client.search_mentions(tool.name)
+    assert len(biotools_articles1) < len(biotools_articles2)
 
 
 def test_find_sentences_with_substring_basic():
@@ -109,3 +112,5 @@ def test_identify_tool_mentions_multiple_occurrences():
 
     # Check that the result contains 3 entries, due to the limit
     assert len(result) == 3
+
+

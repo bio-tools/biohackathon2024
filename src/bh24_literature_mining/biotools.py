@@ -13,10 +13,10 @@ class Tool_entry:
         self.biotools_id = biotools_id
         self.name = name
         self.topics_str = topics
-        if topics == "None":
-            self.topics_list = topics.split(", ")
-        else:
+        if topics is None or isinstance(topics, float) or topics == "":
             self.topics_list = []
+        else:
+            self.topics_list = topics.split(", ")
         self.pubmedid = pubmedid
         self.pubmedcid = pubmedcid
         self.link = link
