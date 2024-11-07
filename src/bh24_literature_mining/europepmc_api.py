@@ -43,7 +43,7 @@ class EuropePMCClient:
         """
         self.base_url = base_url
 
-    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1, format: str = "json", page_limit : int = 2) -> List[Article]:
+    def get_data(self, query: str, result_type: str = "lite", page_size: int = 1, format: str = "json", page_limit : int = 3) -> List[Article]:
         """
         Makes an API request and retrieves all pages by looping until all results are fetched.
         
@@ -127,7 +127,7 @@ class EuropePMCClient:
         return articles
     
 
-    def search_mentions(self, tool_name: str) -> List[Article]:
+    def search_mentions(self, tool_name: str, article_limit = None) -> List[Article]:
         """Searches for mentions of a specific tool using the Europe PMC API.
 
         Parameters
@@ -140,8 +140,12 @@ class EuropePMCClient:
         List[Article]
             List of Article objects for the specified tool query.
         """
-
-        return self.get_data(query=tool_name + " OPEN_ACCESS:y IN_EPMC:y")
+        if article_limit:
+            page_limit = min(article_limit, 100)
+            page_size = -(-article_limit // page_limit)  # This rounds up the division
+            return self.get_data(query=tool_name + " OPEN_ACCESS:y IN_EPMC:y", page_size=page_size, page_limit=page_limit)
+        else:
+            return self.get_data(query=tool_name + " OPEN_ACCESS:y IN_EPMC:y")
 
     def search_cites(self, pmid: str) -> List[Article]:
         """Searches for articles citing a specific PubMed ID.
@@ -217,7 +221,7 @@ def identify_tool_mentions_in_sentences(pmcid:str, tool: Tool_entry, paragraphs:
 
     return [[pmcid, sentence, list(ner_tags), tool.topics] for sentence, ner_tags in sentences_data.items()]
 
-def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry]) -> pd.DataFrame:
+def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry], article_limit: int=1) -> pd.DataFrame:
     """
     Identifies tool mentions in sentences using the Europe PMC API.
 
@@ -226,6 +230,9 @@ def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry]) -> pd.Dat
     biotools : List[Tool_entry]
         List of Tool_entry objects.
     
+    article_limit : int, optional
+        The maximum number of articles to retrieve for each tool, by default 1.
+
     Returns
     -------
     pd.DataFrame
@@ -236,7 +243,7 @@ def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry]) -> pd.Dat
     for tool in biotools:
         # Call bio.tools query and get a list of Article objects
         
-        biotools_articles = client.search_mentions(tool.name)
+        biotools_articles = client.search_mentions(tool.name, article_limit = article_limit)
 
         if len(biotools_articles) == 0:
             continue
@@ -252,7 +259,7 @@ def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry]) -> pd.Dat
         result = identify_tool_mentions_in_sentences(first_article.pmcid, tool, relevant_parahraphs)
         results_list.extend(result)
 
-        result_df = pd.DataFrame(results_list, columns=["PMCID", "Sentence", "NER_Tags", "Topics"])
-        result_df = result_df.explode("NER_Tags").drop_duplicates()
+    result_df = pd.DataFrame(results_list, columns=["PMCID", "Sentence", "NER_Tags", "Topics"])
+    result_df = result_df.explode("NER_Tags").drop_duplicates()
 
-        return result_df
+    return result_df
