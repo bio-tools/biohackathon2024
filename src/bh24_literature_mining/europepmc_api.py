@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 from bh24_literature_mining.biotools import Tool_entry
 from bh24_literature_mining.utils import parse_to_bool
 from sentence_splitter import SentenceSplitter
+from sklearn.model_selection import train_test_split
+import pandas as pd
 
 @dataclass
 class Article:
@@ -253,6 +255,29 @@ def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry]) -> pd.Dat
         results_list.extend(result)
 
         result_df = pd.DataFrame(results_list, columns=["PMCID", "Sentence", "NER_Tags", "Topics"])
-        result_df = result_df.explode("NER_Tags").drop_duplicates()
+        # result_df = result_df.explode("NER_Tags").drop_duplicates()
 
         return result_df
+
+def split_train_test_dev(dataframe: pd.DataFrame, train_size=0.7, dev_size=0.5, random_state=42):
+    """
+    Splits the input dataframe into train, test, and dev sets.
+
+    Parameters:
+        dataframe (pd.DataFrame): The DataFrame to split.
+        train_size (float): Proportion of the data to use for training. Default is 0.7.
+        dev_size (float): Proportion of the test_dev split to use for dev (e.g., 0.5 for 50%). Default is 0.5.
+        random_state (int): Random seed for reproducibility. Default is 42.
+
+    Returns:
+        train_df (pd.DataFrame): Training set.
+        test_df (pd.DataFrame): Test set.
+        dev_df (pd.DataFrame): Development/validation set.
+    """
+    # First split: train and test_dev (test + dev combined)
+    train_df, test_dev_df = train_test_split(dataframe, train_size=train_size, random_state=random_state)
+    
+    # Second split: split test_dev into test and dev
+    test_df, dev_df = train_test_split(test_dev_df, test_size=dev_size, random_state=random_state)
+    
+    return train_df, test_df, dev_df
