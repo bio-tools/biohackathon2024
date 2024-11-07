@@ -70,7 +70,7 @@ def compare_mentions_cites(biotools_mentions, biotools_cites):
     plt.scatter([], [], s=50, label="50% common articles", alpha=0.5)
     plt.scatter([], [], s=75, label="75% common articles", alpha=0.5)
     plt.scatter([], [], s=100, label="100% common articles", alpha=0.5)
-    plt.legend(scatterpoints=1, frameon=False, labelspacing=1, title="Size of point")
+    plt.legend(scatterpoints=1, frameon=False, labelspacing=1, title="")
     plt.show()
 
 
