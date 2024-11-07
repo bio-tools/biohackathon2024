@@ -95,11 +95,14 @@ For example, there are currently four distinct tools named "comet" with differen
 
 To illustrate the challenges of matching Europe PMC article with bio.tools enties, we selected 3 commonly used mass-spectrometry proteomics tools with large numbers of citations in the literature: Comet[@PMID:23148064], Mascot[@PMID:10612281] and MaxQuant[@PMID:19029910]. Figure X illustrates the number of IDs (pmids) identified for the search terms indicated and the overlap between the sets of IDs retrieved.
 
-[Need to reformat / resize these images. Also may not want all of them?]
+[Need to reformat / resize these images. Also may not want all of them?] At least Comet, and maybe at least one other, more complex, example?
 
 ![Alt text](maxquant_venn.png)
 ![Alt text](mascot_venn.png)
 ![Alt text](comet_venn.png)
+
+
+As expected, we find many mentions of "comet" and "mascot" not referring to the software for peptide-spectrum matching. We also find instances of software being cited but not mentioned, e.g. the Comet paper is cited in [@PMID:30702898] in a sentence "Application of these PSM algorithms (e.g., SEQUEST, X!Tandem)[@PMID:24226387][@PMID:23148064][@PMID:14558131] have been successfully applied to metaproteomic analyses, despite the fact that they were never designed to deal with the complexity of metaproteomic data sets". Searching the name of the software together with some EDAM Topics, such as "Proteomics" helps find specific mentions with or without citation. If searching all literature, a large fraction of the mention-without-citation cases derive from non-open access papers, where the search is limited to titles and abstracts, but all citations are available.
 
 ### Subsection level 3
 
