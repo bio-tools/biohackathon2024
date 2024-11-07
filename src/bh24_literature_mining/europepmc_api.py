@@ -6,7 +6,7 @@ import math
 
 from bs4 import BeautifulSoup
 
-from bh24_literature_mining.utils import parse_to_bool
+# from bh24_literature_mining.utils import parse_to_bool
 
 
 @dataclass
@@ -28,6 +28,7 @@ class Article:
 
     inEPMC: Optional[bool] = None
 
+    @staticmethod
     def dict_to_article(article_dict: dict):
         return Article(
             id=article_dict.get("id"),
