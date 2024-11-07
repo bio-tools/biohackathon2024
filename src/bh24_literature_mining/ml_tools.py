@@ -1,5 +1,6 @@
 import os
 import csv
+import pandas as pd
 import pathlib
 from tqdm import tqdm
 import nltk
@@ -29,6 +30,12 @@ def convert_to_iob(texts, ner_tags_list):
             token_spans.append((start_idx, end_idx))
             current_idx = end_idx
 
+        # If ner_tags is None, create 'O' tags for all tokens
+        if ner_tags is None:
+            iob_tags = ['O'] * len(tokens)
+            results.append(list(zip(tokens, iob_tags)))
+            continue  # Proceed to the next iteration
+
         iob_tags = ['O'] * len(tokens)
 
         for start, end, entity, entity_type in sorted(ner_tags, key=lambda x: x[0]):
@@ -45,6 +52,7 @@ def convert_to_iob(texts, ner_tags_list):
 
         results.append(list(zip(tokens, iob_tags)))
     return results
+
 
 def convert_to_IOB_format_from_df(dataframe, output_folder, filename, batch_size=500):
     # Prepare data for batch processing
@@ -67,6 +75,7 @@ def convert_to_IOB_format_from_df(dataframe, output_folder, filename, batch_size
                 for each_token in tagged_tokens:
                     train_writer.writerow(list(each_token))
                 train_writer.writerow('')
+
 
 
 def load_iob_file(file_path):
