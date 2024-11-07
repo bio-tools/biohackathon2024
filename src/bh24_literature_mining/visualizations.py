@@ -7,7 +7,7 @@ from collections import Counter
 # Function for creating a histogram of the number of cites/mentions per tool
 def plot_histogram(biotools_cites, type="cites"):
     # histogram of number of cites
-    num_cites = {len(x["articles"]) for x in biotools_cites}
+    num_cites = [len(x["articles"]) for x in biotools_cites]
     log10_values = [math.log10(num) for num in num_cites]
     plt.hist(log10_values, bins=100)
     plt.xlabel("log10(Number of " + type + ")")
