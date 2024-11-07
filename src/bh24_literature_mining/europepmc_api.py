@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 import json
+import random
 import re
 import pandas as pd
 import requests
-from typing import List, Optional
+from typing import Dict, List, Optional, Set
 import math
 from sentence_splitter import SentenceSplitter
 from sklearn.model_selection import train_test_split
@@ -187,7 +188,7 @@ class EuropePMCClient:
         ----------
         tool_name : str
             The name of the tool to search for.
-        use_topics : bool
+        topics : bool
             Whether to use the tool EDAM topics as additional keywords.
 
         Returns
@@ -203,7 +204,7 @@ class EuropePMCClient:
         if article_limit:
             page_limit = min(article_limit, 100)
             page_size = -(-article_limit // page_limit)  # This rounds up the division
-            return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y", page_size=page_size, page_limit=page_limit)
+            return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y", page_size=page_size, page_limit=page_limit)[:article_limit]
         else:
             return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y")
 
@@ -327,7 +328,7 @@ class EuropePMCClient:
 
             for tag in p_tags:
                 paragraph_text = tag.get_text()
-                if tool_name in paragraph_text:
+                if tool_name.lower() in paragraph_text.lower():
                     relevant_paragraphs.append(paragraph_text)
 
             return relevant_paragraphs
@@ -346,33 +347,96 @@ def segment_sentences_spacy(paragraphs:List[str], substring):
                 all_sentences.append(sentence)
     return all_sentences
 
-def find_sentence_with_substring(string_list, substring):
-    all_sentences = []
-    for text in string_list:
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        for sentence in sentences:
-            if substring.lower() in sentence.lower():
-                all_sentences.append(sentence.replace('\n', ' '))
-    return all_sentences
+def find_sentences_with_substring(string_list: List[str], substring: str, limit: int = 3) -> List[str]:
+    """
+    Finds random sentences containing a specific substring in a list of strings.
 
-def identify_tool_mentions_in_sentences(pmcid:str, tool: Tool_entry, paragraphs:List[str]):
-    sentences_data = {}
-    sentences = find_sentence_with_substring(paragraphs, tool.name)
+    Parameters
+    ----------
+    string_list : List[str]
+        List of sentences (strings) to search.
+    substring : str
+        Substring to search for.
+    limit : int, optional
+        The maximum number of sentences to retrieve, by default 3.
+    
+    Returns
+    -------
+    List[str]
+        List of randomly selected sentences containing the substring, up to the specified limit.
+    """
+    all_sentences = []
+
+    # Split each text into sentences and collect them in a single list
+    for text in string_list:
+        all_sentences.extend(re.split(r'(?<=[.!?])\s+', text))
+    
+    # Shuffle sentences before searching
+    random.shuffle(all_sentences)
+
+    # Search for sentences containing the substring and return as soon as the limit is reached
+    matching_sentences = []
+    for sentence in all_sentences:
+        if substring.lower() in sentence.lower():
+            matching_sentences.append(sentence.replace('\n', ' '))
+            if len(matching_sentences) == limit:
+                break
+    
+    return matching_sentences
+
+def identify_tool_mentions_in_sentences(pmcid: str, tool: Tool_entry, paragraphs: List[str], limit: int = 3) -> List[List[str]]:
+    """
+    Identifies tool mentions in sentences.
+
+    Parameters
+    ----------
+    pmcid : str
+        The PMC ID of the article.
+    tool : Tool_entry
+        The Tool_entry object.
+    paragraphs : List[str]
+        List of paragraphs from the article.
+    limit : int, optional
+        The maximum number of sentences to retrieve, by default 3.
+
+    Returns
+    -------
+    List[List[str]]
+        List of lists containing the PMCID, sentence, NER tags, and topics.
+    """
+    sentences_data: Dict[str, Set] = {}
+    sentences = find_sentences_with_substring(paragraphs, tool.name, limit)
+
     for sentence in sentences:
         if sentence:
             token = tool.name
-            start_span = sentence.find(token)
-            end_span = start_span + len(token)
+            # Escape token to handle special regex characters
+            pattern = re.escape(token)
+            # Find all occurrences of the token in the sentence
+            matches = re.finditer(pattern, sentence, flags=re.IGNORECASE)
 
-            if start_span != -1:  # Ensure the token is found in the sentence
+            for match in matches:
+                start_span = match.start()
+                end_span = match.end()
                 if sentence not in sentences_data:
                     sentences_data[sentence] = set()
+                sentences_data[sentence].add((start_span, end_span, token, tool.biotools_id))
 
-                sentences_data[sentence].add((start_span, end_span, token, tool.biotool_id))
+     # Sort sentences by the position of the first mention of the tool name
+    sorted_sentences = sorted(
+        sentences_data.items(),
+        key=lambda item: min(tag[0] for tag in item[1])
+    )
+    
+    # Prepare the final result
+    result = [
+        [pmcid, sentence, list(ner_tags), tool.topics_str]
+        for sentence, ner_tags in sentences_data.items()
+    ]
 
-    return [[pmcid, sentence, list(ner_tags), tool.topics] for sentence, ner_tags in sentences_data.items()]
+    return result
 
-def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry], article_limit: int=1) -> pd.DataFrame:
+def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry], article_limit: int=1, sentences_per_article: int = 3) -> pd.DataFrame:
     """
     Identifies tool mentions in sentences using the Europe PMC API.
 
@@ -384,6 +448,9 @@ def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry], article_l
     article_limit : int, optional
         The maximum number of articles to retrieve for each tool, by default 1.
 
+    sentences_per_article : int, optional
+        The maximum number of sentences to retrieve for each article, by default 3.
+
     Returns
     -------
     pd.DataFrame
@@ -394,21 +461,20 @@ def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry], article_l
     for tool in biotools:
         # Call bio.tools query and get a list of Article objects
         
-        biotools_articles = client.search_mentions(tool.name, article_limit = article_limit)
+        biotools_articles: List[Article] = client.search_mentions(tool.name, article_limit = article_limit, topics=tool.disjoint_topics())
 
         if len(biotools_articles) == 0:
+            print("No articles found", tool.name)
             continue
-        first_article = biotools_articles[0]
-
-        relevant_parahraphs = client.get_relevant_paragraphs(first_article.pmcid, tool.name)
-        if len(relevant_parahraphs) == 0:
-            print("No relevant paragraphs found", tool.name)
-            continue
-        
-        tool.get_topics()
-
-        result = identify_tool_mentions_in_sentences(first_article.pmcid, tool, relevant_parahraphs)
-        results_list.extend(result)
+        for article in biotools_articles:
+            # per each article, get relevant paragraphs
+            relevant_paragraphs = client.get_relevant_paragraphs(article.pmcid, tool.name)
+            if len(relevant_paragraphs) == 0:
+                print("No relevant paragraphs found", tool.name)
+                continue
+            
+            result = identify_tool_mentions_in_sentences(article.pmcid, tool, relevant_paragraphs, sentences_per_article)
+            results_list.extend(result)
 
     result_df = pd.DataFrame(results_list, columns=["PMCID", "Sentence", "NER_Tags", "Topics"])
     result_df = result_df.explode("NER_Tags").drop_duplicates()

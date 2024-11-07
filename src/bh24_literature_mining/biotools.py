@@ -4,28 +4,25 @@ from typing import List
 import requests
 from bh24_literature_mining.utils import load_biotools_pub
 
-@dataclass
 class Tool_entry:
     """
     Data structure for storing tool information.
     """
 
-    biotool_id: str
-    name: str
-    topics: List[str] = None
+    def __init__(self, biotools_id: str, name: str, topics: str, pubmedid: str, pubmedcid: str, link: str):
+        self.biotools_id = biotools_id
+        self.name = name
+        self.topics_str = topics
+        if topics == "None":
+            self.topics_list = topics.split(", ")
+        else:
+            self.topics_list = []
+        self.pubmedid = pubmedid
+        self.pubmedcid = pubmedcid
+        self.link = link
 
-
-    def get_topics(self):
-        self.topics = "N/A"
-        json = get_tool_by_id(self.biotool_id)
-        json_topics = json.get("topic")
-
-        terms = []
-        # Loop through each dictionary in the topics list
-        for topic in json_topics:
-            # Access the 'term' value from the current dictionary and append it to the terms list
-            terms.append(topic['term'])
-        self.topics = ", ".join(terms)
+    def disjoint_topics(self) -> str:
+        return "(" + " OR ".join(self.topics_list) + ")"
 
 def get_tool_by_id(biotoolsid: str) -> dict:
     """
@@ -50,7 +47,7 @@ def get_tool_by_id(biotoolsid: str) -> dict:
 
 
 
-def get_biotools(path_to_file: str) -> List[Tool_entry]:
+def get_biotools(path_to_file: str, limit: int = 400) -> List[Tool_entry]:
     """
     Load the BioTools data and create a list of Tool_entry objects.
     
@@ -58,6 +55,9 @@ def get_biotools(path_to_file: str) -> List[Tool_entry]:
     ----------
     pat_to_file : str
         The path to the tsv file containing the BioTools data.
+    
+    limit : int, optional
+        The maximum number of tools to load. Default is 400.
         
     Returns
     -------
@@ -75,13 +75,17 @@ def get_biotools(path_to_file: str) -> List[Tool_entry]:
     for _, row in tools.iterrows():
         name = row["name"]
         biotools_id = row["biotoolsID"]
+        pubmedid = row["pubmedid"]
+        pubmedcid = row["pubmedcid"]
+        link = row["link"]
+        topics = row["EDAM_topics"]
         name_lower = name.lower()
 
         # Only add unique tools based on name
         if name_lower not in tools_lower:
             tools_lower.add(name_lower)  # Add to the set to track uniqueness
             # Create a Biotool object and add it to the list
-            biotool = Tool_entry(biotool_id=biotools_id, name=name)
+            biotool = Tool_entry(biotools_id, name, topics, pubmedid, pubmedcid, link)
             unique_biotools.append(biotool)
-
+    
     return unique_biotools
