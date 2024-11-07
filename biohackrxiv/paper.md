@@ -59,7 +59,13 @@ event: BioHackathon Europe 2024
 
 # Background
 
+
+## Software mentions in the scientific literature
+
 The mining and study of mentions of software in the scientific literature has recenntly received much attention.
+
+
+Erik - would you like to expand on this background?
 
 OpenAIRE...
 
@@ -69,22 +75,34 @@ Schindler et al. [@PMID:35111920] constructed a knowledge graph from software me
 
 Software synonyms - SciCrunch
 
-Disambiguation (has anyone looked at this?)
+Disambiguation (if anyone looked at this?)
 
 
+## bio.tools
 
-Please separate paragraphs with a double line.
+bio.tools [@PMID:31405382] is a comprehensive registry of bioinformatics tools and data services, designed to assist researchers in discovering, understanding, and utilizing software resources in the life sciences. Developed under the ELIXIR infrastructure, it serves as a centralized platform for accessing essential scientific and technical metadata about various bioinformatics tools, databases, and services. This metadata includes software licenses, operating system compatibility, repository URLs, but also semantic notation of the operation(s) performed by (or with) the software, and the data types and file format consumed and produced in the EDAM ontology [@PMID:23479348].
+
 
 ## bio.tools and the literature
 
-We identify three distinct types of relationships between software tools (entries) in bio.tools and articles:
+There are at least three distinct types of relationships between software tools (entries) in bio.tools and articles:
 
-1. Articles associated with bio.tools entries in bio.tools, e.g. 10.1002/pmic.201200439 in https://bio.tools/comet
-2. Articles citing articles associated with entries in bio.tools, e.g. 10.1002/rcm.9937 cites 10.1002/pmic.201200439 associated with https://bio.tools/comet
-3. Articles mentioning tool in bio.tools, e.g. 10.1021/acs.jproteome.3c00902
+1. Articles associated with bio.tools entries in bio.tools itself, e.g. [@PMID:23148064] with Comet
+2. Articles citing articles associated with entries in bio.tools, e.g. [@PMID:39496564] cites [@PMID:23148064] associated with Comet
+3. Articles mentioning tool in bio.tools, e.g. [@PMID:16729052] does mention Comet (referred to as COMET), but does not cite the Comet publication (unsurprisingly, since the mentioning publication predates the tool publication).
 
-For example, there are currently four distinct tools named "comet" with varying capitalization: Comet [@PMID:23148064], coMET [@PMID:25928765], CoMet [@PMID:21622656] and COMET [@PMID:32034124]. The first is a tool used in proteomics to match tandem mass spectra to peptides. The last three are used in genetics, metagenomics and epigenetics, respectivly. Since it cannot be assumed that capitalization is consistent, disambiguating homonyms such as these is a non-trivial task, but necessary for accurate mining of tool mentions and extracting information on the (co-)usage of software tools.
+For example, there are currently four distinct tools named "comet" with different capitalization: Comet [@PMID:23148064], coMET [@PMID:25928765], CoMet [@PMID:21622656] and COMET [@PMID:32034124]. The first is a tool used in proteomics to match tandem mass spectra to peptides. The other three are primarily used in genetics, metagenomics and epigenetics, respectivly. Since it cannot be assumed that capitalization is consistent, disambiguating homonyms such as these in the scientific literature is a non-trivial task, but necessary for accurate mining of tool mentions and extracting information on the (co-)usage of software tools. However, the software metadata and semantic annotations in bio.tools opens several possible paths to improving disambiguation. Most tools are associated with one or more topics, Comet with Proteomics, coMET with Epigenomics and Methylated DNA immunoprecipitation, CoMet with Metagenomics and Microbial ecology, and COMET with Transcription factors and regulatory sites, Gene transcripts and Epigenetics. Topics could in theory be mapped to journals. Furthermore, most tools are associated with at least one publication describing the creation, deposition and usage of the tool. These publications, or at least their titles and abstracts, could be used as reference points for the tools. If a pubication is textually more similar to the primary CoMet publication [@PMID:21622656] than the primary COMET publication [@PMID:32034124], mentions of "comet", ignoring capitalization, is _ceteris paribus_ more likely to be about CoMet.
 
+To illustrate the challenges of matching Europe PMC article with bio.tools enties, we selected 3 commonly used mass-spectrometry proteomics tools with large numbers of citations in the literature: Comet[@PMID:23148064], Mascot[@PMID:10612281] and MaxQuant[@PMID:19029910]. Figure X illustrates the number of IDs (pmids) identified for the search terms indicated and the overlap between the sets of IDs retrieved.
+
+[Need to reformat / resize these images. Also may not want all of them?] At least Comet, and maybe at least one other, more complex, example?
+
+![Alt text](maxquant_venn.png)
+![Alt text](mascot_venn.png)
+![Alt text](comet_venn.png)
+
+
+As expected, we find many mentions of "comet" and "mascot" not referring to the software for peptide-spectrum matching. We also find instances of software being cited but not mentioned, e.g. the Comet paper is cited in [@PMID:30702898] in a sentence "Application of these PSM algorithms (e.g., SEQUEST, X!Tandem)[@PMID:24226387][@PMID:23148064][@PMID:14558131] have been successfully applied to metaproteomic analyses, despite the fact that they were never designed to deal with the complexity of metaproteomic data sets". Searching the name of the software together with some EDAM Topics, such as "Proteomics" helps find specific mentions with or without citation. If searching all literature, a large fraction of the mention-without-citation cases derive from non-open access papers, where the search is limited to titles and abstracts, but all citations are available.
 
 ### Subsection level 3
 
