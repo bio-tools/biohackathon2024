@@ -1,13 +1,16 @@
 from dataclasses import dataclass
+import json
+import re
+import pandas as pd
 import requests
 from typing import List, Optional
-import pandas as pd
 import math
-
+from sentence_splitter import SentenceSplitter
+from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
 
-# from bh24_literature_mining.utils import parse_to_bool
-
+from bh24_literature_mining.biotools import Tool_entry
+from bh24_literature_mining.utils import parse_to_bool
 
 @dataclass
 class Article:
@@ -45,6 +48,26 @@ class Article:
             citedByCount=article_dict.get("citedByCount"),
             pubType=article_dict.get("pubType"),
         )
+    
+    @staticmethod
+    def read_cites_from_json(path: str) -> list[dict]:
+        """Reads the list of tools and their citing articles from a JSON file.
+
+        Parameters
+        ----------
+        path : str
+                Path to the JSON file.
+
+        Returns
+        -------
+        list[dict]
+            List of dictionaries with the tool name and the list of citing articles.
+        """
+        with open(path, "r") as file:
+            dat = json.load(file)
+            for i, tool in enumerate(dat):
+                dat[i]["articles"] = [Article.dict_to_article(x) for x in tool["articles"]]
+            return dat
 
 
 class EuropePMCClient:
@@ -157,7 +180,7 @@ class EuropePMCClient:
             articles.append(article)
         return articles
 
-    def search_mentions(self, tool_name: str, topics: str) -> List[Article]:
+    def search_mentions(self, tool_name: str, article_limit = None, topics: str = None) -> List[Article]:
         """Searches for mentions of a specific tool using the Europe PMC API.
 
         Parameters
@@ -172,11 +195,17 @@ class EuropePMCClient:
         List[Article]
             List of Article objects for the specified tool query.
         """
-        if topics != "":
+        if topics:
             query = f'"{tool_name}" AND {topics}'
         else:
             query = f'"{tool_name}"'
-        return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y")
+    
+        if article_limit:
+            page_limit = min(article_limit, 100)
+            page_size = -(-article_limit // page_limit)  # This rounds up the division
+            return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y", page_size=page_size, page_limit=page_limit)
+        else:
+            return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y")
 
     def search_cites(self, pmid: str) -> List[Article]:
         """Searches for articles citing a specific PubMed ID.
@@ -285,7 +314,7 @@ class EuropePMCClient:
 
         return biotools_cites
 
-    def get_relevant_paragraphs(self, pmcid):
+    def get_relevant_paragraphs(self, pmcid: str, tool_name: str):
         """
         Retrieves paragraphs from the full text of an article that contain specific sentences.
         """
@@ -298,9 +327,113 @@ class EuropePMCClient:
 
             for tag in p_tags:
                 paragraph_text = tag.get_text()
-                # if any(partial_sentence in paragraph_text for partial_sentence in partial_sentences):
-                relevant_paragraphs.append(paragraph_text)
+                if tool_name in paragraph_text:
+                    relevant_paragraphs.append(paragraph_text)
 
             return relevant_paragraphs
         else:
-            return None
+            return []
+        
+def segment_sentences_spacy(paragraphs:List[str], substring):
+    if not paragraphs:
+        return None
+    all_sentences = []
+    for parahgraph in paragraphs:
+        splitter = SentenceSplitter(language='en')
+        sentences = splitter.split(parahgraph)
+        for sentence in sentences:
+            if substring in sentence:
+                all_sentences.append(sentence)
+    return all_sentences
+
+def find_sentence_with_substring(string_list, substring):
+    all_sentences = []
+    for text in string_list:
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        for sentence in sentences:
+            if substring.lower() in sentence.lower():
+                all_sentences.append(sentence.replace('\n', ' '))
+    return all_sentences
+
+def identify_tool_mentions_in_sentences(pmcid:str, tool: Tool_entry, paragraphs:List[str]):
+    sentences_data = {}
+    sentences = find_sentence_with_substring(paragraphs, tool.name)
+    for sentence in sentences:
+        if sentence:
+            token = tool.name
+            start_span = sentence.find(token)
+            end_span = start_span + len(token)
+
+            if start_span != -1:  # Ensure the token is found in the sentence
+                if sentence not in sentences_data:
+                    sentences_data[sentence] = set()
+
+                sentences_data[sentence].add((start_span, end_span, token, tool.biotool_id))
+
+    return [[pmcid, sentence, list(ner_tags), tool.topics] for sentence, ner_tags in sentences_data.items()]
+
+def identify_tool_mentions_using_europepmc(biotools: List[Tool_entry], article_limit: int=1) -> pd.DataFrame:
+    """
+    Identifies tool mentions in sentences using the Europe PMC API.
+
+    Parameters
+    ----------
+    biotools : List[Tool_entry]
+        List of Tool_entry objects.
+    
+    article_limit : int, optional
+        The maximum number of articles to retrieve for each tool, by default 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing the tool mentions.
+    """
+    results_list = []
+    client = EuropePMCClient()
+    for tool in biotools:
+        # Call bio.tools query and get a list of Article objects
+        
+        biotools_articles = client.search_mentions(tool.name, article_limit = article_limit)
+
+        if len(biotools_articles) == 0:
+            continue
+        first_article = biotools_articles[0]
+
+        relevant_parahraphs = client.get_relevant_paragraphs(first_article.pmcid, tool.name)
+        if len(relevant_parahraphs) == 0:
+            print("No relevant paragraphs found", tool.name)
+            continue
+        
+        tool.get_topics()
+
+        result = identify_tool_mentions_in_sentences(first_article.pmcid, tool, relevant_parahraphs)
+        results_list.extend(result)
+
+    result_df = pd.DataFrame(results_list, columns=["PMCID", "Sentence", "NER_Tags", "Topics"])
+    result_df = result_df.explode("NER_Tags").drop_duplicates()
+
+    return result_df
+
+def split_train_test_dev(dataframe: pd.DataFrame, train_size=0.7, dev_size=0.5, random_state=42):
+    """
+    Splits the input dataframe into train, test, and dev sets.
+
+    Parameters:
+        dataframe (pd.DataFrame): The DataFrame to split.
+        train_size (float): Proportion of the data to use for training. Default is 0.7.
+        dev_size (float): Proportion of the test_dev split to use for dev (e.g., 0.5 for 50%). Default is 0.5.
+        random_state (int): Random seed for reproducibility. Default is 42.
+
+    Returns:
+        train_df (pd.DataFrame): Training set.
+        test_df (pd.DataFrame): Test set.
+        dev_df (pd.DataFrame): Development/validation set.
+    """
+    # First split: train and test_dev (test + dev combined)
+    train_df, test_dev_df = train_test_split(dataframe, train_size=train_size, random_state=random_state)
+    
+    # Second split: split test_dev into test and dev
+    test_df, dev_df = train_test_split(test_dev_df, test_size=dev_size, random_state=random_state)
+    
+    return train_df, test_df, dev_df
