@@ -1,21 +1,16 @@
 from dataclasses import dataclass
+import json
 import re
-import csv
 import pandas as pd
 import requests
-from pathlib import Path
 from typing import List, Optional
-import pandas as pd
 import math
-
+from sentence_splitter import SentenceSplitter
+from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
 
 from bh24_literature_mining.biotools import Tool_entry
 from bh24_literature_mining.utils import parse_to_bool
-from sentence_splitter import SentenceSplitter
-from sklearn.model_selection import train_test_split
-import pandas as pd
-
 
 @dataclass
 class Article:
@@ -53,6 +48,26 @@ class Article:
             citedByCount=article_dict.get("citedByCount"),
             pubType=article_dict.get("pubType"),
         )
+    
+    @staticmethod
+    def read_cites_from_json(path: str) -> list[dict]:
+        """Reads the list of tools and their citing articles from a JSON file.
+
+        Parameters
+        ----------
+        path : str
+                Path to the JSON file.
+
+        Returns
+        -------
+        list[dict]
+            List of dictionaries with the tool name and the list of citing articles.
+        """
+        with open(path, "r") as file:
+            dat = json.load(file)
+            for i, tool in enumerate(dat):
+                dat[i]["articles"] = [Article.dict_to_article(x) for x in tool["articles"]]
+            return dat
 
 
 class EuropePMCClient:
