@@ -28,6 +28,23 @@ class Article:
 
     inEPMC: Optional[bool] = None
 
+    def dict_to_article(article_dict: dict):
+        return Article(
+            id=article_dict.get("id"),
+            title=article_dict.get("title"),
+            authorString=article_dict.get("authorString"),
+            pubYear=article_dict.get("pubYear"),
+            journalTitle=article_dict.get("journalTitle"),
+            pubDate=article_dict.get("pubDate"),
+            doi=article_dict.get("doi"),
+            pmcid=article_dict.get("pmcid"),
+            pmid=article_dict.get("pmid"),
+            isOpenAccess=article_dict.get("isOpenAccess"),
+            inEPMC=article_dict.get("inEPMC"),
+            citedByCount=article_dict.get("citedByCount"),
+            pubType=article_dict.get("pubType"),
+        )
+
 
 class EuropePMCClient:
     """Client for interacting with the Europe PMC API."""
