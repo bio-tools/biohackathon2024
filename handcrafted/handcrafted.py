@@ -4,7 +4,7 @@ import re
 import time
 import unicodedata
 from enum import Enum
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qsl
 from html import unescape
 
 import requests
@@ -17,8 +17,65 @@ from bh24_literature_mining.utils import load_biotools_from_zip
 MAX_WORDS = 8
 MAX_WORDS_COMPOUND = 4
 
-EXCLUDED_ACRONYMS_IN_TOOL_NAME = {'EBI', 'NIH', 'SIB'}
+EXCLUDED_ACRONYMS_IN_TOOL_NAME = {'EBI', 'NIH', 'SIB', 'ExPASy'}
+
+EXCLUDED_NOT_SIMPLE = {
+    # no cites
+    'ChIA-PET', 'LiftOver', 'BioC', 'CRISPRCas', 'COVID-19 Dashboard',
+    # has cites
+    't-SNE', 'ChIP-Seq', 'circRNA', 'XGBoost', 'scRNA-seq', 'ceRNA', 'ROC Curve', 'cfDNA', 'IsomiR', 'PCHi-C',
+    'SARS-CoV-2', 'MinION', 'sRNA', 'nCoV', 'HotSpot', 'ModeRNA', 'GeneView', 'scATAC-seq', 'aCGH', 'microRNA'
+}
+EXCLUDED_NOT_SIMPLE_PLURAL = {e + 's' for e in EXCLUDED_NOT_SIMPLE}
+INCLUDED_SIMPLE = {
+    # no cites
+    'ggplot2', 'scikit-learn', 'fastqc', 'Matplotlib', 'numpy', 'matplotlib', 'Cutadapt', 'Human Phenotype Ontology',
+    'cutadapt', 'Trim Galore', 'pheatmap', 'American Type Culture Collection', 'tabix', 'Open Targets', 'wgsim',
+    'scikit-image', 'bbmap', 'Cellosaurus', 'ggtree', 'rstudio', 'Konstanz Information Miner', 'Google Colab', 'ICD-9',
+    'Pipeline Pilot', 'LASTZ', 'Apache Hadoop', 'CONCOCT', 'cellosaurus', 'Antimicrobial Peptide Database', 'Squidpy',
+    'Exome Variant Server', 'ea-utils', 'barrnap', 'European Variation Archive', 'sourmash', 'gffread', 'bbtools',
+    'BBKNN', 'Golm Metabolome Database', 'Filtlong', 'pysster', 'SPIEC-EASI', 'Barrnap', 'Merqury', 'MAKER-P',
+    'ICELLNET', 'Partek Genomics Suite', 'Galaxy Tools', 'repeatmasker', 'strobemers', 'rjags', 'Glimma', 'Nextclade',
+    'getorf', 'cellchat', 'diffcyt', 'cellxgene', 'bwtool', 'pyfaidx', 'gffcompare', 'Shiny-Seq', 'immunarch',
+    'motifmatchr', 'Parsnp', 'shovill', 'helixturnhelix',
+    # no cites lower
+    'cikitlearn', 'ggplot', 'numpy', 'fastqc', 'matplotlib', 'rstudio', 'rdkit', 'repeatmasker', 'cutadapt', 'biocarta',
+    'tabix', 'trimgalore', 'bbmap', 'pheatmap', 'wgsim', 'dgidb', 'scikitimage', 'chemspider', 'cellosaurus', 'ggtree',
+    'fastani', 'cellchat', 'bbtools', 'american type culture collection atcc', 'imagemagick', 'helixturnhelix',
+    'gffread', 'google colab', 'somaticsniper', 'metagenemark', 'gffcompare', 'casoffinder', 'gemsim', 'genomestudio',
+    'singlecellsignalr', 'open phacts', 'squidpy', 'varibench', 'abricate', 'picardtools', 'eautils', 'barrnap',
+    'consurfdb', 'mnepython', 'bbknn', 'uniprot id mapping', 'optitype', 'cellxgene', 'sourmash', 'spieceasi',
+    'nextstrainorg', 'plasflow', 'swisslipids', 'pysster', 'golm metabolome database', 'hicanu', 'jsphylosvg',
+    'mirmine', 'europepmc', 'spatiallibd', 'neuromorphoorg', 'fastq screen', 'sympy', 'glimma', 'windowmasker',
+    'covglue', 'amrfinderplus', 'netnglyc', 'protscale', 'dsysmap', 'kofamscan', 'doubletdetection',
+    # has cites
+    'Gene Ontology', 'Reactome', 'MATLAB', 'Entrez Gene', 'European Nucleotide Archive', 'Trimmomatic', 'Rfam',
+    'PROSITE', 'Bioconda', 'Nucleotide Sequence Database Collaboration', 'PHYLIP', 'Mouse Genome Database', 'Orphanet',
+    'Mouse Genome Informatics', 'bioconda', 'CORUM', 'ICD-10', 'seqtk', 'Ontology Lookup Service',
+    'Rat Genome Database', 'MODOMICS', 'Newbler', 'ATTED-II', 'ICD-11',
+    # has cites lower
+    'bioconductor', 'genbank', 'pubchem', 'pymol', 'rcsb protein data bank', 'chembl', 'uniprotkb swissprot',
+    'trimmomatic', 'flybase', 'snakemake', 'pubmed central', 'dbgap', 'bioconda', 'wikipathways',
+    'the biogrid interaction database', 'biocyc', 'bioperl', 'wormbase', 'metacyc', 'orphanet', 'genenamesorg',
+    'cytoscapejs', 'insdc', 'ngl viewer', 'lncrnadisease', 'tigrfams', 'fastxtoolkit', 'mouse genome informatics mgi',
+    'the immune epitope database iedb', 'ecocyc', 'disprot', 'orthodb', 'regulondb', 'openms', 'mzmine', 'metabolights',
+    'biojava', 'pubtator', 'dbptm', 'consurf',
+    # 4 letters upper/lower
+    'HGNC', 'ATCC', 'BLAT', 'DDBJ', 'kegg', 'IEDB', 'HMDD', 'ZFIN', 'EMDB', 'SBGN', 'gatk', 'pfam', 'BMRB', 'GBIF',
+    'MNDR', 'GTRD', 'omim', 'pdbe'
+}
+# TODO add more
+EXCLUDED_SIMPLE = {
+    # lower
+    'timecourse', 'biomodels', 'allpaths', 'dirichletmultinomial', 'tscan', 'beadarray', 'vectorbase',
+    'variantannotation', 'scrna', 'one to three',
+    # 4 letters upper
+    'GSEA', 'SBML', 'DSSP', 'HPRD', 'MLST', 'GSVA', 'GMAP', 'SPIA', 'HSSP', 'RMAP', 'PGAP', 'MSEA', 'PLEK', 'RPBS',
+    'MISA', 'IMPC', 'CRAC'
+}
+
 EXCLUDED_MATCHES = {'RNA', 'rna', 'DNA', 'dna'}
+
 EXCLUDED_SOFTWARE_CATALOGUE_LINKS = {
     'http://ms-utils.org', 'http://cbs.dtu.dk/services', 'http://www.cbs.dtu.dk/services', 'http://expasy.org',
     'https://www.expasy.org/', 'http://bioconductor.org/'
@@ -32,22 +89,31 @@ SKIP_PATHS = {
     'content', 'matlabcentral', 'articles', 'bioinfo', 'main', 'databases', 'services', 'resources', 'programs', 'en',
     'fr', 'group', 'people', 'sites', 'default', 'd', 'main'
 }
+
+def normalize_pub_title(title):
+    return ''.join(c for c in title.lower() if c.isalnum())
+
 EXCLUDED_CITES = {
-    '25633503', 'pmc4509590', '10.1038/nmeth.3252', # Bioconductor
-    '27137889', 'pmc4987906', '10.1093/nar/gkw343', # Galaxy
-    '10.7490/f1000research.1114334.1', # Galaxy Pasteur
-    '10827456', '10.1016/s0168-9525(00)02024-2', # EMBOSS
-    '10.1017/cbo9781139151405', # EMBOSS
-    '10.1017/cbo9781139151399', # EMBOSS
-    '35412617', 'pmc9252731', '10.1093/nar/gkac240', # EMBL-EBI
-    '26673705', 'pmc4702932', '10.1093/nar/gkv1352', # EMBL-EBI
-    '26687719', 'pmc4702834', '10.1093/nar/gkv1157' # Ensembl
+    '25633503', 'pmc4509590', '10.1038/nmeth.3252', normalize_pub_title('Orchestrating high-throughput genomic analysis with Bioconductor'), # Bioconductor
+    '27137889', 'pmc4987906', '10.1093/nar/gkw343', normalize_pub_title('The Galaxy platform for accessible, reproducible and collaborative biomedical analyses: 2016 update'), # Galaxy
+    '10.7490/f1000research.1114334.1', normalize_pub_title('A public Galaxy platform at Pasteur used as an execution engine for web services'), # Galaxy Pasteur
+    '10827456', '10.1016/s0168-9525(00)02024-2', normalize_pub_title('EMBOSS: The European Molecular Biology Open Software Suite'), # EMBOSS
+    '10.1017/cbo9781139151405', normalize_pub_title('EMBOSS Developer\'s Guide'), # EMBOSS
+    '10.1017/cbo9781139151399', normalize_pub_title('EMBOSS Administrator\'s Guide'), # EMBOSS
+    '35412617', 'pmc9252731', '10.1093/nar/gkac240', normalize_pub_title('Search and sequence analysis tools services from EMBL-EBI in 2022'), # EMBL-EBI
+    '26673705', 'pmc4702932', '10.1093/nar/gkv1352', normalize_pub_title('The European Bioinformatics Institute in 2016: Data growth and integration'), # EMBL-EBI
+    '26687719', 'pmc4702834', '10.1093/nar/gkv1157', normalize_pub_title('Ensembl 2016'), # Ensembl
+    '10592169', 'pmc102437', '10.1093/nar/28.1.10', normalize_pub_title('Database resources of the National Center for Biotechnology Information'), # NCBI
+    '16381840', 'pmc1347520', '10.1093/nar/gkj158', normalize_pub_title('Database resources of the National Center for Biotechnology Information'), # NCBI
+    '18940862', 'pmc2686545', '10.1093/nar/gkn741', normalize_pub_title('Database resources of the National Center for Biotechnology Information'), # NCBI
+    '21097890', 'pmc3013733', '10.1093/nar/gkq1172', normalize_pub_title('Database resources of the National Center for Biotechnology Information'), # NCBI
+    '24259429', 'pmc3965057', '10.1093/nar/gkt1146', normalize_pub_title('Database resources of the National Center for Biotechnology Information') # NCBI
 }
-EXCLUDED_CITES_EXCEPTION_IDS = {'bioconductor', 'galaxy', 'emboss', 'ebi_tools', 'ensembl'}
+EXCLUDED_CITES_EXCEPTION_IDS = {'bioconductor', 'galaxy', 'emboss', 'ebi_tools', 'ensembl', 'ncbi_resources'}
 
 
 class Tokens(Enum):
-    ORIG = 'orig'
+    # ORIG = 'orig'
     CASED = 'cased'
     LOWER = 'lower'
 
@@ -87,23 +153,27 @@ def get_conc_list(tokens, n):
 def get_matches_tool(name, id, tokens_words, tokens_set, matches, find):
     if len([c for c in name if c.isalpha()]) == 0:
         return
-    tool = {Tokens.ORIG: name.split()}
-    tool[Tokens.CASED] = get_tokens_cased(tool[Tokens.ORIG])
-    tool[Tokens.LOWER] = get_tokens_lower(tool[Tokens.ORIG])
+    tokens_orig = name.split()
+    tool = {Tokens.CASED: get_tokens_cased(tokens_orig), Tokens.LOWER: get_tokens_lower(tokens_orig)}
     tool_str = {}
     for token_label in Tokens:
         tool_str[token_label] = {' '.join([t for t in tool[token_label] if t])}
-    n = len(tool[Tokens.ORIG]) - 1
+    n = len(tool[Tokens.CASED]) - 1
     if n < MAX_WORDS_COMPOUND:
         for token_label in Tokens:
             for i in range(1, n + 1):
                 tool_str[token_label].add(' '.join(tool[token_label][j] for j in range(0, i) if tool[token_label][j]) + ' '.join(tool[token_label][j] for j in range(i, n + 1) if tool[token_label][j]))
+    hyphenation_pattern = re.compile(r'-[a-z0-9.-]+$')
     for token_label in Tokens:
         for i in range(0, MAX_WORDS):
             for s in tool_str[token_label] & tokens_set[token_label][i]:
                 for w in tokens_words[token_label][i]:
                     if s == w[0]:
                         matches[token_label].add((s, id, w[1], find if find else w[2]))
+                    elif '-' in w[0]:
+                        wn = hyphenation_pattern.sub('', w[0])
+                        if s == wn:
+                            matches[token_label].add((s, id, w[1], find if find else w[2]))
 
 
 def get_matches(tokens, biotools):
@@ -172,23 +242,28 @@ def get_ids_pub(soup):
         ids_pub[id_label].update([tag.text.strip().lower() for tag in soup.find_all('article-id', {'pub-id-type': id_label})])
         if id_label == 'doi':
             ids_pub[id_label] = {normalize_doi(id_pub) for id_pub in ids_pub[id_label]}
+    ids_pub['title'] = {normalize_pub_title(tag.text) for tag in soup.find_all('article-title')}
     return ids_pub
 
 
-def find_ref(match, biotools, ids_pub):
+def find_ref(match, pub_titles, biotools, ids_pub):
     found = False
     tool = biotools[match[1]]
     ids = {}
     id_labels = ['pmid', 'pmcid', 'doi']
     for id_label in id_labels:
         ids[id_label] = set()
+    ids['title'] = set()
     for publication in tool['publication']:
         for id_label in id_labels:
             if publication[id_label]:
                 if id_label == 'doi':
-                    ids[id_label].add(normalize_doi(publication[id_label]))
+                    id = normalize_doi(publication[id_label])
                 else:
-                    ids[id_label].add(publication[id_label].strip().lower())
+                    id = publication[id_label].strip().lower()
+                ids[id_label].add(id)
+                if id in pub_titles:
+                    ids['title'].add(pub_titles[id][1])
     for id_label, v in ids.items():
         for id in v:
             if id in EXCLUDED_CITES and match[1] not in EXCLUDED_CITES_EXCEPTION_IDS:
@@ -201,7 +276,7 @@ def find_ref(match, biotools, ids_pub):
     return found
 
 
-def get_ref_ids(biotools, ids_pub):
+def get_ref_ids(pub_titles, biotools, ids_pub):
     ids = {}
     for tool in biotools.values():
         found = False
@@ -212,7 +287,7 @@ def get_ref_ids(biotools, ids_pub):
                         id = normalize_doi(publication[id_label])
                     else:
                         id = publication[id_label].strip().lower()
-                    if id in ids_pub[id_label]:
+                    if id in ids_pub[id_label] or (id in pub_titles and pub_titles[id][1] in ids_pub['title']):
                         ids[tool['biotoolsID']] = id
                         found = True
                         break
@@ -235,6 +310,11 @@ def get_find_url_tokens(tokens):
 
 def normalize_path(path):
     path = path.split('#')[0]
+    return path
+
+
+def normalize_path_aggressive(path):
+    path = path.split('#')[0]
     path = path.split('?')[0]
     path = path.removesuffix('html')
     path = path.removesuffix('htm')
@@ -243,7 +323,7 @@ def normalize_path(path):
 
 
 def find_url(tokens, match, biotools, find_url_tokens):
-    found = False
+    found = 0
     tool = biotools[match[1]]
     urls_parsed = set()
     urls_parsed.add(urlparse(tool['homepage']))
@@ -254,6 +334,8 @@ def find_url(tokens, match, biotools, find_url_tokens):
     for url_parsed in urls_parsed:
         domain = ''.join(char for char in url_parsed.netloc if char.isalnum()).lower()
         paths = [path.lower() for path in url_parsed.path.split('/')[1:]]
+        if paths and url_parsed.query:
+            paths[-1] += '?' + url_parsed.query
         if domain.startswith('www.'):
             domain = domain[4:]
         if domain.startswith('www'):
@@ -261,7 +343,8 @@ def find_url(tokens, match, biotools, find_url_tokens):
         for i in range(len(find_url_tokens)):
             token_lower = find_url_tokens[i]
             if domain == token_lower:
-                found = True
+                found_1 = False
+                found_2 = True
                 paths_seen = 0
                 match_lower = match[0].lower()
                 for j in range(len(paths)):
@@ -270,84 +353,146 @@ def find_url(tokens, match, biotools, find_url_tokens):
                     if paths[j] not in SKIP_PATHS:
                         paths_seen += 1
                         token_lower = tokens[i + 1 + j].lower()
-                        token_lower_normalized = normalize_path(token_lower)
-                        if match_lower == token_lower or match_lower == token_lower_normalized:
-                            found = True
-                            break
-                        if paths[j] != token_lower and normalize_path(paths[j]) != token_lower_normalized:
-                            found = False
+                        if match_lower == token_lower or match_lower == normalize_path_aggressive(token_lower) or match_lower in {v[1] for v in parse_qsl(token_lower)}:
+                            found_1 = True
+                        if paths[j] != token_lower and normalize_path(paths[j]) != normalize_path(token_lower):
+                            found_2 = False
                         if paths_seen == 2:
                             break
-                if found:
+                if found_2:
+                    found = 2
+                elif found_1:
+                    found = 1
+                if found > 1:
                     break
-        if found:
+        if found > 1:
             break
     return found
 
 
-def find_match(tokens, match, biotools, ids_pub, find_url_tokens):
+def find_match(tokens, match, pub_titles, biotools, ids_pub, find_url_tokens):
     if match[0] in EXCLUDED_MATCHES:
+        return 0
+    if find_ref(match, pub_titles, biotools, ids_pub):
+        return 3
+    return find_url(tokens, match, biotools, find_url_tokens)
+
+
+def is_simple(name):
+    lower_seen = False
+    upper_seen = False
+    capital_seen = False
+    first = True
+    for name in name.split():
+        for name in name.split('-'):
+            if name[:-1].isupper() and name[-1] == 's':
+                name = name[:-1]
+            index = len(name) - 1
+            while index >= 0 and name[index].isdigit():
+                index -= 1
+            name = name[:index + 1]
+            if not name:
+                continue
+            if name.isalpha():
+                if not name.islower() and not name.isupper() and not (name[0].isupper() and name[1:].islower()):
+                    return False
+            else:
+                return False
+            if first:
+                first = False
+                if name.islower():
+                    lower_seen = True
+            if name.isupper():
+                upper_seen = True
+            if name[0].isupper() and name[1:].islower():
+                capital_seen = True
+    if lower_seen and upper_seen or lower_seen and capital_seen or upper_seen and capital_seen:
         return False
-    if find_ref(match, biotools, ids_pub):
-        return True
-    if find_url(tokens, match, biotools, find_url_tokens):
-        return True
-    return False
+    return True
 
 
-def filter_matches(tokens, matches, scores, wordlist, biotools, ids_pub, find_url_tokens):
+def filter_matches(tokens, matches, cites, pub_titles, counts, wordlist, biotools, ids_pub, find_url_tokens):
     matches_filtered: set[(str, str, list[int], bool)] = set()
-    matches_pass: set[(str, str, bool)] = set()
+    matches_pass: dict[(str, str, bool), int] = {}
     matches_fail: set[(str, str, bool)] = set()
     for match in matches:
         if (match[0], match[1], match[3]) in matches_pass:
-            matches_filtered.add(match)
+            matches_filtered.add(match + (matches_pass[(match[0], match[1], match[3])],))
             continue
         if (match[0], match[1], match[3]) in matches_fail:
             continue
         passes = False
         if not match[3]:
-            score = scores[match[0]] if match[0] in scores else 1
-            simple = match[0].isalpha() and (match[0].islower() or match[0].isupper())
-            if simple and score <= 0.2 or not simple and score <= 5:
-                if len([c for c in match[0][1:] if not c.islower() and c != ' ']) > 0:
+            if is_simple(match[0]):
+                if match[0] in INCLUDED_SIMPLE:
                     passes = True
-                else:
-                    for word in match[0].split():
-                        if lower(word) not in wordlist:
+                elif (not match[0] in EXCLUDED_SIMPLE and (not match[0].islower() and len(match[0]) > 3 or len(match[0]) > 4)
+                      and (match[0] not in counts or counts[match[0]] <= 1 or (match[1] in cites and cites[match[1]] > 0 and counts[match[0]] / cites[match[1]] / counts[''] < 0.000012))):
+                    if match[0].isupper() and len(match[0]) == 4:
+                        if match[0].isalpha() and not match[0].lower() in wordlist:
                             passes = True
-        if passes or find_match(tokens, match, biotools, ids_pub, find_url_tokens):
-            matches_filtered.add(match)
-            matches_pass.add((match[0], match[1], match[3]))
+                    elif not match[0][1:].islower() or any(c.isdigit() for c in match[0]):
+                        passes = True
+                    else:
+                        word_count = 0
+                        for word in match[0].split():
+                            for subword in word.split('-'):
+                                word_count += 1
+                                if word_count > 2 or subword.lower() not in wordlist:
+                                    passes = True
+            else:
+                if not match[0] in EXCLUDED_NOT_SIMPLE and not match[0] in EXCLUDED_NOT_SIMPLE_PLURAL and len(match[0]) > 3:
+                    passes = True
+        if passes:
+            matches_filtered.add(match + (0,))
+            matches_pass[(match[0], match[1], match[3])] = 0
         else:
-            matches_fail.add((match[0], match[1], match[3]))
+            find_match_score = find_match(tokens, match, pub_titles, biotools, ids_pub, find_url_tokens)
+            if find_match_score:
+                matches_filtered.add(match + (find_match_score,))
+                matches_pass[(match[0], match[1], match[3])] = find_match_score
+            else:
+                matches_fail.add((match[0], match[1], match[3]))
     return matches_filtered
 
 
-def fill_results(matches, results, filled, tokens, biotools, ids_pub, find_url_tokens):
-    for match in sorted(matches, key=lambda x: (not x[3], len(x[2]), len(x[0]), -len(x[1]), x[1]), reverse=True):
-        overlap = set()
-        for fill in filled:
-            if match[2].start < fill[0].stop and match[2].stop > fill[0].start:
-                overlap.add(fill)
-        overwrite = True
-        for o in overlap:
-            if o[1]:
-                overwrite = False
-                break
-        if overwrite:
-            find = False # find = match[3]
-            if not find:
-                find = find_match(tokens, match, biotools, ids_pub, find_url_tokens)
-            if not overlap or find:
-                for o in overlap:
-                    del results[o[0][0]]
-                filled -= overlap
-                results[match[2][0]] = match[1], len(match[2])
-                filled.add((match[2], find))
+def fill_result(match, results, filled, matches_unused, tokens, pub_titles, biotools, ids_pub, find_url_tokens):
+    if match in matches_unused:
+        del matches_unused[match]
+    overlap = {}
+    for fill in filled:
+        if match[2].start < fill[0][2].stop and match[2].stop > fill[0][2].start:
+            overlap[fill] = None
+    max_score = 0
+    for o in overlap:
+        if o[1] > max_score:
+            max_score = o[1]
+    if max_score < 3:
+        find_match_score = match[4]
+        if not find_match_score:
+            find_match_score = find_match(tokens, match, pub_titles, biotools, ids_pub, find_url_tokens)
+        if not overlap or find_match_score > max_score:
+            for o in overlap:
+                del results[o[0][2][0]]
+                filled.discard(o)
+            results[match[2][0]] = match
+            filled.add((match, find_match_score))
+            for o in overlap:
+                matches_unused[o[0]] = None
+            for match_unused in list(matches_unused.keys()):
+                fill_result(match_unused, results, filled, matches_unused, tokens, pub_titles, biotools, ids_pub, find_url_tokens)
+        else:
+            matches_unused[match[:-1] + (find_match_score,)] = None
+    else:
+        matches_unused[match] = None
 
 
-def get_results(tokens, biotools, scores, wordlist, soup):
+def fill_results(matches, results, filled, matches_unused, tokens, pub_titles, biotools, ids_pub, find_url_tokens):
+    for match in sorted(matches, key=lambda x: (not x[3], len(x[2]), len(x[0]), -len(x[1]), x[1], x[2][0], x[0], x[4]), reverse=True):
+        fill_result(match, results, filled, matches_unused, tokens, pub_titles, biotools, ids_pub, find_url_tokens)
+
+
+def get_results(tokens, biotools, cites, pub_titles, counts, wordlist, soup):
     matches = get_matches(tokens, biotools)
 
     ids_pub = get_ids_pub(soup)
@@ -356,12 +501,13 @@ def get_results(tokens, biotools, scores, wordlist, soup):
         find_url_tokens[token_label] = get_find_url_tokens(tokens[token_label])
     matches_filtered = {}
     for token_label in Tokens:
-        matches_filtered[token_label] = filter_matches(tokens[token_label], matches[token_label], scores[token_label], wordlist, biotools, ids_pub, find_url_tokens[token_label])
+        matches_filtered[token_label] = filter_matches(tokens[token_label], matches[token_label], cites, pub_titles, counts[token_label], wordlist, biotools, ids_pub, find_url_tokens[token_label])
 
     results = {}
     filled = set()
+    matches_unused = {}
     for token_label in Tokens:
-        fill_results(matches_filtered[token_label], results, filled, tokens[token_label], biotools, ids_pub, find_url_tokens[token_label])
+        fill_results(matches_filtered[token_label], results, filled, matches_unused, tokens[token_label], pub_titles, biotools, ids_pub, find_url_tokens[token_label])
 
     return results
 
@@ -390,7 +536,7 @@ def html_replace(id, biotools, color):
         begin = match_begin_end.group(1)
         name = match_begin_end.group(2)
         end = match_begin_end.group(3)
-        if name.endswith(')') and (begin.endswith('(') or '(' not in name or not biotools[id]['name'].endswith(')')):
+        if name.endswith(')') and (begin.endswith('(') or '(' not in name):
             name = name[:-1]
             end = ')' + end
         if name.endswith('+') and not biotools[id]['name'].endswith('+'):
@@ -411,7 +557,7 @@ def html_warning(html, message):
     return html.replace('<body>', f'<body>\n<p style="color: #ff0000; font-weight: bold;">{html_encode(message)}</p>')
 
 
-def get_html(results, tokens_orig, biotools, soup):
+def get_html(results, tokens_orig, pub_titles, biotools, soup):
     xml_doc = etree.fromstring(str(soup).encode('utf-8'))
     with open(get_file_path('jats.xslt'), 'r', encoding='utf-8') as file:
         xslt_doc = etree.parse(file)
@@ -427,14 +573,14 @@ def get_html(results, tokens_orig, biotools, soup):
 
     id_tokens = {}
     id_count = {}
-    for pos, id in sorted(results.items()):
-        token = ' '.join(tokens_orig[pos + i] for i in range(id[1]))
-        if id[0] in id_tokens:
-            id_tokens[id[0]].add(token)
-            id_count[id[0]] += 1
+    for pos, match in sorted(results.items()):
+        token = ' '.join(tokens_orig[i] for i in match[2])
+        if match[1] in id_tokens:
+            id_tokens[match[1]].add(token)
+            id_count[match[1]] += 1
         else:
-            id_tokens[id[0]] = {token}
-            id_count[id[0]] = 1
+            id_tokens[match[1]] = {token}
+            id_count[match[1]] = 1
     to_front = []
     keys = list(id_tokens.keys())
     for i in range(len(keys)):
@@ -465,7 +611,7 @@ def get_html(results, tokens_orig, biotools, soup):
         color = colors[color_index % len(colors)]
         color_index += 1
         pattern = r'(?<=[\s/>])(' # TODO en-dash, em-dash
-        pattern += r'|'.join([r'[\s/]+'.join([re.escape(html_encode_unicode(token_word)) for token_word in token.split()]) for token in tokens])
+        pattern += r'|'.join([r'[\s/]+'.join([re.escape(html_encode_unicode(token_word)) for token_word in token.split()]) for token in sorted(tokens, key=lambda x: (len(x), x), reverse=True)])
         pattern += r')(?=[\s/<])' # TODO \s does not match all Unicode whitespace characters, like Unicode thin space (&#8201;)
         html, n = re.compile(pattern).subn(html_replace(id, biotools, color), html)
         links_in_title = html_links_in_title(html, 'title') - links_in_title_total
@@ -478,7 +624,7 @@ def get_html(results, tokens_orig, biotools, soup):
     if title_text:
         html = re.sub(r'<title>.*?</title>', f'<title>{title_text}</title>', html, count=1, flags=re.DOTALL)
 
-    ref_ids = get_ref_ids(biotools, get_ids_pub(soup))
+    ref_ids = get_ref_ids(pub_titles, biotools, get_ids_pub(soup))
     unmatched_refs = [key for key in ref_ids.keys() if key in ref_ids.keys() - id_tokens.keys() and (ref_ids[key] not in EXCLUDED_CITES or key in EXCLUDED_CITES_EXCEPTION_IDS)]
     if unmatched_refs:
         unmatched = ', '.join(f'{biotools[id]['name']} [{id}] ({ref_ids[id]})' for id in unmatched_refs)
@@ -520,27 +666,28 @@ def get_biotools():
 def match_xml(pmc: str | list[str]) -> str:
     biotools = get_biotools()
 
-    scores = {}
+    cites = read_cites_counts(get_file_path(f'cites.tsv'), True)
+    pub_titles = {k: (v, normalize_pub_title(v)) for k, v in read_cites_counts(get_file_path(f'pub_titles.tsv'), False).items()}
+    counts = {}
     for token_label in Tokens:
-        scores[token_label] = get_scores(get_file_path(f'counts_{token_label.value}.tsv'))
+        counts[token_label] = read_cites_counts(get_file_path(f'counts_{token_label.value}.tsv'), True)
 
     wordlist = set()
     with open(get_file_path('wamerican-wbritish-insane'), 'r', encoding='utf-8') as file:
         for line in file:
-            wordlist.add(lower(line.strip()))
+            wordlist.add(line.strip().lower())
 
     html = ''
     if isinstance(pmc, str):
         pmc = [pmc]
     for p in pmc:
         text, soup = get_xml_europepmc(p)
-        tokens = {Tokens.ORIG: get_tokens(text)}
-        tokens[Tokens.CASED] = get_tokens_cased(tokens[Tokens.ORIG])
-        tokens[Tokens.LOWER] = get_tokens_lower(tokens[Tokens.ORIG])
+        tokens_orig = get_tokens(text)
+        tokens = {Tokens.CASED: get_tokens_cased(tokens_orig), Tokens.LOWER: get_tokens_lower(tokens_orig)}
 
-        results = get_results(tokens, biotools, scores, wordlist, soup)
+        results = get_results(tokens, biotools, cites, pub_titles, counts, wordlist, soup)
 
-        html_p = get_html(results, tokens[Tokens.ORIG], biotools, soup)
+        html_p = get_html(results, tokens_orig, pub_titles, biotools, soup)
         html_p = html_p.replace('<body>', f'<body>\n<p>{p}</p>')
         html += html_p
     html = re.sub(r'</body>.*?<body>', '<hr>', html, flags=re.DOTALL)
@@ -552,49 +699,44 @@ def match_xml(pmc: str | list[str]) -> str:
     return html
 
 
-def get_counts(counts, matches, cites):
+def get_counts(counts, matches):
     matches_done = set()
     for s in matches:
         if s[3]:
             continue
         if s[0] in counts:
-            counts_0 = counts[s[0]][0] + (1 if s[0] not in matches_done else 0)
-            counts_1 = counts[s[0]][1] + (cites[s[1]] if s[1] not in counts[s[0]][2] else 0)
-            counts[s[0]][2].add(s[1])
-            counts[s[0]] = counts_0, counts_1, counts[s[0]][2]
+            counts[s[0]] += 1 if s[0] not in matches_done else 0
         else:
-            counts[s[0]] = 1, cites[s[1]], {s[1]}
+            counts[s[0]] = 1
         matches_done.add(s[0])
 
 
-def write_counts(file_path, counts):
-    counts = dict(sorted(counts.items(), key=lambda x: x[1][0], reverse=True))
+def write_cites_counts(file_path, cites_counts, cites_counts_col_a, cites_counts_col_b):
+    cites_counts = dict(sorted(cites_counts.items(), key=lambda x: (-x[1], x[0]) if type(x[1]) == int else x[0]))
     with open(file_path, 'w', encoding='utf-8', newline='') as file:
         writer = csv.writer(file, delimiter='\t', lineterminator='\n')
-        writer.writerow(['Match', 'Count', 'Cites'])
-        for key, value in counts.items():
-            writer.writerow([key, value[0], value[1]])
+        writer.writerow([cites_counts_col_a, cites_counts_col_b])
+        for key, value in cites_counts.items():
+            writer.writerow([key, value])
 
 
-def get_scores(file_path):
-    scores = {}
+def read_cites_counts(file_path, ints):
+    cites_counts = {}
     with open(file_path, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter='\t')
         next(reader)
         for row in reader:
-            if int(row[2]) > 0:
-                scores[row[0]] = int(row[1]) / int(row[2])
-            else:
-                scores[row[0]] = int(row[1]) + 1
-    return scores
+            cites_counts[row[0]] = int(row[1]) if ints else row[1]
+    return cites_counts
 
 
 def generate_counts():
     biotools = get_biotools()
     cites = {}
+    pub_titles = {}
     i = 0
     for tool in biotools.values():
-        cites[tool['biotoolsID']] = 0
+        cites[tool['biotoolsID']] = -1
         # TODO possibly exclude publication type "Other"
         for publication in tool['publication']:
             found = False
@@ -611,8 +753,20 @@ def generate_counts():
                         response = requests.get("https://www.ebi.ac.uk/europepmc/webservices/rest/search", params=params)
                         if response.status_code == 200:
                             soup = BeautifulSoup(response.content, 'lxml-xml')
+                            title = soup.find('title')
+                            if title:
+                                title = title.text
+                                for pub_title_label in 'pmid', 'pmcid', 'doi':
+                                    label = soup.find(pub_title_label)
+                                    if label:
+                                        if pub_title_label == 'doi':
+                                            pub_titles[normalize_doi(label.text)] = title
+                                        else:
+                                            pub_titles[label.text.strip().lower()] = title
                             citedByCount = soup.find('citedByCount')
                             if citedByCount:
+                                if cites[tool['biotoolsID']] < 0:
+                                    cites[tool['biotoolsID']] = 0
                                 cites[tool['biotoolsID']] += int(citedByCount.text)
                                 found = True
                                 break
@@ -623,6 +777,10 @@ def generate_counts():
                     break
         i += 1
         print(f'cites {i}', flush=True)
+        time.sleep(0.1)
+    write_cites_counts(get_file_path(f'cites.tsv'), cites, 'biotoolsID', 'Cites')
+    write_cites_counts(get_file_path(f'pub_titles.tsv'), pub_titles, 'Publication', 'Title')
+
     fulltexts = get_file_path('../biotoolspub/fulltexts')
     counts = {}
     for token_label in Tokens:
@@ -632,21 +790,21 @@ def generate_counts():
         with open(os.path.join(fulltexts, xml), 'r', encoding='utf-8') as file:
             soup = BeautifulSoup('<article>' + file.read() + '</article>', 'xml')
             text = soup.get_text(separator=' ')
-        tokens = {Tokens.ORIG: get_tokens(text)}
-        tokens[Tokens.CASED] = get_tokens_cased(tokens[Tokens.ORIG])
-        tokens[Tokens.LOWER] = get_tokens_lower(tokens[Tokens.ORIG])
+        tokens_orig = get_tokens(text)
+        tokens = {Tokens.CASED: get_tokens_cased(tokens_orig), Tokens.LOWER: get_tokens_lower(tokens_orig)}
         matches = get_matches(tokens, biotools)
         for token_label in Tokens:
-            get_counts(counts[token_label], matches[token_label], cites)
+            get_counts(counts[token_label], matches[token_label])
         i += 1
         print(f'counts {i}', flush=True)
     for token_label in Tokens:
-        write_counts(get_file_path(f'counts_{token_label.value}.tsv'), counts[token_label])
+        counts[token_label][''] = i
+        write_cites_counts(get_file_path(f'counts_{token_label.value}.tsv'), counts[token_label], 'Match', 'Counts')
 
 
 def main():
     # match_xml([
-    #     'PMC3257301', 'PMC10845142', 'PMC8479664', 'PMC1160178', 'PMC11330317',
+    #     'PMC3257301', 'PMC10845142', 'PMC11387482', 'PMC1160178', 'PMC11330317',
     #     'PMC3125781', 'PMC7005830', 'PMC4422463', # comet
     #     'PMC6612819', 'PMC8479664', 'PMC7699628', 'PMC4086120', 'PMC5570231', # prism
     #     'PMC29831', 'PMC126239', 'PMC540004', 'PMC1160116', 'PMC1538874', 'PMC2238880', 'PMC3245168', 'PMC5154471',
@@ -660,7 +818,7 @@ def main():
     #     'PMC9330001', 'PMC9480001', 'PMC9630018', 'PMC9780001', 'PMC9930001', 'PMC10080001', 'PMC10230001', 'PMC10380001', 'PMC10530004', 'PMC10680001',
     #     'PMC10830001', 'PMC10980001', 'PMC11130001', 'PMC11280001', 'PMC11430001'
     # ])
-    # match_xml('PMC11387482')
+    # match_xml('PMC2238880')
     # generate_counts()
     pass
 
