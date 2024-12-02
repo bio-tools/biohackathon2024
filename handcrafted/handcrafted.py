@@ -17,7 +17,7 @@ from bh24_literature_mining.utils import load_biotools_from_zip
 MAX_WORDS = 8
 MAX_WORDS_COMPOUND = 4
 
-EXCLUDED_ACRONYMS_IN_TOOL_NAME = {'EBI', 'NIH', 'SIB', 'ExPASy'}
+EXCLUDED_ACRONYMS_IN_TOOL_NAME = {'EBI', 'NIH', 'SIB', 'ExPASy', 'COVID-19'}
 
 EXCLUDED_NOT_SIMPLE = {
     # no cites
@@ -74,7 +74,8 @@ EXCLUDED_SIMPLE = {
     'MISA', 'IMPC', 'CRAC'
 }
 
-EXCLUDED_MATCHES = {'RNA', 'rna', 'DNA', 'dna'}
+EXCLUDED_MATCHES = {'rna', 'dna', 'ws', 'api', 'rest', 'ct', 'md', 'db', 'id', 'roc', 'auc', 'mri', 'fmri', 'ii', 'gui',
+                    '2d', '3d', 'covid-19', 'covid19', 'covid', 'sars-cov-2', 'sir', 'gwas', 'snp', 'snps', 'pcr'}
 
 EXCLUDED_SOFTWARE_CATALOGUE_LINKS = {
     'http://ms-utils.org', 'http://cbs.dtu.dk/services', 'http://www.cbs.dtu.dk/services', 'http://expasy.org',
@@ -119,7 +120,9 @@ class Tokens(Enum):
 
 
 def get_tokens(text):
-    text = text.replace('/', ' ') # TODO en-dash, em-dash
+    text = text.replace('/', ' ')
+    text = text.replace('–', ' ') # en dash
+    text = text.replace('—', ' ') # em dash
     return text.split()
 
 
@@ -371,7 +374,7 @@ def find_url(tokens, match, biotools, find_url_tokens):
 
 
 def find_match(tokens, match, pub_titles, biotools, ids_pub, find_url_tokens):
-    if match[0] in EXCLUDED_MATCHES:
+    if match[0].lower() in EXCLUDED_MATCHES and match[3]:
         return 0
     if find_ref(match, pub_titles, biotools, ids_pub):
         return 3
@@ -411,6 +414,30 @@ def is_simple(name):
     return True
 
 
+def is_name(match, cites, counts, wordlist):
+    if is_simple(match[0]):
+        if match[0] in INCLUDED_SIMPLE:
+            return True
+        elif (not match[0] in EXCLUDED_SIMPLE and (not match[0].islower() and len(match[0]) > 3 or len(match[0]) > 4)
+              and (match[0] not in counts or counts[match[0]] <= 1 or (match[1] in cites and cites[match[1]] > 0 and counts[match[0]] / cites[match[1]] / counts[''] < 0.000012))):
+            if match[0].isupper() and len(match[0]) == 4:
+                if match[0].isalpha() and not match[0].lower() in wordlist:
+                    return True
+            elif not match[0][1:].islower() or any(c.isdigit() for c in match[0]):
+                return True
+            else:
+                word_count = 0
+                for word in match[0].split():
+                    for subword in word.split('-'):
+                        word_count += 1
+                        if word_count > 2 or subword.lower() not in wordlist:
+                            return True
+    else:
+        if not match[0] in EXCLUDED_NOT_SIMPLE and not match[0] in EXCLUDED_NOT_SIMPLE_PLURAL and len(match[0]) > 3:
+            return True
+    return False
+
+
 def filter_matches(tokens, matches, cites, pub_titles, counts, wordlist, biotools, ids_pub, find_url_tokens):
     matches_filtered: set[(str, str, list[int], bool)] = set()
     matches_pass: dict[(str, str, bool), int] = {}
@@ -421,29 +448,7 @@ def filter_matches(tokens, matches, cites, pub_titles, counts, wordlist, biotool
             continue
         if (match[0], match[1], match[3]) in matches_fail:
             continue
-        passes = False
-        if not match[3]:
-            if is_simple(match[0]):
-                if match[0] in INCLUDED_SIMPLE:
-                    passes = True
-                elif (not match[0] in EXCLUDED_SIMPLE and (not match[0].islower() and len(match[0]) > 3 or len(match[0]) > 4)
-                      and (match[0] not in counts or counts[match[0]] <= 1 or (match[1] in cites and cites[match[1]] > 0 and counts[match[0]] / cites[match[1]] / counts[''] < 0.000012))):
-                    if match[0].isupper() and len(match[0]) == 4:
-                        if match[0].isalpha() and not match[0].lower() in wordlist:
-                            passes = True
-                    elif not match[0][1:].islower() or any(c.isdigit() for c in match[0]):
-                        passes = True
-                    else:
-                        word_count = 0
-                        for word in match[0].split():
-                            for subword in word.split('-'):
-                                word_count += 1
-                                if word_count > 2 or subword.lower() not in wordlist:
-                                    passes = True
-            else:
-                if not match[0] in EXCLUDED_NOT_SIMPLE and not match[0] in EXCLUDED_NOT_SIMPLE_PLURAL and len(match[0]) > 3:
-                    passes = True
-        if passes:
+        if not match[3] and is_name(match, cites, counts, wordlist):
             matches_filtered.add(match + (0,))
             matches_pass[(match[0], match[1], match[3])] = 0
         else:
@@ -492,6 +497,20 @@ def fill_results(matches, results, filled, matches_unused, tokens, pub_titles, b
         fill_result(match, results, filled, matches_unused, tokens, pub_titles, biotools, ids_pub, find_url_tokens)
 
 
+def is_wordlist_lower(match, wordlist, tokens):
+    word_count = 0
+    for word in match[0].split():
+        for subword in word.split('-'):
+            word_count += 1
+            if word_count > 2 or not subword.isalpha() or not subword.islower() or subword not in wordlist:
+                return False
+    for i in match[2]:
+        word = tokens[Tokens.CASED][i].replace('-', '')
+        if not word.isalpha() or not word.islower():
+            return False
+    return True
+
+
 def get_results(tokens, biotools, cites, pub_titles, counts, wordlist, soup):
     matches = get_matches(tokens, biotools)
 
@@ -508,6 +527,25 @@ def get_results(tokens, biotools, cites, pub_titles, counts, wordlist, soup):
     matches_unused = {}
     for token_label in Tokens:
         fill_results(matches_filtered[token_label], results, filled, matches_unused, tokens[token_label], pub_titles, biotools, ids_pub, find_url_tokens[token_label])
+
+    not_wordlist_lower = set()
+    not_find = set()
+    for match in results.values():
+        if match[1] not in not_wordlist_lower:
+            if not is_wordlist_lower(match, wordlist, tokens):
+                not_wordlist_lower.add(match[1])
+        if match[1] not in not_find:
+            if not match[3]:
+                not_find.add(match[1])
+    for pos in list(results.keys()):
+        match = results[pos]
+        remove = False
+        if match[1] in not_wordlist_lower:
+            remove = is_wordlist_lower(match, wordlist, tokens)
+        if not remove and match[1] in not_find:
+            remove = match[3] and not is_name(match, cites, counts, wordlist)
+        if remove:
+            del results[pos]
 
     return results
 
@@ -570,6 +608,12 @@ def get_html(results, tokens_orig, pub_titles, biotools, soup):
         html = etree.tostring(result_tree, pretty_print=True, method="html", doctype='<!DOCTYPE html>').decode("utf-8")
     except etree.XSLTApplyError:
         html = '<!DOCTYPE html>\n<html><head><title></title></head><body>\n' + soup2text(soup) + '\n</body></html>\n'
+    for codepoint in range(0x110000):
+        char = chr(codepoint)
+        if unicodedata.category(char) in {'Zs', 'Zl', 'Zp'} or char.isspace():
+            html = html.replace(f'&#{codepoint};', ' ')
+    html = html.replace('&#8211;', '–')
+    html = html.replace('&#8212;', '—')
 
     id_tokens = {}
     id_count = {}
@@ -610,9 +654,9 @@ def get_html(results, tokens_orig, pub_titles, biotools, soup):
     for id, tokens in id_tokens.items():
         color = colors[color_index % len(colors)]
         color_index += 1
-        pattern = r'(?<=[\s/>])(' # TODO en-dash, em-dash
-        pattern += r'|'.join([r'[\s/]+'.join([re.escape(html_encode_unicode(token_word)) for token_word in token.split()]) for token in sorted(tokens, key=lambda x: (len(x), x), reverse=True)])
-        pattern += r')(?=[\s/<])' # TODO \s does not match all Unicode whitespace characters, like Unicode thin space (&#8201;)
+        pattern = r'(?<=[\s/–—>])('
+        pattern += r'|'.join([r'[\s/–—]+'.join([re.escape(html_encode_unicode(token_word)) for token_word in token.split()]) for token in sorted(tokens, key=lambda x: (len(x), x), reverse=True)])
+        pattern += r')(?=[\s/–—<])'
         html, n = re.compile(pattern).subn(html_replace(id, biotools, color), html)
         links_in_title = html_links_in_title(html, 'title') - links_in_title_total
         links_in_h1 = html_links_in_title(html, 'h1') - links_in_h1_total
