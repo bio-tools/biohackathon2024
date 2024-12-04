@@ -24,7 +24,16 @@ EXCLUDED_NOT_SIMPLE = {
     'ChIA-PET', 'LiftOver', 'BioC', 'CRISPRCas', 'COVID-19 Dashboard',
     # has cites
     't-SNE', 'ChIP-Seq', 'circRNA', 'XGBoost', 'scRNA-seq', 'ceRNA', 'ROC Curve', 'cfDNA', 'IsomiR', 'PCHi-C',
-    'SARS-CoV-2', 'MinION', 'sRNA', 'nCoV', 'HotSpot', 'ModeRNA', 'GeneView', 'scATAC-seq', 'aCGH', 'microRNA'
+    'SARS-CoV-2', 'MinION', 'sRNA', 'nCoV', 'HotSpot', 'ModeRNA', 'GeneView', 'scATAC-seq', 'aCGH', 'microRNA',
+    # most common name-like words that are not matched currently, but added preventatively for exclusion
+    'RNA-Seq', 'JavaScript', 'MySQL', 'mRNA', 'miRNA', 'tRNA', 'HiSeq', 'GRCh38', 'RNAseq', 'lncRNA','GRCh37',
+    'protein-DNA', 'PacBio', 'ReLU', 'ChIP', 'ncRNA', 'PostgreSQL', 'MicroRNA', 'HeLa', 'jQuery', 'MapReduce',
+    'pre-mRNA', 'RNAi', 'MiSeq', 'H3K4me3', 'PI3K', 'CD4+', 'RNase', 'H3K27ac', 'cDNA', 'NaCl', 'CD8+', '3UTR',
+    'GeneChip', 'CRISPR-Cas9', 'SQLite', 'ChIP-chip', 'mTOR', 'protein-RNA', 'rRNA', 'C57BL', 'eQTL', 'siRNA',
+    'H3K27me3', 'DNase-seq', 'CpG', 'HepG2', 'ATPase', 'mRNA-Seq', 'H3K4me1', 'TruSeq', 'dsDNA', 'microRNA-target',
+    'MongoDB', '5UTR', 'rDNA', 'tSNE', 'snoRNA', 'qRT-PCR', 'PIK3CA', 'mmCIF', 'polyA', 'miRNA-target', 'DataTable',
+    'BeadChip', 'GTPase', 'LncRNA', 'CLIP-Seq', 'lincRNA', 'mzML', 'snRNA', 'snoRNA', 'AdaBoost', 'MgCl', 'SARS-CoV',
+    'H3K36me3', 'CRISPR-Cas', 'sgRNA', 'WebGL', 'bigWig', 'NextSeq', 'RT-qPCR', 'poly-A', 'logFC', 'mtDNA', 'HEK293T'
 }
 EXCLUDED_NOT_SIMPLE_PLURAL = {e + 's' for e in EXCLUDED_NOT_SIMPLE}
 INCLUDED_SIMPLE = {
@@ -746,8 +755,6 @@ def match_xml(pmc: str | list[str]) -> str:
 def get_counts(counts, matches):
     matches_done = set()
     for s in matches:
-        if s[3]:
-            continue
         if s[0] in counts:
             counts[s[0]] += 1 if s[0] not in matches_done else 0
         else:
