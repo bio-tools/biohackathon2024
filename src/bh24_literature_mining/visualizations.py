@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import math
 from wordcloud import WordCloud
-from collections import Counter
 
 
 # Function for creating a histogram of the number of cites/mentions per tool

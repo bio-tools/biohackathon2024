@@ -1,15 +1,22 @@
-
-from dataclasses import dataclass
-from typing import List
 import requests
+from typing import List
 from bh24_literature_mining.utils import load_biotools_pub
+
 
 class Tool_entry:
     """
     Data structure for storing tool information.
     """
 
-    def __init__(self, biotools_id: str, name: str, topics: str, pubmedid: str, pubmedcid: str, link: str):
+    def __init__(
+        self,
+        biotools_id: str,
+        name: str,
+        topics: str,
+        pubmedid: str,
+        pubmedcid: str,
+        link: str,
+    ):
         self.biotools_id = biotools_id
         self.name = name
         self.topics_str = topics
@@ -24,6 +31,7 @@ class Tool_entry:
     def disjoint_topics(self) -> str:
         return "(" + " OR ".join(self.topics_list) + ")"
 
+
 def get_tool_by_id(biotoolsid: str) -> dict:
     """
     Get the tool information from BioTools API by ID.
@@ -32,7 +40,7 @@ def get_tool_by_id(biotoolsid: str) -> dict:
     ----------
     biotoolsid : str
         The BioTools ID of the tool.
-    
+
     Returns
     -------
     dict
@@ -46,19 +54,18 @@ def get_tool_by_id(biotoolsid: str) -> dict:
     return response.json()
 
 
-
 def get_biotools(path_to_file: str, limit: int = 400) -> List[Tool_entry]:
     """
     Load the BioTools data and create a list of Tool_entry objects.
-    
+
     Parameters
     ----------
     pat_to_file : str
         The path to the tsv file containing the BioTools data.
-    
+
     limit : int, optional
         The maximum number of tools to load. Default is 400.
-        
+
     Returns
     -------
     List[Tool_entry]
@@ -87,5 +94,5 @@ def get_biotools(path_to_file: str, limit: int = 400) -> List[Tool_entry]:
             # Create a Biotool object and add it to the list
             biotool = Tool_entry(biotools_id, name, topics, pubmedid, pubmedcid, link)
             unique_biotools.append(biotool)
-    
+
     return unique_biotools
