@@ -59,10 +59,7 @@ def convert_to_iob(texts, ner_tags_list):
 def convert_to_IOB_format_from_df(dataframe, output_folder, filename, batch_size=500):
     # Write data for batch processing
     data = [(row["Sentence"], row["NER_Tags"]) for index, row in dataframe.iterrows()]
-
-    output_folder = Path(output_folder).mkdir(parents=True, exist_ok=True)
     result_path = output_folder / filename
-
     with open(result_path, "w", newline="\n") as f1:
         train_writer = csv.writer(f1, delimiter="\t", lineterminator="\n")
 
@@ -158,27 +155,11 @@ def check_integrity_of_files(train_file_paths, dev_file_paths, test_file_paths):
         zip(train_file_paths, dev_file_paths, test_file_paths)
     ):
         print(f"\nChecking Dataset {i + 1}:")
-
-        # Load train set and check integrity
-        train_df = load_iob_file(train_file)
-        is_train_valid, train_issues = check_data_integrity(train_df)
-        if is_train_valid:
-            print(f"Train set {i + 1} is valid.")
-        else:
-            print(f"Train set {i + 1} has issues:\n", "\n".join(train_issues))
-
-        # Load dev set and check integrity
-        dev_df = load_iob_file(dev_file)
-        is_dev_valid, dev_issues = check_data_integrity(dev_df)
-        if is_dev_valid:
-            print(f"Dev set {i + 1} is valid.")
-        else:
-            print(f"Dev set {i + 1} has issues:\n", "\n".join(dev_issues))
-
-        # Load test set and check integrity
-        test_df = load_iob_file(test_file)
-        is_test_valid, test_issues = check_data_integrity(test_df)
-        if is_test_valid:
-            print(f"Test set {i + 1} is valid.")
-        else:
-            print(f"Test set {i + 1} has issues:\n", "\n".join(test_issues))
+        for df in [train_file, dev_file, test_file]:
+            temp_df = load_iob_file(df)
+            is_valid, issues = check_data_integrity(temp_df)
+            if is_valid:
+                print(f"{df} is valid.")
+            else:
+                print(f"{df} has issues:\n", "\n".join(issues))
+                
