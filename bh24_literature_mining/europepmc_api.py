@@ -16,7 +16,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 from bh24_literature_mining.biotools import Tool_entry
-from utils import parse_to_bool
+from bh24_literature_mining.utils import parse_to_bool
 from nltk.tokenize import wordpunct_tokenize
 
 # Ensure NLTK is installed and the tokenizer is available
