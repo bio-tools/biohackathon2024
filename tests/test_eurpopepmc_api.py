@@ -1,10 +1,5 @@
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent / "biotools"))
-
-from biotools import Tool_entry, get_biotools
-from europepmc_api import (
+from bh24_literature_mining.biotools import Tool_entry, get_biotools
+from bh24_literature_mining.europepmc_api import (
     EuropePMCClient,
     find_sentences_with_substring,
     identify_tool_mentions_in_sentences,

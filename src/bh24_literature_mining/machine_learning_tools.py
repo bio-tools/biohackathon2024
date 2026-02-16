@@ -6,9 +6,6 @@ from tqdm import tqdm
 import nltk
 from nltk.tokenize import wordpunct_tokenize
 
-# Ensure NLTK is installed and the tokenizer is available
-nltk.download("punkt")
-
 
 def find_sub_span(token_span, entity_span):
     if token_span[0] < entity_span[1] and token_span[1] > entity_span[0]:

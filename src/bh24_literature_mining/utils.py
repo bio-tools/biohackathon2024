@@ -19,7 +19,8 @@ def load_biotools_from_json(path: str) -> list:
     Returns:
     list: A list of tools.
     """
-    return json.load(path)
+    with open(path) as f:
+        return json.load(f)
 
 
 def load_biotools_from_zip(path: str, file_name: str) -> list:
