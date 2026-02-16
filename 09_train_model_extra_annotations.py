@@ -156,7 +156,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Define subset sizes to train on
-    subset_percentages = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    subset_percentages = [50, 100]
     results = {
         "subset_percentage": [],
         "subset_size": [],
@@ -168,6 +168,43 @@ def main():
 
     # Set random seed for reproducibility
     np.random.seed(42)
+
+    # Evaluate baseline model before training
+    print(f"\n{'='*80}")
+    print("Evaluating baseline model (before training)")
+    print(f"{'='*80}\n")
+
+    baseline_config = BertConfig.from_pretrained(
+        model_checkpoint,
+        num_labels=len(label_list),
+        id2label=id2label,
+        label2id=label2id,
+        attn_implementation="sdpa",
+    )
+    baseline_config.hidden_dropout_prob = 0.2
+    baseline_config.attention_probs_dropout_prob = 0.2
+    baseline_model = BertForTokenClassification.from_pretrained(
+        model_checkpoint, config=baseline_config
+    )
+    baseline_model.to(device)
+
+    baseline_trainer = Trainer(
+        model=baseline_model,
+        args=TrainingArguments(
+            output_dir=str(model_save_path / "baseline_eval"),
+            per_device_eval_batch_size=4,
+        ),
+        eval_dataset=tokenized_dev_ds,
+        tokenizer=tokenizer,
+        compute_metrics=lambda p: compute_metrics(p, id2label),
+    )
+
+    baseline_results = baseline_trainer.evaluate()
+    print(f"\nBaseline model performance:")
+    print(f"F1: {baseline_results['eval_f1']:.4f}")
+    print(f"Precision: {baseline_results['eval_precision']:.4f}")
+    print(f"Recall: {baseline_results['eval_recall']:.4f}")
+    print(f"Accuracy: {baseline_results['eval_accuracy']:.4f}")
 
     # Shuffle the training data once
     train_df_shuffled = train_df.sample(frac=1, random_state=42).reset_index(drop=True)
@@ -204,7 +241,7 @@ def main():
         )
         model.to(device)
 
-        # Training arguments for 3 epochs
+        # Training arguments for 2 epochs
         subset_output_dir = model_save_path / f"subset_{subset_pct}pct"
         training_args = TrainingArguments(
             output_dir=str(subset_output_dir),
@@ -213,7 +250,7 @@ def main():
             learning_rate=1e-5,
             per_device_train_batch_size=4,
             per_device_eval_batch_size=4,
-            num_train_epochs=3,
+            num_train_epochs=2,
             warmup_ratio=0.1,
             weight_decay=0.01,
             gradient_accumulation_steps=2,
