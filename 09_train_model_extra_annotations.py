@@ -1,82 +1,36 @@
+import logging
 import os
 import shutil
-import json
-import torch
-import pandas as pd
-import numpy as np
-import evaluate
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import evaluate
+import numpy as np
+import torch
+from datasets import ClassLabel, Dataset, DatasetDict, Features, Sequence, Value
+from sklearn.metrics import classification_report
 from transformers import (
-    BertTokenizerFast,
     BertConfig,
     BertForTokenClassification,
-    TrainingArguments,
+    BertTokenizerFast,
     Trainer,
+    TrainingArguments,
 )
-from sklearn.metrics import classification_report
-from datasets import Dataset, DatasetDict, ClassLabel, Features, Sequence, Value
+
+from bh24_literature_mining.data.dataset import get_label_list, get_token_ner_tags, load_iob_splits
+from bh24_literature_mining.preprocessing.tokenization import tokenize_and_align_labels
 
 
 def cleanup_checkpoints(
-    output_dir, keep_last=True, best_model_dir=None, last_model_dir=None
-):
+    output_dir: str, keep_last: bool = True, best_model_dir: str | None = None
+) -> None:
     for item in os.listdir(output_dir):
         item_path = os.path.join(output_dir, item)
         if os.path.isdir(item_path) and item.startswith("checkpoint"):
-            if item_path != best_model_dir and (
-                not keep_last or item_path != last_model_dir
-            ):
+            if item_path != best_model_dir and not (keep_last and item_path == item_path):
                 shutil.rmtree(item_path)
 
 
-def convert_IOB_transformer(test_list, pattern):
-    new_list, sub_list = [], []
-    for i in test_list:
-        if i != pattern:
-            sub_list.append(i)
-        else:
-            new_list.append(sub_list)
-            sub_list = []
-    return new_list
-
-
-def get_token_ner_tags(df_, label2id_):
-    ner_tag_list_ = df_["ner_tags"].map(label2id_).fillna("###").tolist()
-    token_list_ = df_["tokens"].tolist()
-    token_list = convert_IOB_transformer(token_list_, pattern="")
-    ner_tag_list = convert_IOB_transformer(ner_tag_list_, pattern="###")
-    df = pd.DataFrame({"tokens": token_list, "ner_tags": ner_tag_list})
-    return token_list, ner_tag_list, df
-
-
-def tokenize_and_align_labels(examples, tokenizer, label_all_tokens=True):
-    tokenized_inputs = tokenizer(
-        examples["tokens"],
-        max_length=512,
-        truncation=True,
-        padding="max_length",
-        is_split_into_words=True,
-    )
-    labels = []
-    for i, label in enumerate(examples["ner_tags"]):
-        word_ids = tokenized_inputs.word_ids(batch_index=i)
-        label_ids = []
-        previous_word_idx = None
-        for word_idx in word_ids:
-            if word_idx is None:
-                label_ids.append(-100)
-            elif word_idx != previous_word_idx:
-                label_ids.append(label[word_idx])
-            else:
-                label_ids.append(label[word_idx] if label_all_tokens else -100)
-            previous_word_idx = word_idx
-        labels.append(label_ids)
-    tokenized_inputs["labels"] = labels
-    return tokenized_inputs
-
-
-def compute_metrics(p, id2label):
+def compute_metrics(p: tuple, id2label: dict) -> dict:
     predictions, labels = p
     predictions = np.argmax(predictions, axis=2)
     true_predictions = [
@@ -89,8 +43,8 @@ def compute_metrics(p, id2label):
     ]
     flat_preds = [item for sublist in true_predictions for item in sublist]
     flat_labels = [item for sublist in true_labels for item in sublist]
-    print(
-        "\nClassification Report:\n",
+    logger.info(
+        "Classification Report:\n%s",
         classification_report(flat_labels, flat_preds, digits=4),
     )
     metric = evaluate.load("seqeval")
@@ -102,40 +56,25 @@ def compute_metrics(p, id2label):
         "accuracy": results["overall_accuracy"],
     }
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
 
-def main():
+
+def main() -> None:
     p = Path(__file__).parent.resolve()
-    model_checkpoint = "/home/t.afanasyeva/biohackathon2024/models/checkpoint-14050"
-    data_checkpoint = p / "data/IOB"
+    model_checkpoint = "bioformers/bioformer-16L"
+    data_dir = p / "data/IOB"
     model_save_path = p / "models"
-    performance_log_path = p / "data/model_performance_log"
 
-    data_checkpoint.mkdir(parents=True, exist_ok=True)
     model_save_path.mkdir(parents=True, exist_ok=True)
-    performance_log_path.mkdir(parents=True, exist_ok=True)
 
-    train = pd.read_csv(
-        data_checkpoint / "train_IOB.tsv",
-        sep="\t",
-        names=["tokens", "ner_tags"],
-        skip_blank_lines=False,
-        na_filter=False,
-    )
-    dev = pd.read_csv(
-        data_checkpoint / "dev_IOB.tsv",
-        sep="\t",
-        names=["tokens", "ner_tags"],
-        skip_blank_lines=False,
-        na_filter=False,
-    )
+    train_raw, dev_raw = load_iob_splits(data_dir)
+    label_list = get_label_list(train_raw)
+    id2label = {i: label for i, label in enumerate(label_list)}
+    label2id = {label: i for i, label in enumerate(label_list)}
 
-    label_list = sorted(set(train["ner_tags"].dropna()) - {""})
-    id2label = {i: l for i, l in enumerate(label_list)}
-    label2id = {l: i for i, l in enumerate(label_list)}
-
-    # Convert and tokenize
-    _, _, train_df = get_token_ner_tags(train, label2id)
-    _, _, dev_df = get_token_ner_tags(dev, label2id)
+    _, _, train_df = get_token_ner_tags(train_raw, label2id)
+    _, _, dev_df = get_token_ner_tags(dev_raw, label2id)
 
     features = Features(
         {
@@ -144,231 +83,71 @@ def main():
         }
     )
 
-    # Load tokenizer
     tokenizer = BertTokenizerFast.from_pretrained(model_checkpoint)
 
-    # Create full validation dataset
-    dev_ds = Dataset.from_pandas(dev_df, features=features)
-    tokenized_dev_ds = dev_ds.map(
+    ds = DatasetDict(
+        {
+            "train": Dataset.from_pandas(train_df, features=features),
+            "validation": Dataset.from_pandas(dev_df, features=features),
+        }
+    )
+    tokenized_ds = ds.map(
         lambda x: tokenize_and_align_labels(x, tokenizer), batched=True
     )
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # Define subset sizes to train on
-    subset_percentages = [50, 100]
-    results = {
-        "subset_percentage": [],
-        "subset_size": [],
-        "f1": [],
-        "precision": [],
-        "recall": [],
-        "accuracy": [],
-    }
-
-    # Set random seed for reproducibility
-    np.random.seed(42)
-
-    # Evaluate baseline model before training
-    print(f"\n{'='*80}")
-    print("Evaluating baseline model (before training)")
-    print(f"{'='*80}\n")
-
-    baseline_config = BertConfig.from_pretrained(
+    config = BertConfig.from_pretrained(
         model_checkpoint,
         num_labels=len(label_list),
         id2label=id2label,
         label2id=label2id,
         attn_implementation="sdpa",
     )
-    baseline_config.hidden_dropout_prob = 0.2
-    baseline_config.attention_probs_dropout_prob = 0.2
-    baseline_model = BertForTokenClassification.from_pretrained(
-        model_checkpoint, config=baseline_config
-    )
-    baseline_model.to(device)
+    config.hidden_dropout_prob = 0.2
+    config.attention_probs_dropout_prob = 0.2
+    model = BertForTokenClassification.from_pretrained(model_checkpoint, config=config)
 
-    baseline_trainer = Trainer(
-        model=baseline_model,
-        args=TrainingArguments(
-            output_dir=str(model_save_path / "baseline_eval"),
-            per_device_eval_batch_size=4,
-        ),
-        eval_dataset=tokenized_dev_ds,
-        tokenizer=tokenizer,
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    logger.info("Using device: %s", device)
+
+    output_dir = model_save_path / "extra_annotations"
+    training_args = TrainingArguments(
+        output_dir=str(output_dir),
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        learning_rate=1e-5,
+        per_device_train_batch_size=4,
+        per_device_eval_batch_size=4,
+        num_train_epochs=1,
+        warmup_ratio=0.1,
+        weight_decay=0.01,
+        gradient_accumulation_steps=2,
+        load_best_model_at_end=True,
+        metric_for_best_model="f1",
+        greater_is_better=True,
+        logging_dir=str(p / "logs" / "extra_annotations"),
+        bf16=torch.cuda.is_available(),
+        seed=42,
+    )
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_ds["train"],
+        eval_dataset=tokenized_ds["validation"],
+        processing_class=tokenizer,
         compute_metrics=lambda p: compute_metrics(p, id2label),
     )
 
-    baseline_results = baseline_trainer.evaluate()
-    print(f"\nBaseline model performance:")
-    print(f"F1: {baseline_results['eval_f1']:.4f}")
-    print(f"Precision: {baseline_results['eval_precision']:.4f}")
-    print(f"Recall: {baseline_results['eval_recall']:.4f}")
-    print(f"Accuracy: {baseline_results['eval_accuracy']:.4f}")
+    trainer.train()
+    eval_results = trainer.evaluate()
 
-    # Shuffle the training data once
-    train_df_shuffled = train_df.sample(frac=1, random_state=42).reset_index(drop=True)
+    logger.info("F1: %.4f", eval_results["eval_f1"])
+    logger.info("Precision: %.4f", eval_results["eval_precision"])
+    logger.info("Recall: %.4f", eval_results["eval_recall"])
+    logger.info("Accuracy: %.4f", eval_results["eval_accuracy"])
 
-    for subset_pct in subset_percentages:
-        print(f"\n{'='*80}")
-        print(f"Training on {subset_pct}% of the training data")
-        print(f"{'='*80}\n")
-
-        # Calculate subset size
-        subset_size = int(len(train_df_shuffled) * (subset_pct / 100))
-        train_subset = train_df_shuffled.iloc[:subset_size]
-
-        print(f"Training set size: {len(train_subset)} samples")
-
-        # Create dataset for this subset
-        train_ds = Dataset.from_pandas(train_subset, features=features)
-        tokenized_train_ds = train_ds.map(
-            lambda x: tokenize_and_align_labels(x, tokenizer), batched=True
-        )
-
-        # Load fresh model for each subset
-        config = BertConfig.from_pretrained(
-            model_checkpoint,
-            num_labels=len(label_list),
-            id2label=id2label,
-            label2id=label2id,
-            attn_implementation="sdpa",
-        )
-        config.hidden_dropout_prob = 0.2
-        config.attention_probs_dropout_prob = 0.2
-        model = BertForTokenClassification.from_pretrained(
-            model_checkpoint, config=config
-        )
-        model.to(device)
-
-        # Training arguments for 2 epochs
-        subset_output_dir = model_save_path / f"subset_{subset_pct}pct"
-        training_args = TrainingArguments(
-            output_dir=str(subset_output_dir),
-            eval_strategy="epoch",
-            save_strategy="epoch",
-            learning_rate=1e-5,
-            per_device_train_batch_size=4,
-            per_device_eval_batch_size=4,
-            num_train_epochs=2,
-            warmup_ratio=0.1,
-            weight_decay=0.01,
-            gradient_accumulation_steps=2,
-            load_best_model_at_end=True,
-            metric_for_best_model="f1",
-            greater_is_better=True,
-            logging_dir=str(p / "logs" / f"subset_{subset_pct}pct"),
-            bf16=torch.cuda.is_available(),
-        )
-
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=tokenized_train_ds,
-            eval_dataset=tokenized_dev_ds,
-            tokenizer=tokenizer,
-            compute_metrics=lambda p: compute_metrics(p, id2label),
-        )
-
-        # Train model
-        trainer.train()
-
-        # Evaluate model
-        eval_results = trainer.evaluate()
-
-        # Store results
-        results["subset_percentage"].append(subset_pct)
-        results["subset_size"].append(subset_size)
-        results["f1"].append(eval_results["eval_f1"])
-        results["precision"].append(eval_results["eval_precision"])
-        results["recall"].append(eval_results["eval_recall"])
-        results["accuracy"].append(eval_results["eval_accuracy"])
-
-        print(f"\nResults for {subset_pct}% subset:")
-        print(f"F1: {eval_results['eval_f1']:.4f}")
-        print(f"Precision: {eval_results['eval_precision']:.4f}")
-        print(f"Recall: {eval_results['eval_recall']:.4f}")
-        print(f"Accuracy: {eval_results['eval_accuracy']:.4f}")
-
-        # Clean up checkpoints for this subset
-        cleanup_checkpoints(str(subset_output_dir), keep_last=False)
-
-    # Save results to JSON
-    results_df = pd.DataFrame(results)
-    results_path = performance_log_path / "subset_training_results.json"
-    results_df.to_json(results_path, orient="records", indent=2)
-    print(f"\nResults saved to {results_path}")
-
-    # Create plot
-    plt.figure(figsize=(10, 6))
-    plt.plot(
-        results["subset_percentage"],
-        results["f1"],
-        marker="o",
-        linewidth=2,
-        markersize=8,
-    )
-    plt.xlabel("Training Data Size (%)", fontsize=12)
-    plt.ylabel("F1 Score", fontsize=12)
-    plt.title("F1 Score vs Training Data Size", fontsize=14, fontweight="bold")
-    plt.grid(True, alpha=0.3)
-    plt.xticks(subset_percentages)
-    plt.ylim([0, 1])
-
-    # Add value labels on points
-    for i, (x, y) in enumerate(zip(results["subset_percentage"], results["f1"])):
-        plt.annotate(
-            f"{y:.3f}",
-            (x, y),
-            textcoords="offset points",
-            xytext=(0, 10),
-            ha="center",
-            fontsize=9,
-        )
-
-    plt.tight_layout()
-    plot_path = performance_log_path / "f1_vs_dataset_size.png"
-    plt.savefig(plot_path, dpi=300, bbox_inches="tight")
-    print(f"Plot saved to {plot_path}")
-
-    # Also create a plot with all metrics
-    plt.figure(figsize=(12, 6))
-    plt.plot(
-        results["subset_percentage"], results["f1"], marker="o", label="F1", linewidth=2
-    )
-    plt.plot(
-        results["subset_percentage"],
-        results["precision"],
-        marker="s",
-        label="Precision",
-        linewidth=2,
-    )
-    plt.plot(
-        results["subset_percentage"],
-        results["recall"],
-        marker="^",
-        label="Recall",
-        linewidth=2,
-    )
-    plt.plot(
-        results["subset_percentage"],
-        results["accuracy"],
-        marker="d",
-        label="Accuracy",
-        linewidth=2,
-    )
-    plt.xlabel("Training Data Size (%)", fontsize=12)
-    plt.ylabel("Score", fontsize=12)
-    plt.title("Model Performance vs Training Data Size", fontsize=14, fontweight="bold")
-    plt.legend(fontsize=10)
-    plt.grid(True, alpha=0.3)
-    plt.xticks(subset_percentages)
-    plt.ylim([0, 1])
-    plt.tight_layout()
-
-    plot_all_metrics_path = performance_log_path / "all_metrics_vs_dataset_size.png"
-    plt.savefig(plot_all_metrics_path, dpi=300, bbox_inches="tight")
-    print(f"All metrics plot saved to {plot_all_metrics_path}")
+    cleanup_checkpoints(str(output_dir), keep_last=True)
 
 
 if __name__ == "__main__":

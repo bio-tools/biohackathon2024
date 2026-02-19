@@ -75,6 +75,15 @@ def test_convert_to_iob_empty_text():
     assert result == [[]]
 
 
+def test_convert_to_iob_hyphenated_entity():
+    text = "Use BiG-SCAPE for analysis"
+    ner_tags = [[4, 13, "BiG-SCAPE", "BT"]]
+    result = convert_to_iob([text], [ner_tags])
+    tokens_tags = dict(result[0])
+    assert tokens_tags["BiG-SCAPE"] == "B-BT"
+    assert "I-BT" not in [tag for _, tag in result[0]]
+
+
 # --- convert_to_IOB_format_from_df and load_iob_file ---
 
 def test_iob_roundtrip():

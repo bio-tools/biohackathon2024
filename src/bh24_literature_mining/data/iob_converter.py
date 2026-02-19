@@ -1,9 +1,11 @@
 import csv
+import re
 from pathlib import Path
 
 import pandas as pd
-from nltk.tokenize import wordpunct_tokenize
 from tqdm import tqdm
+
+_TOKENIZE_RE = re.compile(r"\w+(?:-\w+)*|[^\w\s]+")
 
 
 def find_sub_span(
@@ -19,7 +21,7 @@ def convert_to_iob(
 ) -> list[list[tuple[str, str]]]:
     results = []
     for text, ner_tags in zip(texts, ner_tags_list):
-        tokens = wordpunct_tokenize(text)
+        tokens = _TOKENIZE_RE.findall(text)
         token_spans: list[tuple[int, int]] = []
         current_idx = 0
         for token in tokens:
