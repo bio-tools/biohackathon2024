@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from transformers import AutoTokenizer
 
 from bh24_literature_mining.data.annotation_parser import (
     filter_checked,
@@ -28,6 +29,11 @@ from bh24_literature_mining.data.iob_converter import (
 from bh24_literature_mining.data.splitter import split_by_pmcid
 
 
+@pytest.fixture(scope="module")
+def tokenizer():
+    return AutoTokenizer.from_pretrained("bioformers/bioformer-16L")
+
+
 # --- find_sub_span ---
 
 def test_find_sub_span_overlap():
@@ -48,45 +54,50 @@ def test_find_sub_span_adjacent():
 
 # --- convert_to_iob ---
 
-def test_convert_to_iob_no_entities():
-    result = convert_to_iob(["hello world"], [None])
+def test_convert_to_iob_no_entities(tokenizer):
+    result = convert_to_iob(["hello world"], [None], tokenizer)
     assert result == [[("hello", "O"), ("world", "O")]]
 
 
-def test_convert_to_iob_single_entity():
+def test_convert_to_iob_single_entity(tokenizer):
     text = "Use BLAST for search"
     ner_tags = [[4, 9, "BLAST", "BT"]]
-    result = convert_to_iob([text], [ner_tags])
+    result = convert_to_iob([text], [ner_tags], tokenizer)
     tokens_tags = dict(result[0])
     assert tokens_tags["BLAST"] == "B-BT"
 
 
-def test_convert_to_iob_multitoken_entity():
+def test_convert_to_iob_multitoken_entity(tokenizer):
     text = "Use Galaxy Tool for analysis"
     ner_tags = [[4, 15, "Galaxy Tool", "BT"]]
-    result = convert_to_iob([text], [ner_tags])
+    result = convert_to_iob([text], [ner_tags], tokenizer)
     tags = [tag for _, tag in result[0]]
     assert "B-BT" in tags
     assert "I-BT" in tags
 
 
-def test_convert_to_iob_empty_text():
-    result = convert_to_iob([""], [None])
+def test_convert_to_iob_empty_text(tokenizer):
+    result = convert_to_iob([""], [None], tokenizer)
     assert result == [[]]
 
 
-def test_convert_to_iob_hyphenated_entity():
+def test_convert_to_iob_hyphenated_entity(tokenizer):
     text = "Use BiG-SCAPE for analysis"
     ner_tags = [[4, 13, "BiG-SCAPE", "BT"]]
-    result = convert_to_iob([text], [ner_tags])
-    tokens_tags = dict(result[0])
-    assert tokens_tags["BiG-SCAPE"] == "B-BT"
-    assert "I-BT" not in [tag for _, tag in result[0]]
+    result = convert_to_iob([text], [ner_tags], tokenizer)
+    tags = [tag for _, tag in result[0]]
+    b_count = tags.count("B-BT")
+    i_count = tags.count("I-BT")
+    assert b_count == 1
+    assert b_count + i_count >= 1
+    first_b = next(i for i, t in enumerate(tags) if t == "B-BT")
+    for j in range(first_b + 1, first_b + b_count + i_count):
+        assert tags[j] == "I-BT"
 
 
 # --- convert_to_IOB_format_from_df and load_iob_file ---
 
-def test_iob_roundtrip():
+def test_iob_roundtrip(tokenizer):
     df = pd.DataFrame(
         {
             "Sentence": ["Use BLAST here", "Run MaxQuant now"],
@@ -98,7 +109,7 @@ def test_iob_roundtrip():
     )
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp)
-        convert_to_IOB_format_from_df(df, out, "test.tsv")
+        convert_to_IOB_format_from_df(df, out, "test.tsv", tokenizer)
         loaded = load_iob_file(out / "test.tsv")
         tags = loaded[loaded["tag"] != ""]["tag"].tolist()
         assert "B-BT" in tags

@@ -7,7 +7,7 @@ from transformers import PreTrainedTokenizerBase
 def tokenize_and_align_labels(
     examples: dict[str, list],
     tokenizer: PreTrainedTokenizerBase,
-    label_all_tokens: bool = True,
+    label_all_tokens: bool = False,
 ) -> dict[str, Any]:
     tokenized_inputs = tokenizer(
         examples["tokens"],
@@ -37,7 +37,7 @@ def tokenize_and_align_labels(
 def tokenize_dataset(
     ds: DatasetDict,
     tokenizer: PreTrainedTokenizerBase,
-    label_all_tokens: bool = True,
+    label_all_tokens: bool = False,
 ) -> DatasetDict:
     return ds.map(
         lambda x: tokenize_and_align_labels(x, tokenizer, label_all_tokens),

@@ -1,11 +1,9 @@
 import csv
-import re
 from pathlib import Path
 
 import pandas as pd
 from tqdm import tqdm
-
-_TOKENIZE_RE = re.compile(r"\w+(?:-\w+)*|[^\w\s]+")
+from transformers import PreTrainedTokenizerBase
 
 
 def find_sub_span(
@@ -16,29 +14,52 @@ def find_sub_span(
     return None
 
 
+def _tokenize_to_words(
+    text: str, tokenizer: PreTrainedTokenizerBase
+) -> tuple[list[str], list[tuple[int, int]]]:
+    enc = tokenizer(text, return_offsets_mapping=True, add_special_tokens=False)
+    offsets = enc["offset_mapping"]
+    wids = enc.word_ids()
+    words: list[str] = []
+    word_spans: list[tuple[int, int]] = []
+    prev_wid = None
+    for idx, wid in enumerate(wids):
+        if wid is None:
+            continue
+        if wid != prev_wid:
+            words.append(text[offsets[idx][0] : offsets[idx][1]])
+            word_spans.append((offsets[idx][0], offsets[idx][1]))
+        else:
+            start = word_spans[-1][0]
+            end = offsets[idx][1]
+            word_spans[-1] = (start, end)
+            words[-1] = text[start:end]
+        prev_wid = wid
+    return words, word_spans
+
+
 def convert_to_iob(
-    texts: list[str], ner_tags_list: list
+    texts: list[str],
+    ner_tags_list: list,
+    tokenizer: PreTrainedTokenizerBase,
 ) -> list[list[tuple[str, str]]]:
     results = []
     for text, ner_tags in zip(texts, ner_tags_list):
-        tokens = _TOKENIZE_RE.findall(text)
-        token_spans: list[tuple[int, int]] = []
-        current_idx = 0
-        for token in tokens:
-            start_idx = text.find(token, current_idx)
-            end_idx = start_idx + len(token)
-            token_spans.append((start_idx, end_idx))
-            current_idx = end_idx
-
-        if ner_tags is None:
-            results.append(list(zip(tokens, ["O"] * len(tokens))))
+        if not text:
+            results.append([])
             continue
 
-        iob_tags = ["O"] * len(tokens)
+        words, word_spans = _tokenize_to_words(text, tokenizer)
+
+        if ner_tags is None:
+            results.append(list(zip(words, ["O"] * len(words))))
+            continue
+
+        iob_tags = ["O"] * len(words)
         for start, end, entity, entity_type in sorted(ner_tags, key=lambda x: x[0]):
             entity_flag = False
-            for i, token_span in enumerate(token_spans):
-                if find_sub_span(token_span, (start, end)):
+            for i, word_span in enumerate(word_spans):
+                if find_sub_span(word_span, (start, end)):
                     if not entity_flag:
                         iob_tags[i] = "B-" + entity_type
                         entity_flag = True
@@ -47,7 +68,7 @@ def convert_to_iob(
                 else:
                     entity_flag = False
 
-        results.append(list(zip(tokens, iob_tags)))
+        results.append(list(zip(words, iob_tags)))
     return results
 
 
@@ -55,6 +76,7 @@ def convert_to_IOB_format_from_df(
     dataframe: pd.DataFrame,
     output_folder: Path,
     filename: str,
+    tokenizer: PreTrainedTokenizerBase,
     batch_size: int = 500,
 ) -> None:
     data = [(row["Sentence"], row["NER_Tags"]) for _, row in dataframe.iterrows()]
@@ -64,7 +86,9 @@ def convert_to_IOB_format_from_df(
         for i in tqdm(range(0, len(data), batch_size), desc="Processing batches"):
             batch = data[i : i + batch_size]
             sentences, ner_tags_batch = zip(*batch)
-            batch_results = convert_to_iob(list(sentences), list(ner_tags_batch))
+            batch_results = convert_to_iob(
+                list(sentences), list(ner_tags_batch), tokenizer
+            )
             for tagged_tokens in batch_results:
                 for each_token in tagged_tokens:
                     writer.writerow(list(each_token))

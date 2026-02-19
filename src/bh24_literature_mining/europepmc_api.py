@@ -1,26 +1,19 @@
-import csv
+import json
+import logging
 import math
 import random
 import re
+from dataclasses import dataclass
+
 import pandas as pd
 import requests
-import json
-
-from typing import Dict, List, Optional, Set
-from dataclasses import dataclass
-from sentence_splitter import SentenceSplitter
-from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
-from tqdm import tqdm
-
-from pathlib import Path
+from sentence_splitter import SentenceSplitter
 
 from bh24_literature_mining.biotools import Tool_entry
 from bh24_literature_mining.utils import parse_to_bool
-from nltk.tokenize import wordpunct_tokenize
 
-# Ensure NLTK is installed and the tokenizer is available
-# nltk.download('punkt')
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -32,15 +25,15 @@ class Article:
     authorString: str
     pubYear: str
     journalTitle: str
-    pubDate: Optional[str] = None
-    doi: Optional[str] = None
-    pmcid: Optional[str] = None
-    pmid: Optional[str] = None
-    isOpenAccess: Optional[bool] = None
-    citedByCount: Optional[int] = None
-    pubType: Optional[str] = None
+    pubDate: str | None = None
+    doi: str | None = None
+    pmcid: str | None = None
+    pmid: str | None = None
+    isOpenAccess: bool | None = None
+    citedByCount: int | None = None
+    pubType: str | None = None
 
-    inEPMC: Optional[bool] = None
+    inEPMC: bool | None = None
 
     @staticmethod
     def dict_to_article(article_dict: dict):
@@ -104,9 +97,9 @@ class EuropePMCClient:
         query: str,
         result_type: str = "lite",
         page_size: int = 1000,
-        format: str = "json",
+        response_format: str = "json",
         page_limit: int = 9,
-    ) -> List[Article]:
+    ) -> list[Article]:
         """
         Makes an API request and retrieves all pages by looping
         until all results are fetched.
@@ -118,15 +111,15 @@ class EuropePMCClient:
         result_type : str, optional
             The type of result to retrieve, by default "lite".
         page_size : int, optional
-            The number of results to retrieve per page, by default 25.
-        format : str, optional
+            The number of results to retrieve per page, by default 1000.
+        response_format : str, optional
             The format of the response, by default "json".
         page_limit : int, optional
-            The maximum number of pages to retrieve, by default 3.
+            The maximum number of pages to retrieve, by default 9.
 
         Returns
         -------
-        List[Article]
+        list[Article]
             List of all Article objects from the API response.
         """
 
@@ -140,29 +133,26 @@ class EuropePMCClient:
                 "resultType": result_type,
                 "cursorMark": cursor_mark,
                 "pageSize": page_size,
-                "format": format,
+                "format": response_format,
             }
             response = requests.get(self.base_url, params=params)
-            response.raise_for_status()  # Raises an error for bad status codes
+            response.raise_for_status()
 
             json_response = response.json()
-            articles.extend(
-                self._parse_articles(json_response)
-            )  # Add batch to main list
+            articles.extend(self._parse_articles(json_response))
 
-            # Update cursor_mark to the nextCursorMark from the response
             next_cursor_mark = json_response.get("nextCursorMark")
             if (
                 not next_cursor_mark
                 or cursor_mark == next_cursor_mark
                 or counter >= page_limit
             ):
-                break  # Exit loop when we've retrieved all pages
-            cursor_mark = next_cursor_mark  # Move to next page
+                break
+            cursor_mark = next_cursor_mark
 
         return articles
 
-    def _parse_articles(self, json_response) -> List[Article]:
+    def _parse_articles(self, json_response) -> list[Article]:
         """Parses the JSON response into a list of Article objects.
 
         Parameters
@@ -172,7 +162,7 @@ class EuropePMCClient:
 
         Returns
         -------
-        List[Article]
+        list[Article]
             List of Article objects.
         """
         articles = []
@@ -197,19 +187,19 @@ class EuropePMCClient:
 
     def search_mentions(
         self, tool_name: str, article_limit=None, topics: str = None
-    ) -> List[Article]:
+    ) -> list[Article]:
         """Searches for mentions of a specific tool using the Europe PMC API.
 
         Parameters
         ----------
         tool_name : str
             The name of the tool to search for.
-        topics : bool
-            Whether to use the tool EDAM topics as additional keywords.
+        topics : str
+            EDAM topics as additional keywords.
 
         Returns
         -------
-        List[Article]
+        list[Article]
             List of Article objects for the specified tool query.
         """
         if topics:
@@ -219,7 +209,7 @@ class EuropePMCClient:
 
         if article_limit:
             page_limit = min(article_limit, 100)
-            page_size = -(-article_limit // page_limit)  # Rounds up the division
+            page_size = -(-article_limit // page_limit)
             return self.get_data(
                 query=query + " OPEN_ACCESS:y IN_EPMC:y",
                 page_size=page_size,
@@ -228,7 +218,7 @@ class EuropePMCClient:
         else:
             return self.get_data(query=query + " OPEN_ACCESS:y IN_EPMC:y")
 
-    def search_cites(self, pmid: str) -> List[Article]:
+    def search_cites(self, pmid: str) -> list[Article]:
         """Searches for articles citing a specific PubMed ID.
 
         Parameters
@@ -238,7 +228,7 @@ class EuropePMCClient:
 
         Returns
         -------
-        List[Article]
+        list[Article]
             List of Article objects for the citations query.
         """
         query = f"cites:{pmid}_MED"
@@ -246,7 +236,7 @@ class EuropePMCClient:
             query=query + " OPEN_ACCESS:y IN_EPMC:y", result_type="core"
         )
 
-    def get_cites_for_tools(self, tools=pd.DataFrame) -> List[dict]:
+    def get_cites_for_tools(self, tools: pd.DataFrame) -> list[dict]:
         """Searches for articles that cite a list of tools
         using the Europe PMC API. Provides a list of dictionaries
         with the tool name and the list of citing articles as article objects.
@@ -259,35 +249,34 @@ class EuropePMCClient:
 
         Returns
         -------
-        List[Article]
+        list[dict]
             List of dictionaries with name of tools, pubmediid and list of
             Article objects for the citations query.
         """
         biotools_cites = []
-        print("Total number of tools: ", len(tools.index))
+        logger.info("Total number of tools: %d", len(tools.index))
 
         for index, row in tools.iterrows():
-            if index > -1:
-                name = row["name"]
-                pubmedid = row["pubmedid"]
-                if not math.isnan(pubmedid):
-                    pubmedid = round(pubmedid)
-                link = row["link"]
-                print(
-                    f"Iter: {index}, Name: {name}, PubMed ID: {pubmedid}, Link: {link}"
+            name = row["name"]
+            pubmedid = row["pubmedid"]
+            if not math.isnan(pubmedid):
+                pubmedid = round(pubmedid)
+            link = row["link"]
+            logger.info(
+                "Iter: %s, Name: %s, PubMed ID: %s, Link: %s",
+                index, name, pubmedid, link,
+            )
+            tool_cites = self.search_cites(pubmedid)
+            if tool_cites:
+                biotools_cites.append(
+                    {"name": name, "pubmedid": pubmedid, "articles": tool_cites}
                 )
-                # Call bio.tools query and get a list of Article objects
-                tool_cites = self.search_cites(pubmedid)
-                if len(tool_cites) > 0:
-                    biotools_cites.append(
-                        {"name": name, "pubmedid": pubmedid, "articles": tool_cites}
-                    )
 
         return biotools_cites
 
     def get_mentions_for_tools(
-        self, tools=pd.DataFrame, use_topics=False
-    ) -> List[dict]:
+        self, tools: pd.DataFrame, use_topics: bool = False
+    ) -> list[dict]:
         """Searches for articles that mention a list of tools using the Europe
         PMC API keyword search. Provides a list of dictionaries
         with the tool name and the list of mentioning articles as article objects.
@@ -302,72 +291,68 @@ class EuropePMCClient:
 
         Returns
         -------
-        List[Article]
+        list[dict]
             List of dictionaries with name of tools, pubmediid and list of
             Article objects for the citations query.
         """
 
         biotools_cites = []
-        print("Total number of tools: ", len(tools.index))
+        logger.info("Total number of tools: %d", len(tools.index))
 
         for index, row in tools.iterrows():
-            if index > -1:
-                name = row["name"]
-                pubmedid = row["pubmedid"]
-                if not math.isnan(pubmedid):
-                    pubmedid = round(pubmedid)
-                link = row["link"]
-                print(
-                    f"Iter: {index}, Name: {name}, PubMed ID: {pubmedid}, Link: {link}"
+            name = row["name"]
+            pubmedid = row["pubmedid"]
+            if not math.isnan(pubmedid):
+                pubmedid = round(pubmedid)
+            link = row["link"]
+            logger.info(
+                "Iter: %s, Name: %s, PubMed ID: %s, Link: %s",
+                index, name, pubmedid, link,
+            )
+            tool_cites = []
+            topics = row["EDAM_topics"]
+            if use_topics and str(topics) != "nan" and str(topics) != "":
+                topics_list = row["EDAM_topics"].split(", ")
+                topics_query = "(" + " OR ".join(f'"{t}"' for t in topics_list) + ")"
+                tool_cites = self.search_mentions(name, topics=topics_query)
+            else:
+                tool_cites = self.search_mentions(name, topics="")
+            if tool_cites:
+                biotools_cites.append(
+                    {"name": name, "pubmedid": pubmedid, "articles": tool_cites}
                 )
-                # Call bio.tools query and get a list of Article objects
-                tool_cites = []
-                topics = row["EDAM_topics"]
-                if use_topics and not str(topics) == "nan" and not str(topics) == "":
-                    # Separate comma-separated EDAM_topics string into list
-                    topics = row["EDAM_topics"].split(", ")
-                    # embed each topics into quotes
-                    topics = [f'"{topic}"' for topic in topics]
-                    topics = "(" + " OR ".join(topics) + ")"
-                    tool_cites = self.search_mentions(name, topics)
-                else:
-                    tool_cites = self.search_mentions(name, "")
-                if len(tool_cites) > 0:
-                    biotools_cites.append(
-                        {"name": name, "pubmedid": pubmedid, "articles": tool_cites}
-                    )
 
         return biotools_cites
 
-    def get_relevant_paragraphs(self, pmcid: str, tool_name: str):
+    def get_relevant_paragraphs(self, pmcid: str, tool_name: str) -> list[str]:
         """
         Retrieves paragraphs from the full text of an article that
         contain specific sentences.
         """
-        relevant_paragraphs = []
         url = f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML"
         response = requests.get(url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, "lxml-xml")
-            p_tags = soup.find_all("p")
-
-            for tag in p_tags:
-                paragraph_text = tag.get_text()
-                if tool_name.lower() in paragraph_text.lower():
-                    relevant_paragraphs.append(paragraph_text)
-
-            return relevant_paragraphs
-        else:
+        if response.status_code != 200:
             return []
 
+        soup = BeautifulSoup(response.content, "lxml-xml")
+        relevant_paragraphs = []
+        for tag in soup.find_all("p"):
+            paragraph_text = tag.get_text()
+            if tool_name.lower() in paragraph_text.lower():
+                relevant_paragraphs.append(paragraph_text)
 
-def segment_sentences_spacy(paragraphs: List[str], substring):
+        return relevant_paragraphs
+
+
+_SENTENCE_SPLITTER = SentenceSplitter(language="en")
+
+
+def segment_sentences_spacy(paragraphs: list[str], substring: str) -> list[str] | None:
     if not paragraphs:
         return None
     all_sentences = []
     for paragraph in paragraphs:
-        splitter = SentenceSplitter(language="en")
-        sentences = splitter.split(paragraph)
+        sentences = _SENTENCE_SPLITTER.split(paragraph)
         for sentence in sentences:
             if substring in sentence:
                 all_sentences.append(sentence)
@@ -375,14 +360,14 @@ def segment_sentences_spacy(paragraphs: List[str], substring):
 
 
 def find_sentences_with_substring(
-    string_list: List[str], substring: str, limit: int = 3
-) -> List[str]:
+    string_list: list[str], substring: str, limit: int = 3
+) -> list[str]:
     """
     Finds random sentences containing a specific substring in a list of strings.
 
     Parameters
     ----------
-    string_list : List[str]
+    string_list : list[str]
         List of sentences (strings) to search.
     substring : str
         Substring to search for.
@@ -391,19 +376,17 @@ def find_sentences_with_substring(
 
     Returns
     -------
-    List[str]
+    list[str]
         List of randomly selected sentences containing the substring, up to the specified limit.
     """
     all_sentences = []
 
-    # Split each text into sentences and collect them in a single list
     for text in string_list:
         all_sentences.extend(re.split(r"(?<=[.!?])\s+", text))
 
-    # Shuffle sentences before searching
-    random.shuffle(all_sentences)
+    rng = random.Random(42)
+    rng.shuffle(all_sentences)
 
-    # Search for sentences containing the substring and return as soon as the limit is reached
     matching_sentences = []
     for sentence in all_sentences:
         if substring.lower() in sentence.lower():
@@ -415,8 +398,8 @@ def find_sentences_with_substring(
 
 
 def identify_tool_mentions_in_sentences(
-    pmcid: str, tool: Tool_entry, paragraphs: List[str], limit: int = 3
-) -> List[List[str]]:
+    pmcid: str, tool: Tool_entry, paragraphs: list[str], limit: int = 3
+) -> list[list]:
     """
     Identifies tool mentions in sentences.
 
@@ -426,25 +409,23 @@ def identify_tool_mentions_in_sentences(
         The PMC ID of the article.
     tool : Tool_entry
         The Tool_entry object.
-    paragraphs : List[str]
+    paragraphs : list[str]
         List of paragraphs from the article.
     limit : int, optional
         The maximum number of sentences to retrieve, by default 3.
 
     Returns
     -------
-    List[List[str]]
+    list[list]
         List of lists containing the PMCID, sentence, NER tags, and topics.
     """
-    sentences_data: Dict[str, Set] = {}
+    sentences_data: dict[str, set] = {}
     sentences = find_sentences_with_substring(paragraphs, tool.name, limit)
 
     for sentence in sentences:
         if sentence:
             token = tool.name
-            # Escape token to handle special regex characters
             pattern = re.escape(token)
-            # Find all occurrences of the token in the sentence
             matches = re.finditer(pattern, sentence, flags=re.IGNORECASE)
 
             for match in matches:
@@ -456,29 +437,27 @@ def identify_tool_mentions_in_sentences(
                     (start_span, end_span, token, tool.biotools_id)
                 )
 
-    # Sort sentences by the position of the first mention of the tool name
     sorted_sentences = sorted(
         sentences_data.items(), key=lambda item: min(tag[0] for tag in item[1])
     )
 
-    # Prepare the final result
     result = [
         [pmcid, sentence, list(ner_tags), tool.topics_str]
-        for sentence, ner_tags in sorted_sentences.items()
+        for sentence, ner_tags in sorted_sentences
     ]
 
     return result
 
 
 def identify_tool_mentions_using_europepmc(
-    biotools: List[Tool_entry], article_limit: int = 1, sentences_per_article: int = 3
+    biotools: list[Tool_entry], article_limit: int = 1, sentences_per_article: int = 3
 ) -> pd.DataFrame:
     """
     Identifies tool mentions in sentences using the Europe PMC API.
 
     Parameters
     ----------
-    biotools : List[Tool_entry]
+    biotools : list[Tool_entry]
         List of Tool_entry objects.
 
     article_limit : int, optional
@@ -495,22 +474,19 @@ def identify_tool_mentions_using_europepmc(
     results_list = []
     client = EuropePMCClient()
     for tool in biotools:
-        # Call bio.tools query and get a list of Article objects
-
-        biotools_articles: List[Article] = client.search_mentions(
+        biotools_articles: list[Article] = client.search_mentions(
             tool.name, article_limit=article_limit, topics=tool.disjoint_topics()
         )
 
-        if len(biotools_articles) == 0:
-            print("No articles found", tool.name)
+        if not biotools_articles:
+            logger.info("No articles found for %s", tool.name)
             continue
         for article in biotools_articles:
-            # per each article, get relevant paragraphs
             relevant_paragraphs = client.get_relevant_paragraphs(
                 article.pmcid, tool.name
             )
-            if len(relevant_paragraphs) == 0:
-                print("No relevant paragraphs found", tool.name)
+            if not relevant_paragraphs:
+                logger.info("No relevant paragraphs found for %s", tool.name)
                 continue
 
             result = identify_tool_mentions_in_sentences(

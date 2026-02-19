@@ -1,117 +1,35 @@
-import os
-import shutil
-import torch
-import pandas as pd
-import numpy as np
-import evaluate
+import logging
 from pathlib import Path
+
+import pandas as pd
+import torch
 from transformers import (
-    BertTokenizerFast,
+    AutoTokenizer,
     BertConfig,
     BertForTokenClassification,
-    TrainingArguments,
     Trainer,
+    TrainingArguments,
     pipeline,
 )
-from sklearn.metrics import classification_report
-from datasets import Dataset, DatasetDict, ClassLabel, Features, Sequence, Value
+
+from bh24_literature_mining.data.dataset import (
+    build_hf_dataset,
+    get_label_list,
+    get_token_ner_tags,
+    load_iob_splits,
+)
+from bh24_literature_mining.evaluation import compute_metrics
+from bh24_literature_mining.preprocessing.tokenization import tokenize_and_align_labels
+from bh24_literature_mining.training import (
+    cleanup_checkpoints,
+    get_last_created_checkpoint,
+)
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
 
 
-def cleanup_checkpoints(
-    output_dir, keep_last=True, best_model_dir=None, last_model_dir=None
-):
-    for item in os.listdir(output_dir):
-        item_path = os.path.join(output_dir, item)
-        if os.path.isdir(item_path) and item.startswith("checkpoint"):
-            if item_path != best_model_dir and (
-                not keep_last or item_path != last_model_dir
-            ):
-                shutil.rmtree(item_path)
-
-
-def convert_IOB_transformer(test_list, pattern):
-    new_list, sub_list = [], []
-    for i in test_list:
-        if i != pattern:
-            sub_list.append(i)
-        else:
-            new_list.append(sub_list)
-            sub_list = []
-    return new_list
-
-
-def get_token_ner_tags(df_, label2id_):
-    ner_tag_list_ = df_["ner_tags"].map(label2id_).fillna("###").tolist()
-    token_list_ = df_["tokens"].tolist()
-    token_list = convert_IOB_transformer(token_list_, pattern="")
-    ner_tag_list = convert_IOB_transformer(ner_tag_list_, pattern="###")
-    df = pd.DataFrame({"tokens": token_list, "ner_tags": ner_tag_list})
-    return token_list, ner_tag_list, df
-
-
-def tokenize_and_align_labels(examples, tokenizer, label_all_tokens=True):
-    tokenized_inputs = tokenizer(
-        examples["tokens"],
-        max_length=512,
-        truncation=True,
-        padding="max_length",
-        is_split_into_words=True,
-    )
-    labels = []
-    for i, label in enumerate(examples["ner_tags"]):
-        word_ids = tokenized_inputs.word_ids(batch_index=i)
-        label_ids = []
-        previous_word_idx = None
-        for word_idx in word_ids:
-            if word_idx is None:
-                label_ids.append(-100)
-            elif word_idx != previous_word_idx:
-                label_ids.append(label[word_idx])
-            else:
-                label_ids.append(label[word_idx] if label_all_tokens else -100)
-            previous_word_idx = word_idx
-        labels.append(label_ids)
-    tokenized_inputs["labels"] = labels
-    return tokenized_inputs
-
-
-def compute_metrics(p, id2label):
-    predictions, labels = p
-    predictions = np.argmax(predictions, axis=2)
-    true_predictions = [
-        [id2label[pred] for pred, label in zip(preds, labs) if label != -100]
-        for preds, labs in zip(predictions, labels)
-    ]
-    true_labels = [
-        [id2label[label] for pred, label in zip(preds, labs) if label != -100]
-        for preds, labs in zip(predictions, labels)
-    ]
-    flat_preds = [item for sublist in true_predictions for item in sublist]
-    flat_labels = [item for sublist in true_labels for item in sublist]
-    print(
-        "\nClassification Report:\n",
-        classification_report(flat_labels, flat_preds, digits=4),
-    )
-    metric = evaluate.load("seqeval")
-    results = metric.compute(predictions=true_predictions, references=true_labels)
-    return {
-        "precision": results["overall_precision"],
-        "recall": results["overall_recall"],
-        "f1": results["overall_f1"],
-        "accuracy": results["overall_accuracy"],
-    }
-
-
-def get_last_created_checkpoint(directory):
-    folders = [
-        d
-        for d in Path(directory).iterdir()
-        if d.is_dir() and d.name.startswith("checkpoint")
-    ]
-    return max(folders, key=os.path.getctime) if folders else None
-
-
-def truncate_if_needed(sentence, tokenizer, max_length):
+def truncate_if_needed(sentence: str, tokenizer, max_length: int) -> str:
     tokens = tokenizer(sentence, return_tensors="pt", truncation=False)
     if tokens["input_ids"].shape[1] > max_length:
         return tokenizer.decode(
@@ -120,7 +38,7 @@ def truncate_if_needed(sentence, tokenizer, max_length):
     return sentence
 
 
-def format_entities(entity_list, sentence):
+def format_entities(entity_list: list[dict], sentence: str) -> str:
     if not entity_list:
         return ""
     return "; ".join(
@@ -129,56 +47,34 @@ def format_entities(entity_list, sentence):
     )
 
 
-def main():
+def main() -> None:
     p = Path(__file__).parent.resolve()
     model_checkpoint = "bioformers/bioformer-16L"
-    data_checkpoint = p / "data/IOB"
+    data_dir = p / "data/IOB"
     model_save_path = p / "models"
     predicted_output = p / "data/predicted"
-    to_predict_path = p / "data/to_predict/250805_mentions_with_topics.csv"
+    to_predict_path = None
 
-    data_checkpoint.mkdir(parents=True, exist_ok=True)
     model_save_path.mkdir(parents=True, exist_ok=True)
     predicted_output.mkdir(parents=True, exist_ok=True)
 
-    train = pd.read_csv(
-        data_checkpoint / "train_IOB.tsv",
-        sep="\t",
-        names=["tokens", "ner_tags"],
-        skip_blank_lines=False,
-        na_filter=False,
-    )
-    dev = pd.read_csv(
-        data_checkpoint / "dev_IOB.tsv",
-        sep="\t",
-        names=["tokens", "ner_tags"],
-        skip_blank_lines=False,
-        na_filter=False,
+    train_raw, test_raw = load_iob_splits(
+        data_dir, train_file="train_IOB.tsv", dev_file="test_IOB.tsv"
     )
 
-    label_list = sorted(set(train["ner_tags"].dropna()) - {""})
-    id2label = {i: l for i, l in enumerate(label_list)}
-    label2id = {l: i for i, l in enumerate(label_list)}
+    label_list = get_label_list(train_raw)
+    id2label = dict(enumerate(label_list))
+    label2id = {label: i for i, label in enumerate(label_list)}
 
-    # Convert and tokenize
-    _, _, train_df = get_token_ner_tags(train, label2id)
-    _, _, dev_df = get_token_ner_tags(dev, label2id)
+    _, _, train_df = get_token_ner_tags(train_raw, label2id)
+    _, _, test_df = get_token_ner_tags(test_raw, label2id)
 
-    features = Features(
-        {
-            "tokens": Sequence(Value("string")),
-            "ner_tags": Sequence(ClassLabel(names=label_list)),
-        }
-    )
-    ds = DatasetDict(
-        {
-            "train": Dataset.from_pandas(train_df, features=features),
-            "validation": Dataset.from_pandas(dev_df, features=features),
-        }
+    tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
+    ds = build_hf_dataset(train_df, test_df, label_list)
+    tokenized_ds = ds.map(
+        lambda x: tokenize_and_align_labels(x, tokenizer), batched=True
     )
 
-    # Load tokenizer and model config
-    tokenizer = BertTokenizerFast.from_pretrained(model_checkpoint)
     config = BertConfig.from_pretrained(
         model_checkpoint,
         num_labels=len(label_list),
@@ -192,19 +88,17 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
+    logger.info("Using device: %s", device)
 
-    tokenized_ds = ds.map(
-        lambda x: tokenize_and_align_labels(x, tokenizer), batched=True
-    )
-
+    output_dir = model_save_path / "extra_annotations"
     training_args = TrainingArguments(
-        output_dir=str(model_save_path),
+        output_dir=str(output_dir),
         eval_strategy="epoch",
         save_strategy="epoch",
         learning_rate=1e-5,
         per_device_train_batch_size=4,
         per_device_eval_batch_size=4,
-        num_train_epochs=50,
+        num_train_epochs=1,
         warmup_ratio=0.1,
         weight_decay=0.01,
         gradient_accumulation_steps=2,
@@ -213,6 +107,7 @@ def main():
         greater_is_better=True,
         logging_dir=str(p / "logs"),
         bf16=torch.cuda.is_available(),
+        seed=42,
     )
 
     trainer = Trainer(
@@ -220,46 +115,55 @@ def main():
         args=training_args,
         train_dataset=tokenized_ds["train"],
         eval_dataset=tokenized_ds["validation"],
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         compute_metrics=lambda p: compute_metrics(p, id2label),
     )
 
     trainer.train()
-    trainer.evaluate()
+    eval_results = trainer.evaluate()
 
-    last_checkpoint = get_last_created_checkpoint(model_save_path)
-    classifier = pipeline(
-        "ner",
-        model=last_checkpoint,
-        tokenizer=tokenizer,
-        aggregation_strategy="max",
-    )
+    logger.info("F1: %.4f", eval_results["eval_f1"])
+    logger.info("Precision: %.4f", eval_results["eval_precision"])
+    logger.info("Recall: %.4f", eval_results["eval_recall"])
+    logger.info("Accuracy: %.4f", eval_results["eval_accuracy"])
 
-    to_predict_df = pd.read_csv(to_predict_path)
-    sentences = [
-        truncate_if_needed(s, tokenizer, config.max_position_embeddings)
-        for s in to_predict_df["Sentence"]
-    ]
+    cleanup_checkpoints(str(output_dir), keep_last=True)
 
-    results = []
-    batch_size = 16
-    for i in range(0, len(sentences), batch_size):
-        try:
-            batch = sentences[i : i + batch_size]
-            results.extend(classifier(batch))
-        except Exception as e:
-            print(f"Batch {i} failed: {e}")
-            results.extend([[] for _ in batch])
+    # # --- Inference ---
+    # last_checkpoint = get_last_created_checkpoint(output_dir)
+    # if last_checkpoint is None:
+    #     logger.warning("No checkpoint found, skipping inference")
+    #     return
 
-    pd.DataFrame(results).to_csv(predicted_output / "results.csv", index=False)
+    # classifier = pipeline(
+    #     "ner",
+    #     model=last_checkpoint,
+    #     tokenizer=tokenizer,
+    #     aggregation_strategy="max",
+    # )
 
-    to_predict_df["NER_Model_Found"] = [
-        format_entities(r, s) for r, s in zip(results, sentences)
-    ]
+    # to_predict_df = pd.read_csv(to_predict_path)
+    # sentences = [
+    #     truncate_if_needed(s, tokenizer, config.max_position_embeddings)
+    #     for s in to_predict_df["Sentence"]
+    # ]
 
-    pd.DataFrame(to_predict_df).to_csv(
-        predicted_output / "to_annotate_with_results.csv", index=False
-    )
+    # results = []
+    # batch_size = 16
+    # for i in range(0, len(sentences), batch_size):
+    #     try:
+    #         batch = sentences[i : i + batch_size]
+    #         results.extend(classifier(batch))
+    #     except Exception as e:
+    #         logger.error("Batch %d failed: %s", i, e)
+    #         results.extend([[] for _ in batch])
+
+    # pd.DataFrame(results).to_csv(predicted_output / "results.csv", index=False)
+
+    # to_predict_df["NER_Model_Found"] = [
+    #     format_entities(r, s) for r, s in zip(results, sentences)
+    # ]
+    # to_predict_df.to_csv(predicted_output / "to_annotate_with_results.csv", index=False)
 
 
 if __name__ == "__main__":

@@ -21,9 +21,18 @@ def filter_checked(df: pd.DataFrame) -> pd.DataFrame:
 
 def parse_ner_tags(df: pd.DataFrame) -> pd.DataFrame:
     df = df[["PMCID", "Sentence", "NER_Tags"]].copy()
-    df["NER_Tags"] = df["NER_Tags"].apply(
-        lambda x: ast.literal_eval(x) if isinstance(x, str) else x
-    )
+
+    def _safe_parse(x):
+        if not isinstance(x, str):
+            return x
+        try:
+            return ast.literal_eval(x)
+        except (ValueError, SyntaxError):
+            logger.warning(f"Failed to parse NER_Tags: {x[:50]}")
+            return None
+
+    df["NER_Tags"] = df["NER_Tags"].apply(_safe_parse)
+    df = df[df["NER_Tags"].notna()].reset_index(drop=True)
     grouped = (
         df.groupby(["Sentence", "PMCID"])["NER_Tags"]
         .apply(lambda x: [i for i in x if i is not None])
