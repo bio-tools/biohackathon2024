@@ -182,6 +182,32 @@ def test_filter_checked_nullifies_false():
     assert result.iloc[0]["NER_Tags"] is None or pd.isna(result.iloc[0]["NER_Tags"])
 
 
+# --- negatives survive pipeline ---
+
+def test_negatives_survive_parse_ner_tags():
+    df = pd.DataFrame(
+        {
+            "True?": [True, False],
+            "False?": [False, True],
+            "NER_Tags": ["(4, 9, 'BLAST', 'subtiwiki')", "(48, 52, 'Fiji', 'fiji')"],
+            "PMCID": ["PMC1", "PMC2"],
+            "Sentence": ["Use BLAST for search", "We used Fiji for imaging"],
+        }
+    )
+    filtered = filter_checked(df)
+    parsed = parse_ner_tags(filtered)
+    assert len(parsed) == 2
+    negative_row = parsed[parsed["PMCID"] == "PMC2"].iloc[0]
+    assert negative_row["NER_Tags"] is None
+
+
+def test_negatives_get_all_O_tags(tokenizer):
+    text = "We used Fiji for imaging"
+    result = convert_to_iob([text], [None], tokenizer)
+    tags = [tag for _, tag in result[0]]
+    assert all(t == "O" for t in tags)
+
+
 # --- split_by_pmcid ---
 
 def _make_split_df(n: int) -> pd.DataFrame:

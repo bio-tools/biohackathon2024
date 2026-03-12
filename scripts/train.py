@@ -1,7 +1,8 @@
+import argparse
 import logging
 from pathlib import Path
 
-from bh24_literature_mining.config import ID2LABEL, LABEL2ID, LABEL_LIST
+from bh24_literature_mining.config import ID2LABEL, LABEL2ID, LABEL_LIST, load_config
 from bh24_literature_mining.data.dataset import (
     build_hf_dataset,
     get_token_ner_tags,
@@ -13,20 +14,21 @@ from bh24_literature_mining.evaluation import compute_metrics
 from bh24_literature_mining.models import create_model
 from bh24_literature_mining.training import build_training_args, cleanup_checkpoints
 from bh24_literature_mining.training.trainer import build_trainer
-from bh24_literature_mining.config import ModelConfig, TrainingConfig
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    p = Path(__file__).parent.resolve()
-    model_checkpoint = "bioformers/bioformer-16L"
-    data_dir = p / "data/IOB"
-    model_save_path = p / "models"
+    parser = argparse.ArgumentParser(description="Train NER model")
+    parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--resume-from", type=Path, default=None)
+    args = parser.parse_args()
 
-    model_save_path.mkdir(parents=True, exist_ok=True)
+    project_root = args.config.resolve().parent.parent
+    config = load_config(args.config)
 
+    data_dir = project_root / config.data.iob_dir
     train_raw, val_raw = load_iob_splits(
         data_dir, train_file="train_IOB.tsv", val_file="val_IOB.tsv"
     )
@@ -34,21 +36,14 @@ def main() -> None:
     _, _, train_df = get_token_ner_tags(train_raw, LABEL2ID)
     _, _, val_df = get_token_ner_tags(val_raw, LABEL2ID)
 
-    tokenizer = get_tokenizer(model_checkpoint)
+    tokenizer = get_tokenizer(config.model.pretrained)
     ds = build_hf_dataset(train_df, val_df, LABEL_LIST)
     tokenized_ds = ds.map(
         lambda x: tokenize_and_align_labels(x, tokenizer), batched=True
     )
 
-    model_config = ModelConfig(pretrained=model_checkpoint)
-    model = create_model(model_config, ID2LABEL, LABEL2ID)
-
-    training_config = TrainingConfig(
-        epochs=4,
-        output_dir=Path("models/extra_annotations"),
-        logging_dir=Path("logs"),
-    )
-    training_args = build_training_args(training_config, p)
+    model = create_model(config.model, ID2LABEL, LABEL2ID)
+    training_args = build_training_args(config.training, project_root)
 
     trainer = build_trainer(
         model=model,
@@ -56,10 +51,11 @@ def main() -> None:
         train_dataset=tokenized_ds["train"],
         eval_dataset=tokenized_ds["validation"],
         tokenizer=tokenizer,
-        compute_metrics_fn=lambda pred: compute_metrics(pred, ID2LABEL),
+        compute_metrics_fn=lambda p: compute_metrics(p, ID2LABEL),
+        early_stopping_patience=config.training.early_stopping_patience,
     )
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=str(args.resume_from) if args.resume_from else None)
     eval_results = trainer.evaluate()
 
     logger.info("F1: %.4f", eval_results["eval_f1"])
@@ -67,8 +63,9 @@ def main() -> None:
     logger.info("Recall: %.4f", eval_results["eval_recall"])
     logger.info("Accuracy: %.4f", eval_results["eval_accuracy"])
 
+    output_dir = project_root / config.training.output_dir
     best_model_dir = getattr(trainer.state, "best_model_checkpoint", None)
-    cleanup_checkpoints(p / "models" / "extra_annotations", best_model_dir=best_model_dir, keep_last=True)
+    cleanup_checkpoints(output_dir, best_model_dir=best_model_dir, keep_last=True)
 
 
 if __name__ == "__main__":

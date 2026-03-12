@@ -28,14 +28,14 @@ def check_data_integrity(df: pd.DataFrame) -> tuple[bool, list[str]]:
 
 def check_integrity_of_files(
     train_file_paths: list[Path],
-    dev_file_paths: list[Path],
+    val_file_paths: list[Path],
     test_file_paths: list[Path],
 ) -> None:
-    for i, (train_file, dev_file, test_file) in enumerate(
-        zip(train_file_paths, dev_file_paths, test_file_paths)
+    for i, (train_file, val_file, test_file) in enumerate(
+        zip(train_file_paths, val_file_paths, test_file_paths)
     ):
         logger.info("Checking Dataset %d", i + 1)
-        for path in [train_file, dev_file, test_file]:
+        for path in [train_file, val_file, test_file]:
             temp_df = load_iob_file(path)
             is_valid, issues = check_data_integrity(temp_df)
             if is_valid:

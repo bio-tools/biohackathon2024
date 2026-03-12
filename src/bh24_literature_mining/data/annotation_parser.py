@@ -13,32 +13,46 @@ def load_annotations(paths: Path | list[Path]) -> pd.DataFrame:
     return pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
 
 
-def filter_checked(df: pd.DataFrame) -> pd.DataFrame:
+
+def filter_checked(df: pd.DataFrame, include_negatives: bool = True) -> pd.DataFrame:
     df = df.copy()
-    df.loc[df["False?"] == True, "NER_Tags"] = None
-    return df[(df["True?"] == True) | (df["False?"] == True)].reset_index(drop=True)
+    if include_negatives:
+        is_negative = df["False?"].eq(True) & df["True?"].eq(False)
+        df.loc[is_negative, "NER_Tags"] = None
+        return df[df["True?"].eq(True) | df["False?"].eq(True)].reset_index(drop=True)
+    return df[df["True?"].eq(True)].reset_index(drop=True)
 
 
 def parse_ner_tags(df: pd.DataFrame) -> pd.DataFrame:
     df = df[["PMCID", "Sentence", "NER_Tags"]].copy()
 
-    def _safe_parse(x):
+    def _safe_parse(x: object) -> object:
         if not isinstance(x, str):
             return x
         try:
             return ast.literal_eval(x)
         except (ValueError, SyntaxError):
-            logger.warning(f"Failed to parse NER_Tags: {x[:50]}")
+            logger.warning("Failed to parse NER_Tags: %s", x[:50])
             return None
 
     df["NER_Tags"] = df["NER_Tags"].apply(_safe_parse)
-    df = df[df["NER_Tags"].notna()].reset_index(drop=True)
-    grouped = (
-        df.groupby(["Sentence", "PMCID"])["NER_Tags"]
+
+    positives = df[df["NER_Tags"].notna()].copy()
+    negatives = df[df["NER_Tags"].isna()].copy()
+
+    grouped_positives = (
+        positives.groupby(["Sentence", "PMCID"])["NER_Tags"]
         .apply(lambda x: [i for i in x if i is not None])
         .reset_index()
     )
-    return grouped
+
+    negatives_deduped = (
+        negatives.drop_duplicates(subset=["Sentence", "PMCID"])[["PMCID", "Sentence"]]
+        .copy()
+    )
+    negatives_deduped["NER_Tags"] = None
+
+    return pd.concat([grouped_positives, negatives_deduped], ignore_index=True)
 
 
 def normalize_entity_type(df: pd.DataFrame, entity_type: str = "BT") -> pd.DataFrame:
@@ -51,10 +65,10 @@ def normalize_entity_type(df: pd.DataFrame, entity_type: str = "BT") -> pd.DataF
 
 
 def prepare_annotations(
-    paths: Path | list[Path], entity_type: str = "BT"
+    paths: Path | list[Path], entity_type: str = "BT", include_negatives: bool = True
 ) -> pd.DataFrame:
     df = load_annotations(paths)
-    df = filter_checked(df)
+    df = filter_checked(df, include_negatives=include_negatives)
     df = parse_ner_tags(df)
     df = normalize_entity_type(df, entity_type)
     return df

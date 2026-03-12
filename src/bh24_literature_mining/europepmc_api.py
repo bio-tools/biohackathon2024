@@ -9,6 +9,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from sentence_splitter import SentenceSplitter
+from tqdm import tqdm
 
 from bh24_literature_mining.biotools import Tool_entry
 from bh24_literature_mining.utils import parse_to_bool
@@ -473,7 +474,7 @@ def identify_tool_mentions_using_europepmc(
     """
     results_list = []
     client = EuropePMCClient()
-    for tool in biotools:
+    for tool in tqdm(biotools, desc="Fetching tool mentions", unit="tool"):
         biotools_articles: list[Article] = client.search_mentions(
             tool.name, article_limit=article_limit, topics=tool.disjoint_topics()
         )
