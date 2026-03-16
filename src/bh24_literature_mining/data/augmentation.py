@@ -85,7 +85,11 @@ def augment_dataframe(
             continue
 
         sentence = row["Sentence"]
-        entity_indices = list(range(len(ner_tags)))
+        entity_indices = [
+            i for i, t in enumerate(ner_tags) if _count_tokens(t[2]) > 1
+        ]
+        if not entity_indices:
+            continue
 
         generated = 0
         attempts = 0

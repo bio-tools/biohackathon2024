@@ -33,6 +33,7 @@ class ModelConfig:
 @dataclass
 class TrainingConfig:
     epochs: int = 20
+    max_steps: int = -1
     learning_rate: float = 1e-5
     batch_size: int = 4
     gradient_accumulation_steps: int = 2
@@ -41,7 +42,9 @@ class TrainingConfig:
     bf16: bool = True
     output_dir: Path = Path("models")
     save_strategy: str = "epoch"
+    save_steps: int = 500
     evaluation_strategy: str = "epoch"
+    eval_steps: int = 500
     load_best_model_at_end: bool = True
     metric_for_best_model: str = "f1"
     seed: int = 42
