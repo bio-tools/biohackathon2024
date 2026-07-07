@@ -1,8 +1,9 @@
 """W&B hyperparameter sweep for NER model."""
 
+import argparse
 import logging
 from pathlib import Path
-
+from datetime import datetime
 import wandb
 from transformers import EarlyStoppingCallback, Trainer, TrainingArguments
 
@@ -22,35 +23,16 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CONFIG_PATH = PROJECT_ROOT / "configs" / "no_aug.yaml"
+CONFIG_PATH = PROJECT_ROOT / "configs" / "260507.yaml"
 
+# Reduced grid (3x3x3=27) adding learning_rate; label_smoothing dropped.
 sweep_config = {
-    "method": "bayes",
+    "method": "grid",
     "metric": {"name": "eval/f1", "goal": "maximize"},
     "parameters": {
-        "learning_rate": {
-            "distribution": "log_uniform_values",
-            "min": 3.5e-5,
-            "max": 6.5e-5,
-        },
-        "dropout": {
-            "distribution": "uniform",
-            "min": 0.17,
-            "max": 0.24,
-        },
-        "warmup_ratio": {
-            "distribution": "uniform",
-            "min": 0.10,
-            "max": 0.18,
-        },
-        "weight_decay": {
-            "distribution": "log_uniform_values",
-            "min": 0.008,
-            "max": 0.025,
-        },
-        "label_smoothing_factor": {"values": [0.15, 0.2, 0.25]},
-        "batch_size": {"value": 16},
-        "gradient_accumulation_steps": {"value": 2},
+        "dropout": {"values": [0.15, 0.25, 0.35]},
+        "weight_decay": {"values": [0.02, 0.05, 0.10]},
+        "learning_rate": {"values": [2e-5, 5e-5, 8e-5]},
     },
 }
 
@@ -79,30 +61,32 @@ def train() -> None:
         dropout=wconfig.dropout,
         num_labels=config.model.num_labels,
     )
+    
     model = create_model(model_config, ID2LABEL, LABEL2ID)
-
+    now = datetime.now()
     training_args = TrainingArguments(
-        output_dir=str(PROJECT_ROOT / "models" / "sweep" / run.name),
-        run_name=run.name,
+        output_dir=str(PROJECT_ROOT / "models" / "sweep" / now.strftime("%y%m%d-%H:%M")),
+        run_name=now.strftime("%y%m%d-%H:%M"),
         learning_rate=wconfig.learning_rate,
-        per_device_train_batch_size=wconfig.batch_size,
-        per_device_eval_batch_size=wconfig.batch_size,
-        gradient_accumulation_steps=wconfig.gradient_accumulation_steps,
-        num_train_epochs=15,
-        warmup_ratio=wconfig.warmup_ratio,
+        per_device_train_batch_size=config.training.batch_size,
+        per_device_eval_batch_size=config.training.batch_size,
+        gradient_accumulation_steps=config.training.gradient_accumulation_steps,
+        num_train_epochs=config.training.epochs,
+        max_steps=config.training.max_steps,
+        warmup_ratio=config.training.warmup_ratio,
         weight_decay=wconfig.weight_decay,
-        label_smoothing_factor=wconfig.label_smoothing_factor,
+        label_smoothing_factor=0.0,
         eval_strategy="steps",
-        eval_steps=250,
+        eval_steps=500,
         save_strategy="steps",
-        save_steps=250,
+        save_steps=500,
         load_best_model_at_end=True,
-        metric_for_best_model="eval_f1",
+        metric_for_best_model="f1",
         greater_is_better=True,
-        logging_dir=str(PROJECT_ROOT / "logs" / "sweep" / run.name),
-        logging_steps=250,
+        logging_dir=str(PROJECT_ROOT / "logs" / "sweep" / now.strftime("%y%m%d-%H:%M")),
+        logging_steps=500,
         optim="adamw_torch",
-        bf16=False,
+        bf16=True,
         seed=42,
         report_to="wandb",
     )
@@ -119,15 +103,24 @@ def train() -> None:
 
     trainer.train()
     eval_results = trainer.evaluate()
-    wandb.log({"best_f1": eval_results["eval_f1"]})
     logger.info("Run %s — F1: %.4f", run.name, eval_results["eval_f1"])
     run.finish()
 
 
 def main() -> None:
-    sweep_id = wandb.sweep(sweep_config, project="biohackathon-ner-sweep")
-    logger.info("Sweep ID: %s", sweep_id)
-    wandb.agent(sweep_id, function=train, count=20)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sweep-id", type=str, default=None, help="Resume existing W&B sweep ID")
+    parser.add_argument("--count", type=int, default=20)
+    args = parser.parse_args()
+
+    if args.sweep_id:
+        sweep_id = args.sweep_id
+        logger.info("Resuming sweep: %s", sweep_id)
+    else:
+        sweep_id = wandb.sweep(sweep_config, project="biohackathon-ner-sweep", entity="afanasyeva-team")
+        logger.info("Created sweep: %s", sweep_id)
+
+    wandb.agent(sweep_id, function=train, count=args.count, project="biohackathon-ner-sweep", entity="afanasyeva-team")
 
 
 if __name__ == "__main__":
