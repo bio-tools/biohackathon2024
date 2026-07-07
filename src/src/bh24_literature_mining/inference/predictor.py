@@ -1,11 +1,22 @@
 import logging
+import re
 
 import pandas as pd
+from datasets import Dataset
 from transformers import PreTrainedTokenizerBase, pipeline
 
 from bh24_literature_mining.config import InferenceConfig
 
 logger = logging.getLogger(__name__)
+
+_PUNCT_ONLY = re.compile(r'^[\W\d_]+$')
+
+
+def filter_predictions(preds: list[dict], min_len: int = 3) -> list[dict]:
+    return [
+        p for p in preds
+        if len(p["word"].strip()) >= min_len and not _PUNCT_ONLY.match(p["word"].strip())
+    ]
 
 
 def truncate_if_needed(
@@ -33,14 +44,10 @@ def predict_batch(
     classifier: object,
     batch_size: int = 16,
 ) -> list[list[dict]]:
+    dataset = Dataset.from_dict({"text": sentences})
     results: list[list[dict]] = []
-    for i in range(0, len(sentences), batch_size):
-        batch = sentences[i : i + batch_size]
-        try:
-            results.extend(classifier(batch))
-        except Exception as e:
-            logger.error("Batch %d failed: %s", i, e)
-            results.extend([[] for _ in batch])
+    for out in classifier(dataset["text"], batch_size=batch_size):
+        results.append(out if isinstance(out, list) else [out])
     return results
 
 

@@ -18,39 +18,41 @@ class DataConfig:
     test_ratio: float = 0.2
     random_seed: int = 42
     augment: bool = False
-    augment_n_copies: int = 3
+    augment_n_copies: int = 1
     biotools_path: Path = Path("biotoolspub/biotoolspub_with_topic.tsv")
-    include_negatives: bool = False
+    include_negatives: bool = True
 
 
 @dataclass
 class ModelConfig:
     pretrained: str = "bioformers/bioformer-16L"
-    dropout: float = 0.2
+    dropout: float = 0.1
     num_labels: int = NUM_LABELS
 
 
 @dataclass
 class TrainingConfig:
-    epochs: int = 20
+    epochs: int = 15
     max_steps: int = -1
     learning_rate: float = 1e-5
-    batch_size: int = 4
+    batch_size: int = 16
     gradient_accumulation_steps: int = 2
     warmup_ratio: float = 0.1
     weight_decay: float = 0.01
+    dropout: float = 0.2
     bf16: bool = True
     output_dir: Path = Path("models")
-    save_strategy: str = "epoch"
+    save_strategy: str = "steps"
     save_steps: int = 500
-    evaluation_strategy: str = "epoch"
+    evaluation_strategy: str = "steps"
     eval_steps: int = 500
     load_best_model_at_end: bool = True
-    metric_for_best_model: str = "f1"
+    metric_for_best_model: str = "eval_f1"
     seed: int = 42
     logging_dir: Path = Path("logs")
-    logging_steps: int = 250
-    early_stopping_patience: int = 5
+    logging_steps: int = 500
+    early_stopping_patience: int = 3
+    label_smoothing_factor: float = 0.1
 
 
 @dataclass
@@ -73,10 +75,21 @@ class PipelineConfig:
 def _set_nested(obj: object, keys: list[str], value: object) -> None:
     for key in keys[:-1]:
         obj = getattr(obj, key)
-    current = getattr(obj, keys[-1])
-    if isinstance(current, Path):
+
+    field = keys[-1]
+    current = getattr(obj, field)
+    target_type = type(current)
+
+    if target_type is Path:
         value = Path(value)
-    setattr(obj, keys[-1], value)
+    elif target_type is float:
+        value = float(value)
+    elif target_type is int:
+        value = int(value)
+    elif target_type is bool:
+        value = bool(value)
+
+    setattr(obj, field, value)
 
 
 def load_config(path: Path) -> PipelineConfig:
