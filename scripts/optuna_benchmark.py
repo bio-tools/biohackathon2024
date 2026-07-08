@@ -51,7 +51,7 @@ MODEL_IDS = {
     "deberta": "microsoft/deberta-v3-base",
     "modernbert": "answerdotai/ModernBERT-base",
 }
-METRIC_FIELDS = ["f1", "precision", "recall", "accuracy", "roc_auc", "loss"]
+METRIC_FIELDS = ["f1", "precision", "recall", "accuracy", "loss"]
 
 
 @dataclass(frozen=True)
@@ -164,9 +164,10 @@ def training_args(
     params: TrialParams,
     seed: int,
 ) -> TrainingArguments:
+    run_name = str(output_dir.relative_to(PROJECT_ROOT)).replace("/", "-")
     return TrainingArguments(
         output_dir=str(output_dir),
-        run_name=output_dir.name,
+        run_name=run_name,
         learning_rate=params.learning_rate,
         per_device_train_batch_size=params.batch_size,
         per_device_eval_batch_size=params.batch_size,
@@ -189,8 +190,17 @@ def training_args(
         bf16=torch.cuda.is_available(),
         seed=seed,
         data_seed=seed,
-        report_to="none",
+        report_to="wandb",
     )
+
+
+def finish_wandb_run() -> None:
+    try:
+        import wandb
+    except ImportError:
+        return
+    if wandb.run is not None:
+        wandb.finish()
 
 
 def metrics_without_prefix(metrics: dict[str, Any], prefix: str = "eval_") -> dict[str, Any]:
@@ -236,6 +246,7 @@ def run_trainer(
     )
     trainer.train()
     metrics = trainer.evaluate()
+    finish_wandb_run()
     return trainer, metrics
 
 
