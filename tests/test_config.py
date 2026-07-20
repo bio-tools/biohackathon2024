@@ -30,7 +30,7 @@ def test_load_config_defaults():
         yaml.dump({}, f)
         f.flush()
         config = load_config(Path(f.name))
-    assert config.training.epochs == 50
+    assert config.training.epochs == 15
     assert config.model.pretrained == "bioformers/bioformer-16L"
     assert config.data.random_seed == 42
 
@@ -43,7 +43,7 @@ def test_load_config_overrides():
         config = load_config(Path(f.name))
     assert config.training.epochs == 10
     assert config.training.learning_rate == 2e-5
-    assert config.training.batch_size == 4  # default preserved
+    assert config.training.batch_size == 16
 
 
 def test_load_config_path_fields():

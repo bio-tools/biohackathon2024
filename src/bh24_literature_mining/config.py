@@ -11,15 +11,15 @@ NUM_LABELS: int = len(LABEL_LIST)
 
 @dataclass
 class DataConfig:
-    annotations_path: Path = Path("data/annotated/251105_annotated.csv")
-    iob_dir: Path = Path("data/IOB")
+    annotations_path: Path = Path("data/annotated/260507_annotated.csv")
+    iob_dir: Path = Path("data/IOB_260713")
     train_ratio: float = 0.6
     val_ratio: float = 0.2
     test_ratio: float = 0.2
     random_seed: int = 42
     augment: bool = False
     augment_n_copies: int = 1
-    biotools_path: Path = Path("biotoolspub/biotoolspub_with_topic.tsv")
+    biotools_path: Path = Path("biotoolspub/biotools_vocab.csv")
     include_negatives: bool = True
 
 
@@ -41,7 +41,7 @@ class TrainingConfig:
     weight_decay: float = 0.01
     dropout: float = 0.2
     bf16: bool = True
-    output_dir: Path = Path("models")
+    output_dir: Path = Path("models/training_260713/bioformer")
     save_strategy: str = "steps"
     save_steps: int = 500
     evaluation_strategy: str = "steps"
@@ -49,7 +49,7 @@ class TrainingConfig:
     load_best_model_at_end: bool = True
     metric_for_best_model: str = "eval_f1"
     seed: int = 42
-    logging_dir: Path = Path("logs")
+    logging_dir: Path = Path("logs/training_260713/bioformer")
     logging_steps: int = 500
     early_stopping_patience: int = 3
     label_smoothing_factor: float = 0.1
@@ -57,9 +57,11 @@ class TrainingConfig:
 
 @dataclass
 class InferenceConfig:
-    checkpoint_path: Path = Path("models/checkpoint-14050")
-    input_path: Path = Path("data/to_predict/250805_mentions_with_topics.csv")
-    output_path: Path = Path("data/predicted/results.csv")
+    checkpoint_path: Path = Path(
+        "models/benchmark_260713/deberta/seed-2024/checkpoint-1500"
+    )
+    input_path: Path = Path("data/annotated/260507_annotated.csv")
+    output_path: Path = Path("data/predicted/results_260713.csv")
     batch_size: int = 16
     max_length: int = 512
 
@@ -80,7 +82,7 @@ def _set_nested(obj: object, keys: list[str], value: object) -> None:
     current = getattr(obj, field)
     target_type = type(current)
 
-    if target_type is Path:
+    if isinstance(current, Path):
         value = Path(value)
     elif target_type is float:
         value = float(value)

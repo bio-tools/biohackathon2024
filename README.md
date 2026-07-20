@@ -1,6 +1,6 @@
 # Enhancing bio.tools by Semantic Literature Mining (BioHackathon Europe 2024)
 
-![](https://img.shields.io/badge/python-3.11+-blue.svg)
+![](https://img.shields.io/badge/python-3.10--3.12-blue.svg)
 ![GitHub license](https://img.shields.io/github/license/bio-tools/biohackathon2024)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 
@@ -10,7 +10,7 @@ ELIXIR Biohackathon 2024 project nr. 16
 
 ### Prerequisites
 
-- **Python 3.11 or higher**
+- **Python 3.10–3.12**
 - **Poetry** (can be installed via `pip install poetry`)
 
 ### Setup Instructions

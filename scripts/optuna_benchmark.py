@@ -1,4 +1,4 @@
-"""Optuna benchmark for token-classification NER checkpoints on IOB_260507."""
+"""Optuna benchmark for token-classification NER checkpoints."""
 
 from __future__ import annotations
 
@@ -39,10 +39,11 @@ from bh24_literature_mining.evaluation import compute_metrics
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = PROJECT_ROOT / "data" / "IOB_260507"
-BIOFORMER_BASELINE = PROJECT_ROOT / "models" / "sweep" / "260616-09:29" / "checkpoint-2500"
+DEFAULT_DATA_DIR = PROJECT_ROOT / "data" / "IOB_260713"
+DEFAULT_RUN_ID = "260713"
 
 DEFAULT_MODELS = ["bert", "biobert", "scibert", "pubmedbert", "deberta", "modernbert"]
+MODEL_CHOICES = DEFAULT_MODELS + ["bioformer"]
 MODEL_IDS = {
     "bert": "bert-base-uncased",
     "biobert": "dmis-lab/biobert-base-cased-v1.2",
@@ -50,6 +51,7 @@ MODEL_IDS = {
     "pubmedbert": "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext",
     "deberta": "microsoft/deberta-v3-base",
     "modernbert": "answerdotai/ModernBERT-base",
+    "bioformer": "bioformers/bioformer-16L",
 }
 METRIC_FIELDS = ["f1", "precision", "recall", "accuracy", "loss"]
 
@@ -85,11 +87,18 @@ class OptunaPruningCallback(TrainerCallback):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--models", nargs="+", choices=DEFAULT_MODELS, default=DEFAULT_MODELS)
+    parser.add_argument("--models", nargs="+", choices=MODEL_CHOICES, default=DEFAULT_MODELS)
     parser.add_argument("--trials", type=int, default=20)
     parser.add_argument("--final-seeds", nargs="+", type=int, default=[42, 123, 2024, 3407, 777])
-    parser.add_argument("--study-dir", type=Path, default=PROJECT_ROOT / "results" / "optuna_260507")
+    parser.add_argument(
+        "--study-dir",
+        type=Path,
+        default=PROJECT_ROOT / "results" / "optuna_260713",
+    )
+    parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
+    parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--collect-test-results", action="store_true")
     return parser.parse_args()
 
 
@@ -114,9 +123,13 @@ def resolve_model_ref(model_ref: str | Path) -> str:
     return str(model_ref)
 
 
-def load_tokenized_datasets(model_id: str) -> tuple[Any, DatasetDict]:
-    train_raw, val_raw = load_iob_splits(DATA_DIR, "train_IOB.tsv", "val_IOB.tsv")
-    test_raw, _ = load_iob_splits(DATA_DIR, "test_IOB.tsv", "test_IOB.tsv")
+def load_tokenized_datasets(
+    model_id: str, data_dir: Path
+) -> tuple[Any, DatasetDict]:
+    train_raw, val_raw = load_iob_splits(
+        data_dir, "train_IOB.tsv", "val_IOB.tsv"
+    )
+    test_raw, _ = load_iob_splits(data_dir, "test_IOB.tsv", "test_IOB.tsv")
     _, _, train_df = get_token_ner_tags(train_raw, LABEL2ID)
     _, _, val_df = get_token_ner_tags(val_raw, LABEL2ID)
     _, _, test_df = get_token_ner_tags(test_raw, LABEL2ID)
@@ -276,15 +289,15 @@ def cleanup_non_best_trials(model_dir: Path, best_trial_number: int | None) -> N
 def run_study(model_key: str, args: argparse.Namespace) -> dict[str, Any]:
     optuna = require_optuna()
     model_id = MODEL_IDS[model_key]
-    tokenizer, tokenized = load_tokenized_datasets(model_id)
-    model_trial_dir = PROJECT_ROOT / "models" / "optuna_260507" / model_key
-    log_dir = PROJECT_ROOT / "logs" / "optuna_260507" / model_key
+    tokenizer, tokenized = load_tokenized_datasets(model_id, args.data_dir)
+    model_trial_dir = PROJECT_ROOT / "models" / f"optuna_{args.run_id}" / model_key
+    log_dir = PROJECT_ROOT / "logs" / f"optuna_{args.run_id}" / model_key
     args.study_dir.mkdir(parents=True, exist_ok=True)
 
     storage = f"sqlite:///{args.study_dir / 'optuna.db'}"
     study = optuna.create_study(
         direction="maximize",
-        study_name=f"260507_{model_key}",
+        study_name=f"{args.run_id}_{model_key}",
         storage=storage,
         load_if_exists=True,
         sampler=optuna.samplers.TPESampler(seed=42),
@@ -361,13 +374,25 @@ def run_final_seeds(
     args: argparse.Namespace,
 ) -> list[dict[str, Any]]:
     model_id = MODEL_IDS[model_key]
-    tokenizer, tokenized = load_tokenized_datasets(model_id)
+    tokenizer, tokenized = load_tokenized_datasets(model_id, args.data_dir)
     params = TrialParams(**best_params)
     rows = []
     for seed in args.final_seeds:
         logger.info("Final retrain for %s seed %s", model_key, seed)
-        output_dir = PROJECT_ROOT / "models" / "benchmark_260507" / model_key / f"seed-{seed}"
-        log_dir = PROJECT_ROOT / "logs" / "benchmark_260507" / model_key / f"seed-{seed}"
+        output_dir = (
+            PROJECT_ROOT
+            / "models"
+            / f"benchmark_{args.run_id}"
+            / model_key
+            / f"seed-{seed}"
+        )
+        log_dir = (
+            PROJECT_ROOT
+            / "logs"
+            / f"benchmark_{args.run_id}"
+            / model_key
+            / f"seed-{seed}"
+        )
         trainer, metrics = run_trainer(
             model_id=model_id,
             tokenizer=tokenizer,
@@ -403,40 +428,83 @@ def aggregate_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(out, key=lambda row: row.get("f1_mean", float("-inf")), reverse=True)
 
 
-def add_bioformer_baseline(args: argparse.Namespace, rows: list[dict[str, Any]]) -> None:
-    if not BIOFORMER_BASELINE.exists():
-        logger.warning("Bioformer baseline checkpoint not found: %s", BIOFORMER_BASELINE)
-        return
-    tokenizer, tokenized = load_tokenized_datasets(str(BIOFORMER_BASELINE))
-    metrics = evaluate_checkpoint(BIOFORMER_BASELINE, BIOFORMER_BASELINE, tokenized, "validation")
-    row = {
-        "model_key": "bioformer_baseline",
-        "model_id": str(BIOFORMER_BASELINE.relative_to(PROJECT_ROOT)),
-        "seed": "baseline",
-        "checkpoint": str(BIOFORMER_BASELINE),
-    }
-    row.update(metrics)
-    rows.append(row)
-
-
-def evaluate_best_on_test(args: argparse.Namespace, final_rows: list[dict[str, Any]]) -> dict[str, Any] | None:
-    candidate_rows = [row for row in final_rows if row.get("f1") is not None and row.get("checkpoint")]
+def select_best_model_row(
+    final_rows: list[dict[str, Any]], model_key: str
+) -> dict[str, Any] | None:
+    candidate_rows = [
+        row
+        for row in final_rows
+        if row.get("model_key") == model_key
+        and row.get("f1") not in (None, "")
+        and row.get("checkpoint")
+    ]
     if not candidate_rows:
         return None
-    best = max(candidate_rows, key=lambda row: row.get("f1", float("-inf")))
-    tokenizer, tokenized = load_tokenized_datasets(best["model_id"])
-    metrics = evaluate_checkpoint(Path(best["checkpoint"]), best["model_id"], tokenized, "test")
-    payload = {
-        "selected_by": "best_final_validation_f1",
-        "model_key": best["model_key"],
-        "model_id": best["model_id"],
-        "seed": best["seed"],
-        "checkpoint": best["checkpoint"],
-        "validation_f1": best.get("f1"),
-        "test_metrics": metrics,
-    }
-    write_json(args.study_dir / "single_best_test_eval.json", payload)
-    return payload
+    return max(candidate_rows, key=lambda row: float(row["f1"]))
+
+
+def evaluate_models_on_test(
+    args: argparse.Namespace, final_rows: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
+    for model_key in args.models:
+        best = select_best_model_row(final_rows, model_key)
+        if best is None:
+            logger.warning("No validation result found for model %s", model_key)
+            continue
+        tokenizer, tokenized = load_tokenized_datasets(
+            best["model_id"], args.data_dir
+        )
+        metrics = evaluate_checkpoint(
+            Path(best["checkpoint"]), best["model_id"], tokenized, "test"
+        )
+        payload = {
+            "selected_by": "best_model_specific_validation_f1",
+            "model_key": best["model_key"],
+            "model_id": best["model_id"],
+            "seed": best["seed"],
+            "checkpoint": best["checkpoint"],
+            "validation_f1": float(best["f1"]),
+            "test_metrics": metrics,
+        }
+        write_json(args.study_dir / f"{model_key}_best_test_eval.json", payload)
+        payloads.append(payload)
+
+    write_json(args.study_dir / "model_specific_test_evals.json", payloads)
+    return payloads
+
+
+def collect_model_specific_test_results(
+    results_root: Path, model_keys: list[str]
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for model_key in model_keys:
+        path = results_root / model_key / f"{model_key}_best_test_eval.json"
+        data = json.loads(path.read_text())
+        if data["model_key"] != model_key:
+            raise ValueError(
+                f"Expected model {model_key!r} in {path}, found "
+                f"{data['model_key']!r}"
+            )
+        metrics = data["test_metrics"]
+        rows.append(
+            {
+                "model_key": model_key,
+                "model_id": data["model_id"],
+                "seed": data["seed"],
+                "checkpoint": data["checkpoint"],
+                "validation_f1": data["validation_f1"],
+                "test_precision": metrics["precision"],
+                "test_recall": metrics["recall"],
+                "test_f1": metrics["f1"],
+                "test_accuracy": metrics["accuracy"],
+            }
+        )
+    rows.sort(key=lambda row: float(row["test_f1"]), reverse=True)
+    table_dir = results_root / "tables"
+    write_csv(table_dir / "benchmark_test_table.csv", rows)
+    write_json(table_dir / "benchmark_test_table.json", rows)
+    return rows
 
 
 def dry_run(args: argparse.Namespace) -> None:
@@ -444,12 +512,12 @@ def dry_run(args: argparse.Namespace) -> None:
         "models": {key: MODEL_IDS[key] for key in args.models},
         "trials_per_model": args.trials,
         "final_seeds": args.final_seeds,
-        "dataset": str(DATA_DIR.relative_to(PROJECT_ROOT)),
+        "dataset": str(args.data_dir),
+        "run_id": args.run_id,
         "study_dir": str(args.study_dir),
         "study_storage": str(args.study_dir / "optuna.db"),
-        "trial_checkpoints": "models/optuna_260507/<model_key>/trial-<n>/",
-        "final_checkpoints": "models/benchmark_260507/<model_key>/seed-<seed>/",
-        "bioformer_baseline": str(BIOFORMER_BASELINE.relative_to(PROJECT_ROOT)),
+        "trial_checkpoints": f"models/optuna_{args.run_id}/<model_key>/trial-<n>/",
+        "final_checkpoints": f"models/benchmark_{args.run_id}/<model_key>/seed-<seed>/",
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
 
@@ -458,10 +526,13 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     args = parse_args()
     args.study_dir = args.study_dir if args.study_dir.is_absolute() else PROJECT_ROOT / args.study_dir
+    args.data_dir = args.data_dir if args.data_dir.is_absolute() else PROJECT_ROOT / args.data_dir
     if args.dry_run:
         dry_run(args)
         return
-
+    if args.collect_test_results:
+        collect_model_specific_test_results(args.study_dir, args.models)
+        return
     study_payloads = [run_study(model_key, args) for model_key in args.models]
     write_json(args.study_dir / "study_summary.json", study_payloads)
     write_csv(
@@ -482,15 +553,18 @@ def main() -> None:
     final_rows: list[dict[str, Any]] = []
     for item in study_payloads:
         final_rows.extend(run_final_seeds(item["model_key"], item["best_params"], args))
-    add_bioformer_baseline(args, final_rows)
 
     aggregate = aggregate_rows(final_rows)
-    test_payload = evaluate_best_on_test(args, final_rows)
+    test_payloads = evaluate_models_on_test(args, final_rows)
     write_csv(args.study_dir / "final_seed_results.csv", final_rows)
     write_csv(args.study_dir / "final_aggregate_results.csv", aggregate)
     write_json(
         args.study_dir / "final_results.json",
-        {"rows": final_rows, "aggregate": aggregate, "single_best_test_eval": test_payload},
+        {
+            "rows": final_rows,
+            "aggregate": aggregate,
+            "model_specific_test_evals": test_payloads,
+        },
     )
 
 

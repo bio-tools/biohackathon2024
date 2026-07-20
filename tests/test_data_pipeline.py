@@ -26,7 +26,13 @@ from bh24_literature_mining.data.iob_converter import (
     find_sub_span,
     load_iob_file,
 )
-from bh24_literature_mining.data.splitter import split_by_pmcid
+from bh24_literature_mining.data.preparation import count_all_o_sentences
+from bh24_literature_mining.data.splitter import (
+    get_document_tool_components,
+    get_resource_ids,
+    split_by_pmcid,
+    split_by_pmcid_and_resource,
+)
 
 
 @pytest.fixture(scope="module")
@@ -112,7 +118,13 @@ def test_iob_roundtrip(tokenizer):
         convert_to_IOB_format_from_df(df, out, "test.tsv", tokenizer)
         loaded = load_iob_file(out / "test.tsv")
         tags = loaded[loaded["tag"] != ""]["tag"].tolist()
-        assert "B-BT" in tags
+    assert "B-BT" in tags
+
+
+def test_count_all_o_sentences(tmp_path):
+    path = tmp_path / "data.tsv"
+    path.write_text("No\tO\ntool\tO\n\nUse\tO\nBLAST\tB-BT\n\n")
+    assert count_all_o_sentences(path) == 1
 
 
 # --- check_data_integrity ---
@@ -206,6 +218,80 @@ def test_negatives_get_all_O_tags(tokenizer):
     result = convert_to_iob([text], [None], tokenizer)
     tags = [tag for _, tag in result[0]]
     assert all(t == "O" for t in tags)
+
+
+def test_prepare_annotations_can_preserve_resource_ids(tmp_path):
+    path = tmp_path / "annotations.csv"
+    pd.DataFrame(
+        {
+            "True?": [True],
+            "False?": [False],
+            "NER_Tags": ["(4, 9, 'BLAST', 'blast')"],
+            "PMCID": ["PMC1"],
+            "Sentence": ["Use BLAST for search"],
+        }
+    ).to_csv(path, index=False)
+    result = prepare_annotations(path, entity_type=None)
+    assert get_resource_ids(result.iloc[0]["NER_Tags"]) == {"blast"}
+
+
+def test_document_tool_components_join_shared_resources():
+    df = pd.DataFrame(
+        {
+            "PMCID": ["PMC1", "PMC2", "PMC3"],
+            "NER_Tags": [
+                [[0, 1, "A", "tool-a"]],
+                [[0, 1, "A", "tool-a"], [2, 3, "B", "tool-b"]],
+                [[0, 1, "C", "tool-c"]],
+            ],
+        }
+    )
+    components = get_document_tool_components(df)
+    assert {"PMC1", "PMC2"} in components
+    assert {"PMC3"} in components
+
+
+def test_tool_disjoint_split_has_no_resource_overlap():
+    rows = []
+    for index in range(30):
+        resource_id = f"tool-{index // 2}"
+        rows.append(
+            {
+                "PMCID": f"PMC{index:03d}",
+                "Sentence": f"Use tool {index}",
+                "NER_Tags": [[4, 8, "tool", resource_id]],
+            }
+        )
+    df = pd.DataFrame(rows)
+    train, validation, test = split_by_pmcid_and_resource(df, random_seed=42)
+
+    def ids(split):
+        return set().union(*(get_resource_ids(tags) for tags in split["NER_Tags"]))
+
+    train_ids = ids(train)
+    validation_ids = ids(validation)
+    test_ids = ids(test)
+    assert not train_ids & validation_ids
+    assert not train_ids & test_ids
+    assert not validation_ids & test_ids
+    assert len(train) + len(validation) + len(test) == len(df)
+
+
+def test_tool_disjoint_split_is_deterministic():
+    df = pd.DataFrame(
+        {
+            "PMCID": [f"PMC{index:03d}" for index in range(30)],
+            "Sentence": [f"sentence {index}" for index in range(30)],
+            "NER_Tags": [
+                [[0, 4, "tool", f"tool-{index}"]] for index in range(30)
+            ],
+        }
+    )
+    first = split_by_pmcid_and_resource(df, random_seed=42)
+    second = split_by_pmcid_and_resource(df, random_seed=42)
+    assert [split["Sentence"].tolist() for split in first] == [
+        split["Sentence"].tolist() for split in second
+    ]
 
 
 # --- split_by_pmcid ---

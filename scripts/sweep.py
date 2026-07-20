@@ -65,7 +65,9 @@ def train() -> None:
     model = create_model(model_config, ID2LABEL, LABEL2ID)
     now = datetime.now()
     training_args = TrainingArguments(
-        output_dir=str(PROJECT_ROOT / "models" / "sweep" / now.strftime("%y%m%d-%H:%M")),
+        output_dir=str(
+            PROJECT_ROOT / "models" / "sweep_260713" / now.strftime("%y%m%d-%H:%M")
+        ),
         run_name=now.strftime("%y%m%d-%H:%M"),
         learning_rate=wconfig.learning_rate,
         per_device_train_batch_size=config.training.batch_size,
@@ -83,7 +85,9 @@ def train() -> None:
         load_best_model_at_end=True,
         metric_for_best_model="f1",
         greater_is_better=True,
-        logging_dir=str(PROJECT_ROOT / "logs" / "sweep" / now.strftime("%y%m%d-%H:%M")),
+        logging_dir=str(
+            PROJECT_ROOT / "logs" / "sweep_260713" / now.strftime("%y%m%d-%H:%M")
+        ),
         logging_steps=500,
         optim="adamw_torch",
         bf16=True,
@@ -117,10 +121,20 @@ def main() -> None:
         sweep_id = args.sweep_id
         logger.info("Resuming sweep: %s", sweep_id)
     else:
-        sweep_id = wandb.sweep(sweep_config, project="biohackathon-ner-sweep", entity="afanasyeva-team")
+        sweep_id = wandb.sweep(
+            sweep_config,
+            project="biohackathon-ner-sweep-260713",
+            entity="afanasyeva-team",
+        )
         logger.info("Created sweep: %s", sweep_id)
 
-    wandb.agent(sweep_id, function=train, count=args.count, project="biohackathon-ner-sweep", entity="afanasyeva-team")
+    wandb.agent(
+        sweep_id,
+        function=train,
+        count=args.count,
+        project="biohackathon-ner-sweep-260713",
+        entity="afanasyeva-team",
+    )
 
 
 if __name__ == "__main__":

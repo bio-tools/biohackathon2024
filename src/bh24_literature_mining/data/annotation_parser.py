@@ -91,11 +91,25 @@ def normalize_entity_type(df: pd.DataFrame, entity_type: str = "BT") -> pd.DataF
     return df
 
 
-def prepare_annotations(
-    paths: Path | list[Path], entity_type: str = "BT", include_negatives: bool = True,
+def prepare_annotation_dataframe(
+    df: pd.DataFrame,
+    entity_type: str | None = "BT",
+    include_negatives: bool = True,
 ) -> pd.DataFrame:
-    df = load_annotations(paths)
     df = filter_checked(df, include_negatives=include_negatives)
     df = parse_ner_tags(df)
-    df = normalize_entity_type(df, entity_type)
+    if entity_type is not None:
+        df = normalize_entity_type(df, entity_type)
     return df
+
+
+def prepare_annotations(
+    paths: Path | list[Path],
+    entity_type: str | None = "BT",
+    include_negatives: bool = True,
+) -> pd.DataFrame:
+    return prepare_annotation_dataframe(
+        load_annotations(paths),
+        entity_type=entity_type,
+        include_negatives=include_negatives,
+    )
